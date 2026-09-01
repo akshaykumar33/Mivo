@@ -78,17 +78,17 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
 
           {room.description && (
-            <span className="hidden lg:inline text-xs text-white/40 truncate border-l border-white/[0.08] pl-3.5">
+            <span className="hidden lg:inline text-xs text-[var(--text-muted)] truncate border-l border-[var(--border-subtle)] pl-3.5">
               {room.description}
             </span>
           )}
         </div>
 
         {/* Center Stage Status Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs text-white/60">
+        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
-          <span className="font-semibold text-white/80 font-display">Active Stage</span>
-          <span className="text-white/30">•</span>
+          <span className="font-semibold text-[var(--text-primary)] font-display">Active Stage</span>
+          <span className="text-[var(--text-muted)]">•</span>
           <span className="text-[11px] font-mono text-[#64D2FF] font-bold uppercase">{activeMode}</span>
         </div>
 
@@ -100,8 +100,8 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
               onClick={onToggleRecording}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-150 cursor-pointer ${
                 isRecording
-                  ? 'bg-[#FF453A] text-white shadow-[0_4px_16px_rgba(255,69,58,0.5)] border border-white/20 animate-pulse'
-                  : 'bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]'
+                  ? 'bg-[#FF453A] !text-white shadow-[0_4px_16px_rgba(255,69,58,0.5)] border border-white/20 animate-pulse'
+                  : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)]'
               }`}
               title={isRecording ? 'Stop Recording' : 'Start Recording Session'}
             >
@@ -113,7 +113,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           {/* Whisper AI Scribe & Notes Drawer */}
           <button
             onClick={onToggleWhisper}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-xs font-semibold text-[#BF5AF2] hover:text-white bg-[#BF5AF2]/15 hover:bg-[#BF5AF2] border border-[#BF5AF2]/30 hover:border-[#BF5AF2] transition-all duration-200 shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-xs font-semibold text-[#BF5AF2] hover:!text-white bg-[#BF5AF2]/15 hover:bg-[#BF5AF2] border border-[#BF5AF2]/30 hover:border-[#BF5AF2] transition-all duration-200 shadow-sm cursor-pointer"
             title="Open Whisper AI Scribe, Multilingual Translation & MOM"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2] group-hover:text-white transition-colors" />
@@ -123,7 +123,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           {/* System User Documentation */}
           <button
             onClick={() => setIsDocsOpen(true)}
-            className="p-2 rounded-[12px] text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+            className="p-2 rounded-[12px] bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] transition-all cursor-pointer"
             title="Interactive User Guide & Documentation"
           >
             <BookOpen className="w-4 h-4 text-[#5E5CE6]" />
@@ -132,7 +132,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           {/* Connected Participants Toggle */}
           <button
             onClick={onToggleParticipants}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs font-semibold text-[var(--text-primary)] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] transition-all cursor-pointer"
             title="Toggle Stage Members Roster"
           >
             <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />

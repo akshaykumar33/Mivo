@@ -259,7 +259,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               className={`p-2 rounded-[10px] transition-all cursor-pointer ${
                 isMuted
                   ? 'text-[#FF453A] bg-[#FF453A]/15 border border-[#FF453A]/30 shadow-sm'
-                  : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08]'
               }`}
               title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
             >
@@ -271,7 +271,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               className={`p-2 rounded-[10px] transition-all cursor-pointer ${
                 isDeafened
                   ? 'text-[#FF453A] bg-[#FF453A]/15 border border-[#FF453A]/30 shadow-sm'
-                  : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08]'
               }`}
               title={isDeafened ? 'Undeafen' : 'Deafen'}
             >
@@ -280,7 +280,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
             <button
               onClick={() => setIsThemeModalOpen(true)}
-              className="p-2 rounded-[10px] text-white/50 hover:text-[#BF5AF2] hover:bg-white/[0.08] transition-all cursor-pointer"
+              className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[#BF5AF2] hover:bg-white/[0.08] transition-all cursor-pointer"
               title="Visual Themes & Dark/Bright Mode"
             >
               <Palette className="w-3.5 h-3.5 text-[#BF5AF2]" />
@@ -288,7 +288,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
             <button
               onClick={() => logout()}
-              className="p-2 rounded-[10px] text-white/50 hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all cursor-pointer"
+              className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />

@@ -350,7 +350,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               </span>
               <button
                 onClick={handleAutoArrange}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-violet-300 hover:text-white px-3 py-1 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-colors"
+                className="flex items-center gap-1.5 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-3 py-1 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors"
                 title="Reset to Auto-Arranged Grid"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -359,11 +359,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             </div>
 
             <div
-              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto ${
+              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
                 sortedParticipants.length === 1
-                  ? 'grid-cols-1 max-w-2xl mx-auto w-full self-center place-items-center my-auto'
+                  ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
                   : sortedParticipants.length === 2
-                  ? 'grid-cols-1 sm:grid-cols-2 max-w-5xl mx-auto w-full self-center my-auto'
+                  ? 'grid-cols-1 sm:grid-cols-2 max-w-5xl mx-auto w-full my-auto'
                   : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
               }`}
             >
