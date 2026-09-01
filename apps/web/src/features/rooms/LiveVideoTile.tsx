@@ -265,9 +265,9 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       </div>
 
       {/* Floating Bottom Nameplate, Dynamic Equalizer & Media Badges */}
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[#090B10]/85 backdrop-blur-xl border border-white/[0.08] text-xs text-white z-10 shadow-lg">
+      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[var(--bg-surface-0)]/90 backdrop-blur-xl border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] z-10 shadow-lg">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="truncate font-bold text-xs">
+          <span className="truncate font-bold text-xs text-[var(--text-primary)]">
             {user.displayName || user.username}
             {isMe && ' (You)'}
           </span>

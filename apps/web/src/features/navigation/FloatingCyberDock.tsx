@@ -114,7 +114,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
   // Tooltip helper
   const Tip = ({ text, groupClass }: { text: string; groupClass: string }) => (
-    <div className={`absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1A1D2E]/95 border border-white/10 text-[10px] font-semibold text-white opacity-0 pointer-events-none ${groupClass} transition-opacity duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl`}>
+    <div className={`absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-[10px] font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none ${groupClass} transition-opacity duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50`}>
       {text}
     </div>
   );
@@ -194,7 +194,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
                 onClick={() => onModeChange(mode.id)}
                 className={`relative group/btn flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? `bg-gradient-to-r ${mode.color} text-white shadow-md ${mode.glow} border border-white/25`
+                    ? `bg-gradient-to-r ${mode.color} !text-white shadow-md ${mode.glow} border border-white/25`
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.06]'
                 }`}
               >
@@ -217,9 +217,9 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
               onClick={onToggleMute}
               className={`relative group/mic p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 isMuted
-                  ? 'bg-[#FF453A]/20 text-[#FF453A] hover:bg-[#FF453A] hover:text-white'
+                  ? 'bg-[#FF453A]/20 text-[#FF453A] hover:bg-[#FF453A] hover:!text-white'
                   : isSpeaking
-                  ? 'bg-[#30D158] text-black shadow-[0_0_16px_rgba(48,209,88,0.5)] scale-105'
+                  ? 'bg-[#30D158] !text-black shadow-[0_0_16px_rgba(48,209,88,0.5)] scale-105'
                   : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
               }`}
             >
@@ -235,7 +235,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
               }}
               className={`relative group/cam p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 isCameraOn
-                  ? 'bg-[#0A84FF]/20 text-[#0A84FF] hover:bg-[#0A84FF] hover:text-white'
+                  ? 'bg-[#0A84FF] !text-white hover:bg-[#0A84FF]/90 shadow-md shadow-[#0A84FF]/30'
                   : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
               }`}
             >
@@ -251,7 +251,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
               }}
               className={`relative group/scr p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 isScreenOn
-                  ? 'bg-[#5E5CE6]/20 text-[#BF5AF2] hover:bg-[#5E5CE6] hover:text-white'
+                  ? 'bg-[#5E5CE6] !text-white hover:bg-[#5E5CE6]/90 shadow-md shadow-[#5E5CE6]/30'
                   : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
               }`}
             >
@@ -284,7 +284,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             onClick={onToggleWhisper}
             className={`relative group/ai p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
               isWhisperOpen
-                ? 'bg-gradient-to-r from-[#BF5AF2] to-[#5E5CE6] text-white shadow-[0_0_16px_rgba(191,90,242,0.5)]'
+                ? 'bg-gradient-to-r from-[#BF5AF2] to-[#5E5CE6] !text-white shadow-[0_0_16px_rgba(191,90,242,0.5)]'
                 : 'bg-[#BF5AF2]/10 text-[#BF5AF2] hover:bg-[#BF5AF2]/25'
             }`}
           >
@@ -297,8 +297,8 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             onClick={onToggleParticipants}
             className={`relative group/ppl flex items-center gap-1 px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
               isParticipantsOpen
-                ? 'bg-white/[0.12] text-[var(--text-primary)]'
-                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
+                ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)]'
+                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -311,8 +311,8 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
             className={`relative group/more p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
               isMoreMenuOpen
-                ? 'bg-white/[0.12] text-[var(--text-primary)]'
-                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
+                ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)]'
+                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
             }`}
           >
             <MoreVertical className="w-4 h-4" />
@@ -323,10 +323,10 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
         {/* ── Leave Button ── */}
         {isInCall && (
           <>
-            <div className="w-px h-6 bg-white/10" />
+            <div className="w-px h-6 bg-[var(--border-subtle)]" />
             <button
               onClick={onDisconnect}
-              className="relative group/leave p-2.5 rounded-xl bg-[#FF453A] hover:bg-[#FF2D20] text-white shadow-[0_4px_16px_rgba(255,69,58,0.4)] hover:scale-105 transition-all cursor-pointer"
+              className="relative group/leave p-2.5 rounded-xl bg-[#FF453A] hover:bg-[#FF2D20] !text-white shadow-[0_4px_16px_rgba(255,69,58,0.4)] hover:scale-105 transition-all cursor-pointer"
             >
               <PhoneOff className="w-4 h-4" />
               <Tip text="Leave Call" groupClass="group-hover/leave:opacity-100" />
