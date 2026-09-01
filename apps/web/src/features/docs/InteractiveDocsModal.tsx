@@ -385,16 +385,31 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
  * Clean markdown formatter helper for docs viewer
  */
 function formatMarkdownToHtml(md: string): string {
-  let html = md
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold text-white font-display border-b border-white/[0.08] pb-3 mb-4">$1</h1>')
-    .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-violet-300 font-display mt-5 mb-2">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-lg font-extrabold text-white font-display mt-6 mb-3">$1</h2>')
-    .replace(/^\> (.*$)/gim, '<blockquote class="p-3 rounded-2xl bg-violet-950/40 border border-violet-500/40 text-violet-200 text-xs italic my-3">$1</blockquote>')
-    .replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white font-bold">$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em class="text-slate-300 italic">$1</em>')
-    .replace(/\`(.*?)\`/gim, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-cyan-300 font-mono text-xs border border-white/[0.06]">$1</code>')
-    .replace(/^\* (.*$)/gim, '<li class="text-slate-300 ml-4 list-disc">$1</li>')
-    .replace(/\n/gim, '<br />');
+  const lines = md.split('\n');
+  const processed = lines.map((line) => {
+    let l = line;
+    if (l.startsWith('# ')) {
+      return `<h1 class="text-2xl font-extrabold text-white font-display border-b border-white/[0.08] pb-3 mb-4 mt-2">${l.slice(2)}</h1>`;
+    }
+    if (l.startsWith('### ')) {
+      return `<h3 class="text-base font-bold text-violet-300 font-display mt-5 mb-2">${l.slice(4)}</h3>`;
+    }
+    if (l.startsWith('## ')) {
+      return `<h2 class="text-lg font-extrabold text-white font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+    }
+    if (l.startsWith('> ')) {
+      return `<blockquote class="p-3 rounded-2xl bg-violet-950/40 border border-violet-500/40 text-violet-200 text-xs italic my-3">${l.slice(2)}</blockquote>`;
+    }
+    if (l.startsWith('* ') || l.startsWith('- ')) {
+      const itemText = l.slice(2)
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-cyan-300 font-mono text-xs border border-white/[0.06]">$1</code>');
+      return `<li class="text-slate-300 ml-4 list-disc mb-1.5 leading-relaxed">${itemText}</li>`;
+    }
+    return l
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-cyan-300 font-mono text-xs border border-white/[0.06]">$1</code>');
+  });
 
-  return html;
+  return processed.join('<br />');
 }

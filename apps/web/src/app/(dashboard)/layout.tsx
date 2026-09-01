@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { CommunitySidebar } from '@/features/communities/CommunitySidebar';
-import { FloatingDocsButton } from '@/features/docs/FloatingDocsButton';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 
@@ -42,9 +41,6 @@ export default function DashboardLayout({
 
       {/* Main Dynamic Area */}
       <main className="flex-1 flex overflow-hidden">{children}</main>
-
-      {/* Persistent Floating Interactive User Documentation Hub */}
-      <FloatingDocsButton />
     </div>
   );
 }

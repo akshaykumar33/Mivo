@@ -2,15 +2,17 @@
 
 import * as React from 'react';
 import { useCommunityStore } from '@/stores/communityStore';
-import { Plus, Compass, MessageSquare, Sparkles } from 'lucide-react';
+import { Plus, Compass, MessageSquare, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
+import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 
 export const CommunitySidebar: React.FC = () => {
   const pathname = usePathname();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isDocsOpen, setIsDocsOpen] = React.useState(false);
 
   React.useEffect(() => {
     fetchCommunities();
@@ -30,7 +32,7 @@ export const CommunitySidebar: React.FC = () => {
           />
           <Link
             href="/channels"
-            className={`flex items-center justify-center w-13 h-13 transition-all duration-300 ${
+            className={`flex items-center justify-center w-12 h-12 transition-all duration-300 ${
               isDMsActive
                 ? 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white rounded-2xl shadow-xl shadow-violet-600/30 border border-white/20 scale-105'
                 : 'bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white rounded-3xl hover:rounded-2xl border border-white/[0.05] hover:border-violet-500/40'
@@ -64,7 +66,7 @@ export const CommunitySidebar: React.FC = () => {
                 />
                 <Link
                   href={`/communities/${community.id}`}
-                  className={`flex items-center justify-center w-13 h-13 transition-all duration-300 font-extrabold text-sm tracking-tight ${
+                  className={`flex items-center justify-center w-12 h-12 transition-all duration-300 font-extrabold text-sm tracking-tight ${
                     isActive
                       ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-2xl shadow-xl shadow-violet-600/30 border border-white/20 scale-105'
                       : 'bg-white/[0.03] text-slate-300 rounded-3xl hover:rounded-2xl hover:bg-violet-600 hover:text-white border border-white/[0.05] hover:border-violet-500/40'
@@ -88,17 +90,26 @@ export const CommunitySidebar: React.FC = () => {
           {/* Add Community Button */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center w-13 h-13 rounded-3xl hover:rounded-2xl bg-white/[0.02] text-emerald-400 hover:bg-emerald-600 hover:text-white border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 group shadow-sm hover:scale-105"
+            className="flex items-center justify-center w-12 h-12 rounded-3xl hover:rounded-2xl bg-white/[0.02] text-emerald-400 hover:bg-emerald-600 hover:text-white border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 group shadow-sm hover:scale-105"
             title="Create a Community"
           >
             <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
           </button>
         </div>
 
+        {/* Documentation Hub Button */}
+        <button
+          onClick={() => setIsDocsOpen(true)}
+          className="flex items-center justify-center w-12 h-12 rounded-3xl hover:rounded-2xl bg-white/[0.02] text-violet-400 hover:bg-violet-600 hover:text-white border border-violet-500/20 hover:border-violet-500/40 transition-all duration-300 shadow-sm hover:scale-105"
+          title="User Documentation & Guide"
+        >
+          <BookOpen className="w-5 h-5" />
+        </button>
+
         {/* Discovery Button */}
         <Link
           href="/discover"
-          className="flex items-center justify-center w-13 h-13 rounded-3xl hover:rounded-2xl bg-white/[0.02] text-cyan-400 hover:bg-cyan-600 hover:text-white border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 shadow-sm hover:scale-105"
+          className="flex items-center justify-center w-12 h-12 rounded-3xl hover:rounded-2xl bg-white/[0.02] text-cyan-400 hover:bg-cyan-600 hover:text-white border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 shadow-sm hover:scale-105"
           title="Explore Public Communities"
         >
           <Compass className="w-5 h-5" />
@@ -106,6 +117,7 @@ export const CommunitySidebar: React.FC = () => {
       </aside>
 
       <CreateCommunityModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
     </>
   );
 };
