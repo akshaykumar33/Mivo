@@ -46,8 +46,8 @@ Welcome to **Mivo** — the unified real-time communication platform.
 * **👑 Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner
 * **🎨 Alex Rivera** (\`alex@mivo.app\`): Staff Designer & Community Admin
 * **⚡ Sarah Connor** (\`sarah@mivo.app\`): Principal Backend Lead
-* **🇪🇸 Carlos Mendoza** (\`carlos@mivo.app\`): Frontend Specialist (Spanish Speaker)
-* **🇮🇳 Priya Sharma** (\`priya@mivo.app\`): Cloud Architect (Hindi Speaker)
+* **🌍 Carlos Mendoza** (\`carlos@mivo.app\`): Frontend Specialist (Spanish 🇪🇸)
+* **🌏 Priya Sharma** (\`priya@mivo.app\`): Cloud Architect (Hindi 🇮🇳)
 * **📻 Elena Rostova** (\`elena@mivo.app\`): Media SFU Infrastructure Specialist
 
 > **Tip:** You can log in instantly by clicking any profile card on the login screen.
