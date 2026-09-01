@@ -92,7 +92,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
   return (
     <>
-      <aside className="w-[270px] h-full bg-[#090B12]/85 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col justify-between select-none">
+      <aside className="w-[270px] h-full bg-[#090B12]/85 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col justify-between select-none flex-shrink-0">
         {/* Top Header & Navigation Segmented Controls */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Community Title Bar */}

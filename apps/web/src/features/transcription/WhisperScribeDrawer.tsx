@@ -56,6 +56,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
   const [isRecording, setIsRecording] = React.useState(false);
   const [targetLang, setTargetLang] = React.useState<string>('es');
   const [isGeminiSettingsOpen, setIsGeminiSettingsOpen] = React.useState(false);
+  const [liveSpeechInput, setLiveSpeechInput] = React.useState('');
   const [transcripts, setTranscripts] = React.useState<TranscriptItem[]>([
     {
       id: '1',
@@ -96,6 +97,39 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [emailSuccess, setEmailSuccess] = React.useState<string | null>(null);
   const recognitionRef = React.useRef<any>(null);
+
+  const handleAddLiveTranscriptTurn = async (text: string) => {
+    if (!text.trim()) return;
+    setLiveSpeechInput('');
+    const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
+
+    let translated = '';
+    try {
+      const res = await api.post<{ translatedText: string; engine: string }>('/api/v1/ai/translate', {
+        text: text.trim(),
+        targetLanguage: targetLang,
+        apiKey: userKey,
+      });
+      translated = res.data?.translatedText || (await translationManager.translateText(text.trim(), targetLang));
+    } catch {
+      translated = await translationManager.translateText(text.trim(), targetLang);
+    }
+
+    const newItem: TranscriptItem = {
+      id: Date.now().toString(),
+      speaker: currentUser?.displayName || currentUser?.username || 'Dev Admin',
+      text: text.trim(),
+      translatedText: translated,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setTranscripts((prev) => [...prev, newItem]);
+    translationManager.emitSubtitle({
+      speaker: newItem.speaker,
+      text: newItem.text,
+      translatedText: newItem.translatedText,
+    });
+  };
 
   // Initialize Speech Recognition if supported
   React.useEffect(() => {
@@ -425,6 +459,26 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
                     >
                       {isRecording ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                       <span>{isRecording ? 'Listening Live...' : 'Start Dictation'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
+                    <input
+                      type="text"
+                      placeholder="Or dictate/type speech turn..."
+                      value={liveSpeechInput}
+                      onChange={(e) => setLiveSpeechInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddLiveTranscriptTurn(liveSpeechInput);
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-[12px] bg-white/[0.04] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6]"
+                    />
+                    <button
+                      onClick={() => handleAddLiveTranscriptTurn(liveSpeechInput)}
+                      disabled={!liveSpeechInput.trim()}
+                      className="px-3 py-1.5 rounded-[12px] bg-[#5E5CE6] hover:bg-[#5E5CE6]/80 text-white text-xs font-semibold disabled:opacity-40 cursor-pointer transition-all"
+                    >
+                      Transmit
                     </button>
                   </div>
                 </div>

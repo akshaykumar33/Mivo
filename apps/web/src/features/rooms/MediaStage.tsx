@@ -66,9 +66,13 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   }, [participants]);
 
   React.useEffect(() => {
-    if (screenVideoRef.current && screenStream) {
-      screenVideoRef.current.srcObject = screenStream;
-      screenVideoRef.current.play().catch((e) => console.log('Screen play interrupted:', e));
+    if (screenVideoRef.current) {
+      if (screenStream) {
+        screenVideoRef.current.srcObject = screenStream;
+        screenVideoRef.current.play().catch((e) => console.log('Screen play interrupted:', e));
+      } else {
+        screenVideoRef.current.srcObject = null;
+      }
     }
   }, [screenStream]);
 
@@ -147,11 +151,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   if (mode === 'VOICE') {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#0E1017] select-none relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 pb-28 sm:p-8 sm:pb-28 bg-[#0E1017] select-none relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="mb-8 text-center z-10">
+        <div className="mb-6 sm:mb-8 text-center z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-3 shadow-lg shadow-emerald-500/10">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>Spatial Voice Huddle Active</span>
@@ -171,7 +175,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           </div>
         </div>
 
-        <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 place-items-center z-10">
+        <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 place-items-center z-10">
           {sortedParticipants.map((p) => {
             const isMe = p.userId === currentUserId;
             const participantMuted = isMe ? isMuted : p.isMuted;
@@ -184,7 +188,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 onDragStart={handleDragStart(p.userId)}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop(p.userId)}
-                className={`flex flex-col items-center p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-44 shadow-lg cursor-grab active:cursor-grabbing ${
+                className={`flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
                   isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                     : 'border-white/[0.05] hover:border-violet-500/30'
@@ -250,7 +254,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
-      <div className="flex-1 p-6 bg-[#0E1017] select-none flex flex-col overflow-hidden">
+      <div className="flex-1 p-6 pb-28 bg-[#0E1017] select-none flex flex-col overflow-hidden">
         {pinnedParticipant ? (
           // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
@@ -312,7 +316,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             </div>
 
             <div
-              className={`grid gap-5 h-full min-h-[380px] overflow-y-auto ${
+              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto ${
                 sortedParticipants.length === 1
                   ? 'grid-cols-1 max-w-4xl mx-auto w-full'
                   : sortedParticipants.length === 2
@@ -354,9 +358,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater
   return (
-    <div className="flex-1 p-6 bg-[#0E1017] flex flex-col select-none">
+    <div className="flex-1 p-6 pb-28 bg-[#0E1017] flex flex-col select-none overflow-hidden">
       {/* Primary Dominant Stage */}
-      <div className="flex-1 rounded-3xl bg-[#08090E] border border-white/[0.08] relative flex items-center justify-center shadow-2xl overflow-hidden">
+      <div className="flex-1 rounded-3xl bg-[#08090E] border border-white/[0.08] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
         {screenStream ? (
           <video
             ref={screenVideoRef}

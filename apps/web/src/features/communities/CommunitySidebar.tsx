@@ -30,7 +30,7 @@ export const CommunitySidebar: React.FC = () => {
 
   return (
     <>
-      <aside className="w-[72px] h-full bg-[#080A12]/90 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col items-center pt-3 pb-3.5 space-y-2.5 z-30 select-none">
+      <aside className="w-[72px] h-full bg-[#080A12]/90 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col items-center pt-3 pb-3.5 space-y-2.5 z-30 select-none flex-shrink-0">
         {/* macOS Style Traffic Light Control Dots */}
         <div className="flex items-center gap-1.5 pb-1">
           <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] shadow-[0_0_8px_rgba(255,95,86,0.6)] cursor-pointer hover:scale-110 transition-transform" />

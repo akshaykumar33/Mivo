@@ -137,9 +137,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
   return (
     <div
-      className={`fixed ${
-        activeMode === 'TEXT' ? 'bottom-20 sm:bottom-22' : 'bottom-6'
-      } left-1/2 -translate-x-1/2 z-40 pointer-events-auto select-none transition-all duration-300`}
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto select-none transition-all duration-300"
     >
       {/* Floating Google Meet / Zoom Style Reactions Tray Popover */}
       {isReactionsTrayOpen && (
@@ -231,7 +229,12 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
           {/* Camera Toggle */}
           <button
-            onClick={onToggleCamera}
+            onClick={() => {
+              if (activeMode !== 'VIDEO' && activeMode !== 'SCREEN_SHARE') {
+                onModeChange('VIDEO');
+              }
+              onToggleCamera();
+            }}
             className={`relative group/cam p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isCameraOn
                 ? 'bg-gradient-to-tr from-[#0A84FF] to-[#64D2FF] text-white shadow-[0_0_20px_rgba(100,210,255,0.5)] border border-white/30 scale-105'
@@ -248,7 +251,12 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
           {/* Screen Share Toggle */}
           <button
-            onClick={onToggleScreen}
+            onClick={() => {
+              if (activeMode !== 'SCREEN_SHARE') {
+                onModeChange('SCREEN_SHARE');
+              }
+              onToggleScreen();
+            }}
             className={`relative group/screen p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isScreenOn
                 ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] text-white shadow-[0_0_20px_rgba(191,90,242,0.5)] border border-white/30 scale-105'

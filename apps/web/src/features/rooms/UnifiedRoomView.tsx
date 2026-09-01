@@ -192,6 +192,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           isHost={isHost}
           onHostAction={handleHostAction}
           isOpen={isParticipantsOpen}
+          onClose={() => setIsParticipantsOpen(false)}
         />
 
         {/* Whisper AI Multilingual Translation, Notes & MOM Drawer */}
