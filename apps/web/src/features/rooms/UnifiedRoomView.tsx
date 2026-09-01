@@ -120,6 +120,17 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     }
   };
 
+  const handleHostAction = (action: 'MUTE' | 'KICK' | 'TRANSFER_HOST', targetUserId: string) => {
+    const socket = realtime.getSocket();
+    if (socket && activeRoom) {
+      socket.emit(REALTIME_EVENTS.ROOM_HOST_ACTION, {
+        roomId: activeRoom.id,
+        action,
+        targetUserId,
+      });
+    }
+  };
+
   return (
     <div className="flex-1 h-full flex flex-col bg-[#0E1017] overflow-hidden select-none">
       {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
@@ -161,10 +172,12 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           audioLevel={audioLevel}
         />
 
-        {/* Collapsible Participant List */}
+        {/* Collapsible Participant List with Host Actions */}
         <ParticipantTray
           participants={participants}
           currentUserId={user?.id}
+          isHost={isHost}
+          onHostAction={handleHostAction}
           isOpen={isParticipantsOpen}
         />
 
