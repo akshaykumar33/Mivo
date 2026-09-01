@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
-import { RoomModeSwitcher } from './RoomModeSwitcher';
 import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen } from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 
@@ -21,7 +20,6 @@ export interface RoomHeaderProps {
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
   room,
   activeMode,
-  onModeChange,
   participantCount,
   isRecording = false,
   isHost = false,
@@ -86,8 +84,13 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
         </div>
 
-        {/* Apple Segmented Control Room Mode Switcher */}
-        <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
+        {/* Center Stage Status Badge */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs text-white/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
+          <span className="font-semibold text-white/80 font-display">Active Stage</span>
+          <span className="text-white/30">•</span>
+          <span className="text-[11px] font-mono text-[#64D2FF] font-bold uppercase">{activeMode}</span>
+        </div>
 
         {/* Right Glass Action Tray */}
         <div className="flex items-center gap-2">

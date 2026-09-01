@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { translationManager, SUPPORTED_LANGUAGES } from '@/lib/translation-manager';
 
+import { LanguageSelectorPopover } from './LanguageSelectorPopover';
+
 export interface ChatStreamProps {
   room: RoomDTO;
 }
@@ -129,17 +131,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           <Globe className="w-3.5 h-3.5 text-[#5E5CE6]" />
           <span className="font-semibold text-[11px]">Instant Message Translation:</span>
         </div>
-        <select
+        <LanguageSelectorPopover
           value={chatTargetLang}
-          onChange={(e) => setChatTargetLang(e.target.value)}
-          className="bg-[#121524] border border-white/[0.12] rounded-[10px] px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#5E5CE6] font-semibold cursor-pointer"
-        >
-          {SUPPORTED_LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.flag} {l.name}
-            </option>
-          ))}
-        </select>
+          onChange={(code) => setChatTargetLang(code)}
+          label="Select Target Language"
+        />
       </div>
 
       {/* Scrollable Message List */}

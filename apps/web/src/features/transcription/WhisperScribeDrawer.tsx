@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { translationManager, SUPPORTED_LANGUAGES } from '@/lib/translation-manager';
 import { GeminiSettingsModal } from '@/features/ai/GeminiSettingsModal';
+import { LanguageSelectorPopover } from '@/features/chat/LanguageSelectorPopover';
 
 export interface TranscriptItem {
   id: string;
@@ -405,17 +406,11 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
                 <div className="p-3.5 rounded-[18px] bg-white/[0.03] border border-white/[0.07] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-white/80">Translate Speech Into:</span>
-                    <select
+                    <LanguageSelectorPopover
                       value={targetLang}
-                      onChange={(e) => setTargetLang(e.target.value)}
-                      className="bg-[#0E111C] border border-white/[0.12] rounded-[10px] px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#5E5CE6] font-semibold cursor-pointer"
-                    >
-                      {SUPPORTED_LANGUAGES.map((lang) => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(code) => setTargetLang(code)}
+                      label="Speech Target Language"
+                    />
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
@@ -476,17 +471,11 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
                 <div className="p-3.5 rounded-[18px] bg-white/[0.03] border border-white/[0.07] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-white/80">Translate Into:</span>
-                    <select
+                    <LanguageSelectorPopover
                       value={targetLang}
-                      onChange={(e) => setTargetLang(e.target.value)}
-                      className="bg-[#0E111C] border border-white/[0.12] rounded-[10px] px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#5E5CE6] font-semibold cursor-pointer"
-                    >
-                      {SUPPORTED_LANGUAGES.map((lang) => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(code) => setTargetLang(code)}
+                      label="Text Target Language"
+                    />
                   </div>
 
                   <textarea
