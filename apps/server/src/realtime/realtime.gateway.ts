@@ -254,4 +254,76 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       });
     }
   }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_HOST_ACTION)
+  async handleHostAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    const user = client.data?.user;
+    if (!user || !data.roomId || !data.targetUserId) return;
+
+    if (data.action === 'MUTE') {
+      await prisma.roomMember.updateMany({
+        where: { roomId: data.roomId, userId: data.targetUserId },
+        data: { isMuted: true },
+      });
+
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_STATE_UPDATED, {
+        roomId: data.roomId,
+        userId: data.targetUserId,
+        isMuted: true,
+        isDeafened: false,
+        isCameraOn: false,
+        isScreenOn: false,
+      });
+    } else if (data.action === 'KICK') {
+      await prisma.roomMember.deleteMany({
+        where: { roomId: data.roomId, userId: data.targetUserId },
+      });
+
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_LEFT, {
+        roomId: data.roomId,
+        userId: data.targetUserId,
+        reason: data.reason || 'Removed by host',
+      });
+    } else if (data.action === 'TRANSFER_HOST') {
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_HOST_TRANSFERRED, {
+        roomId: data.roomId,
+        oldHostUserId: user.sub,
+        newHostUserId: data.newHostUserId || data.targetUserId,
+      });
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_RECORDING_START)
+  handleRecordingStart(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data.roomId) return;
+
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_RECORDING_STATE_CHANGED, {
+      roomId: data.roomId,
+      isRecording: true,
+      hostName: user.displayName || user.username || 'Host',
+      startedAt: new Date().toISOString(),
+    });
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_RECORDING_STOP)
+  handleRecordingStop(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data.roomId) return;
+
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_RECORDING_STATE_CHANGED, {
+      roomId: data.roomId,
+      isRecording: false,
+      hostName: user.displayName || user.username || 'Host',
+    });
+  }
 }

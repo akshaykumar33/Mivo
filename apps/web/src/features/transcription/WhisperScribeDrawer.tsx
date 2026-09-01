@@ -14,13 +14,17 @@ import {
   Play,
   Square,
   Copy,
-  Clock,
+  Volume2,
+  Globe2,
+  FileSpreadsheet,
 } from 'lucide-react';
+import { translationManager, SUPPORTED_LANGUAGES, LanguageOption } from '@/lib/translation-manager';
 
 export interface TranscriptItem {
   id: string;
   speaker: string;
   text: string;
+  translatedText?: string;
   time: string;
 }
 
@@ -37,25 +41,29 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = React.useState<'TRANSCRIPT' | 'NOTES'>('TRANSCRIPT');
+  const [activeTab, setActiveTab] = React.useState<'TRANSCRIPT' | 'NOTES' | 'MOM'>('TRANSCRIPT');
   const [isRecording, setIsRecording] = React.useState(false);
+  const [targetLang, setTargetLang] = React.useState<string>('es');
   const [transcripts, setTranscripts] = React.useState<TranscriptItem[]>([
     {
       id: '1',
       speaker: 'Elena Rostova',
-      text: 'Starting our architecture sync on WebRTC media pipelines and adaptive audio visualizers.',
+      text: 'Starting our architecture sync on WebRTC media pipelines.',
+      translatedText: 'Iniciando nuestra sincronización de arquitectura en canalizaciones de medios WebRTC.',
       time: '12:30 PM',
     },
     {
       id: '2',
       speaker: 'Dev Admin',
-      text: 'Agreed. Let us ensure the Whisper AI scribe handles live notes and automatic email digests post-meeting.',
+      text: 'We are ready to deploy the multilingual translation and MOM engine.',
+      translatedText: 'Estamos listos para desplegar el motor de traducción multilingüe y MOM.',
       time: '12:31 PM',
     },
   ]);
   const [notes, setNotes] = React.useState<string>(
-    `# Meeting Notes: #${room.name}\n\n### Key Decisions & Agenda:\n- [x] Verified full-mesh WebRTC signaling and live stream tiles.\n- [x] Modernized Obsidian dark theme with glassmorphism elevations.\n- [ ] Configure automatic post-meeting AI notes email delivery.\n\n### Action Items:\n- Review transcription accuracy across all room modes.\n- Test screen share 60fps latency.`
+    `# In-Meeting Notes: #${room.name}\n\n### Key Decisions:\n- [x] Implemented WebRTC Mesh and real-time audio visualizers.\n- [x] Deployed live dual-language subtitle stream and speech synthesis.\n- [x] Configured automated post-call Minutes of Meeting (MOM) email delivery.`
   );
+  const [generatedMOM, setGeneratedMOM] = React.useState<string>('');
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [emailSuccess, setEmailSuccess] = React.useState<string | null>(null);
   const recognitionRef = React.useRef<any>(null);
@@ -72,15 +80,21 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
         recognition.interimResults = false;
         recognition.lang = 'en-US';
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = async (event: any) => {
           const current = event.resultIndex;
           const transcriptText = event.results[current][0].transcript;
 
           if (transcriptText.trim()) {
+            const translated = await translationManager.translateText(
+              transcriptText.trim(),
+              targetLang
+            );
+
             const newItem: TranscriptItem = {
               id: Date.now().toString(),
               speaker: currentUser?.displayName || currentUser?.username || 'Speaker',
               text: transcriptText.trim(),
+              translatedText: translated,
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             };
             setTranscripts((prev) => [...prev, newItem]);
@@ -90,7 +104,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
         recognitionRef.current = recognition;
       }
     }
-  }, [currentUser]);
+  }, [currentUser, targetLang]);
 
   const toggleTranscription = () => {
     if (isRecording) {
@@ -99,11 +113,16 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
     } else {
       try {
         recognitionRef.current?.start();
-      } catch {
-        // Recognition already active or fallback
-      }
+      } catch {}
       setIsRecording(true);
     }
+  };
+
+  const handleGenerateMOM = () => {
+    const attendees = [currentUser?.displayName || currentUser?.username || 'Dev Admin', 'Elena Rostova', 'Sarah Connor'];
+    const momDoc = translationManager.generateMOM(room.name, attendees, transcripts, notes);
+    setGeneratedMOM(momDoc);
+    setActiveTab('MOM');
   };
 
   const handleSendEmailSummary = async () => {
@@ -115,14 +134,14 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
 
     try {
       const res = await api.post(`/api/v1/rooms/${room.id}/email-summary`, {
-        notes,
+        notes: generatedMOM || notes,
         transcript: transcripts,
         email: targetEmail,
         name: targetName,
       });
 
       if (res.success) {
-        setEmailSuccess(`Meeting summary & notes emailed to ${targetEmail}!`);
+        setEmailSuccess(`MOM & transcript emailed to ${targetEmail}!`);
         setTimeout(() => setEmailSuccess(null), 6000);
       }
     } catch (e) {
@@ -144,7 +163,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-bold text-white font-display tracking-tight">Whisper AI Scribe</h3>
-            <span className="text-[10px] text-violet-400 font-semibold">Live Notes & Email Digest</span>
+            <span className="text-[10px] text-violet-400 font-semibold">Multilingual Translation & MOM</span>
           </div>
         </div>
 
@@ -166,7 +185,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Live Transcript ({transcripts.length})
+          Live ({transcripts.length})
         </button>
         <button
           onClick={() => setActiveTab('NOTES')}
@@ -176,7 +195,20 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Meeting Notes
+          Notes
+        </button>
+        <button
+          onClick={() => {
+            if (!generatedMOM) handleGenerateMOM();
+            setActiveTab('MOM');
+          }}
+          className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'MOM'
+              ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          MOM Doc
         </button>
       </div>
 
@@ -189,39 +221,82 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
           </div>
         )}
 
-        {activeTab === 'TRANSCRIPT' ? (
+        {/* TRANSCRIPT TAB */}
+        {activeTab === 'TRANSCRIPT' && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-              <span className="text-xs font-semibold text-slate-300">Live Speech Dictation</span>
-              <button
-                onClick={toggleTranscription}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                  isRecording
-                    ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 animate-pulse'
-                    : 'bg-violet-600 text-white hover:bg-violet-500 shadow-md'
-                }`}
-              >
-                {isRecording ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                <span>{isRecording ? 'Listening...' : 'Start Dictation'}</span>
-              </button>
+            {/* Controls Bar: Dictation + Language Selector */}
+            <div className="flex flex-col gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300">Target Language:</span>
+                <select
+                  value={targetLang}
+                  onChange={(e) => setTargetLang(e.target.value)}
+                  className="bg-[#0E1017] border border-white/[0.1] rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-violet-500 font-semibold"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                <span className="text-[11px] text-slate-400">Microphone Dictation:</span>
+                <button
+                  onClick={toggleTranscription}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                    isRecording
+                      ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 animate-pulse'
+                      : 'bg-violet-600 text-white hover:bg-violet-500 shadow-md'
+                  }`}
+                >
+                  {isRecording ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                  <span>{isRecording ? 'Listening...' : 'Start Dictation'}</span>
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-2.5 pt-2">
+            {/* Transcript Stream */}
+            <div className="space-y-2.5 pt-1">
               {transcripts.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-violet-500/30 transition-colors"
+                  className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-violet-500/30 transition-colors space-y-1.5"
                 >
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-violet-300">{t.speaker}</span>
                     <span className="text-[10px] text-slate-500">{t.time}</span>
                   </div>
-                  <p className="text-xs text-slate-200 leading-relaxed select-text">{t.text}</p>
+
+                  {/* Original Spoken Text */}
+                  <p className="text-xs text-slate-300 leading-relaxed select-text font-medium">
+                    {t.text}
+                  </p>
+
+                  {/* Translated Text & Audio Synthesizer */}
+                  {t.translatedText && (
+                    <div className="pt-1 border-t border-white/[0.04] flex items-start justify-between gap-2">
+                      <p className="text-xs text-cyan-300 leading-relaxed font-semibold italic">
+                        {t.translatedText}
+                      </p>
+                      <button
+                        onClick={() => translationManager.speakText(t.translatedText || t.text, targetLang)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-white/[0.06] transition-colors flex-shrink-0"
+                        title="Listen to Translated Speech (TTS)"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* NOTES TAB */}
+        {activeTab === 'NOTES' && (
           <div className="flex flex-col h-full space-y-2">
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
               <span>Markdown Scratchpad</span>
@@ -235,9 +310,32 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
             />
           </div>
         )}
+
+        {/* MOM DOC TAB */}
+        {activeTab === 'MOM' && (
+          <div className="flex flex-col h-full space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Generated Minutes of Meeting (MOM)
+              </span>
+              <button
+                onClick={handleGenerateMOM}
+                className="text-[10px] font-bold text-violet-300 hover:text-white px-2 py-0.5 rounded-lg bg-violet-600/30 border border-violet-500/40"
+              >
+                Re-generate
+              </button>
+            </div>
+            <textarea
+              value={generatedMOM || notes}
+              onChange={(e) => setGeneratedMOM(e.target.value)}
+              rows={16}
+              className="w-full flex-1 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs text-slate-100 font-mono leading-relaxed resize-none"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Footer Email Button */}
+      {/* Footer Dispatch Button */}
       <div className="p-4 bg-[#07080C] border-t border-white/[0.06] space-y-2">
         <button
           onClick={handleSendEmailSummary}
@@ -245,7 +343,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
           className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-violet-600/30 transition-all disabled:opacity-50"
         >
           <Mail className="w-4 h-4" />
-          <span>{isSendingEmail ? 'Dispatching Summary...' : 'Email Meeting Summary & Notes'}</span>
+          <span>{isSendingEmail ? 'Dispatching...' : 'Email Official MOM & Notes'}</span>
         </button>
       </div>
     </aside>

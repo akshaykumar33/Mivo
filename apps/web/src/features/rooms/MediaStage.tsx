@@ -1,17 +1,32 @@
 'use client';
 
 import * as React from 'react';
-import { RoomMemberDTO, RoomCommunicationMode, RoomDTO } from '@mivo/shared';
+import { RoomMemberDTO, RoomCommunicationMode, RoomDTO, REALTIME_EVENTS } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
-import { Mic, MicOff, Video, VideoOff, Monitor, Radio, Activity, Volume2, Pin, PinOff } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Monitor,
+  Radio,
+  Activity,
+  Volume2,
+  Pin,
+  PinOff,
+  LayoutGrid,
+  Sparkles,
+} from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
+import { realtime } from '@/lib/socket-client';
 
 export interface MediaStageProps {
   mode: RoomCommunicationMode;
   participants: RoomMemberDTO[];
   room?: RoomDTO;
   currentUserId?: string;
+  isHost?: boolean;
   isMuted: boolean;
   isCameraOn: boolean;
   isScreenOn: boolean;
@@ -26,6 +41,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   participants,
   room,
   currentUserId,
+  isHost = false,
   isMuted,
   isCameraOn,
   isScreenOn,
@@ -55,6 +71,25 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       screenVideoRef.current.play().catch((e) => console.log('Screen play interrupted:', e));
     }
   }, [screenStream]);
+
+  // Host Action Handler
+  const handleHostAction = (action: 'MUTE' | 'KICK' | 'TRANSFER_HOST', targetUserId: string) => {
+    if (!room) return;
+    const socket = realtime.getSocket();
+    if (socket) {
+      socket.emit(REALTIME_EVENTS.ROOM_HOST_ACTION, {
+        roomId: room.id,
+        action,
+        targetUserId,
+      });
+    }
+  };
+
+  // Reset to auto-arranged speaker grid
+  const handleAutoArrange = () => {
+    setPinnedUserId(null);
+    setOrderedParticipantIds(participants.map((p) => p.userId));
+  };
 
   // Drag & Drop Reordering handlers
   const handleDragStart = (userId: string) => (e: React.DragEvent) => {
@@ -116,14 +151,24 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="mb-10 text-center z-10">
+        <div className="mb-8 text-center z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-3 shadow-lg shadow-emerald-500/10">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>Spatial Voice Huddle Active</span>
           </div>
-          <h3 className="text-xl font-bold text-white font-display">
-            {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
-          </h3>
+          <div className="flex items-center justify-center gap-3">
+            <h3 className="text-xl font-bold text-white font-display">
+              {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
+            </h3>
+            <button
+              onClick={handleAutoArrange}
+              className="flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] transition-colors"
+              title="Auto-Arrange Speaker Order"
+            >
+              <LayoutGrid className="w-3 h-3" />
+              <span>Auto-Arrange</span>
+            </button>
+          </div>
         </div>
 
         <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 place-items-center z-10">
@@ -202,7 +247,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     );
   }
 
-  // VIDEO MODE: Grid with Drag & Drop & Spotlight Pinning
+  // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
       <div className="flex-1 p-6 bg-[#0E1017] select-none flex flex-col overflow-hidden">
@@ -217,6 +262,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 isCameraOn={pinnedParticipant.userId === currentUserId ? isCameraOn : pinnedParticipant.isCameraOn}
                 isPinned={true}
                 onTogglePin={() => setPinnedUserId(null)}
+                isHost={isHost}
+                onHostAction={handleHostAction}
                 mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
                 audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
               />
@@ -237,6 +284,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                         isCameraOn={isMe ? isCameraOn : p.isCameraOn}
                         isPinned={false}
                         onTogglePin={() => setPinnedUserId(p.userId)}
+                        isHost={isHost}
+                        onHostAction={handleHostAction}
                         mediaStream={isMe ? localStream : remoteStreams[p.userId]}
                         audioLevel={isMe ? audioLevel : 0}
                       />
@@ -246,31 +295,57 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             </div>
           </div>
         ) : (
-          // Standard Equal Grid with Drag & Drop
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 h-full min-h-[380px] overflow-y-auto">
-            {sortedParticipants.map((p) => {
-              const isMe = p.userId === currentUserId;
-              const camOn = isMe ? isCameraOn : p.isCameraOn;
-              const participantMuted = isMe ? isMuted : p.isMuted;
-              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+          // Standard Equal Auto-Adjusting Grid with Drag & Drop
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                Live Video Stage ({participants.length} Active)
+              </span>
+              <button
+                onClick={handleAutoArrange}
+                className="flex items-center gap-1.5 text-[11px] font-bold text-violet-300 hover:text-white px-3 py-1 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-colors"
+                title="Reset to Auto-Arranged Grid"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Auto-Arrange Grid</span>
+              </button>
+            </div>
 
-              return (
-                <LiveVideoTile
-                  key={p.id}
-                  user={p.user}
-                  isMe={isMe}
-                  isMuted={participantMuted}
-                  isCameraOn={camOn}
-                  isPinned={false}
-                  onTogglePin={() => setPinnedUserId(p.userId)}
-                  mediaStream={participantStream}
-                  audioLevel={isMe ? audioLevel : 0}
-                  onDragStart={handleDragStart(p.userId)}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop(p.userId)}
-                />
-              );
-            })}
+            <div
+              className={`grid gap-5 h-full min-h-[380px] overflow-y-auto ${
+                sortedParticipants.length === 1
+                  ? 'grid-cols-1 max-w-4xl mx-auto w-full'
+                  : sortedParticipants.length === 2
+                  ? 'grid-cols-1 sm:grid-cols-2'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              }`}
+            >
+              {sortedParticipants.map((p) => {
+                const isMe = p.userId === currentUserId;
+                const camOn = isMe ? isCameraOn : p.isCameraOn;
+                const participantMuted = isMe ? isMuted : p.isMuted;
+                const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+                return (
+                  <LiveVideoTile
+                    key={p.id}
+                    user={p.user}
+                    isMe={isMe}
+                    isMuted={participantMuted}
+                    isCameraOn={camOn}
+                    isPinned={false}
+                    onTogglePin={() => setPinnedUserId(p.userId)}
+                    isHost={isHost}
+                    onHostAction={handleHostAction}
+                    mediaStream={participantStream}
+                    audioLevel={isMe ? audioLevel : 0}
+                    onDragStart={handleDragStart(p.userId)}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop(p.userId)}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

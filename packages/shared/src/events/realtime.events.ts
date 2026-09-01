@@ -19,6 +19,15 @@ export const REALTIME_EVENTS = {
   ROOM_MODE_CHANGED: 'room:mode_changed',
   ROOM_PARTICIPANT_STATE_UPDATED: 'room:participant_state_updated',
 
+  // Host & Moderation Controls
+  ROOM_HOST_ACTION: 'room:host_action',
+  ROOM_HOST_TRANSFERRED: 'room:host_transferred',
+
+  // Meeting Recording & Consent
+  ROOM_RECORDING_START: 'room:recording_start',
+  ROOM_RECORDING_STOP: 'room:recording_stop',
+  ROOM_RECORDING_STATE_CHANGED: 'room:recording_state_changed',
+
   // Realtime Messaging
   CHAT_SEND_MESSAGE: 'chat:send_message',
   CHAT_NEW_MESSAGE: 'chat:new_message',
@@ -28,6 +37,21 @@ export const REALTIME_EVENTS = {
   SIGNALING_ANSWER: 'signaling:answer',
   SIGNALING_ICE_CANDIDATE: 'signaling:ice_candidate',
 } as const;
+
+export interface RoomHostActionPayload {
+  roomId: string;
+  action: 'MUTE' | 'KICK' | 'TRANSFER_HOST';
+  targetUserId: string;
+  newHostUserId?: string;
+  reason?: string;
+}
+
+export interface RoomRecordingStatePayload {
+  roomId: string;
+  isRecording: boolean;
+  hostName: string;
+  startedAt?: string;
+}
 
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
 

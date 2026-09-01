@@ -3,13 +3,16 @@
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
 import { RoomModeSwitcher } from './RoomModeSwitcher';
-import { Users, Lock, Unlock, Hash, Sparkles } from 'lucide-react';
+import { Users, Lock, Unlock, Hash, Sparkles, CircleDot, Radio } from 'lucide-react';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
   activeMode: RoomCommunicationMode;
   onModeChange: (mode: RoomCommunicationMode) => void;
   participantCount: number;
+  isRecording?: boolean;
+  isHost?: boolean;
+  onToggleRecording?: () => void;
   onToggleParticipants?: () => void;
   onToggleWhisper?: () => void;
 }
@@ -19,6 +22,9 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   activeMode,
   onModeChange,
   participantCount,
+  isRecording = false,
+  isHost = false,
+  onToggleRecording,
   onToggleParticipants,
   onToggleWhisper,
 }) => {
@@ -37,6 +43,15 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             </span>
           ) : null}
         </div>
+
+        {/* Global REC Pulsing Badge when recording is active */}
+        {isRecording && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-300 text-[10px] font-extrabold shadow-sm animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span>REC</span>
+          </div>
+        )}
+
         {room.description && (
           <span className="hidden md:inline text-xs text-slate-400 truncate border-l border-white/[0.08] pl-3">
             {room.description}
@@ -49,14 +64,30 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
 
       {/* Right Action Tray */}
       <div className="flex items-center gap-2">
+        {/* Host Record Button */}
+        {isHost && (
+          <button
+            onClick={onToggleRecording}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              isRecording
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/40 border border-rose-400 animate-pulse'
+                : 'bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+            }`}
+            title={isRecording ? 'Stop Recording' : 'Start Recording with Consent'}
+          >
+            <CircleDot className={`w-3.5 h-3.5 ${isRecording ? 'text-white' : 'text-rose-400'}`} />
+            <span className="hidden sm:inline">{isRecording ? 'Recording...' : 'Record'}</span>
+          </button>
+        )}
+
         {/* Whisper AI Scribe & Notes Toggle */}
         <button
           onClick={onToggleWhisper}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-violet-300 hover:text-white bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 transition-all shadow-sm shadow-violet-600/20"
-          title="Open Whisper AI Scribe & Notes"
+          title="Open Whisper AI Scribe, Translation & MOM"
         >
           <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-          <span className="hidden sm:inline">AI Notes</span>
+          <span className="hidden sm:inline">AI Notes & MOM</span>
         </button>
 
         {/* Participant Count Toggle */}

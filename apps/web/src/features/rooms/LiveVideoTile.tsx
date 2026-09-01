@@ -15,6 +15,7 @@ import {
   GripVertical,
   Sliders,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
@@ -25,6 +26,8 @@ export interface LiveVideoTileProps {
   isCameraOn: boolean;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  isHost?: boolean;
+  onHostAction?: (action: 'MUTE' | 'KICK' | 'TRANSFER_HOST', targetUserId: string) => void;
   mediaStream?: MediaStream | null;
   audioLevel?: number;
   onDragStart?: (e: React.DragEvent) => void;
@@ -39,6 +42,8 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   isCameraOn,
   isPinned = false,
   onTogglePin,
+  isHost = false,
+  onHostAction,
   mediaStream,
   audioLevel = 0,
   onDragStart,
@@ -48,6 +53,7 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = React.useState(100);
   const [showVolumeSlider, setShowVolumeSlider] = React.useState(false);
+  const [showHostMenu, setShowHostMenu] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
 
   React.useEffect(() => {
@@ -165,6 +171,63 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
                   onChange={(e) => setVolume(Number(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
                 />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Host Moderation Menu (for Admins / Hosts) */}
+        {isHost && !isMe && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowHostMenu(!showHostMenu);
+              }}
+              className="p-1.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 hover:text-white hover:bg-rose-600 transition-all"
+              title="Host Moderation Controls"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+            </button>
+
+            {showHostMenu && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-9 p-2 rounded-2xl bg-[#090B10]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl z-40 w-44 space-y-1"
+              >
+                <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-white/[0.06]">
+                  Host Actions
+                </div>
+                <button
+                  onClick={() => {
+                    onHostAction?.('MUTE', user.id);
+                    setShowHostMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors"
+                >
+                  <MicOff className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Mute Participant</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onHostAction?.('TRANSFER_HOST', user.id);
+                    setShowHostMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Transfer Host</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onHostAction?.('KICK', user.id);
+                    setShowHostMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/60 hover:text-rose-300 text-left transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Remove from Room</span>
+                </button>
               </div>
             )}
           </div>

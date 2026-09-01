@@ -7,9 +7,13 @@ import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
 import { ParticipantTray } from './ParticipantTray';
 import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
-import { RoomCommunicationMode } from '@mivo/shared';
-import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff } from 'lucide-react';
+import { FloatingPiPOverlay } from './FloatingPiPOverlay';
+import { RecordingConsentBanner } from './RecordingConsentBanner';
+import { RoomCommunicationMode, REALTIME_EVENTS, RoomRecordingStatePayload } from '@mivo/shared';
+import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff, PictureInPicture2, CircleDot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { realtime } from '@/lib/socket-client';
+import { recorderManager } from '@/lib/recorder-manager';
 
 export interface UnifiedRoomViewProps {
   communityId: string;
@@ -39,6 +43,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
   const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(true);
   const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
+  const [isPiPOpen, setIsPiPOpen] = React.useState(false);
+  const [isRecording, setIsRecording] = React.useState(false);
+  const [recordingHostName, setRecordingHostName] = React.useState('Host');
 
   React.useEffect(() => {
     if (roomId && user?.id) {
@@ -48,6 +55,32 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
       leaveRoom();
     };
   }, [roomId, user?.id, joinRoom, leaveRoom]);
+
+  // Listen for room-wide recording state changes
+  React.useEffect(() => {
+    const socket = realtime.getSocket();
+    if (!socket || !roomId) return;
+
+    const handleRecordingState = (data: RoomRecordingStatePayload) => {
+      if (data.roomId === roomId) {
+        setIsRecording(data.isRecording);
+        if (data.hostName) setRecordingHostName(data.hostName);
+      }
+    };
+
+    socket.on(REALTIME_EVENTS.ROOM_RECORDING_STATE_CHANGED, handleRecordingState);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.ROOM_RECORDING_STATE_CHANGED, handleRecordingState);
+    };
+  }, [roomId]);
+
+  // Auto-open PiP overlay if presenting screen
+  React.useEffect(() => {
+    if (isScreenOn) {
+      setIsPiPOpen(true);
+    }
+  }, [isScreenOn]);
 
   if (!activeRoom) {
     return (
@@ -61,8 +94,30 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   }
 
   const handleDisconnect = () => {
+    if (isRecording) {
+      recorderManager.stopRecording();
+    }
     leaveRoom();
     router.push(`/communities/${communityId}`);
+  };
+
+  const isHost = user?.email === 'dev@mivo.app' || user?.email === 'alex@mivo.app';
+
+  const handleToggleRecording = async () => {
+    const socket = realtime.getSocket();
+    if (!socket || !activeRoom) return;
+
+    if (!isRecording) {
+      const started = await recorderManager.startRecording(screenStream || localStream);
+      if (started) {
+        setIsRecording(true);
+        socket.emit(REALTIME_EVENTS.ROOM_RECORDING_START, { roomId: activeRoom.id });
+      }
+    } else {
+      recorderManager.stopRecording();
+      setIsRecording(false);
+      socket.emit(REALTIME_EVENTS.ROOM_RECORDING_STOP, { roomId: activeRoom.id });
+    }
   };
 
   return (
@@ -73,8 +128,19 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         activeMode={activeRoom.activeMode}
         onModeChange={(mode: RoomCommunicationMode) => switchMode(mode)}
         participantCount={participants.length}
+        isRecording={isRecording}
+        isHost={isHost}
+        onToggleRecording={handleToggleRecording}
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
         onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
+      />
+
+      {/* Permission-Gated Room-Wide Recording Consent Alert Banner */}
+      <RecordingConsentBanner
+        isRecording={isRecording}
+        hostName={recordingHostName}
+        onConsentDismiss={() => {}}
+        onLeaveCall={handleDisconnect}
       />
 
       {/* Main Content Layout */}
@@ -85,6 +151,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           room={activeRoom}
           participants={participants}
           currentUserId={user?.id}
+          isHost={isHost}
           isMuted={isMuted}
           isCameraOn={isCameraOn}
           isScreenOn={isScreenOn}
@@ -101,12 +168,25 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           isOpen={isParticipantsOpen}
         />
 
-        {/* Whisper AI Meeting Scribe & Notes Drawer */}
+        {/* Whisper AI Multilingual Translation, Notes & MOM Drawer */}
         <WhisperScribeDrawer
           room={activeRoom}
           currentUser={user}
           isOpen={isWhisperOpen}
           onClose={() => setIsWhisperOpen(false)}
+        />
+
+        {/* Floating PiP Multi-Tile Presenter Stage */}
+        <FloatingPiPOverlay
+          participants={participants}
+          currentUserId={user?.id}
+          isMuted={isMuted}
+          isCameraOn={isCameraOn}
+          localStream={localStream}
+          remoteStreams={remoteStreams}
+          audioLevel={audioLevel}
+          isOpen={isPiPOpen}
+          onClose={() => setIsPiPOpen(false)}
         />
 
         {/* Floating Bottom Luxury Media Bar (when mode is active) */}
@@ -147,6 +227,32 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             >
               <Monitor className="w-5 h-5" />
             </button>
+
+            <button
+              onClick={() => setIsPiPOpen(!isPiPOpen)}
+              className={`p-3 rounded-2xl transition-all duration-200 ${
+                isPiPOpen
+                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/40 border border-violet-400'
+                  : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.06]'
+              }`}
+              title="Toggle Floating Picture-in-Picture Stage"
+            >
+              <PictureInPicture2 className="w-5 h-5" />
+            </button>
+
+            {isHost && (
+              <button
+                onClick={handleToggleRecording}
+                className={`p-3 rounded-2xl transition-all duration-200 ${
+                  isRecording
+                    ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/40 border border-rose-400 animate-pulse'
+                    : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.06]'
+                }`}
+                title={isRecording ? 'Stop Recording' : 'Record Session'}
+              >
+                <CircleDot className={`w-5 h-5 ${isRecording ? 'text-white' : 'text-rose-400'}`} />
+              </button>
+            )}
 
             <div className="w-[1px] h-6 bg-white/[0.1] mx-1" />
 
