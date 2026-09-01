@@ -18,8 +18,10 @@ import {
   PhoneOff,
   Smile,
   Hand,
+  Palette,
 } from 'lucide-react';
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
+import { useThemeStore } from '@/stores/themeStore';
 
 export interface FloatingCyberDockProps {
   activeMode: RoomCommunicationMode;
@@ -68,6 +70,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
   onToggleDocs,
   onDisconnect,
 }) => {
+  const { setIsThemeModalOpen } = useThemeStore();
   const [isReactionsTrayOpen, setIsReactionsTrayOpen] = React.useState(false);
   const reactionsTrayRef = React.useRef<HTMLDivElement>(null);
 
@@ -358,6 +361,19 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/roster:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               {participantCount} Connected
+            </div>
+          </button>
+
+          {/* Visual Theme Engine Switcher */}
+          <button
+            onClick={() => setIsThemeModalOpen(true)}
+            className="relative group/theme p-2.5 sm:p-3 rounded-[16px] bg-white/[0.04] text-white/70 hover:bg-[#BF5AF2] hover:text-white border border-white/[0.08] hover:border-[#BF5AF2] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+            title="Visual Themes & Dark/Bright Mode"
+          >
+            <Palette className="w-4 h-4 text-[#BF5AF2] group-hover/theme:text-white transition-colors stroke-[2.2]" />
+
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/theme:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              Visual Themes
             </div>
           </button>
 

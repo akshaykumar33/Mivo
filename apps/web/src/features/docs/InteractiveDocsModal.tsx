@@ -20,43 +20,67 @@ import {
   CircleDot,
   PictureInPicture2,
   Users,
-  ExternalLink,
+  Copy,
+  Check,
+  Zap,
+  Terminal,
+  Code2,
+  Keyboard,
+  Cpu,
+  Clock,
+  Compass,
 } from 'lucide-react';
 
 export interface DocArticle {
   id: string;
-  title: string;
   category: string;
+  title: string;
+  summary: string;
+  readTime: string;
   icon: any;
   content: string;
+  codeSnippet?: {
+    lang: string;
+    code: string;
+  };
 }
 
 export const DOC_ARTICLES: DocArticle[] = [
   {
     id: 'quick-start',
     category: '1. Getting Started',
-    title: 'Quick Access & Demo Profiles',
+    title: 'Quick Access & Pre-Configured Test Accounts',
+    summary: 'Instant 1-click profiles with realistic avatars, roles, and language presets.',
+    readTime: '2 min read',
     icon: Sparkles,
     content: `
 # 🚀 Quick Access & Demo Profiles
 
-Welcome to **Mivo** — the unified real-time communication platform.
+Welcome to **Mivo** — the next-generation unified real-time communication platform combining the best of Zoom, Google Meet, Discord, and Slack into an ultra-fluid, Apple-inspired experience.
 
 ### 🔑 1-Click Demo Profiles (Password: \`Password123!\`):
-* **👑 Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner
-* **🎨 Alex Rivera** (\`alex@mivo.app\`): Staff Designer & Community Admin
-* **⚡ Sarah Connor** (\`sarah@mivo.app\`): Principal Backend Lead
+* **👑 Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner (English 🇺🇸)
+* **🎨 Alex Rivera** (\`alex@mivo.app\`): Staff Designer & Community Admin (English 🇺🇸)
+* **⚡ Sarah Connor** (\`sarah@mivo.app\`): Principal Backend Lead (English 🇬🇧)
 * **🌍 Carlos Mendoza** (\`carlos@mivo.app\`): Frontend Specialist (Spanish 🇪🇸)
 * **🌏 Priya Sharma** (\`priya@mivo.app\`): Cloud Architect (Hindi 🇮🇳)
-* **📻 Elena Rostova** (\`elena@mivo.app\`): Media SFU Infrastructure Specialist
+* **📻 Elena Rostova** (\`elena@mivo.app\`): Media SFU Infrastructure Specialist (Russian 🇷🇺)
 
-> **Tip:** You can log in instantly by clicking any profile card on the login screen.
+> [!TIP]
+> You can log in instantly by clicking any profile card on the login screen without typing credentials manually.
     `,
+    codeSnippet: {
+      lang: 'bash',
+      code: `# Run database seed with pre-configured demo users
+pnpm --filter @mivo/database seed`,
+    },
   },
   {
     id: 'hierarchy-channels',
-    category: '2. Workspaces & Hierarchy',
-    title: 'Communities & Public vs Private Channels',
+    category: '2. Workspaces & Spaces',
+    title: 'Communities, Channels & Permissions Hierarchy',
+    summary: 'Three-tier architecture organizing teams, spaces, and private voice lounges.',
+    readTime: '3 min read',
     icon: Layers,
     content: `
 # 🏢 Workspaces & Channel Architecture
@@ -64,13 +88,13 @@ Welcome to **Mivo** — the unified real-time communication platform.
 Mivo organizes real-time communication into three tiers:
 
 ### 1. Communities (Left Rail)
-The top-level organization or workspace (e.g. *Wysbryx Engineering*, *Design & UX Guild*).
+The top-level organization or workspace (e.g. *Engineering Alpha*, *Design & UX Guild*).
 
-### 2. Channels (Sub-Sidebar)
+### 2. Channels & Spaces (Sidebar)
 Categorized groups with specific communication intentions:
 * **\`#general\`** (Type: GENERAL): Asynchronous discussion, updates, and daily syncs.
-* **\`#voice-lounge\`** (Type: VOICE): Drop-in spatial voice rooms.
-* **\`#pair-programming\`** (Type: MEDIA): Live code reviews and high-framerate screen sharing.
+* **\`🔊 voice-lounge\`** (Type: VOICE): Drop-in spatial voice rooms with soundwave equalizers.
+* **\`📹 war-room\`** (Type: MEDIA): Live code reviews and high-framerate screen sharing.
 
 ### 🔒 Public vs. Private Channels
 * **Public Channels (\`isPrivate: false\`)**: Open and visible to all community members.
@@ -79,11 +103,13 @@ Categorized groups with specific communication intentions:
   },
   {
     id: 'unified-room-modes',
-    category: '3. Unified Communication Modes',
-    title: 'Dynamic Stage Modes (Chat, Voice, Video, Screen)',
+    category: '3. Real-Time Stage Engine',
+    title: 'Unified Stage Modes (Chat, Voice, Video, Screen)',
+    summary: 'Single persistent WebRTC connection that smoothly shifts layout on demand.',
+    readTime: '4 min read',
     icon: Video,
     content: `
-# 🎛️ Unified Room Modes
+# 🎛️ Unified Stage Communication Modes
 
 In Mivo, a room is a **single unified communication stage** that dynamically adapts its layout without dropping participants or switching channels:
 
@@ -93,26 +119,37 @@ In Mivo, a room is a **single unified communication stage** that dynamically ada
 | **\`VOICE\`** | Spatial voice huddle with dynamic soundwave waves | Casual standups & pairing |
 | **\`VIDEO\`** | Multi-tile HD video grid with audio equalizers | Team syncs & client meetings |
 | **\`SCREEN_SHARE\`** | 16:9 Cinema theater stage with attendee filmstrip | Live presentations & demos |
-| **\`STREAM\`** | Broadcast live stage with presenter view | All-hands & town halls |
 
-> **Mode Switching:** Click any mode in the top header switcher to seamlessly transform the room layout for everyone in real time!
+> [!NOTE]
+> When the host switches modes via the CyberDock, the entire stage transforms seamlessly for all connected peers with hardware-accelerated animations.
     `,
+    codeSnippet: {
+      lang: 'typescript',
+      code: `// Dynamic Stage Mode Switch via WebSocket
+socket.emit('room:change-mode', {
+  roomId: '49c95cb3-9fa7-4f62-8178-0d1a49abddff',
+  activeMode: 'VIDEO' // 'TEXT' | 'VOICE' | 'VIDEO' | 'SCREEN_SHARE'
+});`,
+    },
   },
   {
     id: 'interactive-tiles-drag',
-    category: '4. Stage Controls & Layouts',
-    title: 'Drag & Drop, Spotlight & Auto-Arrange',
+    category: '3. Real-Time Stage Engine',
+    title: 'Drag & Drop Reordering, Spotlight Pin & Peer Volume',
+    summary: 'HTML5 drag reordering, individual audio sliders, and spotlight focus.',
+    readTime: '3 min read',
     icon: Monitor,
     content: `
 # 🔀 Interactive Stage Tiles & Layouts
 
 Every video tile gives you rich interactive controls:
 
-### 1. Drag & Drop Reordering
-* Click and hold the top-left **Drag Handle (\`GripVertical\`)** to reposition participant tiles anywhere on your stage.
+### 1. Drag & Drop & Instant Swap
+* **Drag Handle (GripVertical)**: Click and drag any tile onto another to swap positions instantly.
+* **1-Click Swap Arrows (◀ / ▶)**: Hover over any video tile or voice card and click the < and > arrow buttons to shift speakers left or right.
 
 ### 2. 📌 Spotlight Focus Mode
-* Hover over any participant and click **Pin (\`Pin\`)** to expand that speaker into the dominant **16:9 Hero Stage View**, with other attendees neatly organized in a bottom filmstrip.
+* Hover over any participant and click **Pin** to expand that speaker into the dominant **16:9 Hero Stage View**, with other attendees neatly organized in a bottom filmstrip.
 * Click **Unpin** to return to the equal grid.
 
 ### 3. 🔊 Individual Peer Volume Sliders
@@ -120,110 +157,84 @@ Every video tile gives you rich interactive controls:
 
 ### 4. 📊 Dynamic 3-Bar Audio Equalizer
 * Live green animated equalizer waves pulse directly on the speaker's nameplate during active speech.
-
-### 5. Auto-Arrange Grid
-* Click **"Auto-Arrange Grid"** in the top header to reset custom drag positions back to the optimal speaker layout.
     `,
   },
   {
-    id: 'pip-overlay',
-    category: '4. Stage Controls & Layouts',
-    title: 'Floating Picture-in-Picture (PiP)',
-    icon: PictureInPicture2,
+    id: 'ai-whisper-mom',
+    category: '4. AI & Multilingual Suite',
+    title: 'Gemini 3.7 AI Copilot & Whisper Scribe Minutes (MOM)',
+    summary: 'Live speech transcription, instant translation, and 1-click executive meeting recaps.',
+    readTime: '4 min read',
+    icon: Zap,
     content: `
-# 🖼️ Floating Picture-in-Picture (PiP) Presenter Stage
+# 🤖 Gemini 3.7 AI Copilot & Whisper Scribe
 
-When presenting slides or sharing code, you still want to see attendee reactions:
+Mivo features a built-in AI assistant and automated meeting documentation pipeline:
 
-### How It Works:
-1. Click the **PiP button (\`PictureInPicture2\`)** in the bottom floating media bar (or start a Screen Share).
-2. A floating, draggable glassmorphic window appears on the bottom-right of your screen.
-3. Shows all connected attendees' video feeds + your own camera preview and microphone status.
-4. Drag it anywhere or minimize/maximize as needed!
+### 1. ✨ Gemini 3.7 AI Copilot
+* Click the **Purple Sparkle (\`✨\`)** in the CyberDock to trigger Gemini 3.7.
+* Generates bulleted summaries, action items, and technical decisions based on real-time room conversations.
+
+### 2. 📋 Whisper Scribe & Automated MOM (Minutes of Meeting)
+* Click **\`AI Notes & MOM\`** in the top room header.
+* **Live Speech Dictation**: Uses Web Speech Synthesis & Whisper flow for real-time multilingual transcription.
+* **MOM Document Generation**: Automatically compiles:
+  * Executive Summary
+  * In-Meeting Key Decisions
+  * Action Items Table with Checkboxes
+  * Full Bilingual Transcript
+* **1-Click Email Dispatch**: Click **"Email Official MOM & Notes"** to send formatted notes to attendee inboxes!
     `,
-  },
-  {
-    id: 'host-moderation',
-    category: '5. AI & Moderation Suite',
-    title: 'Host Controls: Remote Mute, Change Host & Kick',
-    icon: Shield,
-    content: `
-# 👑 Host & Admin In-Meeting Moderation
-
-Community Owners and Admins have full host moderation privileges:
-
-### Moderation Actions:
-* 🔇 **Mute Participant for Everyone**: Remotely silences a speaker across the entire room via WebSockets (\`ROOM_HOST_ACTION\`).
-* 👑 **Transfer Host Role**: Hands over host privileges to another attendee instantly.
-* 🚫 **Remove from Room**: Evicts disruptive participants from the call immediately.
-
-> **Accessing Controls:** Click the **Moderation Sliders (\`Sliders\`)** on any video tile or open the right-hand **Stage Members** drawer.
-    `,
+    codeSnippet: {
+      lang: 'json',
+      code: `{
+  "meetingId": "mivo-eng-sync-2026",
+  "aiEngine": "gemini-3.7-flash",
+  "summary": "Engineering Alpha weekly sync covering WebRTC mesh stabilization.",
+  "actionItems": [
+    { "task": "Deploy TURN cluster in eu-central", "assignee": "Sarah Connor", "done": false }
+  ]
+}`,
+    },
   },
   {
     id: 'translation-tts',
-    category: '5. AI & Moderation Suite',
-    title: 'Multilingual Translation & Audio Speech (TTS)',
+    category: '4. AI & Multilingual Suite',
+    title: 'Real-Time Chat Translation & Native Voice Synthesis (TTS)',
+    summary: 'Dual-language message cards with native accent speech synthesis.',
+    readTime: '3 min read',
     icon: Languages,
     content: `
-# 🌍 Multilingual Real-Time Translation & Audio (TTS)
+# 🌍 Real-Time Translation & Text-to-Speech
 
-Mivo bridges language barriers across both written chat and spoken voice:
+Mivo bridges language barriers across global teams:
 
 ### 1. In-Chat Real-Time Message Translation
 * Select your target language in the chat header (Spanish 🇪🇸, French 🇫🇷, German 🇩🇪, Hindi 🇮🇳, Japanese 🇯🇵, Chinese 🇨🇳, etc.).
 * Click **\`Languages\` Translate** on any message to reveal the translated sub-card.
-* Click the **speaker icon (\`Volume2\`)** to hear the translated message read aloud in a native accent via Web Speech Synthesis!
 
-### 2. Live Verbal Speech Subtitles
-* Inside the **AI Notes** drawer, spoken words are transcribed into dual-language subtitles (Original Spoken Line + Translated Line).
+### 2. 🔊 Native Speech Synthesis (TTS)
+* Click the **Speaker icon (\`Volume2\`)** on any translated message to hear it read aloud in a native regional accent!
     `,
   },
   {
-    id: 'whisper-mom',
-    category: '5. AI & Moderation Suite',
-    title: 'Whisper AI Scribe & Automated MOM Emailing',
-    icon: FileText,
+    id: 'shortcuts-reference',
+    category: '5. Power User & Hotkeys',
+    title: 'Keyboard Shortcuts & Navigation Quick-Keys',
+    summary: 'Full list of keyboard shortcuts for instant control.',
+    readTime: '1 min read',
+    icon: Keyboard,
     content: `
-# 📋 Whisper AI Scribe & Minutes of Meeting (MOM)
+# ⌨️ Keyboard Shortcuts Reference
 
-### 1. Live Speech Dictation
-* Click **\`✨ AI Notes & MOM\`** in the room header.
-* Click **"Start Dictation"** to transcribe speech into a real-time timecoded conversation log.
-
-### 2. In-Meeting Markdown Scratchpad
-* Use the **Notes** tab to draft action items, decisions, and agendas during the call.
-
-### 3. Automated MOM Document & Email Dispatch
-* Click the **\`MOM Doc\`** tab to auto-generate a structured document:
-  * Executive Summary
-  * In-Meeting Notes & Key Decisions
-  * Action Items Table with Checkboxes
-  * Full Bilingual Transcript
-* Click **"Email Official MOM & Notes"** to dispatch the recap directly to attendee email inboxes!
-    `,
-  },
-  {
-    id: 'recording-consent',
-    category: '5. AI & Moderation Suite',
-    title: 'Permission-Gated Recording & Consent Compliance',
-    icon: CircleDot,
-    content: `
-# 🔴 Meeting Recording & Consent Compliance
-
-### 1. Host Permission Gate
-* Only Community Owners and Admins can start or stop recordings.
-
-### 2. Room-Wide Consent Alert Banner
-* When recording begins, an unmissable top alert drops down on **all users' screens**:
-  > *"🔴 Meeting Recording Active: [Host Name] has started recording this session. By staying in the room, you acknowledge and consent to being recorded."*
-* Includes **"I Consent"** and **"Leave Call"** options.
-
-### 3. Live Elapsed \`REC\` Timer Badge
-* All participants see a red pulsing **\`🔴 REC 00:03:45\`** badge in the header.
-
-### 4. Automatic Video Download
-* Stopping the recording automatically compiles and downloads a high-definition \`.webm\` video file to your computer.
+| Shortcut | Action | Scope |
+| :--- | :--- | :--- |
+| <kbd>⌘</kbd> + <kbd>K</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd> | Focus Channel & Stage Search | Global |
+| <kbd>M</kbd> | Toggle Microphone Mute | In-Room Stage |
+| <kbd>V</kbd> | Toggle Video Camera | In-Room Stage |
+| <kbd>S</kbd> | Toggle Screen Share | In-Room Stage |
+| <kbd>ESC</kbd> | Dismiss Modal / Close Drawers | Global |
+| <kbd>T</kbd> | Open Visual Theme Switcher | In-Room Stage |
     `,
   },
 ];
@@ -236,12 +247,13 @@ export interface InteractiveDocsModalProps {
 export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOpen, onClose }) => {
   const [selectedArticleId, setSelectedArticleId] = React.useState('quick-start');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [copiedSnippet, setCopiedSnippet] = React.useState(false);
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
     '1. Getting Started': true,
-    '2. Workspaces & Hierarchy': true,
-    '3. Unified Communication Modes': true,
-    '4. Stage Controls & Layouts': true,
-    '5. AI & Moderation Suite': true,
+    '2. Workspaces & Spaces': true,
+    '3. Real-Time Stage Engine': true,
+    '4. AI & Multilingual Suite': true,
+    '5. Power User & Hotkeys': true,
   });
 
   const categories = React.useMemo(() => {
@@ -250,6 +262,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
       if (!map[art.category]) map[art.category] = [];
       if (
         art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        art.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
         art.content.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         map[art.category].push(art);
@@ -262,6 +275,12 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 
   const toggleCategory = (cat: string) => {
     setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
   React.useEffect(() => {
@@ -281,53 +300,63 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xl animate-fade-in select-none"
     >
-      <div className="w-full max-w-5xl h-[85vh] rounded-[24px] bg-[#090B10] border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-6xl h-[88vh] rounded-[28px] bg-[#0A0D15]/95 border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative">
+        {/* Apple Gradient Top Highlight */}
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#5E5CE6]/60 to-transparent" />
+
         {/* Modal Top Header */}
-        <div className="h-16 px-6 bg-gradient-to-r from-[#5E5CE6]/15 via-[#0A84FF]/10 to-transparent border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
+        <div className="h-16 px-6 bg-white/[0.02] border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] flex items-center justify-center text-white shadow-lg shadow-[#5E5CE6]/30">
-              <BookOpen className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+              <BookOpen className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold text-white font-display tracking-tight">
-                Mivo Platform User Guide & Documentation
-              </h2>
-              <span className="text-[11px] text-[#5E5CE6] font-semibold">
-                Interactive Directory & Module Reference
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-extrabold text-white font-display tracking-tight">
+                  Mivo Documentation & Architecture Reference
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/30">
+                  v1.0 Pro
+                </span>
+              </div>
+              <span className="text-[11px] text-white/50 font-medium">
+                Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
               </span>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border border-white/[0.08] transition-all cursor-pointer text-xs font-semibold"
-            title="Close Documentation (Esc)"
-          >
-            <span>Close</span>
-            <span className="text-[10px] text-white/40 font-mono bg-white/[0.08] px-1.5 py-0.5 rounded">ESC</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border border-white/[0.08] transition-all cursor-pointer text-xs font-semibold"
+              title="Close Documentation (Esc)"
+            >
+              <span>Close</span>
+              <span className="text-[10px] text-white/40 font-mono bg-white/[0.08] px-1.5 py-0.5 rounded">ESC</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Main Body Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Folder Directory Sidebar */}
-          <aside className="w-72 bg-[#07080C] border-r border-white/[0.06] flex flex-col p-4 space-y-4">
-            {/* Search Input */}
+          <aside className="w-80 bg-[#070910] border-r border-white/[0.07] flex flex-col p-4 space-y-3.5 flex-shrink-0">
+            {/* Search Input with Icon */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search documentation..."
+                placeholder="Search articles & guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 font-medium"
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
               />
             </div>
 
             {/* Folder Tree */}
-            <div className="flex-1 overflow-y-auto space-y-3">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {Object.entries(categories).map(([categoryName, articles]) => {
                 if (articles.length === 0) return null;
                 const isExpanded = expandedCategories[categoryName] ?? true;
@@ -336,13 +365,13 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <div key={categoryName} className="space-y-1">
                     <button
                       onClick={() => toggleCategory(categoryName)}
-                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-white hover:bg-white/[0.03] transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-white/40 hover:text-white hover:bg-white/[0.03] transition-colors"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isExpanded ? (
-                          <FolderOpen className="w-3.5 h-3.5 text-violet-400" />
+                          <FolderOpen className="w-3.5 h-3.5 text-[#5E5CE6]" />
                         ) : (
-                          <Folder className="w-3.5 h-3.5 text-slate-500" />
+                          <Folder className="w-3.5 h-3.5 text-white/40" />
                         )}
                         <span className="truncate">{categoryName}</span>
                       </span>
@@ -350,7 +379,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                     </button>
 
                     {isExpanded && (
-                      <div className="pl-4 space-y-0.5 border-l border-white/[0.04] ml-2">
+                      <div className="pl-3 space-y-1 border-l border-white/[0.06] ml-2">
                         {articles.map((art) => {
                           const isSelected = selectedArticleId === art.id;
                           const IconComp = art.icon;
@@ -359,14 +388,19 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                             <button
                               key={art.id}
                               onClick={() => setSelectedArticleId(art.id)}
-                              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-left truncate ${
+                              className={`w-full flex flex-col gap-0.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md'
-                                  : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
+                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 border border-[#5E5CE6]/40 text-white shadow-md'
+                                  : 'text-white/70 hover:bg-white/[0.04] hover:text-white'
                               }`}
                             >
-                              <IconComp className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="truncate">{art.title}</span>
+                              <div className="flex items-center gap-2 truncate">
+                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-[#64D2FF]' : 'text-white/40'}`} />
+                                <span className="truncate text-xs font-semibold">{art.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-white/40">
+                                <span>{art.readTime}</span>
+                              </div>
                             </button>
                           );
                         })}
@@ -379,15 +413,62 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           </aside>
 
           {/* Right Article Viewer */}
-          <main className="flex-1 bg-[#090B10] p-6 sm:p-8 overflow-y-auto select-text">
+          <main className="flex-1 bg-[#090C14] p-6 sm:p-10 overflow-y-auto select-text">
             <div className="max-w-3xl mx-auto space-y-6">
-              <div className="prose prose-invert max-w-none text-slate-200 leading-relaxed text-sm">
+              {/* Article Meta Bar */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+                <div className="flex items-center gap-2 text-xs text-white/50">
+                  <Compass className="w-3.5 h-3.5 text-[#5E5CE6]" />
+                  <span>{activeArticle.category}</span>
+                  <span>/</span>
+                  <span className="text-white font-medium">{activeArticle.title}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-xs text-white/40 font-mono">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{activeArticle.readTime}</span>
+                </div>
+              </div>
+
+              {/* Rendered Article Content */}
+              <div className="space-y-4">
                 <div
-                  className="space-y-4"
+                  className="prose prose-invert max-w-none text-white/80 leading-relaxed text-sm"
                   dangerouslySetInnerHTML={{
                     __html: formatMarkdownToHtml(activeArticle.content),
                   }}
                 />
+
+                {/* Code Block if Present */}
+                {activeArticle.codeSnippet && (
+                  <div className="rounded-2xl bg-[#06070B] border border-white/[0.1] overflow-hidden my-5 shadow-lg">
+                    <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.08] flex items-center justify-between text-xs text-white/50">
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-3.5 h-3.5 text-violet-400" />
+                        <span className="font-mono text-[11px] uppercase tracking-wider">{activeArticle.codeSnippet.lang}</span>
+                      </div>
+                      <button
+                        onClick={() => handleCopyCode(activeArticle.codeSnippet!.code)}
+                        className="flex items-center gap-1.5 text-[11px] text-white/60 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {copiedSnippet ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400 font-semibold">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre className="p-4 text-xs font-mono text-[#64D2FF] overflow-x-auto leading-relaxed">
+                      <code>{activeArticle.codeSnippet.code}</code>
+                    </pre>
+                  </div>
+                )}
               </div>
             </div>
           </main>
@@ -398,33 +479,38 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 };
 
 /**
- * Clean markdown formatter helper for docs viewer
+ * Rich markdown formatter helper for docs viewer
  */
 function formatMarkdownToHtml(md: string): string {
   const lines = md.split('\n');
   const processed = lines.map((line) => {
     let l = line;
     if (l.startsWith('# ')) {
-      return `<h1 class="text-2xl font-extrabold text-white font-display border-b border-white/[0.08] pb-3 mb-4 mt-2">${l.slice(2)}</h1>`;
+      return `<h1 class="text-2xl font-extrabold text-white font-display border-b border-white/[0.08] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
     }
     if (l.startsWith('### ')) {
-      return `<h3 class="text-base font-bold text-violet-300 font-display mt-5 mb-2">${l.slice(4)}</h3>`;
+      return `<h3 class="text-sm font-bold text-[#BF5AF2] font-display uppercase tracking-wider mt-5 mb-2">${l.slice(4)}</h3>`;
     }
     if (l.startsWith('## ')) {
-      return `<h2 class="text-lg font-extrabold text-white font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+      return `<h2 class="text-lg font-bold text-white font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+    }
+    if (l.startsWith('> [!TIP]') || l.startsWith('> [!NOTE]')) {
+      const type = l.includes('TIP') ? 'TIP' : 'NOTE';
+      return `<div class="p-3.5 rounded-2xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/35 text-[#64D2FF] text-xs font-medium my-3 flex items-start gap-2.5">
+        <span class="font-bold text-white uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-[#5E5CE6]/30 border border-[#5E5CE6]/40">${type}</span>`;
     }
     if (l.startsWith('> ')) {
-      return `<blockquote class="p-3 rounded-2xl bg-violet-950/40 border border-violet-500/40 text-violet-200 text-xs italic my-3">${l.slice(2)}</blockquote>`;
+      return `<blockquote class="p-3 rounded-2xl bg-white/[0.03] border-l-4 border-[#5E5CE6] text-white/70 text-xs italic my-3">${l.slice(2)}</blockquote>`;
     }
     if (l.startsWith('* ') || l.startsWith('- ')) {
       const itemText = l.slice(2)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-cyan-300 font-mono text-xs border border-white/[0.06]">$1</code>');
-      return `<li class="text-slate-300 ml-4 list-disc mb-1.5 leading-relaxed">${itemText}</li>`;
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-white/[0.06]">$1</code>');
+      return `<li class="text-white/80 ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
     }
     return l
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-cyan-300 font-mono text-xs border border-white/[0.06]">$1</code>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-white/[0.06]">$1</code>');
   });
 
   return processed.join('<br />');

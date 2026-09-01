@@ -23,9 +23,11 @@ import {
   Layers,
   Users,
   Settings,
+  Palette,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useThemeStore } from '@/stores/themeStore';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
@@ -40,6 +42,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { activeCommunity, selectCommunity } = useCommunityStore();
+  const { setIsThemeModalOpen } = useThemeStore();
 
   const [activeTab, setActiveTab] = React.useState<NavVariant>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -272,6 +275,14 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               title={isDeafened ? 'Undeafen' : 'Deafen'}
             >
               <Headphones className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setIsThemeModalOpen(true)}
+              className="p-2 rounded-[10px] text-white/50 hover:text-[#BF5AF2] hover:bg-white/[0.08] transition-all cursor-pointer"
+              title="Visual Themes & Dark/Bright Mode"
+            >
+              <Palette className="w-3.5 h-3.5 text-[#BF5AF2]" />
             </button>
 
             <button

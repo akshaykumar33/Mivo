@@ -5,12 +5,19 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  [data-theme="midnight"] {
     --bg-canvas: #06070B;
+    --bg-sidebar: #090B12;
     --bg-surface-0: #0A0C13;
     --bg-surface-1: #0F121C;
     --bg-surface-2: #151926;
     --bg-surface-3: #1C2233;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(94, 92, 230, 0.4);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --text-muted: rgba(255, 255, 255, 0.45);
     
     /* Apple macOS & iOS 18 System Colors */
     --apple-blue: #0A84FF;
@@ -26,9 +33,66 @@
     --apple-cyan: #64D2FF;
   }
 
+  [data-theme="titanium"] {
+    --bg-canvas: #12151E;
+    --bg-sidebar: #161A26;
+    --bg-surface-0: #161A26;
+    --bg-surface-1: #1E2333;
+    --bg-surface-2: #252C40;
+    --bg-surface-3: #2F374F;
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(100, 210, 255, 0.45);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.5);
+  }
+
+  [data-theme="cyber"] {
+    --bg-canvas: #080716;
+    --bg-sidebar: #0D0B24;
+    --bg-surface-0: #0F0D2B;
+    --bg-surface-1: #17133B;
+    --bg-surface-2: #221C55;
+    --bg-surface-3: #2F2673;
+    --border-subtle: rgba(191, 90, 242, 0.25);
+    --border-active: rgba(255, 55, 95, 0.55);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.5);
+  }
+
+  [data-theme="light-frost"],
+  .light-mode {
+    --bg-canvas: #F4F5F9;
+    --bg-sidebar: #EAECEF;
+    --bg-surface-0: #FFFFFF;
+    --bg-surface-1: #FFFFFF;
+    --bg-surface-2: #F0F2F6;
+    --bg-surface-3: #E4E7EE;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-active: rgba(94, 92, 230, 0.5);
+    --text-primary: #0B0C10;
+    --text-secondary: rgba(11, 12, 16, 0.75);
+    --text-muted: rgba(11, 12, 16, 0.45);
+  }
+
+  [data-theme="solar-warm"] {
+    --bg-canvas: #F8F7F2;
+    --bg-sidebar: #EFECE4;
+    --bg-surface-0: #FFFFFF;
+    --bg-surface-1: #FFFFFF;
+    --bg-surface-2: #F4F1E8;
+    --bg-surface-3: #E8E3D8;
+    --border-subtle: rgba(180, 140, 80, 0.18);
+    --border-active: rgba(255, 159, 10, 0.55);
+    --text-primary: #1A1814;
+    --text-secondary: rgba(26, 24, 20, 0.75);
+    --text-muted: rgba(26, 24, 20, 0.45);
+  }
+
   body {
     background-color: var(--bg-canvas);
-    color: #F5F5F7;
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     overflow: hidden;
     height: 100vh;
@@ -36,6 +100,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.015em;
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   ::selection {
