@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "Mivo",
+  "version": "1.0.0",
+  "planes": {
+    "controlPlane": {
+      "protocol": "HTTP/HTTPS (REST)",
+      "server": "NestJS",
+      "database": "PostgreSQL (Prisma)",
+      "modules": ["Auth", "Users", "Communities", "Channels", "Rooms", "Roles", "Permissions", "Audit"]
+    },
+    "realtimePlane": {
+      "protocol": "WebSocket (WSS)",
+      "gateway": "NestJS WebSocketGateway",
+      "pubsub": "Redis Pub/Sub & Cluster",
+      "modules": ["Presence", "Typing", "RoomEvents", "SignalingForwarding"]
+    },
+    "mediaPlane": {
+      "protocol": "WebRTC (SRTP/DTLS)",
+      "sfu": "SFU Media Router",
+      "modules": ["VoiceTracks", "VideoTracks", "ScreenShareTracks", "LiveBroadcastPipeline"]
+    }
+  },
+  "layers": [
+    {
+      "layer": "Frontend UI",
+      "path": "apps/web/src/components",
+      "dependencies": ["apps/web/src/hooks", "apps/web/src/stores", "packages/ui"]
+    },
+    {
+      "layer": "Client State & Hooks",
+      "path": "apps/web/src/hooks",
+      "dependencies": ["apps/web/src/lib/api-client", "apps/web/src/lib/socket-client", "packages/shared"]
+    },
+    {
+      "layer": "Backend API & Gateway",
+      "path": "apps/server/src",
+      "dependencies": ["packages/shared", "packages/database"]
+    },
+    {
+      "layer": "Database DAL",
+      "path": "packages/database",
+      "dependencies": ["PostgreSQL"]
+    }
+  ]
+}
