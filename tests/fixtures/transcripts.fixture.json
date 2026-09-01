@@ -1,0 +1,28 @@
+{
+  "transcripts": [
+    {
+      "speaker": "Elena Rostova",
+      "text": "Starting our architecture sync on WebRTC media pipelines.",
+      "time": "10:00 AM",
+      "expectedTranslations": {
+        "es": "Iniciando nuestra sincronización de arquitectura en canalizaciones de medios WebRTC."
+      }
+    },
+    {
+      "speaker": "Carlos Mendoza",
+      "text": "We are ready to deploy the new server cluster.",
+      "time": "10:01 AM",
+      "expectedTranslations": {
+        "es": "Estamos listos para desplegar el nuevo clúster de servidores."
+      }
+    },
+    {
+      "speaker": "Dev Admin",
+      "text": "Sounds good. Compiling meeting notes and action items.",
+      "time": "10:02 AM",
+      "expectedTranslations": {
+        "es": "Suena bien. Compilando notas de la reunión y elementos de acción."
+      }
+    }
+  ]
+}

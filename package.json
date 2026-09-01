@@ -9,6 +9,7 @@
     "lint": "turbo run lint",
     "check:types": "turbo run check:types",
     "test": "turbo run test",
+    "test:suites": "node tests/run-all-tests.js",
     "clean": "turbo run clean"
   },
   "devDependencies": {

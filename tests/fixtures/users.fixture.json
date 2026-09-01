@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "email": "dev@mivo.app",
+      "password": "Password123!",
+      "role": "OWNER",
+      "displayName": "Dev Admin"
+    },
+    {
+      "email": "alex@mivo.app",
+      "password": "Password123!",
+      "role": "ADMIN",
+      "displayName": "Alex Rivera"
+    },
+    {
+      "email": "sarah@mivo.app",
+      "password": "Password123!",
+      "role": "ADMIN",
+      "displayName": "Sarah Connor"
+    },
+    {
+      "email": "carlos@mivo.app",
+      "password": "Password123!",
+      "role": "MEMBER",
+      "displayName": "Carlos Mendoza 🇪🇸"
+    },
+    {
+      "email": "priya@mivo.app",
+      "password": "Password123!",
+      "role": "ADMIN",
+      "displayName": "Priya Sharma 🇮🇳"
+    },
+    {
+      "email": "elena@mivo.app",
+      "password": "Password123!",
+      "role": "MEMBER",
+      "displayName": "Elena Rostova"
+    }
+  ]
+}
