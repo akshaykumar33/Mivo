@@ -16,8 +16,6 @@ import {
   PictureInPicture2,
   BookOpen,
   PhoneOff,
-  ChevronUp,
-  LayoutGrid,
 } from 'lucide-react';
 
 export interface FloatingCyberDockProps {
@@ -67,8 +65,6 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
   onToggleDocs,
   onDisconnect,
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(true);
-
   const stageModes: Array<{
     id: RoomCommunicationMode;
     label: string;
@@ -80,36 +76,36 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
       id: 'TEXT',
       label: 'Chat',
       icon: MessageSquare,
-      color: 'from-blue-500 to-indigo-600',
-      glow: 'shadow-blue-500/40',
+      color: 'from-[#0A84FF] to-[#5E5CE6]',
+      glow: 'shadow-[0_4px_16px_rgba(10,132,255,0.4)]',
     },
     {
       id: 'VOICE',
       label: 'Voice',
       icon: Mic,
-      color: 'from-emerald-500 to-teal-600',
-      glow: 'shadow-emerald-500/40',
+      color: 'from-[#30D158] to-[#63E6E2]',
+      glow: 'shadow-[0_4px_16px_rgba(48,209,88,0.4)]',
     },
     {
       id: 'VIDEO',
       label: 'Video',
       icon: Video,
-      color: 'from-cyan-500 to-blue-600',
-      glow: 'shadow-cyan-500/40',
+      color: 'from-[#64D2FF] to-[#0A84FF]',
+      glow: 'shadow-[0_4px_16px_rgba(100,210,255,0.4)]',
     },
     {
       id: 'SCREEN_SHARE',
       label: 'Screen',
       icon: Monitor,
-      color: 'from-violet-500 to-purple-600',
-      glow: 'shadow-violet-500/40',
+      color: 'from-[#5E5CE6] to-[#BF5AF2]',
+      glow: 'shadow-[0_4px_16px_rgba(94,92,230,0.4)]',
     },
     {
       id: 'STREAM',
       label: 'Stage',
       icon: Radio,
-      color: 'from-rose-500 to-pink-600',
-      glow: 'shadow-rose-500/40',
+      color: 'from-[#FF375F] to-[#FF453A]',
+      glow: 'shadow-[0_4px_16px_rgba(255,55,95,0.4)]',
     },
   ];
 
@@ -121,13 +117,13 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
         activeMode === 'TEXT' ? 'bottom-20 sm:bottom-22' : 'bottom-6'
       } left-1/2 -translate-x-1/2 z-40 pointer-events-auto select-none transition-all duration-300`}
     >
-      {/* Outer Floating Glow Aura */}
-      <div className="absolute -inset-1.5 bg-gradient-to-r from-violet-600/30 via-cyan-500/20 to-indigo-600/30 rounded-[32px] blur-xl opacity-80 group-hover:opacity-100 transition duration-500" />
+      {/* Apple Liquid Glass Floating Dock Container */}
+      <div className="relative flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-[26px] bg-[#0A0C14]/85 border border-white/[0.12] backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] ring-1 ring-white/[0.06]">
+        {/* Top Specular Line Highlight */}
+        <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-      {/* Main Glass Cyber Dock Container */}
-      <div className="relative flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-[28px] bg-[#07090F]/90 border border-white/[0.12] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] ring-1 ring-white/[0.05]">
-        {/* 1. Dynamic Mode Switcher Pills */}
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+        {/* 1. Stage Mode Switcher Segmented Pills */}
+        <div className="flex items-center gap-1 p-1 rounded-[18px] bg-white/[0.03] border border-white/[0.06]">
           {stageModes.map((mode) => {
             const Icon = mode.icon;
             const isActive = activeMode === mode.id;
@@ -136,18 +132,18 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
               <button
                 key={mode.id}
                 onClick={() => onModeChange(mode.id)}
-                className={`relative group/btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${
+                className={`relative group/btn flex items-center gap-1.5 px-3 py-2 rounded-[14px] text-xs font-bold transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? `bg-gradient-to-r ${mode.color} text-white shadow-lg ${mode.glow} border border-white/30 scale-105`
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] hover:scale-102'
+                    ? `bg-gradient-to-r ${mode.color} text-white shadow-md ${mode.glow} border border-white/30 scale-105`
+                    : 'text-white/60 hover:text-white hover:bg-white/[0.06] hover:scale-102'
                 }`}
                 title={`Switch stage to ${mode.label} mode`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover/btn:text-slate-200'}`} />
+                <Icon className={`w-4 h-4 stroke-[2.2] ${isActive ? 'text-white' : 'text-white/60 group-hover/btn:text-white'}`} />
                 <span className="hidden md:inline font-display">{mode.label}</span>
 
-                {/* Floating Tooltip for mobile / compact */}
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/btn:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+                {/* Apple Native Tooltip */}
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/btn:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                   {mode.label} Mode
                 </div>
               </button>
@@ -155,89 +151,84 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           })}
         </div>
 
-        {/* Vertical Separator Hairline */}
-        <div className="w-[1px] h-7 bg-white/[0.12] mx-0.5" />
+        {/* Apple Glass Hairline Separator */}
+        <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
 
-        {/* 2. Media Hardware & Live Controls (Voice/Video/Screen Modes) */}
+        {/* 2. Media Hardware & Live Controls */}
         <div className="flex items-center gap-1.5">
-          {/* Microphone Toggle with Audio Level Halo */}
+          {/* Microphone Toggle with Speaking Wave Halo */}
           <button
             onClick={onToggleMute}
-            className={`relative group/mic p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/mic p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isMuted
-                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40 hover:bg-rose-600 hover:text-white shadow-lg shadow-rose-600/20'
+                ? 'bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/40 hover:bg-[#FF453A] hover:text-white shadow-sm'
                 : isSpeaking
-                ? 'bg-emerald-500 text-white border border-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.7)] scale-105 animate-pulse'
-                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-500/20'
+                ? 'bg-[#30D158] text-black font-bold border border-white shadow-[0_0_20px_rgba(48,209,88,0.7)] scale-105 animate-speaking'
+                : 'bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/40 hover:bg-[#30D158] hover:text-black shadow-sm'
             }`}
-            title={isMuted ? 'Unmute Microphone (Ctrl+D)' : 'Mute Microphone (Ctrl+D)'}
+            title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
           >
-            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isMuted ? <MicOff className="w-4 h-4 stroke-[2.2]" /> : <Mic className="w-4 h-4 stroke-[2.2]" />}
 
-            {/* Speaking audio wave indicator ring */}
-            {isSpeaking && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            )}
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/mic:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
-              {isMuted ? 'Microphone: OFF' : 'Microphone: LIVE'}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/mic:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              {isMuted ? 'Mic: Muted' : 'Mic: Live'}
             </div>
           </button>
 
           {/* Camera Toggle */}
           <button
             onClick={onToggleCamera}
-            className={`relative group/cam p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/cam p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isCameraOn
-                ? 'bg-gradient-to-tr from-cyan-600 to-blue-600 text-white shadow-[0_0_25px_rgba(6,182,212,0.5)] border border-cyan-300/50 scale-105'
-                : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                ? 'bg-gradient-to-tr from-[#0A84FF] to-[#64D2FF] text-white shadow-[0_0_20px_rgba(100,210,255,0.5)] border border-white/30 scale-105'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
             }`}
-            title={isCameraOn ? 'Turn Camera Off (Ctrl+E)' : 'Turn Camera On (Ctrl+E)'}
+            title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
           >
-            {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+            {isCameraOn ? <Video className="w-4 h-4 stroke-[2.2]" /> : <VideoOff className="w-4 h-4 stroke-[2.2]" />}
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/cam:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
-              {isCameraOn ? 'Camera: ON (HD)' : 'Camera: OFF'}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/cam:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              {isCameraOn ? 'Camera: Active' : 'Camera: Off'}
             </div>
           </button>
 
           {/* Screen Share Toggle */}
           <button
             onClick={onToggleScreen}
-            className={`relative group/screen p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/screen p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isScreenOn
-                ? 'bg-gradient-to-tr from-violet-600 to-purple-600 text-white shadow-[0_0_25px_rgba(139,92,246,0.6)] border border-violet-300/50 scale-105'
-                : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] text-white shadow-[0_0_20px_rgba(191,90,242,0.5)] border border-white/30 scale-105'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
             }`}
-            title={isScreenOn ? 'Stop Screen Share' : 'Share Screen / Window'}
+            title={isScreenOn ? 'Stop Sharing' : 'Share Screen'}
           >
-            <Monitor className="w-4 h-4" />
+            <Monitor className="w-4 h-4 stroke-[2.2]" />
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/screen:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
-              {isScreenOn ? 'Sharing Screen' : 'Share Screen'}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/screen:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              {isScreenOn ? 'Sharing Screen' : 'Share Display'}
             </div>
           </button>
 
           {/* Floating Picture-in-Picture (PiP) */}
           <button
             onClick={onTogglePiP}
-            className={`relative group/pip p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/pip p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isPiPOpen
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_20px_rgba(245,158,11,0.3)]'
-                : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                ? 'bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/50 shadow-[0_0_16px_rgba(255,159,10,0.3)]'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
             }`}
             title="Floating Presenter Stage (Picture-in-Picture)"
           >
-            <PictureInPicture2 className="w-4 h-4" />
+            <PictureInPicture2 className="w-4 h-4 stroke-[2.2]" />
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/pip:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
-              Floating PiP Presenter
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/pip:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              Floating PiP Stage
             </div>
           </button>
         </div>
 
-        {/* Vertical Separator Hairline */}
-        <div className="w-[1px] h-7 bg-white/[0.12] mx-0.5" />
+        {/* Apple Glass Hairline Separator */}
+        <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
 
         {/* 3. Intelligent Tools: Recording, AI Whisper, Docs, Roster */}
         <div className="flex items-center gap-1.5">
@@ -245,16 +236,16 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           {isHost && (
             <button
               onClick={onToggleRecording}
-              className={`relative group/rec p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+              className={`relative group/rec p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
                 isRecording
-                  ? 'bg-rose-600 text-white shadow-[0_0_25px_rgba(225,29,72,0.7)] border border-rose-400 animate-pulse'
-                  : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                  ? 'bg-[#FF453A] text-white shadow-[0_0_20px_rgba(255,69,58,0.7)] border border-white/20 animate-pulse'
+                  : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
               }`}
               title={isRecording ? 'Stop Recording' : 'Start Recording Session'}
             >
-              <CircleDot className={`w-4 h-4 ${isRecording ? 'text-white' : 'text-rose-400'}`} />
+              <CircleDot className={`w-4 h-4 stroke-[2.2] ${isRecording ? 'text-white' : 'text-[#FF453A]'}`} />
 
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/rec:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/rec:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                 {isRecording ? 'Recording (Consent Active)' : 'Record Meeting'}
               </div>
             </button>
@@ -263,34 +254,34 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           {/* Whisper AI Scribe, Live Translation & MOM */}
           <button
             onClick={onToggleWhisper}
-            className={`relative group/whisper p-2.5 sm:p-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/whisper p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isWhisperOpen
-                ? 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white shadow-[0_0_30px_rgba(124,58,237,0.6)] border border-violet-300/60 scale-105'
-                : 'bg-violet-600/20 text-violet-300 hover:bg-violet-600 hover:text-white border border-violet-500/40 shadow-sm shadow-violet-600/20'
+                ? 'bg-gradient-to-tr from-[#BF5AF2] via-[#5E5CE6] to-[#0A84FF] text-white shadow-[0_0_24px_rgba(191,90,242,0.6)] border border-white/30 scale-105'
+                : 'bg-[#BF5AF2]/15 text-[#BF5AF2] hover:bg-[#BF5AF2] hover:text-white border border-[#BF5AF2]/30 shadow-sm'
             }`}
             title="Open Whisper AI Scribe, Live Translation & MOM"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 stroke-[2.2]" />
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/whisper:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/whisper:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               AI Scribe & MOM
             </div>
           </button>
 
-          {/* Stage Roster Members Toggle */}
+          {/* Stage Roster Members */}
           <button
             onClick={onToggleParticipants}
-            className={`relative group/roster flex items-center gap-1.5 px-3 py-2 rounded-2xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/roster flex items-center gap-1.5 px-3 py-2 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isParticipantsOpen
                 ? 'bg-white/[0.12] text-white border border-white/20'
-                : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
             }`}
             title="Toggle Stage Members Roster"
           >
-            <Users className="w-4 h-4 text-violet-400" />
+            <Users className="w-4 h-4 text-[#5E5CE6] stroke-[2.2]" />
             <span className="text-xs font-bold font-mono">{participantCount}</span>
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/roster:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/roster:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               {participantCount} Connected
             </div>
           </button>
@@ -298,28 +289,28 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           {/* Interactive User Documentation */}
           <button
             onClick={onToggleDocs}
-            className="relative group/docs p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] text-slate-300 hover:bg-violet-600 hover:text-white border border-white/[0.08] hover:border-violet-400 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+            className="relative group/docs p-2.5 sm:p-3 rounded-[16px] bg-white/[0.04] text-white/70 hover:bg-[#5E5CE6] hover:text-white border border-white/[0.08] hover:border-[#5E5CE6] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             title="Interactive User Guide & Documentation"
           >
-            <BookOpen className="w-4 h-4 text-violet-300 group-hover/docs:text-white transition-colors" />
+            <BookOpen className="w-4 h-4 text-[#5E5CE6] group-hover/docs:text-white transition-colors stroke-[2.2]" />
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-white opacity-0 pointer-events-none group-hover/docs:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/docs:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               Documentation Hub
             </div>
           </button>
 
-          {/* Vertical Separator Hairline */}
-          <div className="w-[1px] h-7 bg-white/[0.12] mx-0.5" />
+          {/* Apple Glass Hairline Separator */}
+          <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
 
           {/* Disconnect / Leave Stage Button */}
           <button
             onClick={onDisconnect}
-            className="relative group/leave p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-[0_0_25px_rgba(225,29,72,0.5)] border border-rose-400/40 hover:scale-105 transition-all duration-200 cursor-pointer"
-            title="Leave Stage / Disconnect (Ctrl+W)"
+            className="relative group/leave p-2.5 sm:p-3 rounded-[16px] bg-[#FF453A] hover:bg-[#FF375F] text-white shadow-[0_4px_20px_rgba(255,69,58,0.5)] border border-white/20 hover:scale-105 transition-all duration-200 cursor-pointer"
+            title="Leave Stage (Ctrl+W)"
           >
-            <PhoneOff className="w-4 h-4" />
+            <PhoneOff className="w-4 h-4 stroke-[2.2]" />
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#0C0E16] border border-white/[0.1] text-[10px] font-bold text-rose-300 opacity-0 pointer-events-none group-hover/leave:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-[#FF453A] opacity-0 pointer-events-none group-hover/leave:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               Leave Stage
             </div>
           </button>

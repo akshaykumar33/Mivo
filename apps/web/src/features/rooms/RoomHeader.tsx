@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
 import { RoomModeSwitcher } from './RoomModeSwitcher';
-import { Users, Lock, Unlock, Hash, Sparkles, CircleDot, BookOpen } from 'lucide-react';
+import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen } from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 
 export interface RoomHeaderProps {
@@ -56,84 +56,84 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
 
   return (
     <>
-      <header className="h-16 px-6 bg-[#080A10]/95 border-b border-white/[0.06] backdrop-blur-xl flex items-center justify-between shadow-sm select-none z-10">
-        {/* Room Title & Metadata */}
+      <header className="h-16 px-6 bg-[#07090F]/80 border-b border-white/[0.07] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10">
+        {/* Room Title & macOS-Style Hash Badge */}
         <div className="flex items-center gap-3.5 min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
-              <Hash className="w-4 h-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-[12px] bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#5E5CE6] shadow-sm">
+              <Hash className="w-4 h-4 stroke-[2.5]" />
             </div>
             <h2 className="text-sm font-bold text-white font-display tracking-tight truncate">{room.name}</h2>
-            {room.isLocked ? (
-              <span title="Locked Room">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
+            {room.isLocked && (
+              <span title="Private Encrypted Room">
+                <Lock className="w-3.5 h-3.5 text-[#FF9F0A]" />
               </span>
-            ) : null}
+            )}
           </div>
 
-          {/* Global REC Pulsing Badge with Live Elapsed Timer */}
+          {/* Apple Live Recording Status Badge */}
           {isRecording && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600/20 border border-rose-500/50 text-rose-300 text-[10px] font-extrabold shadow-lg shadow-rose-600/10 animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF453A]/15 border border-[#FF453A]/40 text-[#FF453A] text-[10px] font-mono font-bold shadow-[0_0_12px_rgba(255,69,58,0.3)] animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-[#FF453A] animate-ping" />
               <span>REC {formatTimer(elapsedSeconds)}</span>
             </div>
           )}
 
           {room.description && (
-            <span className="hidden lg:inline text-xs text-slate-400 truncate border-l border-white/[0.08] pl-3.5">
+            <span className="hidden lg:inline text-xs text-white/40 truncate border-l border-white/[0.08] pl-3.5">
               {room.description}
             </span>
           )}
         </div>
 
-        {/* Mode Switcher */}
+        {/* Apple Segmented Control Room Mode Switcher */}
         <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
 
-        {/* Right Action Tray */}
+        {/* Right Glass Action Tray */}
         <div className="flex items-center gap-2">
-          {/* Host Record Button */}
+          {/* Host Recording Guard */}
           {isHost && (
             <button
               onClick={onToggleRecording}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-150 cursor-pointer ${
                 isRecording
-                  ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/40 border border-rose-400 animate-pulse'
-                  : 'bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+                  ? 'bg-[#FF453A] text-white shadow-[0_4px_16px_rgba(255,69,58,0.5)] border border-white/20 animate-pulse'
+                  : 'bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]'
               }`}
-              title={isRecording ? 'Stop Recording' : 'Start Recording with Consent'}
+              title={isRecording ? 'Stop Recording' : 'Start Recording Session'}
             >
-              <CircleDot className={`w-3.5 h-3.5 ${isRecording ? 'text-white' : 'text-rose-400'}`} />
+              <CircleDot className={`w-3.5 h-3.5 ${isRecording ? 'text-white' : 'text-[#FF453A]'}`} />
               <span className="hidden sm:inline">{isRecording ? 'Recording...' : 'Record'}</span>
             </button>
           )}
 
-          {/* Whisper AI Scribe & Notes Toggle */}
+          {/* Whisper AI Scribe & Notes Drawer */}
           <button
             onClick={onToggleWhisper}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-violet-300 hover:text-white bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 transition-all shadow-sm shadow-violet-600/20"
-            title="Open Whisper AI Scribe, Translation & MOM"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-xs font-semibold text-[#BF5AF2] hover:text-white bg-[#BF5AF2]/15 hover:bg-[#BF5AF2] border border-[#BF5AF2]/30 hover:border-[#BF5AF2] transition-all duration-200 shadow-sm cursor-pointer"
+            title="Open Whisper AI Scribe, Multilingual Translation & MOM"
           >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2] group-hover:text-white transition-colors" />
             <span className="hidden sm:inline">AI Notes & MOM</span>
           </button>
 
-          {/* Interactive Documentation Button */}
+          {/* System User Documentation */}
           <button
             onClick={() => setIsDocsOpen(true)}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06] transition-all"
-            title="Platform User Documentation"
+            className="p-2 rounded-[12px] text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+            title="Interactive User Guide & Documentation"
           >
-            <BookOpen className="w-4 h-4 text-violet-400" />
+            <BookOpen className="w-4 h-4 text-[#5E5CE6]" />
           </button>
 
-          {/* Participant Count Toggle */}
+          {/* Connected Participants Toggle */}
           <button
             onClick={onToggleParticipants}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-all"
-            title="Toggle Participant List"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+            title="Toggle Stage Members Roster"
           >
-            <Users className="w-3.5 h-3.5 text-violet-400" />
-            <span>{participantCount}</span>
+            <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
+            <span className="font-mono">{participantCount}</span>
           </button>
         </div>
       </header>
