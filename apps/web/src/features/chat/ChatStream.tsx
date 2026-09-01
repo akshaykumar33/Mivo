@@ -114,20 +114,20 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#06070B]">
+      <div className="flex-1 flex items-center justify-center bg-[var(--bg-canvas)]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-3 border-[#5E5CE6] border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-white/50 font-semibold font-display">Loading message stream...</span>
+          <span className="text-xs text-[var(--text-muted)] font-semibold font-display">Loading message stream...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#06070B] overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] overflow-hidden">
       {/* Apple Translucent Chat Header Bar */}
-      <div className="h-11 px-6 bg-[#090B12]/80 border-b border-white/[0.07] backdrop-blur-xl flex items-center justify-between text-xs select-none">
-        <div className="flex items-center gap-2 text-white/60">
+      <div className="h-11 px-6 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] backdrop-blur-xl flex items-center justify-between text-xs select-none">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <Globe className="w-3.5 h-3.5 text-[#5E5CE6]" />
           <span className="font-semibold text-[11px]">Instant Message Translation:</span>
         </div>

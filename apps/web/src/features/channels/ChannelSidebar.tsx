@@ -95,16 +95,16 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
   return (
     <>
-      <aside className="w-[270px] h-full bg-[#090B12]/85 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col justify-between select-none flex-shrink-0">
+      <aside className="w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col justify-between select-none flex-shrink-0">
         {/* Top Header & Search Bar */}
         <div className="flex-shrink-0 flex flex-col">
           {/* Community Title Bar */}
-          <div className="h-16 px-4 border-b border-white/[0.07] flex items-center justify-between shadow-sm bg-white/[0.01] flex-shrink-0">
+          <div className="h-16 px-4 border-b border-[var(--border-subtle)] flex items-center justify-between shadow-sm flex-shrink-0">
             <div className="min-w-0 pr-2">
-              <h1 className="truncate font-display tracking-tight text-sm font-bold text-white">
+              <h1 className="truncate font-display tracking-tight text-sm font-bold text-[var(--text-primary)]">
                 {activeCommunity.name}
               </h1>
-              <span className="text-[10px] text-white/40 font-medium tracking-wider uppercase">
+              <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wider uppercase">
                 {activeCommunity.channels?.length || 0} Spaces
               </span>
             </div>
@@ -124,15 +124,15 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
           {/* Apple-Style Search Input with ⌘K Badge */}
           <div className="px-3.5 pt-3 pb-1.5">
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 text-white/40 absolute left-3" />
+              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3" />
               <input
                 type="text"
                 placeholder="Filter channels & rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-9 py-1.5 rounded-[12px] bg-white/[0.03] border border-white/[0.07] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
+                className="w-full pl-8 pr-9 py-1.5 rounded-[12px] bg-white/[0.03] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
               />
-              <span className="absolute right-2.5 px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] text-[9px] font-mono text-white/40 pointer-events-none">
+              <span className="absolute right-2.5 px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-[var(--border-subtle)] text-[9px] font-mono text-[var(--text-muted)] pointer-events-none">
                 ⌘K
               </span>
             </div>
@@ -141,7 +141,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
         {/* Scrollable Tree View */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 scrollbar-thin">
-          <div className="flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
+          <div className="flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-[#BF5AF2]" />
               <span>Spaces & Channels</span>
@@ -161,7 +161,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                   {filteredChannels.map((channel) => (
                     <div key={channel.id} className="space-y-1">
                       {/* Channel Row Header */}
-                      <div className="flex items-center justify-between group px-2 py-1 rounded-[10px] text-xs font-semibold text-white/50 hover:text-white hover:bg-white/[0.03] transition-colors">
+                      <div className="flex items-center justify-between group px-2 py-1 rounded-[10px] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.03] transition-colors">
                         <div className="flex items-center gap-2 truncate">
                           {channel.type === 'VOICE' ? (
                             <Volume2 className="w-3.5 h-3.5 text-[#30D158] flex-shrink-0" />
@@ -170,7 +170,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                           ) : (
                             <Hash className="w-3.5 h-3.5 text-[#BF5AF2] flex-shrink-0" />
                           )}
-                          <span className="truncate text-white/70 group-hover:text-white font-display text-[11px] uppercase tracking-wider font-bold">
+                          <span className="truncate text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-display text-[11px] uppercase tracking-wider font-bold">
                             {channel.name}
                           </span>
                         </div>
@@ -186,7 +186,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                       </div>
 
                       {/* Rooms in Channel */}
-                      <div className="pl-2 space-y-0.5 border-l border-white/[0.05] ml-2.5">
+                      <div className="pl-2 space-y-0.5 border-l border-[var(--border-subtle)] ml-2.5">
                         {channel.rooms?.map((room) => {
                           const isRoomActive = pathname.includes(`/rooms/${room.id}`);
                           return (
@@ -195,8 +195,8 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                               href={`/communities/${communityId}/rooms/${room.id}`}
                               className={`flex items-center justify-between px-2.5 py-1.5 rounded-[12px] text-xs font-medium transition-all duration-150 group cursor-pointer ${
                                 isRoomActive
-                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 text-white font-semibold border border-[#5E5CE6]/40 shadow-[0_4px_16px_rgba(94,92,230,0.25)]'
-                                  : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
+                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 text-[var(--text-primary)] font-semibold border border-[#5E5CE6]/40 shadow-[0_4px_16px_rgba(94,92,230,0.25)]'
+                                  : 'text-[var(--text-secondary)] hover:bg-white/[0.05] hover:text-[var(--text-primary)]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate min-w-0">
@@ -204,7 +204,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                                 {room.activeMode === 'VIDEO' && <Video className="w-3.5 h-3.5 text-[#64D2FF] flex-shrink-0 animate-pulse" />}
                                 {room.activeMode === 'SCREEN_SHARE' && <Monitor className="w-3.5 h-3.5 text-[#5E5CE6] flex-shrink-0" />}
                                 {room.activeMode === 'STREAM' && <Radio className="w-3.5 h-3.5 text-[#FF375F] flex-shrink-0 animate-pulse" />}
-                                {room.activeMode === 'TEXT' && <Hash className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />}
+                                {room.activeMode === 'TEXT' && <Hash className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />}
                                 <span className="truncate">{room.name}</span>
                               </div>
 
@@ -217,7 +217,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                                   ? 'bg-[#5E5CE6]/15 text-[#5E5CE6] border-[#5E5CE6]/30'
                                   : room.activeMode === 'STREAM'
                                   ? 'bg-[#FF375F]/15 text-[#FF375F] border-[#FF375F]/30'
-                                  : 'bg-white/[0.04] text-white/40 border-white/[0.06]'
+                                  : 'bg-white/[0.04] text-[var(--text-muted)] border-[var(--border-subtle)]'
                               }`}>
                                 {room.activeMode}
                               </span>
@@ -231,7 +231,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               </div>
 
         {/* macOS Style User Status Footer */}
-        <div className="h-16 bg-[#06070B]/90 px-3.5 border-t border-white/[0.07] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
+        <div className="h-16 bg-[var(--bg-sidebar)] px-3.5 border-t border-[var(--border-subtle)] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <Avatar
               size="sm"
@@ -240,7 +240,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               src={user?.avatarUrl}
             />
             <div className="min-w-0">
-              <div className="text-xs font-bold text-white truncate">
+              <div className="text-xs font-bold text-[var(--text-primary)] truncate">
                 {user?.displayName || user?.username}
               </div>
               <div
@@ -251,6 +251,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               </div>
             </div>
           </div>
+
 
           <div className="flex items-center gap-1">
             <button

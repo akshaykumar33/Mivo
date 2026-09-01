@@ -270,3 +270,226 @@
 .animate-slide-up {
   animation: slide-up-smooth 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  THEME CASCADING OVERRIDES                              */
+/*  These rules make hardcoded dark-mode components        */
+/*  respond to the CSS variable themes properly.           */
+/* ═══════════════════════════════════════════════════════ */
+
+/* ── Light Mode Global Overrides ── */
+[data-theme="light-frost"],
+[data-theme="solar-warm"] {
+  color-scheme: light;
+}
+
+[data-theme="light-frost"] body,
+[data-theme="solar-warm"] body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+/* Sidebar in light mode */
+[data-theme="light-frost"] aside,
+[data-theme="solar-warm"] aside {
+  background-color: var(--bg-sidebar) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Community nav rail in light mode */
+[data-theme="light-frost"] nav,
+[data-theme="solar-warm"] nav {
+  background-color: var(--bg-surface-2) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Main content area in light mode */
+[data-theme="light-frost"] main,
+[data-theme="solar-warm"] main {
+  background-color: var(--bg-canvas) !important;
+}
+
+/* Room header in light mode */
+[data-theme="light-frost"] header,
+[data-theme="solar-warm"] header {
+  background-color: var(--bg-surface-0) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Cards, chat bubbles, surfaces */
+[data-theme="light-frost"] .bg-\[\#06070B\],
+[data-theme="light-frost"] .bg-\[\#080A12\],
+[data-theme="light-frost"] .bg-\[\#090B12\],
+[data-theme="light-frost"] .bg-\[\#0A0C13\],
+[data-theme="light-frost"] .bg-\[\#0F121C\],
+[data-theme="light-frost"] .bg-\[\#0E1017\],
+[data-theme="solar-warm"] .bg-\[\#06070B\],
+[data-theme="solar-warm"] .bg-\[\#080A12\],
+[data-theme="solar-warm"] .bg-\[\#090B12\],
+[data-theme="solar-warm"] .bg-\[\#0A0C13\],
+[data-theme="solar-warm"] .bg-\[\#0F121C\],
+[data-theme="solar-warm"] .bg-\[\#0E1017\] {
+  background-color: var(--bg-canvas) !important;
+}
+
+/* Surface containers in light mode */
+[data-theme="light-frost"] .bg-\[\#090B12\]\/85,
+[data-theme="light-frost"] .bg-\[\#080A12\]\/90,
+[data-theme="light-frost"] .bg-\[\#0A0D18\]\/95,
+[data-theme="light-frost"] .bg-\[\#0D0F18\]\/90,
+[data-theme="light-frost"] .bg-\[\#0F1220\]\/95,
+[data-theme="light-frost"] .bg-\[\#0C0E17\]\/90,
+[data-theme="light-frost"] .bg-\[\#07090F\]\/80,
+[data-theme="light-frost"] .bg-\[\#06070B\]\/90,
+[data-theme="solar-warm"] .bg-\[\#090B12\]\/85,
+[data-theme="solar-warm"] .bg-\[\#080A12\]\/90,
+[data-theme="solar-warm"] .bg-\[\#0A0D18\]\/95,
+[data-theme="solar-warm"] .bg-\[\#0D0F18\]\/90,
+[data-theme="solar-warm"] .bg-\[\#0F1220\]\/95,
+[data-theme="solar-warm"] .bg-\[\#0C0E17\]\/90,
+[data-theme="solar-warm"] .bg-\[\#07090F\]\/80,
+[data-theme="solar-warm"] .bg-\[\#06070B\]\/90 {
+  background-color: var(--bg-surface-0) !important;
+}
+
+/* Text overrides in light mode */
+[data-theme="light-frost"] .text-white,
+[data-theme="light-frost"] .text-slate-100,
+[data-theme="solar-warm"] .text-white,
+[data-theme="solar-warm"] .text-slate-100 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light-frost"] .text-white\/90,
+[data-theme="light-frost"] .text-white\/80,
+[data-theme="light-frost"] .text-white\/70,
+[data-theme="light-frost"] .text-slate-200,
+[data-theme="light-frost"] .text-slate-300,
+[data-theme="solar-warm"] .text-white\/90,
+[data-theme="solar-warm"] .text-white\/80,
+[data-theme="solar-warm"] .text-white\/70,
+[data-theme="solar-warm"] .text-slate-200,
+[data-theme="solar-warm"] .text-slate-300 {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light-frost"] .text-white\/60,
+[data-theme="light-frost"] .text-white\/50,
+[data-theme="light-frost"] .text-white\/40,
+[data-theme="light-frost"] .text-white\/30,
+[data-theme="light-frost"] .text-slate-400,
+[data-theme="light-frost"] .text-slate-500,
+[data-theme="solar-warm"] .text-white\/60,
+[data-theme="solar-warm"] .text-white\/50,
+[data-theme="solar-warm"] .text-white\/40,
+[data-theme="solar-warm"] .text-white\/30,
+[data-theme="solar-warm"] .text-slate-400,
+[data-theme="solar-warm"] .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Placeholder text in light mode */
+[data-theme="light-frost"] .placeholder-white\/40::placeholder,
+[data-theme="light-frost"] .placeholder-white\/30::placeholder,
+[data-theme="solar-warm"] .placeholder-white\/40::placeholder,
+[data-theme="solar-warm"] .placeholder-white\/30::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Border overrides for light mode */
+[data-theme="light-frost"] .border-white\/\[0\.07\],
+[data-theme="light-frost"] .border-white\/\[0\.08\],
+[data-theme="light-frost"] .border-white\/\[0\.06\],
+[data-theme="light-frost"] .border-white\/\[0\.1\],
+[data-theme="light-frost"] .border-white\/\[0\.12\],
+[data-theme="light-frost"] .border-white\/\[0\.14\],
+[data-theme="solar-warm"] .border-white\/\[0\.07\],
+[data-theme="solar-warm"] .border-white\/\[0\.08\],
+[data-theme="solar-warm"] .border-white\/\[0\.06\],
+[data-theme="solar-warm"] .border-white\/\[0\.1\],
+[data-theme="solar-warm"] .border-white\/\[0\.12\],
+[data-theme="solar-warm"] .border-white\/\[0\.14\] {
+  border-color: var(--border-subtle) !important;
+}
+
+/* Scrollbar in light mode */
+[data-theme="light-frost"] ::-webkit-scrollbar-thumb,
+[data-theme="solar-warm"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light-frost"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="solar-warm"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Selection in light mode */
+[data-theme="light-frost"] ::selection {
+  background: rgba(10, 132, 255, 0.25);
+  color: #000;
+}
+
+[data-theme="solar-warm"] ::selection {
+  background: rgba(255, 159, 10, 0.25);
+  color: #1A1814;
+}
+
+/* Glass effects in light mode */
+[data-theme="light-frost"] .apple-glass,
+[data-theme="solar-warm"] .apple-glass {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light-frost"] .apple-glass-heavy,
+[data-theme="solar-warm"] .apple-glass-heavy {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 1), 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Input fields in light mode */
+[data-theme="light-frost"] input,
+[data-theme="light-frost"] textarea,
+[data-theme="solar-warm"] input,
+[data-theme="solar-warm"] textarea {
+  color: var(--text-primary) !important;
+}
+
+/* White/alpha backgrounds become light in light mode */
+[data-theme="light-frost"] .bg-white\/\[0\.03\],
+[data-theme="light-frost"] .bg-white\/\[0\.04\],
+[data-theme="light-frost"] .bg-white\/\[0\.06\],
+[data-theme="solar-warm"] .bg-white\/\[0\.03\],
+[data-theme="solar-warm"] .bg-white\/\[0\.04\],
+[data-theme="solar-warm"] .bg-white\/\[0\.06\] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light-frost"] .hover\:bg-white\/\[0\.06\]:hover,
+[data-theme="light-frost"] .hover\:bg-white\/\[0\.08\]:hover,
+[data-theme="light-frost"] .hover\:bg-white\/\[0\.09\]:hover,
+[data-theme="light-frost"] .hover\:bg-white\/\[0\.1\]:hover,
+[data-theme="light-frost"] .hover\:bg-white\/\[0\.12\]:hover,
+[data-theme="solar-warm"] .hover\:bg-white\/\[0\.06\]:hover,
+[data-theme="solar-warm"] .hover\:bg-white\/\[0\.08\]:hover,
+[data-theme="solar-warm"] .hover\:bg-white\/\[0\.09\]:hover,
+[data-theme="solar-warm"] .hover\:bg-white\/\[0\.1\]:hover,
+[data-theme="solar-warm"] .hover\:bg-white\/\[0\.12\]:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ── Cyberpunk Theme Extras ── */
+[data-theme="cyber"] ::selection {
+  background: rgba(255, 55, 95, 0.35);
+}
+
+/* ── Titanium Theme Extras ── */
+[data-theme="titanium"] .apple-mesh-bg {
+  background-color: #12151E;
+  background-image:
+    radial-gradient(at 10% 10%, rgba(100, 210, 255, 0.1) 0px, transparent 55%),
+    radial-gradient(at 90% 15%, rgba(94, 92, 230, 0.08) 0px, transparent 55%);
+}
+

@@ -84,12 +84,12 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         setIsHovered(false);
         setShowVolumeSlider(false);
       }}
-      className={`relative rounded-3xl bg-[#08090E] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
+      className={`relative rounded-3xl bg-[var(--bg-surface-1)] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
         isPinned
           ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/20'
           : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
-          : 'border-white/[0.08] hover:border-violet-500/40'
+          : 'border-[var(--border-subtle)] hover:border-violet-500/40'
       }`}
     >
       {/* Real Live Video Feed */}

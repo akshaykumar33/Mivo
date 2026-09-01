@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -22,10 +22,28 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('mivo_theme') || 'midnight';
+                document.documentElement.setAttribute('data-theme', theme);
+                if (theme === 'light-frost' || theme === 'solar-warm') {
+                  document.documentElement.classList.add('light-mode');
+                  document.documentElement.classList.remove('dark-mode');
+                } else {
+                  document.documentElement.classList.add('dark-mode');
+                  document.documentElement.classList.remove('light-mode');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
       </head>
-      <body className="bg-[#0B0E14] text-slate-100 antialiased h-screen w-screen overflow-hidden">
+      <body className="antialiased h-screen w-screen overflow-hidden">
         <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+

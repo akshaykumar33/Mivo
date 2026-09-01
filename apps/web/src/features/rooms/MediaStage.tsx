@@ -170,7 +170,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   if (mode === 'VOICE') {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 pb-28 sm:p-8 sm:pb-28 bg-[#0E1017] select-none relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 pb-28 sm:p-8 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
@@ -180,7 +180,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <span>Spatial Voice Huddle Active</span>
           </div>
           <div className="flex items-center justify-center gap-3">
-            <h3 className="text-xl font-bold text-white font-display">
+            <h3 className="text-xl font-bold text-[var(--text-primary)] font-display">
               {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
             </h3>
             <button
@@ -207,10 +207,10 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 onDragStart={handleDragStart(p.userId)}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop(p.userId)}
-                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
+                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
                   isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
-                    : 'border-white/[0.05] hover:border-violet-500/30'
+                    : 'border-[var(--border-subtle)] hover:border-violet-500/30'
                 }`}
               >
                 {/* Voice Card Reorder Arrows */}
@@ -249,7 +249,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   {/* Mic Mute Indicator Bubble */}
                   <div
                     className={`absolute -bottom-1 -right-1 p-1.5 rounded-full text-white shadow-lg transition-all ${
-                      participantMuted ? 'bg-rose-600 ring-2 ring-[#0E1017]' : 'bg-emerald-600 ring-2 ring-[#0E1017]'
+                      participantMuted ? 'bg-rose-600 ring-2 ring-[var(--bg-canvas)]' : 'bg-emerald-600 ring-2 ring-[var(--bg-canvas)]'
                     }`}
                   >
                     {participantMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
@@ -257,7 +257,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 </div>
 
                 <div className="mt-3.5 text-center w-full">
-                  <div className="text-xs font-bold text-white truncate">
+                  <div className="text-xs font-bold text-[var(--text-primary)] truncate">
                     {p.user.displayName || p.user.username}
                     {isMe && ' (You)'}
                   </div>
@@ -283,7 +283,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       />
                     </div>
                   ) : (
-                    <span className="text-[10px] text-slate-500 font-semibold block mt-1">Muted</span>
+                    <span className="text-[10px] text-[var(--text-muted)] font-semibold block mt-1">Muted</span>
                   )}
                 </div>
               </div>
@@ -297,7 +297,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
-      <div className="flex-1 p-6 pb-28 bg-[#0E1017] select-none flex flex-col overflow-hidden">
+      <div className="flex-1 p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden">
         {pinnedParticipant ? (
           // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
@@ -345,7 +345,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           // Standard Equal Auto-Adjusting Grid with Drag & Drop
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
                 Live Video Stage ({participants.length} Active)
               </span>
               <button
@@ -403,9 +403,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater
   return (
-    <div className="flex-1 p-6 pb-28 bg-[#0E1017] flex flex-col select-none overflow-hidden">
+    <div className="flex-1 p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden">
       {/* Primary Dominant Stage */}
-      <div className="flex-1 rounded-3xl bg-[#08090E] border border-white/[0.08] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
+      <div className="flex-1 rounded-3xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
         {screenStream ? (
           <video
             ref={screenVideoRef}
@@ -423,10 +423,10 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 <Radio className="w-12 h-12 animate-pulse text-rose-400" />
               )}
             </div>
-            <h4 className="text-xl font-extrabold text-white font-display">
+            <h4 className="text-xl font-extrabold text-[var(--text-primary)] font-display">
               {mode === 'SCREEN_SHARE' ? 'Interactive Screen Broadcast' : 'Live Broadcaster Stage'}
             </h4>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
               Click &quot;Share Screen&quot; in the bottom controls bar to broadcast your window or full display.
             </p>
           </div>
@@ -444,10 +444,10 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         {participants.map((p) => (
           <div
             key={p.id}
-            className="flex-shrink-0 px-3.5 py-2 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-2.5 text-xs"
+            className="flex-shrink-0 px-3.5 py-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center gap-2.5 text-xs"
           >
             <Avatar size="xs" src={p.user.avatarUrl} fallbackText={p.user.displayName || p.user.username} />
-            <span className="text-slate-200 truncate max-w-[100px] font-semibold">
+            <span className="text-[var(--text-primary)] truncate max-w-[100px] font-semibold">
               {p.user.displayName || p.user.username}
             </span>
           </div>
@@ -456,3 +456,4 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     </div>
   );
 };
+

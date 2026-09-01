@@ -330,15 +330,15 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
           className="fixed inset-0 bg-black/50 backdrop-blur-md pointer-events-auto transition-opacity"
         />
 
-        <aside className="relative w-84 sm:w-[440px] h-full bg-[#080A12]/95 border-l border-white/[0.1] backdrop-blur-3xl flex flex-col select-none z-50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pointer-events-auto animate-slide-left">
+        <aside className="relative w-84 sm:w-[440px] h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-3xl flex flex-col select-none z-50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pointer-events-auto animate-slide-left">
           {/* Apple Translucent Header */}
-          <div className="h-16 px-5 border-b border-white/[0.08] flex items-center justify-between bg-gradient-to-r from-[#5E5CE6]/10 via-[#BF5AF2]/10 to-transparent">
+          <div className="h-16 px-5 border-b border-[var(--border-subtle)] flex items-center justify-between bg-gradient-to-r from-[#5E5CE6]/10 via-[#BF5AF2]/10 to-transparent">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-[12px] bg-gradient-to-tr from-[#BF5AF2] via-[#5E5CE6] to-[#0A84FF] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(191,90,242,0.4)]">
                 <Sparkles className="w-4 h-4 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white font-display tracking-tight flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-[var(--text-primary)] font-display tracking-tight flex items-center gap-1.5">
                   <span>Gemini AI Scribe & Hub</span>
                   <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#5E5CE6]/30 text-[#64D2FF] font-mono">
                     3.7 / 2.5

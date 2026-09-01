@@ -297,31 +297,32 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xl animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xl animate-fade-in select-none"
+      onClick={onClose}
     >
-      <div className="w-full max-w-6xl h-[88vh] rounded-[28px] bg-[#0A0D15]/95 border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative">
+      <div
+        className="w-full max-w-6xl h-[88vh] rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative text-[var(--text-primary)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Apple Gradient Top Highlight */}
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#5E5CE6]/60 to-transparent" />
 
         {/* Modal Top Header */}
-        <div className="h-16 px-6 bg-white/[0.02] border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
+        <div className="h-16 px-6 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
               <BookOpen className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-extrabold text-white font-display tracking-tight">
+                <h2 className="text-sm font-extrabold text-[var(--text-primary)] font-display tracking-tight">
                   Mivo Documentation & Architecture Reference
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/30">
                   v1.0 Pro
                 </span>
               </div>
-              <span className="text-[11px] text-white/50 font-medium">
+              <span className="text-[11px] text-[var(--text-muted)] font-medium">
                 Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
               </span>
             </div>
@@ -330,11 +331,10 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border border-white/[0.08] transition-all cursor-pointer text-xs font-semibold"
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
               title="Close Documentation (Esc)"
             >
-              <span>Close</span>
-              <span className="text-[10px] text-white/40 font-mono bg-white/[0.08] px-1.5 py-0.5 rounded">ESC</span>
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -342,16 +342,16 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
         {/* Modal Main Body Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Folder Directory Sidebar */}
-          <aside className="w-80 bg-[#070910] border-r border-white/[0.07] flex flex-col p-4 space-y-3.5 flex-shrink-0">
+          <aside className="w-80 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col p-4 space-y-3.5 flex-shrink-0">
             {/* Search Input with Icon */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search articles & guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/[0.03] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
               />
             </div>
 
@@ -365,13 +365,13 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <div key={categoryName} className="space-y-1">
                     <button
                       onClick={() => toggleCategory(categoryName)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-white/40 hover:text-white hover:bg-white/[0.03] transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.03] transition-colors"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isExpanded ? (
                           <FolderOpen className="w-3.5 h-3.5 text-[#5E5CE6]" />
                         ) : (
-                          <Folder className="w-3.5 h-3.5 text-white/40" />
+                          <Folder className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                         )}
                         <span className="truncate">{categoryName}</span>
                       </span>
@@ -379,7 +379,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                     </button>
 
                     {isExpanded && (
-                      <div className="pl-3 space-y-1 border-l border-white/[0.06] ml-2">
+                      <div className="pl-3 space-y-1 border-l border-[var(--border-subtle)] ml-2">
                         {articles.map((art) => {
                           const isSelected = selectedArticleId === art.id;
                           const IconComp = art.icon;
@@ -390,15 +390,15 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                               onClick={() => setSelectedArticleId(art.id)}
                               className={`w-full flex flex-col gap-0.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 border border-[#5E5CE6]/40 text-white shadow-md'
-                                  : 'text-white/70 hover:bg-white/[0.04] hover:text-white'
+                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 border border-[#5E5CE6]/40 text-[var(--text-primary)] shadow-md'
+                                  : 'text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate">
-                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-[#64D2FF]' : 'text-white/40'}`} />
+                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-[#64D2FF]' : 'text-[var(--text-muted)]'}`} />
                                 <span className="truncate text-xs font-semibold">{art.title}</span>
                               </div>
-                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-white/40">
+                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-[var(--text-muted)]">
                                 <span>{art.readTime}</span>
                               </div>
                             </button>
@@ -413,18 +413,18 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           </aside>
 
           {/* Right Article Viewer */}
-          <main className="flex-1 bg-[#090C14] p-6 sm:p-10 overflow-y-auto select-text">
+          <main className="flex-1 bg-[var(--bg-canvas)] p-6 sm:p-10 overflow-y-auto select-text">
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Article Meta Bar */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-                <div className="flex items-center gap-2 text-xs text-white/50">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                   <Compass className="w-3.5 h-3.5 text-[#5E5CE6]" />
                   <span>{activeArticle.category}</span>
                   <span>/</span>
-                  <span className="text-white font-medium">{activeArticle.title}</span>
+                  <span className="text-[var(--text-primary)] font-medium">{activeArticle.title}</span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-white/40 font-mono">
+                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-mono">
                   <Clock className="w-3.5 h-3.5" />
                   <span>{activeArticle.readTime}</span>
                 </div>
@@ -433,7 +433,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
               {/* Rendered Article Content */}
               <div className="space-y-4">
                 <div
-                  className="prose prose-invert max-w-none text-white/80 leading-relaxed text-sm"
+                  className="prose prose-invert max-w-none text-[var(--text-secondary)] leading-relaxed text-sm"
                   dangerouslySetInnerHTML={{
                     __html: formatMarkdownToHtml(activeArticle.content),
                   }}
@@ -441,15 +441,15 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 
                 {/* Code Block if Present */}
                 {activeArticle.codeSnippet && (
-                  <div className="rounded-2xl bg-[#06070B] border border-white/[0.1] overflow-hidden my-5 shadow-lg">
-                    <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.08] flex items-center justify-between text-xs text-white/50">
+                  <div className="rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] overflow-hidden my-5 shadow-lg">
+                    <div className="px-4 py-2.5 bg-white/[0.03] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)]">
                       <div className="flex items-center gap-2">
                         <Terminal className="w-3.5 h-3.5 text-violet-400" />
                         <span className="font-mono text-[11px] uppercase tracking-wider">{activeArticle.codeSnippet.lang}</span>
                       </div>
                       <button
                         onClick={() => handleCopyCode(activeArticle.codeSnippet!.code)}
-                        className="flex items-center gap-1.5 text-[11px] text-white/60 hover:text-white transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                       >
                         {copiedSnippet ? (
                           <>
@@ -477,6 +477,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
     </div>
   );
 };
+
 
 /**
  * Rich markdown formatter helper for docs viewer

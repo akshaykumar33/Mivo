@@ -54,14 +54,14 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
 
   return (
     <>
-      <header className="h-16 px-6 bg-[#07090F]/80 border-b border-white/[0.07] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10 flex-shrink-0">
+      <header className="h-16 px-6 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10 flex-shrink-0">
         {/* Room Title & macOS-Style Hash Badge */}
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-[12px] bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#5E5CE6] shadow-sm">
               <Hash className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <h2 className="text-sm font-bold text-white font-display tracking-tight truncate">{room.name}</h2>
+            <h2 className="text-sm font-bold text-[var(--text-primary)] font-display tracking-tight truncate">{room.name}</h2>
             {room.isLocked && (
               <span title="Private Encrypted Room">
                 <Lock className="w-3.5 h-3.5 text-[#FF9F0A]" />

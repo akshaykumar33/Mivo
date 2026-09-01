@@ -26,14 +26,14 @@ export default function CommunityPage() {
     <div className="flex-1 flex h-full overflow-hidden">
       <ChannelSidebar communityId={communityId} />
 
-      <div className="flex-1 bg-[#1C2232] flex flex-col items-center justify-center p-8 text-center select-none">
+      <div className="flex-1 bg-[var(--bg-canvas)] flex flex-col items-center justify-center p-8 text-center select-none">
         <div className="w-16 h-16 rounded-3xl bg-violet-600/20 text-violet-400 flex items-center justify-center mb-4 border border-violet-500/30">
           <MessageSquare className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-1">
+        <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">
           {activeCommunity?.name || 'Community Overview'}
         </h3>
-        <p className="text-xs text-slate-400 max-w-sm">
+        <p className="text-xs text-[var(--text-secondary)] max-w-sm">
           Select a channel or room from the sidebar to start collaborating.
         </p>
       </div>

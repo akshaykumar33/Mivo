@@ -79,18 +79,18 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   return (
-    <div className="p-3 sm:p-4 pb-20 sm:pb-24 bg-[#080A12]/90 border-t border-white/[0.07] backdrop-blur-2xl select-none z-10 relative">
+    <div className="p-3 sm:p-4 pb-20 sm:pb-24 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] backdrop-blur-2xl select-none z-10 relative">
       {/* Interactive Emoji Picker Popover */}
       {isEmojiPickerOpen && (
         <div
           ref={emojiPickerRef}
-          className="absolute bottom-24 right-6 p-3 rounded-2xl bg-[#0F1220]/95 border border-white/[0.12] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 animate-slide-up w-64 ring-1 ring-white/[0.08]"
+          className="absolute bottom-24 right-6 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 animate-slide-up w-64 ring-1 ring-white/[0.08]"
         >
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.08] text-xs font-bold text-white font-display">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] font-display">
             <span>Quick Emojis</span>
             <button
               onClick={() => setIsEmojiPickerOpen(false)}
-              className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -102,8 +102,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                 key={emoji}
                 type="button"
                 onClick={() => handleInsertEmoji(emoji)}
-                className="w-7 h-7 rounded-lg hover:bg-white/[0.1] hover:scale-125 active:scale-95 text-base flex items-center justify-center transition-all cursor-pointer"
-                title={`Insert ${emoji}`}
+                className="p-1.5 rounded-lg hover:bg-white/[0.1] hover:scale-125 transition-all text-base cursor-pointer"
               >
                 {emoji}
               </button>
@@ -112,52 +111,58 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         </div>
       )}
 
-      <div className="flex items-center gap-2 px-4 py-2 rounded-[18px] bg-white/[0.03] border border-white/[0.08] focus-within:border-[#5E5CE6] focus-within:ring-2 focus-within:ring-[#5E5CE6]/20 transition-all shadow-inner">
-        <button
-          type="button"
-          className="p-1.5 rounded-[10px] text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-          title="Add Attachment"
-        >
-          <Paperclip className="w-4 h-4" />
-        </button>
+      <div className="max-w-5xl mx-auto">
+        {/* Apple Luxury Frosted Glass Input Chassis */}
+        <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-[#5E5CE6] focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
+          {/* Action Tools Left */}
+          <button
+            type="button"
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
+            title="Attach file (Drag & Drop supported)"
+          >
+            <Paperclip className="w-4 h-4 stroke-[2.2]" />
+          </button>
 
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={`Message #${roomName}... (Press Enter to send)`}
-          className="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none resize-none max-h-32 min-h-[24px] leading-relaxed"
-        />
+          {/* Expandable Textarea */}
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={`Message #${roomName}... (Press Enter to send)`}
+            className="flex-1 bg-transparent border-0 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none py-1.5 max-h-32 font-medium"
+          />
 
-        <button
-          type="button"
-          onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-          className={`p-1.5 rounded-[10px] transition-colors cursor-pointer ${
-            isEmojiPickerOpen
-              ? 'text-[#FFD60A] bg-[#FFD60A]/15 border border-[#FFD60A]/30'
-              : 'text-white/40 hover:text-white hover:bg-white/[0.06]'
-          }`}
-          title="Insert Emoji"
-        >
-          <Smile className="w-4 h-4" />
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+            className={`p-1.5 rounded-[10px] transition-colors cursor-pointer ${
+              isEmojiPickerOpen
+                ? 'text-[#FFD60A] bg-[#FFD60A]/15 border border-[#FFD60A]/30'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.06]'
+            }`}
+            title="Insert Emoji"
+          >
+            <Smile className="w-4 h-4" />
+          </button>
 
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={!content.trim() || isSending}
-          className={`p-2 rounded-[12px] transition-all duration-200 cursor-pointer ${
-            content.trim() && !isSending
-              ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] hover:scale-105 text-white shadow-md shadow-[#5E5CE6]/30'
-              : 'bg-white/[0.04] text-white/20 cursor-not-allowed'
-          }`}
-          title="Send Message"
-        >
-          <Send className="w-4 h-4" />
-        </button>
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!content.trim() || isSending}
+            className={`p-2 rounded-[12px] transition-all duration-200 cursor-pointer ${
+              content.trim() && !isSending
+                ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] hover:scale-105 text-white shadow-md shadow-[#5E5CE6]/30'
+                : 'bg-white/[0.04] text-white/20 cursor-not-allowed'
+            }`}
+            title="Send Message"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+

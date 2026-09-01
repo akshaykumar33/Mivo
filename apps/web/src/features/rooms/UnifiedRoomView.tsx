@@ -89,10 +89,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
   if (!activeRoom) {
     return (
-      <div className="flex-1 h-full bg-[#06070B] flex items-center justify-center">
+      <div className="flex-1 h-full bg-[var(--bg-canvas)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-3 border-[#5E5CE6] border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-white/50 font-semibold font-display">Connecting to Stage...</span>
+          <span className="text-xs text-[var(--text-muted)] font-semibold font-display">Connecting to Stage...</span>
         </div>
       </div>
     );
@@ -137,7 +137,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-[#06070B] overflow-hidden select-none relative">
+    <div className="flex-1 h-full flex flex-col bg-[var(--bg-canvas)] overflow-hidden select-none relative">
       {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
       <RoomHeader
         room={activeRoom}

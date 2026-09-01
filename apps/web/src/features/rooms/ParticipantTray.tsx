@@ -27,9 +27,9 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-64 h-full bg-[#080A12]/95 border-l border-white/[0.07] backdrop-blur-2xl p-4 flex flex-col select-none z-20 transition-all">
-      <div className="text-[11px] font-extrabold uppercase tracking-wider text-white/40 mb-3 flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-white">
+    <aside className="w-64 h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-2xl p-4 flex flex-col select-none z-20 transition-all">
+      <div className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center justify-between">
+        <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
           <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
           <span>Stage Members</span>
         </span>
