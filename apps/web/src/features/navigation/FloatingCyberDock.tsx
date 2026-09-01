@@ -117,13 +117,6 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
       color: 'from-[#5E5CE6] to-[#BF5AF2]',
       glow: 'shadow-[0_4px_16px_rgba(94,92,230,0.4)]',
     },
-    {
-      id: 'STREAM',
-      label: 'Stage',
-      icon: Radio,
-      color: 'from-[#FF375F] to-[#FF453A]',
-      glow: 'shadow-[0_4px_16px_rgba(255,55,95,0.4)]',
-    },
   ];
 
   const reactionEmojis = ['❤️', '👏', '🔥', '🎉', '👍', '😂', '🚀', '💯'];

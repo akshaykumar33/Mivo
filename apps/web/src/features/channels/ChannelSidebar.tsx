@@ -118,54 +118,13 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
             </div>
           </div>
 
-          {/* Apple Segmented Control Navigation Tabs */}
-          <div className="px-3.5 pt-3 pb-1.5">
-            <div className="p-1 rounded-[14px] bg-white/[0.04] border border-white/[0.06] flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab('ALL')}
-                className={`flex-1 py-1.5 rounded-[10px] text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                  activeTab === 'ALL'
-                    ? 'bg-gradient-to-r from-[#5E5CE6] to-[#0A84FF] text-white shadow-[0_4px_12px_rgba(94,92,230,0.3)]'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5 stroke-[2.2]" />
-                <span>All</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('STAGES')}
-                className={`flex-1 py-1.5 rounded-[10px] text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                  activeTab === 'STAGES'
-                    ? 'bg-gradient-to-r from-[#0A84FF] to-[#64D2FF] text-white shadow-[0_4px_12px_rgba(10,132,255,0.3)]'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Radio className="w-3.5 h-3.5 stroke-[2.2]" />
-                <span>Stages</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('MEMBERS')}
-                className={`flex-1 py-1.5 rounded-[10px] text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                  activeTab === 'MEMBERS'
-                    ? 'bg-gradient-to-r from-[#30D158] to-[#63E6E2] text-black font-bold shadow-[0_4px_12px_rgba(48,209,88,0.3)]'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5 stroke-[2.2]" />
-                <span>Roster</span>
-              </button>
-            </div>
-          </div>
-
           {/* Apple-Style Search Input with ⌘K Badge */}
-          <div className="px-3.5 py-1.5">
+          <div className="px-3.5 pt-3 pb-1.5">
             <div className="relative flex items-center">
               <Search className="w-3.5 h-3.5 text-white/40 absolute left-3" />
               <input
                 type="text"
-                placeholder="Filter channels & stages..."
+                placeholder="Filter channels & rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-9 py-1.5 rounded-[12px] bg-white/[0.03] border border-white/[0.07] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
@@ -175,26 +134,25 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               </span>
             </div>
           </div>
+        </div>
 
-          {/* Scrollable Tree View */}
-          <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 scrollbar-thin">
-            {activeTab !== 'MEMBERS' ? (
-              <>
-                <div className="flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-[#BF5AF2]" />
-                    <span>{activeTab === 'STAGES' ? 'Live Stages' : 'Spaces & Channels'}</span>
-                  </span>
-                  {isOwnerOrAdmin && activeTab === 'ALL' && (
-                    <button
-                      onClick={() => setIsCreateChannelOpen(true)}
-                      className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
-                      title="Create Space"
-                    >
-                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </button>
-                  )}
-                </div>
+        {/* Scrollable Tree View */}
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 scrollbar-thin">
+          <div className="flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-[#BF5AF2]" />
+              <span>Spaces & Channels</span>
+            </span>
+            {isOwnerOrAdmin && (
+              <button
+                onClick={() => setIsCreateChannelOpen(true)}
+                className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                title="Create Space"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            )}
+          </div>
 
                 <div className="space-y-3.5">
                   {filteredChannels.map((channel) => (
@@ -267,40 +225,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                     </div>
                   ))}
                 </div>
-              </>
-            ) : (
-              /* Members Directory Variant */
-              <div className="space-y-3">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2">
-                  Community Roster
-                </div>
-                <div className="space-y-1">
-                  {((activeCommunity as any).members || []).map((m: any) => (
-                    <div
-                      key={m.userId}
-                      className="flex items-center gap-2.5 p-2 rounded-[14px] bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] transition-all"
-                    >
-                      <Avatar
-                        size="sm"
-                        src={m.user?.avatarUrl}
-                        fallbackText={m.user?.displayName || m.user?.username}
-                        status={m.user?.status || 'ONLINE'}
-                      />
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-white truncate">
-                          {m.user?.displayName || m.user?.username}
-                        </div>
-                        <div className="text-[10px] text-white/40 truncate">
-                          {m.role?.name || 'Member'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
-            )}
-          </div>
-        </div>
 
         {/* macOS Style User Status Footer */}
         <div className="h-16 bg-[#06070B]/90 px-3.5 border-t border-white/[0.07] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
