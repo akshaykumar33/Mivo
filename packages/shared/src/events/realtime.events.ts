@@ -19,6 +19,10 @@ export const REALTIME_EVENTS = {
   ROOM_MODE_CHANGED: 'room:mode_changed',
   ROOM_PARTICIPANT_STATE_UPDATED: 'room:participant_state_updated',
 
+  // Realtime Messaging
+  CHAT_SEND_MESSAGE: 'chat:send_message',
+  CHAT_NEW_MESSAGE: 'chat:new_message',
+
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',

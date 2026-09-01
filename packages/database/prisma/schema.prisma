@@ -39,6 +39,7 @@ model User {
   ownedCommunities Community[]       @relation("CommunityOwner")
   memberships      CommunityMember[]
   roomMemberships  RoomMember[]
+  messages         Message[]
   auditLogs        AuditLog[]
 
   @@index([email])
@@ -226,6 +227,7 @@ model Room {
 
   channel     Channel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
   members     RoomMember[]
+  messages    Message[]
 
   @@index([channelId])
   @@index([activeMode])
@@ -271,4 +273,26 @@ model AuditLog {
   @@index([communityId, createdAt(sort: Desc)])
   @@index([userId])
   @@map("audit_logs")
+}
+
+// -----------------------------------------------------------------------------
+// REAL-TIME MESSAGING DOMAIN
+// -----------------------------------------------------------------------------
+
+model Message {
+  id          String    @id @default(uuid()) @db.Uuid
+  roomId      String    @db.Uuid
+  senderId    String    @db.Uuid
+  content     String    @db.Text
+  attachments Json?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime? @db.Timestamptz(6)
+
+  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender      User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("messages")
 }

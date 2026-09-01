@@ -10,6 +10,7 @@ export * from './types/community.js';
 export * from './types/channel.js';
 export * from './types/room.js';
 export * from './types/rbac.js';
+export * from './types/message.js';
 
 // Schemas
 export * from './schemas/auth.schema.js';
@@ -17,6 +18,7 @@ export * from './schemas/community.schema.js';
 export * from './schemas/channel.schema.js';
 export * from './schemas/room.schema.js';
 export * from './schemas/rbac.schema.js';
+export * from './schemas/message.schema.js';
 
 // Events
 export * from './events/realtime.events.js';
