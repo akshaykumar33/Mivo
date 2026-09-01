@@ -7,6 +7,7 @@ import { RoomsModule } from './rooms/rooms.module.js';
 import { RbacModule } from './rbac/rbac.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { MessagesModule } from './messages/messages.module.js';
+import { AiModule } from './ai/ai.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MessagesModule } from './messages/messages.module.js';
     RoomsModule,
     RealtimeModule,
     MessagesModule,
+    AiModule,
   ],
 })
 export class AppModule {}
