@@ -1,0 +1,274 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// USER & IDENTITY DOMAIN
+// -----------------------------------------------------------------------------
+
+enum UserStatus {
+  ONLINE
+  IDLE
+  DND
+  OFFLINE
+}
+
+model User {
+  id               String            @id @default(uuid()) @db.Uuid
+  email            String            @unique @db.VarChar(255)
+  username         String            @unique @db.VarChar(32)
+  displayName      String            @db.VarChar(64)
+  passwordHash     String            @db.VarChar(255)
+  avatarUrl        String?           @db.VarChar(512)
+  bannerUrl        String?           @db.VarChar(512)
+  bio              String?           @db.VarChar(256)
+  customStatus     String?           @db.VarChar(128)
+  status           UserStatus        @default(OFFLINE)
+  isEmailVerified  Boolean           @default(false)
+  lastSeenAt       DateTime?         @db.Timestamptz(6)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(6)
+  deletedAt        DateTime?         @db.Timestamptz(6)
+
+  sessions         Session[]
+  ownedCommunities Community[]       @relation("CommunityOwner")
+  memberships      CommunityMember[]
+  roomMemberships  RoomMember[]
+  auditLogs        AuditLog[]
+
+  @@index([email])
+  @@index([username])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Session {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  refreshToken String    @unique @db.VarChar(255)
+  userAgent    String?   @db.VarChar(512)
+  ipAddress    String?   @db.VarChar(45)
+  isRevoked    Boolean   @default(false)
+  expiresAt    DateTime  @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// -----------------------------------------------------------------------------
+// COMMUNITY DOMAIN
+// -----------------------------------------------------------------------------
+
+enum VisibilityType {
+  PUBLIC
+  PRIVATE
+  INVITE_ONLY
+}
+
+model Community {
+  id          String            @id @default(uuid()) @db.Uuid
+  name        String            @db.VarChar(64)
+  slug        String            @unique @db.VarChar(64)
+  description String?           @db.VarChar(500)
+  iconUrl     String?           @db.VarChar(512)
+  bannerUrl   String?           @db.VarChar(512)
+  ownerId     String            @db.Uuid
+  visibility  VisibilityType    @default(PUBLIC)
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?         @db.Timestamptz(6)
+
+  owner       User              @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members     CommunityMember[]
+  roles       Role[]
+  channels    Channel[]
+  auditLogs   AuditLog[]
+
+  @@index([slug])
+  @@index([ownerId])
+  @@index([visibility])
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String       @id @default(uuid()) @db.Uuid
+  communityId String       @db.Uuid
+  userId      String       @db.Uuid
+  nickname    String?      @db.VarChar(64)
+  roleId      String       @db.Uuid
+  joinedAt    DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  community   Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role         @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("community_members")
+}
+
+// -----------------------------------------------------------------------------
+// RBAC: ROLES & GRANULAR PERMISSIONS
+// -----------------------------------------------------------------------------
+
+model Role {
+  id          String            @id @default(uuid()) @db.Uuid
+  communityId String            @db.Uuid
+  name        String            @db.VarChar(32)
+  color       String?           @db.VarChar(7)
+  position    Int               @default(0)
+  isDefault   Boolean           @default(false)
+  isSystem    Boolean           @default(false)
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @db.Timestamptz(6)
+
+  community   Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  members     CommunityMember[]
+
+  @@unique([communityId, name])
+  @@index([communityId, position])
+  @@map("roles")
+}
+
+model Permission {
+  id          String            @id @default(uuid()) @db.Uuid
+  key         String            @unique @db.VarChar(64)
+  name        String            @db.VarChar(64)
+  category    String            @db.VarChar(32)
+  description String?           @db.VarChar(255)
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+
+  roles       RolePermission[]
+
+  @@index([key])
+  @@index([category])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// -----------------------------------------------------------------------------
+// CHANNELS & UNIFIED ROOMS
+// -----------------------------------------------------------------------------
+
+enum ChannelType {
+  TEXT
+  VOICE
+  MEDIA
+  GENERAL
+}
+
+model Channel {
+  id          String         @id @default(uuid()) @db.Uuid
+  communityId String         @db.Uuid
+  name        String         @db.VarChar(64)
+  topic       String?        @db.VarChar(255)
+  type        ChannelType    @default(GENERAL)
+  position    Int            @default(0)
+  isPrivate   Boolean        @default(false)
+  createdAt   DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?      @db.Timestamptz(6)
+
+  community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  rooms       Room[]
+
+  @@index([communityId, position])
+  @@map("channels")
+}
+
+enum RoomCommunicationMode {
+  TEXT
+  VOICE
+  VIDEO
+  SCREEN_SHARE
+  STREAM
+}
+
+model Room {
+  id          String                @id @default(uuid()) @db.Uuid
+  channelId   String                @db.Uuid
+  name        String                @db.VarChar(64)
+  description String?               @db.VarChar(255)
+  activeMode  RoomCommunicationMode @default(TEXT)
+  maxCapacity Int                   @default(100)
+  isLocked    Boolean               @default(false)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?             @db.Timestamptz(6)
+
+  channel     Channel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  members     RoomMember[]
+
+  @@index([channelId])
+  @@index([activeMode])
+  @@map("rooms")
+}
+
+model RoomMember {
+  id          String                @id @default(uuid()) @db.Uuid
+  roomId      String                @db.Uuid
+  userId      String                @db.Uuid
+  isMuted     Boolean               @default(false)
+  isDeafened  Boolean               @default(false)
+  isCameraOn  Boolean               @default(false)
+  isScreenOn  Boolean               @default(false)
+  joinedAt    DateTime              @default(now()) @db.Timestamptz(6)
+
+  room        Room                  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@map("room_members")
+}
+
+// -----------------------------------------------------------------------------
+// AUDIT LOGGING DOMAIN
+// -----------------------------------------------------------------------------
+
+model AuditLog {
+  id          String     @id @default(uuid()) @db.Uuid
+  communityId String?    @db.Uuid
+  userId      String     @db.Uuid
+  action      String     @db.VarChar(64)
+  targetId    String?    @db.VarChar(64)
+  details     Json?
+  ipAddress   String?    @db.VarChar(45)
+  createdAt   DateTime   @default(now()) @db.Timestamptz(6)
+
+  community   Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("audit_logs")
+}
