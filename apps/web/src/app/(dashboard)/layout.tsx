@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { CommunitySidebar } from '@/features/communities/CommunitySidebar';
+import { FloatingDocsButton } from '@/features/docs/FloatingDocsButton';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 
@@ -35,12 +36,15 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen w-screen bg-[#0B0E14] overflow-hidden">
+    <div className="flex h-screen w-screen bg-[#0B0E14] overflow-hidden relative">
       {/* Leftmost Community Icon Rail */}
       <CommunitySidebar />
 
       {/* Main Dynamic Area */}
       <main className="flex-1 flex overflow-hidden">{children}</main>
+
+      {/* Persistent Floating Interactive User Documentation Hub */}
+      <FloatingDocsButton />
     </div>
   );
 }
