@@ -206,113 +206,116 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
         {/* Apple Glass Hairline Separator */}
         <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
 
-        {/* 2. Media Hardware & Live Controls */}
-        <div className="flex items-center gap-1.5">
-          {/* Microphone Toggle with Speaking Wave Halo */}
-          <button
-            onClick={onToggleMute}
-            className={`relative group/mic p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
-              isMuted
-                ? 'bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/40 hover:bg-[#FF453A] hover:text-white shadow-sm'
-                : isSpeaking
-                ? 'bg-[#30D158] text-black font-bold border border-white shadow-[0_0_20px_rgba(48,209,88,0.7)] scale-105 animate-speaking'
-                : 'bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/40 hover:bg-[#30D158] hover:text-black shadow-sm'
-            }`}
-            title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
-          >
-            {isMuted ? <MicOff className="w-4 h-4 stroke-[2.2]" /> : <Mic className="w-4 h-4 stroke-[2.2]" />}
+        {/* 2. Media Hardware & Live Controls (Rendered during active calls / live stages) */}
+        {activeMode !== 'TEXT' && (
+          <>
+            <div className="flex items-center gap-1.5">
+              {/* Microphone Toggle with Speaking Wave Halo */}
+              <button
+                onClick={onToggleMute}
+                className={`relative group/mic p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+                  isMuted
+                    ? 'bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/40 hover:bg-[#FF453A] hover:text-white shadow-sm'
+                    : isSpeaking
+                    ? 'bg-[#30D158] text-black font-bold border border-white shadow-[0_0_20px_rgba(48,209,88,0.7)] scale-105 animate-speaking'
+                    : 'bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/40 hover:bg-[#30D158] hover:text-black shadow-sm'
+                }`}
+                title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
+              >
+                {isMuted ? <MicOff className="w-4 h-4 stroke-[2.2]" /> : <Mic className="w-4 h-4 stroke-[2.2]" />}
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/mic:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              {isMuted ? 'Mic: Muted' : 'Mic: Live'}
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/mic:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  {isMuted ? 'Mic: Muted' : 'Mic: Live'}
+                </div>
+              </button>
+
+              {/* Camera Toggle */}
+              <button
+                onClick={() => {
+                  if (activeMode !== 'VIDEO' && activeMode !== 'SCREEN_SHARE') {
+                    onModeChange('VIDEO');
+                  }
+                  onToggleCamera();
+                }}
+                className={`relative group/cam p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+                  isCameraOn
+                    ? 'bg-gradient-to-tr from-[#0A84FF] to-[#64D2FF] text-white shadow-[0_0_20px_rgba(100,210,255,0.5)] border border-white/30 scale-105'
+                    : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                }`}
+                title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
+              >
+                {isCameraOn ? <Video className="w-4 h-4 stroke-[2.2]" /> : <VideoOff className="w-4 h-4 stroke-[2.2]" />}
+
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/cam:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  {isCameraOn ? 'Camera: Active' : 'Camera: Off'}
+                </div>
+              </button>
+
+              {/* Screen Share Toggle */}
+              <button
+                onClick={() => {
+                  if (activeMode !== 'SCREEN_SHARE') {
+                    onModeChange('SCREEN_SHARE');
+                  }
+                  onToggleScreen();
+                }}
+                className={`relative group/screen p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+                  isScreenOn
+                    ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] text-white shadow-[0_0_20px_rgba(191,90,242,0.5)] border border-white/30 scale-105'
+                    : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                }`}
+                title={isScreenOn ? 'Stop Sharing' : 'Share Screen'}
+              >
+                <Monitor className="w-4 h-4 stroke-[2.2]" />
+
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/screen:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  {isScreenOn ? 'Sharing Screen' : 'Share Display'}
+                </div>
+              </button>
+
+              {/* Google Meet / Zoom Style In-Meeting Reactions Trigger */}
+              <button
+                onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
+                className={`relative group/react p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+                  isReactionsTrayOpen
+                    ? 'bg-gradient-to-tr from-[#FFBD2E] to-[#FF9F0A] text-black font-bold shadow-[0_0_20px_rgba(255,189,46,0.6)] scale-105'
+                    : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                }`}
+                title="In-Meeting Emoji Reactions"
+              >
+                <Smile className="w-4 h-4 stroke-[2.2]" />
+
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/react:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  Send Reactions
+                </div>
+              </button>
+
+              {/* Floating Picture-in-Picture (PiP) */}
+              <button
+                onClick={onTogglePiP}
+                className={`relative group/pip p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+                  isPiPOpen
+                    ? 'bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/50 shadow-[0_0_16px_rgba(255,159,10,0.3)]'
+                    : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+                }`}
+                title="Floating Presenter Stage (Picture-in-Picture)"
+              >
+                <PictureInPicture2 className="w-4 h-4 stroke-[2.2]" />
+
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/pip:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  Floating PiP Stage
+                </div>
+              </button>
             </div>
-          </button>
 
-          {/* Camera Toggle */}
-          <button
-            onClick={() => {
-              if (activeMode !== 'VIDEO' && activeMode !== 'SCREEN_SHARE') {
-                onModeChange('VIDEO');
-              }
-              onToggleCamera();
-            }}
-            className={`relative group/cam p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
-              isCameraOn
-                ? 'bg-gradient-to-tr from-[#0A84FF] to-[#64D2FF] text-white shadow-[0_0_20px_rgba(100,210,255,0.5)] border border-white/30 scale-105'
-                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
-            }`}
-            title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
-          >
-            {isCameraOn ? <Video className="w-4 h-4 stroke-[2.2]" /> : <VideoOff className="w-4 h-4 stroke-[2.2]" />}
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/cam:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              {isCameraOn ? 'Camera: Active' : 'Camera: Off'}
-            </div>
-          </button>
-
-          {/* Screen Share Toggle */}
-          <button
-            onClick={() => {
-              if (activeMode !== 'SCREEN_SHARE') {
-                onModeChange('SCREEN_SHARE');
-              }
-              onToggleScreen();
-            }}
-            className={`relative group/screen p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
-              isScreenOn
-                ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] text-white shadow-[0_0_20px_rgba(191,90,242,0.5)] border border-white/30 scale-105'
-                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
-            }`}
-            title={isScreenOn ? 'Stop Sharing' : 'Share Screen'}
-          >
-            <Monitor className="w-4 h-4 stroke-[2.2]" />
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/screen:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              {isScreenOn ? 'Sharing Screen' : 'Share Display'}
-            </div>
-          </button>
-
-          {/* Google Meet / Zoom Style In-Meeting Reactions Trigger */}
-          <button
-            onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
-            className={`relative group/react p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
-              isReactionsTrayOpen
-                ? 'bg-gradient-to-tr from-[#FFBD2E] to-[#FF9F0A] text-black font-bold shadow-[0_0_20px_rgba(255,189,46,0.6)] scale-105'
-                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
-            }`}
-            title="In-Meeting Emoji Reactions"
-          >
-            <Smile className="w-4 h-4 stroke-[2.2]" />
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/react:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              Send Reactions
-            </div>
-          </button>
-
-          {/* Floating Picture-in-Picture (PiP) */}
-          <button
-            onClick={onTogglePiP}
-            className={`relative group/pip p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
-              isPiPOpen
-                ? 'bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/50 shadow-[0_0_16px_rgba(255,159,10,0.3)]'
-                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
-            }`}
-            title="Floating Presenter Stage (Picture-in-Picture)"
-          >
-            <PictureInPicture2 className="w-4 h-4 stroke-[2.2]" />
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/pip:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              Floating PiP Stage
-            </div>
-          </button>
-        </div>
-
-        {/* Apple Glass Hairline Separator */}
-        <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
+            <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
+          </>
+        )}
 
         {/* 3. Intelligent Tools: Recording, AI Whisper, Docs, Roster */}
         <div className="flex items-center gap-1.5">
-          {/* Permission-Gated Host Recording */}
-          {isHost && (
+          {/* Permission-Gated Host Recording (Only during live calls) */}
+          {isHost && activeMode !== 'TEXT' && (
             <button
               onClick={onToggleRecording}
               className={`relative group/rec p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
@@ -378,21 +381,23 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             </div>
           </button>
 
-          {/* Apple Glass Hairline Separator */}
-          <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
+          {/* Leave Stage Button (Only during active calling modes) */}
+          {activeMode !== 'TEXT' && (
+            <>
+              <div className="w-[1px] h-7 bg-white/[0.1] mx-0.5" />
+              <button
+                onClick={onDisconnect}
+                className="relative group/leave p-2.5 sm:p-3 rounded-[16px] bg-[#FF453A] hover:bg-[#FF375F] text-white shadow-[0_4px_20px_rgba(255,69,58,0.5)] border border-white/20 hover:scale-105 transition-all duration-200 cursor-pointer"
+                title="Leave Stage (Ctrl+W)"
+              >
+                <PhoneOff className="w-4 h-4 stroke-[2.2]" />
 
-          {/* Disconnect / Leave Stage Button */}
-          <button
-            onClick={onDisconnect}
-            className="relative group/leave p-2.5 sm:p-3 rounded-[16px] bg-[#FF453A] hover:bg-[#FF375F] text-white shadow-[0_4px_20px_rgba(255,69,58,0.5)] border border-white/20 hover:scale-105 transition-all duration-200 cursor-pointer"
-            title="Leave Stage (Ctrl+W)"
-          >
-            <PhoneOff className="w-4 h-4 stroke-[2.2]" />
-
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-[#FF453A] opacity-0 pointer-events-none group-hover/leave:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-              Leave Stage
-            </div>
-          </button>
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-[#FF453A] opacity-0 pointer-events-none group-hover/leave:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  Leave Stage
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

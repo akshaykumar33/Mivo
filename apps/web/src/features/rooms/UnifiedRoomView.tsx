@@ -44,7 +44,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     toggleScreenShare,
   } = useRoomStore();
 
-  const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(true);
+  const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(false);
   const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
   const [isPiPOpen, setIsPiPOpen] = React.useState(false);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
