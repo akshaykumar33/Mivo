@@ -16,7 +16,7 @@ export const CommunitySidebar: React.FC = () => {
     fetchCommunities();
   }, [fetchCommunities]);
 
-  const isDMsActive = pathname.startsWith('/channels/@me');
+  const isDMsActive = pathname.startsWith('/channels');
 
   return (
     <>
@@ -29,7 +29,7 @@ export const CommunitySidebar: React.FC = () => {
             }`}
           />
           <Link
-            href="/channels/@me"
+            href="/channels"
             className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
               isDMsActive
                 ? 'bg-violet-600 text-white rounded-xl shadow-lg shadow-violet-600/30'

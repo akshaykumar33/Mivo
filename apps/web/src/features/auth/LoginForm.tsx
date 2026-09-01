@@ -31,9 +31,30 @@ export const LoginForm: React.FC = () => {
 
     if (res.success && res.data) {
       setAuth(res.data.user, res.data.accessToken);
-      router.push('/channels/@me');
+      router.push('/channels');
     } else {
       setError(res.error?.message || 'Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleQuickLogin = async (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('Password123!');
+    setError(null);
+    setIsLoading(true);
+
+    const res = await api.post<AuthSessionResponse>('/api/v1/auth/login', {
+      email: demoEmail,
+      password: 'Password123!',
+    });
+
+    setIsLoading(false);
+
+    if (res.success && res.data) {
+      setAuth(res.data.user, res.data.accessToken);
+      router.push('/channels');
+    } else {
+      setError(res.error?.message || 'Login failed.');
     }
   };
 
@@ -76,6 +97,43 @@ export const LoginForm: React.FC = () => {
           Sign In
         </Button>
       </form>
+
+      {/* 1-Click Demo Accounts */}
+      <div className="mt-6 pt-5 border-t border-slate-800">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 text-center">
+          Quick Demo Accounts (1-Click Login)
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('dev@mivo.app')}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+          >
+            👑 Dev Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('alex@mivo.app')}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+          >
+            🎨 Alex (Designer)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('sarah@mivo.app')}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+          >
+            ⚡ Sarah (Backend)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('elena@mivo.app')}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+          >
+            📹 Elena (Media)
+          </button>
+        </div>
+      </div>
 
       <div className="mt-6 text-center text-xs text-slate-400">
         Don&apos;t have an account?{' '}
