@@ -364,6 +364,23 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             </div>
           </button>
 
+          {/* Floating Emoji Reactions Tray Toggle */}
+          <button
+            onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
+            className={`relative group/reactions p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+              isReactionsTrayOpen
+                ? 'bg-[#FFD60A]/20 text-[#FFD60A] border border-[#FFD60A]/50 shadow-[0_0_16px_rgba(255,214,10,0.3)]'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+            }`}
+            title="Send Floating Reaction (Emoji / Raise Hand)"
+          >
+            <Smile className="w-4 h-4 stroke-[2.2]" />
+
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/reactions:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              Floating Reactions
+            </div>
+          </button>
+
           {/* Visual Theme Engine Switcher */}
           <button
             onClick={() => setIsThemeModalOpen(true)}
