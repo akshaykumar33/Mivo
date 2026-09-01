@@ -57,8 +57,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   return (
     <div
       className={cn(
-        'relative inline-flex flex-shrink-0 items-center justify-center rounded-full select-none',
-        isSpeaking && 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900 animate-pulse',
+        'relative inline-flex flex-shrink-0 items-center justify-center rounded-full select-none transition-all duration-200',
+        isSpeaking && 'ring-3 ring-emerald-500 ring-offset-2 ring-offset-[#0B0E14] shadow-lg shadow-emerald-500/40 animate-speaking',
         sizes[size],
         className
       )}
