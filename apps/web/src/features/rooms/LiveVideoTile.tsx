@@ -2,7 +2,20 @@
 
 import * as React from 'react';
 import { Avatar } from '@mivo/ui';
-import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Pin,
+  PinOff,
+  Maximize2,
+  Volume2,
+  VolumeX,
+  GripVertical,
+  Sliders,
+  Sparkles,
+} from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
 export interface LiveVideoTileProps {
@@ -10,8 +23,13 @@ export interface LiveVideoTileProps {
   isMe: boolean;
   isMuted: boolean;
   isCameraOn: boolean;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
   mediaStream?: MediaStream | null;
   audioLevel?: number;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
@@ -19,10 +37,18 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   isMe,
   isMuted,
   isCameraOn,
+  isPinned = false,
+  onTogglePin,
   mediaStream,
   audioLevel = 0,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [volume, setVolume] = React.useState(100);
+  const [showVolumeSlider, setShowVolumeSlider] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
 
   React.useEffect(() => {
     if (videoRef.current && mediaStream && isCameraOn) {
@@ -37,8 +63,19 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
 
   return (
     <div
-      className={`relative rounded-3xl bg-[#08090E] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 ${
-        isSpeaking
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setShowVolumeSlider(false);
+      }}
+      className={`relative rounded-3xl bg-[#08090E] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
+        isPinned
+          ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/20'
+          : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
           : 'border-white/[0.08] hover:border-violet-500/40'
       }`}
@@ -64,22 +101,108 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         </div>
       )}
 
-      {/* Floating Bottom Nameplate & Media Statuses */}
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[#090B10]/85 backdrop-blur-xl border border-white/[0.08] text-xs text-white z-10 shadow-lg">
-        <span className="truncate font-bold text-xs">
-          {user.displayName || user.username}
-          {isMe && ' (You)'}
+      {/* Top Left Drag Handle & Connection Badge */}
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div
+          className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-slate-400 hover:text-white"
+          title="Drag & Drop to Reorder"
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06]">
+          1080p • 60fps
         </span>
+      </div>
+
+      {/* Top Right Quick-Action Hover Controls */}
+      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Pin to Spotlight Button */}
+        {onTogglePin && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin();
+            }}
+            className={`p-1.5 rounded-xl backdrop-blur-md border transition-all ${
+              isPinned
+                ? 'bg-violet-600 text-white border-violet-400'
+                : 'bg-[#090B10]/80 border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.08]'
+            }`}
+            title={isPinned ? 'Unpin from Main Stage' : 'Spotlight / Pin to Main Stage'}
+          >
+            {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+          </button>
+        )}
+
+        {/* Volume Slider Toggle for Remote Peers */}
+        {!isMe && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVolumeSlider(!showVolumeSlider);
+              }}
+              className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors"
+              title="Adjust Volume"
+            >
+              {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+
+            {showVolumeSlider && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-9 p-3 rounded-2xl bg-[#090B10]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl z-30 w-36 space-y-1.5"
+              >
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                  <span>User Volume</span>
+                  <span className="text-violet-400">{volume}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Floating Bottom Nameplate, Dynamic Equalizer & Media Badges */}
+      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[#090B10]/85 backdrop-blur-xl border border-white/[0.08] text-xs text-white z-10 shadow-lg">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="truncate font-bold text-xs">
+            {user.displayName || user.username}
+            {isMe && ' (You)'}
+          </span>
+
+          {/* Live Dynamic Audio Equalizer Bars */}
+          {!isMuted && (
+            <div className="flex items-center gap-0.5 h-3">
+              <span
+                className="w-0.5 bg-emerald-400 rounded-full transition-all duration-75"
+                style={{ height: isMe ? `${Math.max(3, (audioLevel / 100) * 12)}px` : '8px' }}
+              />
+              <span
+                className="w-0.5 bg-emerald-400 rounded-full transition-all duration-75"
+                style={{ height: isMe ? `${Math.max(4, (audioLevel / 100) * 14)}px` : '12px' }}
+              />
+              <span
+                className="w-0.5 bg-emerald-400 rounded-full transition-all duration-75"
+                style={{ height: isMe ? `${Math.max(3, (audioLevel / 100) * 10)}px` : '6px' }}
+              />
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-2">
           {isMuted ? (
             <MicOff className="w-3.5 h-3.5 text-rose-400" />
           ) : (
-            <div className="flex items-center gap-1">
-              <Mic className="w-3.5 h-3.5 text-emerald-400" />
-              {isMe && audioLevel > 5 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              )}
-            </div>
+            <Mic className="w-3.5 h-3.5 text-emerald-400" />
           )}
           {isCameraOn ? (
             <Video className="w-3.5 h-3.5 text-cyan-400" />

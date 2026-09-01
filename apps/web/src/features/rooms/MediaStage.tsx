@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { RoomMemberDTO, RoomCommunicationMode, RoomDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
-import { Mic, MicOff, Video, VideoOff, Monitor, Radio, Activity, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor, Radio, Activity, Volume2, Pin, PinOff } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
 
@@ -35,6 +35,19 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   audioLevel = 0,
 }) => {
   const screenVideoRef = React.useRef<HTMLVideoElement>(null);
+  const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
+  const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
+  const [draggedId, setDraggedId] = React.useState<string | null>(null);
+
+  // Sync participant list to ordered array
+  React.useEffect(() => {
+    setOrderedParticipantIds((prev) => {
+      const incomingIds = participants.map((p) => p.userId);
+      const existing = prev.filter((id) => incomingIds.includes(id));
+      const added = incomingIds.filter((id) => !existing.includes(id));
+      return [...existing, ...added];
+    });
+  }, [participants]);
 
   React.useEffect(() => {
     if (screenVideoRef.current && screenStream) {
@@ -42,6 +55,46 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       screenVideoRef.current.play().catch((e) => console.log('Screen play interrupted:', e));
     }
   }, [screenStream]);
+
+  // Drag & Drop Reordering handlers
+  const handleDragStart = (userId: string) => (e: React.DragEvent) => {
+    setDraggedId(userId);
+    e.dataTransfer.setData('text/plain', userId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetUserId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetUserId) return;
+
+    setOrderedParticipantIds((prev) => {
+      const copy = [...prev];
+      const fromIndex = copy.indexOf(draggedId);
+      const toIndex = copy.indexOf(targetUserId);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        copy.splice(fromIndex, 1);
+        copy.splice(toIndex, 0, draggedId);
+      }
+      return copy;
+    });
+    setDraggedId(null);
+  };
+
+  // Sort participants by current drag order
+  const sortedParticipants = React.useMemo(() => {
+    return [...participants].sort((a, b) => {
+      const indexA = orderedParticipantIds.indexOf(a.userId);
+      const indexB = orderedParticipantIds.indexOf(b.userId);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }, [participants, orderedParticipantIds]);
+
+  const pinnedParticipant = participants.find((p) => p.userId === pinnedUserId);
 
   // TEXT MODE: Real-Time Chat Stream
   if (mode === 'TEXT') {
@@ -56,7 +109,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     return <ChatStream room={room} />;
   }
 
-  // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Web Audio Levels
+  // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   if (mode === 'VOICE') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#0E1017] select-none relative overflow-hidden">
@@ -74,7 +127,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         </div>
 
         <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 place-items-center z-10">
-          {participants.map((p) => {
+          {sortedParticipants.map((p) => {
             const isMe = p.userId === currentUserId;
             const participantMuted = isMe ? isMuted : p.isMuted;
             const isSpeaking = !participantMuted && (isMe ? audioLevel > 5 : true);
@@ -82,7 +135,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             return (
               <div
                 key={p.id}
-                className={`flex flex-col items-center p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-44 shadow-lg ${
+                draggable
+                onDragStart={handleDragStart(p.userId)}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop(p.userId)}
+                className={`flex flex-col items-center p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-44 shadow-lg cursor-grab active:cursor-grabbing ${
                   isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                     : 'border-white/[0.05] hover:border-violet-500/30'
@@ -145,30 +202,77 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     );
   }
 
-  // VIDEO MODE: Real Live Video Tiles Grid (Local + Remote WebRTC Mesh)
+  // VIDEO MODE: Grid with Drag & Drop & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
-      <div className="flex-1 p-6 bg-[#0E1017] select-none overflow-y-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 h-full min-h-[380px]">
-          {participants.map((p) => {
-            const isMe = p.userId === currentUserId;
-            const camOn = isMe ? isCameraOn : p.isCameraOn;
-            const participantMuted = isMe ? isMuted : p.isMuted;
-            const participantStream = isMe ? localStream : remoteStreams[p.userId];
-
-            return (
+      <div className="flex-1 p-6 bg-[#0E1017] select-none flex flex-col overflow-hidden">
+        {pinnedParticipant ? (
+          // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+            <div className="flex-1 max-h-[70vh]">
               <LiveVideoTile
-                key={p.id}
-                user={p.user}
-                isMe={isMe}
-                isMuted={participantMuted}
-                isCameraOn={camOn}
-                mediaStream={participantStream}
-                audioLevel={isMe ? audioLevel : 0}
+                user={pinnedParticipant.user}
+                isMe={pinnedParticipant.userId === currentUserId}
+                isMuted={pinnedParticipant.userId === currentUserId ? isMuted : pinnedParticipant.isMuted}
+                isCameraOn={pinnedParticipant.userId === currentUserId ? isCameraOn : pinnedParticipant.isCameraOn}
+                isPinned={true}
+                onTogglePin={() => setPinnedUserId(null)}
+                mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
+                audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
               />
-            );
-          })}
-        </div>
+            </div>
+
+            {/* Bottom attendee filmstrip */}
+            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
+              {sortedParticipants
+                .filter((p) => p.userId !== pinnedUserId)
+                .map((p) => {
+                  const isMe = p.userId === currentUserId;
+                  return (
+                    <div key={p.id} className="w-52 h-full flex-shrink-0">
+                      <LiveVideoTile
+                        user={p.user}
+                        isMe={isMe}
+                        isMuted={isMe ? isMuted : p.isMuted}
+                        isCameraOn={isMe ? isCameraOn : p.isCameraOn}
+                        isPinned={false}
+                        onTogglePin={() => setPinnedUserId(p.userId)}
+                        mediaStream={isMe ? localStream : remoteStreams[p.userId]}
+                        audioLevel={isMe ? audioLevel : 0}
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ) : (
+          // Standard Equal Grid with Drag & Drop
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 h-full min-h-[380px] overflow-y-auto">
+            {sortedParticipants.map((p) => {
+              const isMe = p.userId === currentUserId;
+              const camOn = isMe ? isCameraOn : p.isCameraOn;
+              const participantMuted = isMe ? isMuted : p.isMuted;
+              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+              return (
+                <LiveVideoTile
+                  key={p.id}
+                  user={p.user}
+                  isMe={isMe}
+                  isMuted={participantMuted}
+                  isCameraOn={camOn}
+                  isPinned={false}
+                  onTogglePin={() => setPinnedUserId(p.userId)}
+                  mediaStream={participantStream}
+                  audioLevel={isMe ? audioLevel : 0}
+                  onDragStart={handleDragStart(p.userId)}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop(p.userId)}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
