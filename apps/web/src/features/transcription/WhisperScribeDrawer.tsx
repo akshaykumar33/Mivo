@@ -154,7 +154,14 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-80 sm:w-96 h-full bg-[#0B0D14] border-l border-white/[0.08] flex flex-col select-none z-30 shadow-2xl backdrop-blur-2xl">
+    <div className="fixed inset-0 z-50 pointer-events-none flex justify-end">
+      {/* Click outside backdrop */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto transition-opacity"
+      />
+
+      <aside className="relative w-80 sm:w-96 h-full bg-[#090B10] border-l border-white/[0.1] flex flex-col select-none z-50 shadow-2xl pointer-events-auto animate-slide-left">
       {/* Header */}
       <div className="h-14 px-4 border-b border-white/[0.06] flex items-center justify-between bg-gradient-to-r from-violet-600/10 to-transparent">
         <div className="flex items-center gap-2">
@@ -347,5 +354,6 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
         </button>
       </div>
     </aside>
+  </div>
   );
 };
