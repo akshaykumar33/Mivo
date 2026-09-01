@@ -22,9 +22,16 @@ export const CommunitySidebar: React.FC = () => {
 
   return (
     <>
-      <aside className="w-[76px] h-full bg-[#07080D]/90 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col items-center py-4 space-y-3 z-30 select-none">
+      <aside className="w-[76px] h-full bg-[#07080D]/90 border-r border-white/[0.07] backdrop-blur-2xl flex flex-col items-center pt-3.5 pb-4 space-y-3 z-30 select-none">
+        {/* macOS Style Traffic Light Control Dots */}
+        <div className="flex items-center gap-1.5 pb-1">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] shadow-[0_0_8px_rgba(255,95,86,0.6)] cursor-pointer hover:scale-110 transition-transform" title="Close" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] shadow-[0_0_8px_rgba(255,189,46,0.6)] cursor-pointer hover:scale-110 transition-transform" title="Minimize" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F] shadow-[0_0_8px_rgba(39,201,63,0.6)] cursor-pointer hover:scale-110 transition-transform" title="Maximize" />
+        </div>
+
         {/* macOS Style Direct Messages / Home App Icon */}
-        <div className="relative group flex items-center justify-center w-full">
+        <div className="relative group flex items-center justify-center w-full pt-1">
           {/* Active Spring Indicator Bar */}
           <div
             className={`absolute left-0 w-[4px] rounded-r-full bg-gradient-to-b from-[#5E5CE6] to-[#0A84FF] transition-all duration-300 ${
