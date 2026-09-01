@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
 import { ParticipantTray } from './ParticipantTray';
+import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
 import { RoomCommunicationMode } from '@mivo/shared';
 import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +27,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     isScreenOn,
     localStream,
     screenStream,
+    remoteStreams,
     audioLevel,
     joinRoom,
     leaveRoom,
@@ -36,15 +38,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   } = useRoomStore();
 
   const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(true);
+  const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (roomId) {
-      joinRoom(roomId);
+    if (roomId && user?.id) {
+      joinRoom(roomId, user.id);
     }
     return () => {
       leaveRoom();
     };
-  }, [roomId, joinRoom, leaveRoom]);
+  }, [roomId, user?.id, joinRoom, leaveRoom]);
 
   if (!activeRoom) {
     return (
@@ -64,13 +67,14 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
   return (
     <div className="flex-1 h-full flex flex-col bg-[#0E1017] overflow-hidden select-none">
-      {/* Top Room Header with Mode Switcher */}
+      {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
       <RoomHeader
         room={activeRoom}
         activeMode={activeRoom.activeMode}
         onModeChange={(mode: RoomCommunicationMode) => switchMode(mode)}
         participantCount={participants.length}
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
+        onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
       />
 
       {/* Main Content Layout */}
@@ -86,6 +90,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           isScreenOn={isScreenOn}
           localStream={localStream}
           screenStream={screenStream}
+          remoteStreams={remoteStreams}
           audioLevel={audioLevel}
         />
 
@@ -94,6 +99,14 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           participants={participants}
           currentUserId={user?.id}
           isOpen={isParticipantsOpen}
+        />
+
+        {/* Whisper AI Meeting Scribe & Notes Drawer */}
+        <WhisperScribeDrawer
+          room={activeRoom}
+          currentUser={user}
+          isOpen={isWhisperOpen}
+          onClose={() => setIsWhisperOpen(false)}
         />
 
         {/* Floating Bottom Luxury Media Bar (when mode is active) */}

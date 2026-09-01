@@ -17,6 +17,7 @@ export interface MediaStageProps {
   isScreenOn: boolean;
   localStream?: MediaStream | null;
   screenStream?: MediaStream | null;
+  remoteStreams?: Record<string, MediaStream>;
   audioLevel?: number;
 }
 
@@ -30,6 +31,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   isScreenOn,
   localStream,
   screenStream,
+  remoteStreams = {},
   audioLevel = 0,
 }) => {
   const screenVideoRef = React.useRef<HTMLVideoElement>(null);
@@ -143,7 +145,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     );
   }
 
-  // VIDEO MODE: Real Live Video Tiles Grid
+  // VIDEO MODE: Real Live Video Tiles Grid (Local + Remote WebRTC Mesh)
   if (mode === 'VIDEO') {
     return (
       <div className="flex-1 p-6 bg-[#0E1017] select-none overflow-y-auto">
@@ -152,6 +154,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             const isMe = p.userId === currentUserId;
             const camOn = isMe ? isCameraOn : p.isCameraOn;
             const participantMuted = isMe ? isMuted : p.isMuted;
+            const participantStream = isMe ? localStream : remoteStreams[p.userId];
 
             return (
               <LiveVideoTile
@@ -160,7 +163,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 isMe={isMe}
                 isMuted={participantMuted}
                 isCameraOn={camOn}
-                mediaStream={isMe ? localStream : null}
+                mediaStream={participantStream}
                 audioLevel={isMe ? audioLevel : 0}
               />
             );

@@ -59,4 +59,24 @@ export class RoomsController {
       data: room,
     };
   }
+
+  @Post(':id/email-summary')
+  async emailSummary(
+    @Param('id') id: string,
+    @Body() body: { notes: string; transcript: Array<{ speaker: string; text: string; time: string }>; email?: string; name?: string }
+  ): Promise<ApiResponse<any>> {
+    const userEmail = body.email || 'attendee@mivo.app';
+    const userName = body.name || 'Mivo Member';
+    const result = await this.roomsService.emailMeetingSummary(
+      id,
+      userEmail,
+      userName,
+      body.notes || '',
+      body.transcript || []
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
 }

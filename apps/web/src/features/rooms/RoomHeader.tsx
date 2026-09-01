@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
 import { RoomModeSwitcher } from './RoomModeSwitcher';
-import { Users, Lock, Unlock, Hash } from 'lucide-react';
+import { Users, Lock, Unlock, Hash, Sparkles } from 'lucide-react';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
@@ -11,6 +11,7 @@ export interface RoomHeaderProps {
   onModeChange: (mode: RoomCommunicationMode) => void;
   participantCount: number;
   onToggleParticipants?: () => void;
+  onToggleWhisper?: () => void;
 }
 
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
@@ -19,6 +20,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   onModeChange,
   participantCount,
   onToggleParticipants,
+  onToggleWhisper,
 }) => {
   return (
     <header className="h-14 px-5 bg-[#0B0D14]/95 border-b border-white/[0.06] backdrop-blur-xl flex items-center justify-between shadow-sm select-none z-10">
@@ -47,6 +49,17 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
 
       {/* Right Action Tray */}
       <div className="flex items-center gap-2">
+        {/* Whisper AI Scribe & Notes Toggle */}
+        <button
+          onClick={onToggleWhisper}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-violet-300 hover:text-white bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 transition-all shadow-sm shadow-violet-600/20"
+          title="Open Whisper AI Scribe & Notes"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+          <span className="hidden sm:inline">AI Notes</span>
+        </button>
+
+        {/* Participant Count Toggle */}
         <button
           onClick={onToggleParticipants}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-all"
