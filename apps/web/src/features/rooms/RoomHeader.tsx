@@ -28,6 +28,30 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   onToggleParticipants,
   onToggleWhisper,
 }) => {
+  const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
+
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isRecording) {
+      setElapsedSeconds(0);
+      timer = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setElapsedSeconds(0);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isRecording]);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <header className="h-14 px-5 bg-[#0B0D14]/95 border-b border-white/[0.06] backdrop-blur-xl flex items-center justify-between shadow-sm select-none z-10">
       {/* Room Title & Metadata */}
@@ -44,11 +68,11 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           ) : null}
         </div>
 
-        {/* Global REC Pulsing Badge when recording is active */}
+        {/* Global REC Pulsing Badge with Live Elapsed Timer */}
         {isRecording && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-300 text-[10px] font-extrabold shadow-sm animate-pulse">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600/20 border border-rose-500/50 text-rose-300 text-[10px] font-extrabold shadow-lg shadow-rose-600/10 animate-pulse">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span>REC</span>
+            <span>REC {formatTimer(elapsedSeconds)}</span>
           </div>
         )}
 
