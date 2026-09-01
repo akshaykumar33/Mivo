@@ -54,6 +54,38 @@ const DEMO_USERS = [
     bio: 'WebRTC & Media SFU Infrastructure Engineer',
     status: 'DND' as const,
   },
+  {
+    email: 'carlos@mivo.app',
+    username: 'carlos_madrid',
+    displayName: 'Carlos Mendoza 🇪🇸',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    bio: 'Frontend Specialist (Madrid, Spain)',
+    status: 'ONLINE' as const,
+  },
+  {
+    email: 'amelie@mivo.app',
+    username: 'amelie_paris',
+    displayName: 'Amélie Dubois 🇫🇷',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    bio: 'UX Research Lead (Paris, France)',
+    status: 'ONLINE' as const,
+  },
+  {
+    email: 'priya@mivo.app',
+    username: 'priya_sharma',
+    displayName: 'Priya Sharma 🇮🇳',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    bio: 'Distributed Systems & Cloud Engineer (Bangalore, India)',
+    status: 'ONLINE' as const,
+  },
+  {
+    email: 'kenji@mivo.app',
+    username: 'kenji_tokyo',
+    displayName: 'Kenji Sato 🇯🇵',
+    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
+    bio: 'Audio DSP & Real-Time Codecs Engineer (Tokyo, Japan)',
+    status: 'IDLE' as const,
+  },
 ];
 
 export async function seed() {
@@ -197,6 +229,10 @@ export async function seed() {
       { email: 'alex@mivo.app', roleId: adminRole.id },
       { email: 'sarah@mivo.app', roleId: adminRole.id },
       { email: 'elena@mivo.app', roleId: memberRole.id },
+      { email: 'carlos@mivo.app', roleId: memberRole.id },
+      { email: 'amelie@mivo.app', roleId: memberRole.id },
+      { email: 'priya@mivo.app', roleId: adminRole.id },
+      { email: 'kenji@mivo.app', roleId: memberRole.id },
     ];
 
     for (const assignment of memberAssignments) {

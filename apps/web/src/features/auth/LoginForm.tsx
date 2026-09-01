@@ -180,6 +180,34 @@ export const LoginForm: React.FC = () => {
               </div>
             </div>
           </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('carlos@mivo.app')}
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-amber-500/10 border border-white/[0.06] hover:border-amber-500/40 text-left transition-all duration-200 group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🇪🇸</span>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Carlos Mendoza</div>
+                <div className="text-[10px] text-amber-400/80 font-medium truncate">Frontend Lead</div>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('priya@mivo.app')}
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-indigo-500/10 border border-white/[0.06] hover:border-indigo-500/40 text-left transition-all duration-200 group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🇮🇳</span>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Priya Sharma</div>
+                <div className="text-[10px] text-indigo-400/80 font-medium truncate">Cloud Architect</div>
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
