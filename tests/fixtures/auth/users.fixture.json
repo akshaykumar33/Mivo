@@ -1,0 +1,10 @@
+{
+  "users": [
+    { "email": "dev@mivo.app", "role": "OWNER", "displayName": "Dev Admin" },
+    { "email": "alex@mivo.app", "role": "ADMIN", "displayName": "Alex Rivera" },
+    { "email": "sarah@mivo.app", "role": "ADMIN", "displayName": "Sarah Connor" },
+    { "email": "carlos@mivo.app", "role": "MEMBER", "displayName": "Carlos Mendoza 🇪🇸" },
+    { "email": "priya@mivo.app", "role": "ADMIN", "displayName": "Priya Sharma 🇮🇳" },
+    { "email": "elena@mivo.app", "role": "MEMBER", "displayName": "Elena Rostova" }
+  ]
+}

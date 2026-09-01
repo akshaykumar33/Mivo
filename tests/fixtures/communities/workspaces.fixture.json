@@ -1,0 +1,20 @@
+{
+  "workspaces": [
+    {
+      "name": "Wysbryx Engineering",
+      "slug": "wysbryx-core",
+      "channels": [
+        { "name": "general", "type": "GENERAL", "isPrivate": false },
+        { "name": "voice-lounge", "type": "VOICE", "isPrivate": false },
+        { "name": "pair-programming", "type": "MEDIA", "isPrivate": false }
+      ]
+    },
+    {
+      "name": "Design & UX Guild",
+      "slug": "design-guild",
+      "channels": [
+        { "name": "critique", "type": "GENERAL", "isPrivate": false }
+      ]
+    }
+  ]
+}
