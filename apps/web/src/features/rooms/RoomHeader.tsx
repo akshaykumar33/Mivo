@@ -54,7 +54,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
 
   return (
     <>
-      <header className="h-16 px-6 bg-[#07090F]/80 border-b border-white/[0.07] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10">
+      <header className="h-16 px-6 bg-[#07090F]/80 border-b border-white/[0.07] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10 flex-shrink-0">
         {/* Room Title & macOS-Style Hash Badge */}
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="flex items-center gap-2.5">

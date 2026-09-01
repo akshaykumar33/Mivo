@@ -264,22 +264,37 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
     setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-fade-in select-none">
-      <div className="w-full max-w-5xl h-[85vh] rounded-3xl bg-[#090B10] border border-white/[0.1] shadow-2xl flex flex-col overflow-hidden">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-fade-in select-none"
+    >
+      <div className="w-full max-w-5xl h-[85vh] rounded-[24px] bg-[#090B10] border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden">
         {/* Modal Top Header */}
-        <div className="h-16 px-6 bg-gradient-to-r from-violet-600/15 via-indigo-600/10 to-transparent border-b border-white/[0.08] flex items-center justify-between">
+        <div className="h-16 px-6 bg-gradient-to-r from-[#5E5CE6]/15 via-[#0A84FF]/10 to-transparent border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] flex items-center justify-center text-white shadow-lg shadow-[#5E5CE6]/30">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-sm font-extrabold text-white font-display tracking-tight">
                 Mivo Platform User Guide & Documentation
               </h2>
-              <span className="text-[11px] text-violet-400 font-semibold">
+              <span className="text-[11px] text-[#5E5CE6] font-semibold">
                 Interactive Directory & Module Reference
               </span>
             </div>
@@ -287,10 +302,11 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
-            title="Close Documentation"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border border-white/[0.08] transition-all cursor-pointer text-xs font-semibold"
+            title="Close Documentation (Esc)"
           >
-            <X className="w-5 h-5" />
+            <span>Close</span>
+            <span className="text-[10px] text-white/40 font-mono bg-white/[0.08] px-1.5 py-0.5 rounded">ESC</span>
           </button>
         </div>
 

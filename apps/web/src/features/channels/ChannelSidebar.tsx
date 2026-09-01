@@ -96,7 +96,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
         {/* Top Header & Navigation Segmented Controls */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Community Title Bar */}
-          <div className="h-16 px-4 border-b border-white/[0.07] flex items-center justify-between shadow-sm bg-white/[0.01]">
+          <div className="h-16 px-4 border-b border-white/[0.07] flex items-center justify-between shadow-sm bg-white/[0.01] flex-shrink-0">
             <div className="min-w-0 pr-2">
               <h1 className="truncate font-display tracking-tight text-sm font-bold text-white">
                 {activeCommunity.name}
@@ -303,7 +303,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
         </div>
 
         {/* macOS Style User Status Footer */}
-        <div className="h-16 bg-[#06070B]/90 px-3.5 border-t border-white/[0.07] flex items-center justify-between backdrop-blur-xl">
+        <div className="h-16 bg-[#06070B]/90 px-3.5 border-t border-white/[0.07] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <Avatar
               size="sm"
