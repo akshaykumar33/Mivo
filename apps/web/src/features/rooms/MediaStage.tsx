@@ -301,7 +301,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         {pinnedParticipant ? (
           // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 max-h-[70vh]">
+            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
               <LiveVideoTile
                 user={pinnedParticipant.user}
                 isMe={pinnedParticipant.userId === currentUserId}
@@ -323,7 +323,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 .map((p) => {
                   const isMe = p.userId === currentUserId;
                   return (
-                    <div key={p.id} className="w-52 h-full flex-shrink-0">
+                    <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
                       <LiveVideoTile
                         user={p.user}
                         isMe={isMe}

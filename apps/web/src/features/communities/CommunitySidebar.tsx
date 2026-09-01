@@ -50,21 +50,21 @@ export const CommunitySidebar: React.FC = () => {
             href="/channels"
             className={`flex items-center justify-center w-11 h-11 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isDMsActive
-                ? 'bg-gradient-to-br from-[#5E5CE6] to-[#0A84FF] text-white shadow-[0_6px_20px_rgba(94,92,230,0.45)] border border-white/30 scale-105'
-                : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] hover:rounded-[14px] border border-white/[0.06] hover:border-white/[0.12] hover:scale-105'
+                ? 'bg-gradient-to-br from-[#5E5CE6] to-[#0A84FF] !text-white shadow-[0_6px_20px_rgba(94,92,230,0.45)] border border-white/30 scale-105'
+                : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] hover:rounded-[14px] border border-[var(--border-subtle)] hover:scale-105'
             }`}
           >
             <MessageSquare className="w-4 h-4 stroke-[2.2]" />
           </Link>
 
           {/* Apple Custom Hover Tooltip */}
-          <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-xs font-semibold text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl z-50">
+          <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
             Overview & DMs
           </div>
         </div>
 
         {/* Apple macOS Glass Divider */}
-        <div className="w-7 h-[1px] bg-white/[0.08] rounded-full my-0.5" />
+        <div className="w-7 h-[1px] bg-[var(--border-subtle)] rounded-full my-0.5" />
 
         {/* Communities App Icons Scroll List */}
         <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col items-center space-y-2 py-1 scrollbar-none">
@@ -91,8 +91,8 @@ export const CommunitySidebar: React.FC = () => {
                   href={`/communities/${community.id}`}
                   className={`flex items-center justify-center w-11 h-11 rounded-[16px] transition-all duration-200 font-bold text-xs tracking-tight cursor-pointer ${
                     isActive
-                      ? `bg-gradient-to-br ${palette} text-white shadow-[0_6px_20px_rgba(191,90,242,0.4)] border border-white/30 scale-105`
-                      : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.09] hover:rounded-[14px] border border-white/[0.06] hover:border-white/[0.12] hover:scale-105'
+                      ? `bg-gradient-to-br ${palette} !text-white shadow-[0_6px_20px_rgba(191,90,242,0.4)] border border-white/30 scale-105`
+                      : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] hover:rounded-[14px] border border-[var(--border-subtle)] hover:scale-105'
                   }`}
                 >
                   {community.iconUrl ? (
@@ -107,7 +107,7 @@ export const CommunitySidebar: React.FC = () => {
                 </Link>
 
                 {/* Apple Custom Hover Tooltip */}
-                <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-xs font-semibold text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl z-50">
+                <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
                   {community.name}
                 </div>
               </div>
@@ -118,28 +118,28 @@ export const CommunitySidebar: React.FC = () => {
           <div className="relative group flex items-center justify-center w-full pt-1">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center justify-center w-11 h-11 rounded-[16px] hover:rounded-[14px] bg-white/[0.03] text-[#30D158] hover:bg-[#30D158] hover:text-black border border-[#30D158]/30 hover:border-[#30D158] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+              className="flex items-center justify-center w-11 h-11 rounded-[16px] hover:rounded-[14px] bg-[var(--bg-surface-1)] text-[#30D158] hover:bg-[#30D158] hover:!text-black border border-[#30D158]/30 hover:border-[#30D158] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             >
               <Plus className="w-4 h-4 stroke-[2.5] transition-transform group-hover:rotate-90 duration-200" />
             </button>
 
-            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-xs font-semibold text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl z-50">
+            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
               Create Community
             </div>
           </div>
         </div>
 
         {/* Bottom Tool Icons (Docs Hub & Discover) */}
-        <div className="w-full flex flex-col items-center space-y-2 pt-2 border-t border-white/[0.08]">
+        <div className="w-full flex flex-col items-center space-y-2 pt-2 border-t border-[var(--border-subtle)]">
           <div className="relative group flex items-center justify-center w-full">
             <button
               onClick={() => setIsDocsOpen(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white/[0.03] text-[#BF5AF2] hover:bg-[#BF5AF2] hover:text-white border border-[#BF5AF2]/20 hover:border-[#BF5AF2]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] text-[#BF5AF2] hover:bg-[#BF5AF2] hover:!text-white border border-[#BF5AF2]/20 hover:border-[#BF5AF2]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             >
               <BookOpen className="w-4 h-4 stroke-[2.2]" />
             </button>
 
-            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-xs font-semibold text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl z-50">
+            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
               Documentation Hub
             </div>
           </div>
@@ -147,12 +147,12 @@ export const CommunitySidebar: React.FC = () => {
           <div className="relative group flex items-center justify-center w-full">
             <Link
               href="/discover"
-              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white/[0.03] text-[#64D2FF] hover:bg-[#64D2FF] hover:text-black border border-[#64D2FF]/20 hover:border-[#64D2FF]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] text-[#64D2FF] hover:bg-[#64D2FF] hover:!text-black border border-[#64D2FF]/20 hover:border-[#64D2FF]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             >
               <Compass className="w-4 h-4 stroke-[2.2]" />
             </Link>
 
-            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-xs font-semibold text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl z-50">
+            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
               Explore Communities
             </div>
           </div>
