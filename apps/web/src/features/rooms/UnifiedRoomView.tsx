@@ -11,6 +11,8 @@ import { FloatingPiPOverlay } from './FloatingPiPOverlay';
 import { RecordingConsentBanner } from './RecordingConsentBanner';
 import { FloatingCyberDock } from '@/features/navigation/FloatingCyberDock';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
+import { LiveSubtitlesOverlay } from './LiveSubtitlesOverlay';
+import { FloatingReactionsLayer } from './FloatingReactionsLayer';
 import { RoomCommunicationMode, REALTIME_EVENTS, RoomRecordingStatePayload } from '@mivo/shared';
 import { useRouter } from 'next/navigation';
 import { realtime } from '@/lib/socket-client';
@@ -48,6 +50,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
   const [isRecording, setIsRecording] = React.useState(false);
   const [recordingHostName, setRecordingHostName] = React.useState('Host');
+  const [isSubtitlesEnabled, setIsSubtitlesEnabled] = React.useState(true);
 
   React.useEffect(() => {
     if (roomId && user?.id) {
@@ -86,10 +89,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
   if (!activeRoom) {
     return (
-      <div className="flex-1 h-full bg-[#0E1017] flex items-center justify-center">
+      <div className="flex-1 h-full bg-[#06070B] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-slate-400 font-semibold font-display">Connecting to Stage...</span>
+          <div className="w-8 h-8 border-3 border-[#5E5CE6] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-white/50 font-semibold font-display">Connecting to Stage...</span>
         </div>
       </div>
     );
@@ -134,7 +137,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-[#0E1017] overflow-hidden select-none relative">
+    <div className="flex-1 h-full flex flex-col bg-[#06070B] overflow-hidden select-none relative">
       {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
       <RoomHeader
         room={activeRoom}
@@ -173,6 +176,14 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           remoteStreams={remoteStreams}
           audioLevel={audioLevel}
         />
+
+        {/* Live Closed Captions & Dual Subtitles Overlay (Google Meet / Zoom style) */}
+        {activeRoom.activeMode !== 'TEXT' && (
+          <LiveSubtitlesOverlay isEnabled={isSubtitlesEnabled} targetLang="es" />
+        )}
+
+        {/* In-Call Floating Emoji Reactions Layer (Telegram / Zoom style) */}
+        {activeRoom.activeMode !== 'TEXT' && <FloatingReactionsLayer />}
 
         {/* Collapsible Participant List with Host Actions */}
         <ParticipantTray

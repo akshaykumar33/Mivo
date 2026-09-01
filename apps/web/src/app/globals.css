@@ -165,3 +165,43 @@
 .animate-speaking {
   animation: apple-speaking 1.8s infinite cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Floating Reactions Particle Animation */
+@keyframes float-up-particle {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.6) rotate(0deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-120px) scale(1.2) rotate(-8deg);
+  }
+  80% {
+    opacity: 0.8;
+    transform: translateY(-240px) scale(1.1) rotate(6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-340px) scale(0.9) rotate(-4deg);
+  }
+}
+
+.animate-float-up {
+  animation: float-up-particle 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Slide Up Fade In */
+@keyframes slide-up-smooth {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up-smooth 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
