@@ -16,6 +16,8 @@ import {
   PinOff,
   LayoutGrid,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -99,27 +101,44 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const handleDragStart = (userId: string) => (e: React.DragEvent) => {
     setDraggedId(userId);
     e.dataTransfer.setData('text/plain', userId);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = (targetUserId: string) => (e: React.DragEvent) => {
     e.preventDefault();
-    if (!draggedId || draggedId === targetUserId) return;
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    if (!sourceId || sourceId === targetUserId) return;
 
     setOrderedParticipantIds((prev) => {
-      const copy = [...prev];
-      const fromIndex = copy.indexOf(draggedId);
-      const toIndex = copy.indexOf(targetUserId);
+      const currentList = prev.length === participants.length ? [...prev] : participants.map((p) => p.userId);
+      const fromIndex = currentList.indexOf(sourceId);
+      const toIndex = currentList.indexOf(targetUserId);
       if (fromIndex !== -1 && toIndex !== -1) {
-        copy.splice(fromIndex, 1);
-        copy.splice(toIndex, 0, draggedId);
+        currentList.splice(fromIndex, 1);
+        currentList.splice(toIndex, 0, sourceId);
       }
-      return copy;
+      return [...currentList];
     });
     setDraggedId(null);
+  };
+
+  const handleMoveTile = (userId: string, direction: 'left' | 'right') => {
+    setOrderedParticipantIds((prev) => {
+      const currentList = prev.length === participants.length ? [...prev] : participants.map((p) => p.userId);
+      const fromIndex = currentList.indexOf(userId);
+      if (fromIndex === -1) return currentList;
+      const toIndex = direction === 'left' ? fromIndex - 1 : fromIndex + 1;
+      if (toIndex < 0 || toIndex >= currentList.length) return currentList;
+
+      const item = currentList.splice(fromIndex, 1)[0];
+      currentList.splice(toIndex, 0, item);
+      return [...currentList];
+    });
   };
 
   // Sort participants by current drag order
@@ -188,12 +207,36 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 onDragStart={handleDragStart(p.userId)}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop(p.userId)}
-                className={`flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
+                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-white/[0.02] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
                   isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                     : 'border-white/[0.05] hover:border-violet-500/30'
                 }`}
               >
+                {/* Voice Card Reorder Arrows */}
+                <div className="absolute top-2 left-2 right-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveTile(p.userId, 'left');
+                    }}
+                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
+                    title="Move Left"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveTile(p.userId, 'right');
+                    }}
+                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
+                    title="Move Right"
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+
                 <div className="relative">
                   <Avatar
                     size="xl"
@@ -346,6 +389,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop(p.userId)}
+                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
                   />
                 );
               })}

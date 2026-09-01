@@ -16,6 +16,8 @@ import {
   Sliders,
   Sparkles,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
@@ -33,6 +35,8 @@ export interface LiveVideoTileProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
 }
 
 export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
@@ -49,6 +53,8 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   onDragStart,
   onDragOver,
   onDrop,
+  onMoveLeft,
+  onMoveRight,
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = React.useState(100);
@@ -108,13 +114,37 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       )}
 
       {/* Top Left Drag Handle & Connection Badge */}
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-3 left-3 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
         <div
-          className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-slate-400 hover:text-white"
+          className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white cursor-grab active:cursor-grabbing"
           title="Drag & Drop to Reorder"
         >
           <GripVertical className="w-3.5 h-3.5" />
         </div>
+        {onMoveLeft && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveLeft();
+            }}
+            className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
+            title="Move Tile Left"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onMoveRight && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveRight();
+            }}
+            className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
+            title="Move Tile Right"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        )}
         <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06]">
           1080p • 60fps
         </span>
