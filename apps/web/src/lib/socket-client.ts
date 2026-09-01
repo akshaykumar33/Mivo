@@ -32,6 +32,24 @@ class SocketClient {
     return this.socket;
   }
 
+  on(event: string, callback: (...args: any[]) => void) {
+    if (this.socket) {
+      this.socket.on(event, callback);
+    }
+  }
+
+  off(event: string, callback: (...args: any[]) => void) {
+    if (this.socket) {
+      this.socket.off(event, callback);
+    }
+  }
+
+  emit(event: string, ...args: any[]) {
+    if (this.socket) {
+      this.socket.emit(event, ...args);
+    }
+  }
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();

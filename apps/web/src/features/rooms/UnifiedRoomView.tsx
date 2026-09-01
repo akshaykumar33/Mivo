@@ -75,6 +75,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         {/* Dynamic Stage View */}
         <MediaStage
           mode={activeRoom.activeMode}
+          room={activeRoom}
           participants={participants}
           currentUserId={user?.id}
           isMuted={isMuted}
