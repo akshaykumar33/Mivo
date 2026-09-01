@@ -84,14 +84,17 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         setIsHovered(false);
         setShowVolumeSlider(false);
       }}
-      className={`relative rounded-3xl bg-[var(--bg-surface-1)] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
+      className={`relative rounded-3xl bg-[#0D1017] border flex items-center justify-center overflow-hidden shadow-2xl aspect-video transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
         isPinned
           ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/20'
           : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
-          : 'border-[var(--border-subtle)] hover:border-violet-500/40'
+          : 'border-white/[0.08] hover:border-violet-500/40'
       }`}
     >
+      {/* Subtle Ambient Radial Glow */}
+      <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
+
       {/* Real Live Video Feed */}
       {isCameraOn ? (
         <video
@@ -102,14 +105,37 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
           className="w-full h-full object-cover rounded-3xl"
         />
       ) : (
-        <div className="flex flex-col items-center">
-          <Avatar
-            size="xl"
-            src={user.avatarUrl}
-            fallbackText={user.displayName || user.username}
-            status={user.status}
-            isSpeaking={isSpeaking}
-          />
+        <div className="flex flex-col items-center justify-center z-10 space-y-3">
+          <div className="relative flex items-center justify-center">
+            {isSpeaking && (
+              <div className="absolute -inset-4 rounded-full bg-emerald-500/20 animate-ping pointer-events-none" />
+            )}
+            <div className="relative">
+              <Avatar
+                size="xl"
+                src={user.avatarUrl}
+                fallbackText={user.displayName || user.username}
+                status={user.status}
+                isSpeaking={isSpeaking}
+              />
+              <div
+                className={`absolute -bottom-1 -right-1 p-1.5 rounded-full text-white shadow-lg transition-all ${
+                  isMuted ? 'bg-rose-600 ring-2 ring-[#0D1017]' : 'bg-emerald-600 ring-2 ring-[#0D1017]'
+                }`}
+              >
+                {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              </div>
+            </div>
+          </div>
+          <div className="text-center">
+            <span className="text-sm font-bold text-white tracking-tight block">
+              {user.displayName || user.username}
+              {isMe && ' (You)'}
+            </span>
+            <span className="text-[11px] text-white/50 font-medium">
+              Camera Off
+            </span>
+          </div>
         </div>
       )}
 

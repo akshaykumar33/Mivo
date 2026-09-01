@@ -361,9 +361,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <div
               className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto ${
                 sortedParticipants.length === 1
-                  ? 'grid-cols-1 max-w-4xl mx-auto w-full'
+                  ? 'grid-cols-1 max-w-2xl mx-auto w-full self-center place-items-center my-auto'
                   : sortedParticipants.length === 2
-                  ? 'grid-cols-1 sm:grid-cols-2'
+                  ? 'grid-cols-1 sm:grid-cols-2 max-w-5xl mx-auto w-full self-center my-auto'
                   : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
               }`}
             >
@@ -405,7 +405,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   return (
     <div className="flex-1 p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden">
       {/* Primary Dominant Stage */}
-      <div className="flex-1 rounded-3xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
+      <div className="flex-1 rounded-3xl bg-[#0B0D14] border border-white/[0.08] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
         {screenStream ? (
           <video
             ref={screenVideoRef}
