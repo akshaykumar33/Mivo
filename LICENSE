@@ -1,0 +1,26 @@
+PROPRIETARY AND CONFIDENTIAL SOFTWARE LICENSE
+
+Copyright (c) 2026 Wysbryx / Mivo. All Rights Reserved.
+
+IMPORTANT: PLEASE READ THIS LICENSE CAREFULLY BEFORE ACCESSING, USING, COPYING, OR MODIFYING THIS SOFTWARE.
+
+1. PROPRIETARY RIGHTS
+This software, including its source code, architecture, designs, documentation, algorithms, protocols, and visual assets (collectively, the "Software"), is the exclusive, confidential, and proprietary property of Wysbryx ("Licensor").
+
+2. STRICT LICENSE GRANT & RESTRICTIONS
+Except as expressly permitted by written agreement signed by an authorized officer of Wysbryx:
+   a. NO REDISTRIBUTION: You may not distribute, sublicense, rent, lease, lend, sell, or disclose the Software in whole or in part to any third party.
+   b. NO PUBLIC DEPLOYMENT: You may not use the Software to provide commercial SaaS, PaaS, or hosted communication services to third parties without an enterprise commercial license.
+   c. NO REVERSE ENGINEERING: You may not reverse engineer, decompile, disassemble, or derive source code from any compiled binaries or distributed artifacts.
+   d. NO DERIVATIVE WORKS: You may not modify, adapt, translate, or create derivative works of the Software for public release or unauthorized distribution.
+
+3. CONFIDENTIALITY
+The Software contains trade secrets and confidential information belonging to Wysbryx. Any party granted access to this repository agrees to maintain the strict confidentiality of the Software and protect it against unauthorized disclosure or access.
+
+4. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+5. TERMINATION
+Any breach of the terms of this License shall automatically and immediately terminate all rights granted herein and may subject the violator to civil liability and criminal penalties.
+
+For enterprise licensing inquiries, commercial partnerships, or custom deployment terms, contact: licensing@wysbryx.com
