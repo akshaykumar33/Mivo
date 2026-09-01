@@ -12,6 +12,7 @@ import {
 } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
+import { mediaManager } from '@/lib/media-manager';
 
 interface RoomState {
   activeRoom: RoomDTO | null;
@@ -21,23 +22,29 @@ interface RoomState {
   isCameraOn: boolean;
   isScreenOn: boolean;
   isLoading: boolean;
+  localStream: MediaStream | null;
+  screenStream: MediaStream | null;
+  audioLevel: number;
   joinRoom: (roomId: string) => Promise<void>;
   leaveRoom: () => void;
   switchMode: (mode: RoomCommunicationMode) => Promise<void>;
-  toggleMute: () => void;
+  toggleMute: () => Promise<void>;
   toggleDeafen: () => void;
-  toggleCamera: () => void;
-  toggleScreenShare: () => void;
+  toggleCamera: () => Promise<void>;
+  toggleScreenShare: () => Promise<void>;
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
   activeRoom: null,
   participants: [],
-  isMuted: false,
+  isMuted: true, // Default muted on room join for clean audio hygiene
   isDeafened: false,
   isCameraOn: false,
   isScreenOn: false,
   isLoading: false,
+  localStream: null,
+  screenStream: null,
+  audioLevel: 0,
 
   joinRoom: async (roomId: string) => {
     set({ isLoading: true });
@@ -124,13 +131,22 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         socket.emit(REALTIME_EVENTS.ROOM_LEAVE, { roomId: activeRoom.id });
       }
     }
+
+    // Stop real local media devices
+    mediaManager.stopMicrophone();
+    mediaManager.stopCamera();
+    mediaManager.stopScreenShare();
+
     set({
       activeRoom: null,
       participants: [],
-      isMuted: false,
+      isMuted: true,
       isDeafened: false,
       isCameraOn: false,
       isScreenOn: false,
+      localStream: null,
+      screenStream: null,
+      audioLevel: 0,
     });
   },
 
@@ -156,17 +172,28 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
-  toggleMute: () => {
+  toggleMute: async () => {
     const { isMuted, activeRoom } = get();
-    const nextState = !isMuted;
-    set({ isMuted: nextState });
+    const willBeUnmuted = isMuted; // toggling from muted -> unmuted
+    const nextMutedState = !isMuted;
+
+    if (willBeUnmuted) {
+      await mediaManager.startMicrophone((level) => {
+        set({ audioLevel: level });
+      });
+    } else {
+      mediaManager.stopMicrophone();
+      set({ audioLevel: 0 });
+    }
+
+    set({ isMuted: nextMutedState });
 
     if (activeRoom) {
       const socket = realtime.getSocket();
       if (socket) {
         socket.emit(REALTIME_EVENTS.ROOM_UPDATE_MEDIA_STATE, {
           roomId: activeRoom.id,
-          isMuted: nextState,
+          isMuted: nextMutedState,
         });
       }
     }
@@ -188,33 +215,58 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
-  toggleCamera: () => {
+  toggleCamera: async () => {
     const { isCameraOn, activeRoom } = get();
-    const nextState = !isCameraOn;
-    set({ isCameraOn: nextState });
+    const willBeCameraOn = !isCameraOn;
+
+    if (willBeCameraOn) {
+      const stream = await mediaManager.startCamera();
+      set({ isCameraOn: true, localStream: stream });
+    } else {
+      mediaManager.stopCamera();
+      set({ isCameraOn: false, localStream: null });
+    }
 
     if (activeRoom) {
       const socket = realtime.getSocket();
       if (socket) {
         socket.emit(REALTIME_EVENTS.ROOM_UPDATE_MEDIA_STATE, {
           roomId: activeRoom.id,
-          isCameraOn: nextState,
+          isCameraOn: willBeCameraOn,
         });
       }
     }
   },
 
-  toggleScreenShare: () => {
+  toggleScreenShare: async () => {
     const { isScreenOn, activeRoom } = get();
-    const nextState = !isScreenOn;
-    set({ isScreenOn: nextState });
+    const willBeScreenOn = !isScreenOn;
+
+    if (willBeScreenOn) {
+      const stream = await mediaManager.startScreenShare(() => {
+        set({ isScreenOn: false, screenStream: null });
+        if (activeRoom) {
+          const socket = realtime.getSocket();
+          if (socket) {
+            socket.emit(REALTIME_EVENTS.ROOM_UPDATE_MEDIA_STATE, {
+              roomId: activeRoom.id,
+              isScreenOn: false,
+            });
+          }
+        }
+      });
+      set({ isScreenOn: true, screenStream: stream });
+    } else {
+      mediaManager.stopScreenShare();
+      set({ isScreenOn: false, screenStream: null });
+    }
 
     if (activeRoom) {
       const socket = realtime.getSocket();
       if (socket) {
         socket.emit(REALTIME_EVENTS.ROOM_UPDATE_MEDIA_STATE, {
           roomId: activeRoom.id,
-          isScreenOn: nextState,
+          isScreenOn: willBeScreenOn,
         });
       }
     }
