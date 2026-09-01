@@ -19,9 +19,10 @@
 [![Prisma](https://img.shields.io/badge/Prisma-6.4-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passed-10B981?style=for-the-badge)](#-modular-testing-architecture)
 [![License](https://img.shields.io/badge/License-Proprietary-blueviolet?style=for-the-badge)](#license)
 
-[Features](#-key-features) • [Architecture](#-three-plane-architecture) • [Monorepo Layout](#-monorepo-ecosystem) • [Quickstart](#-local-development-quickstart) • [Roadmap](#-phased-roadmap) • [Documentation](file:///docs/ARCHITECTURE.md)
+[Features](#-key-features) • [Architecture](#-three-plane-architecture) • [User Guide](file:///docs/USER_GUIDE.md) • [Testing](file:///tests) • [Monorepo Layout](#-monorepo-ecosystem) • [Quickstart](#-local-development-quickstart) • [Prompts](file:///prompts)
 
 ---
 
@@ -39,11 +40,27 @@ In conventional tools (e.g. Discord, Slack, Teams), channels are hard-locked by 
 
 | Mode | Capability & Experience | Primary Use Case |
 | :--- | :--- | :--- |
-| `TEXT` | Focused chat stream with real-time markdown & media | Async & sync textual discussion |
-| `VOICE` | Low-latency voice huddle with active speaker pulse rings | Casual drop-in audio conversations |
-| `VIDEO` | Responsive auto-arranging HD video grid | Standups, team syncs, meetings |
-| `SCREEN_SHARE` | High-framerate interactive presentation viewport | Pair programming, code reviews, demos |
-| `STREAM` | Single-broadcaster stage with audience participation | Keynotes, gaming streams, town halls |
+| `TEXT` | Focused chat stream with real-time markdown, instant message translation & TTS | Async & sync textual discussion |
+| `VOICE` | Low-latency voice huddle with active speaker pulse rings & green soundwave visualizers | Casual drop-in audio conversations |
+| `VIDEO` | Responsive auto-arranging HD video grid with HTML5 drag-and-drop & spotlight pinning | Standups, team syncs, meetings |
+| `SCREEN_SHARE` | High-framerate interactive presentation viewport with floating PiP presenter | Pair programming, code reviews, demos |
+| `STREAM` | Single-broadcaster stage with audience participation & live broadcast badge | Keynotes, gaming streams, town halls |
+
+---
+
+## 🚀 Key Features
+
+* 🎛️ **Unified Room Stage**: Morph room context between `TEXT`, `VOICE`, `VIDEO`, `SCREEN_SHARE`, and `STREAM` dynamically.
+* 🔀 **Smart Auto-Arranging Grid & Drag & Drop**: Grab participant tiles by the handle to reorder them on the fly, or click **"Auto-Arrange Grid"** to restore optimal speaker balance.
+* 📌 **Spotlight Focus Mode**: Pin any speaker into a dominant 16:9 hero stage with an attendee filmstrip below.
+* 🖼️ **Floating Picture-in-Picture (PiP) Presenter**: Multitask and view all participant live video feeds in a draggable floating window while presenting slides or code.
+* 🔊 **Individual Peer Volume Sliders**: Adjust each speaker's volume independently from 0% to 200%.
+* 👑 **Host & Admin Moderation**: Remote mute participants across the room, hand over host privileges, or evict attendees via real-time WebSocket signals (`ROOM_HOST_ACTION`).
+* 🌍 **Multilingual AI Translation & Audio (TTS)**: In-chat instant translation and live speech transcription across 12+ languages (Spanish 🇪🇸, French 🇫🇷, German 🇩🇪, Hindi 🇮🇳, Japanese 🇯🇵, Chinese 🇨🇳) with native audio playback.
+* 📋 **Whisper AI Meeting Scribe & Automated MOM**: Real-time speech dictation, Markdown scratchpad, structured Minutes of Meeting (MOM) document generation, and 1-click email dispatch.
+* 🔴 **Permission-Gated Recording & Consent Compliance**: Host permission checks, unmissable room-wide consent alert banner (`RecordingConsentBanner.tsx`), persistent live elapsed `REC` timer badge, and automatic `.webm` video download.
+* 📖 **In-App Interactive Documentation Hub**: Floating `User Docs` trigger with a folderized directory and real-time search modal (`InteractiveDocsModal.tsx`).
+* 🛡️ **Zero-Client-Trust Granular RBAC**: 16 fine-grained permissions evaluated strictly server-side before every mutation.
 
 ---
 
@@ -53,93 +70,75 @@ Mivo strictly enforces a **Three-Plane Separation of Concerns** to guarantee hig
 
 ```mermaid
 graph TD
-    Client["Client Applications<br/>(Web Next.js / Mobile / Desktop)"]
+    Client["Client Applications<br/>(Next.js 15 / Web / Mobile)"]
 
     subgraph ControlPlane ["1. Control Plane (REST & State)"]
-        API["NestJS Control API<br/>(Argon2id, JWT, RBAC)"]
+        API["NestJS 11 Control API<br/>(Argon2, JWT, RBAC, MOM Email)"]
         DB[("PostgreSQL 16<br/>Source of Truth")]
         API -->|Prisma 6 DAL| DB
     end
 
     subgraph RealtimePlane ["2. Realtime Plane (Events & Presence)"]
-        WS["Socket.io Gateway<br/>(Ephemeral State Sync)"]
+        WS["Socket.io Realtime Gateway<br/>(Signaling, Host Actions, Rec Broadcast)"]
         Redis[("Redis 7<br/>Pub/Sub & Heartbeats")]
         WS <-->|Redis Pub/Sub| Redis
     end
 
     subgraph MediaPlane ["3. Media Plane (Audio / Video / SFU)"]
-        SFU["Media Router Mesh<br/>(WebRTC Pipelines)"]
-        Signaling["SDP / ICE Signaling Relay"]
+        Mesh["WebRTC Mesh & Audio Analysers<br/>(lib/media-manager.ts, lib/webrtc-mesh.ts)"]
+        Canvas["HD Canvas Synthetic Fallback Pipeline"]
     end
 
     Client -->|HTTP / REST| API
     Client <-->|WebSocket Events| WS
-    Client <-->|Signaling Relay| Signaling
-    Client <-->|RTP Audio / Video| SFU
+    Client <-->|ICE / SDP Signaling| WS
+    Client <-->|WebRTC Media Streams| Mesh
 ```
 
 1. **Control Plane (`apps/server`)**: 
-   * Authoritative REST API for authentication, user profiles, community hierarchy, channel structures, and role configurations.
-   * Backed by PostgreSQL 16 with Prisma 6 for complete relational integrity and strict ACID guarantees.
+   * Authoritative REST API for authentication, user profiles, community hierarchy, channel structures, role configurations, and MOM email dispatching.
+   * Backed by PostgreSQL 16 with Prisma 6 for relational integrity and strict ACID guarantees.
 2. **Realtime Plane (`apps/server/src/realtime`)**: 
    * Ultra-low-latency WebSocket gateway powered by Socket.io and Redis 7 Pub/Sub.
-   * Handles ephemeral user presence heartbeats, dynamic room mode transitions, and participant state updates.
-3. **Media Plane (`apps/web/src/features/rooms/MediaStage.tsx`)**: 
-   * WebRTC signaling relay and dynamic media stage supporting responsive video grids, screen capture pipelines, and real-time active speaker animations.
+   * Handles ephemeral user presence, dynamic room mode transitions, host moderation actions, and recording state broadcasts.
+3. **Media Plane (`apps/web/src/lib`)**: 
+   * WebRTC mesh manager, hardware device acquisition (Mic, Camera, Screen), Web Audio API spectrum decibel analysers, and HTML5 `MediaRecorder` capture.
 
 ---
 
-## 📦 Monorepo Ecosystem
+## 📂 Modular Testing Architecture (22/22 Suites Passing)
 
-Mivo is structured as an optimized Turborepo monorepo with strict package boundaries:
+All test suites and fixtures are organized by feature domain in `tests/`:
 
-```text
-mivo/
-├── apps/
-│   ├── server/           # NestJS 11 Control Plane REST API & WebSocket Gateway
-│   └── web/              # Next.js 15 App Router Frontend with Dark Glassmorphism UI
-├── packages/
-│   ├── shared/           # Single-source-of-truth Zod schemas, DTOs, & event catalogs
-│   ├── database/         # Prisma 6 schema, migrations, client singleton, & seeder
-│   └── ui/               # Reusable Tailwind design tokens & accessible UI primitives
-├── docker/               # Local PostgreSQL, Redis, and MinIO Docker Compose services
-├── docs/                 # Architectural Decision Records (ADRs) & system specifications
-└── prompts/              # Engineering protocols & AI code generation instructions
+```
+tests/
+├── 📄 run-all-tests.js                         # Master runner traversing all 7 modules
+├── 📁 fixtures/                                # Seed fixtures (users, workspaces, transcripts)
+└── 📁 modules/                                 # 7 Core Feature Modules
+    ├── 📁 auth-identity/                       # Unit, Integration & E2E Auth suites
+    ├── 📁 communities-rbac/                    # Workspace & Channel hierarchy suites
+    ├── 📁 messaging-chat/                      # Real-time chat & translation suites
+    ├── 📁 webrtc-media-stage/                  # WebRTC mesh & stage mode suites
+    ├── 📁 host-moderation/                     # Remote mute, kick & host transfer suites
+    ├── 📁 ai-scribe-mom/                       # Whisper dictation & MOM email suites
+    └── 📁 recording-compliance/                # Session recording & consent banner suites
 ```
 
-| Package / App | Description | Technologies |
-| :--- | :--- | :--- |
-| [`@mivo/shared`](file:///packages/shared) | Shared contracts, DTO types, permission constants, Zod schemas | TypeScript, Zod, Vitest |
-| [`@mivo/database`](file:///packages/database) | Database client singleton, Prisma models, migrations, seeder | Prisma 6, PostgreSQL |
-| [`@mivo/ui`](file:///packages/ui) | Design tokens, glowing accents, Avatar, Button, Input, Modal | Tailwind CSS, Lucide |
-| [`@mivo/server`](file:///apps/server) | Control & Realtime backend services, Auth, RBAC, Gateway | NestJS 11, Socket.io, Jest |
-| [`@mivo/web`](file:///apps/web) | Interactive web client, RoomModeSwitcher, MediaStage | Next.js 15, Zustand, React 19 |
+Run all 22 modular test suites anytime with:
+```bash
+pnpm test:suites
+```
 
 ---
 
-## 🚀 Key Features
+## 👥 Demo Profiles (Password: `Password123!`)
 
-* 🎛️ **Unified Room Stage**: Morph room context between `TEXT`, `VOICE`, `VIDEO`, `SCREEN_SHARE`, and `STREAM` seamlessly.
-* 🛡️ **Zero-Client-Trust Granular RBAC**: 16 fine-grained permissions evaluated strictly server-side before every mutation.
-* ⚡ **Ephemeral Presence Engine**: Sub-second user online/offline/idle presence powered by Redis heartbeat pipelines.
-* 🔐 **Enterprise Auth**: Argon2id password hashing, stateless short-lived JWTs, and secure HttpOnly refresh token rotation.
-* 🎨 **Bespoke Glassmorphism Design**: High-contrast dark theme with curated HSL glow states and active speaker animations.
-* 🐳 **1-Click Containerized Dev**: Fully automated local database, cache, and object storage infrastructure.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Primary Technology | Rationale & Trade-offs |
-| :--- | :--- | :--- |
-| **Frontend Framework** | **Next.js 15 (App Router)** | Server-side rendering, streaming layout shell, and fast routing |
-| **State Management** | **Zustand** | Minimal boilerplate, synchronous selector updates, zero re-render bloat |
-| **Styling & Theme** | **Tailwind CSS + HSL Tokens** | Fine-grained design token control and glassmorphic surface rendering |
-| **Backend Framework** | **NestJS 11** | Modular enterprise architecture, dependency injection, and clean boundaries |
-| **ORM & Database** | **Prisma 6 + PostgreSQL 16** | Strong schema typing, automatic migrations, and ACID transaction safety |
-| **Realtime Engine** | **Socket.io + Redis 7** | Reliable room fanouts, automatic fallback, and multi-node horizontal scaling |
-| **Password Hashing** | **Argon2id** | Industry-standard memory-hard hashing resistant to GPU cracking |
-| **Build System** | **Turborepo + PNPM** | Incremental task caching, parallel execution, and strict workspace linking |
+* **👑 Dev Admin** (`dev@mivo.app`): Platform Architect & Community Owner
+* **🎨 Alex Rivera** (`alex@mivo.app`): Staff Designer & Admin
+* **⚡ Sarah Connor** (`sarah@mivo.app`): Principal Backend Lead
+* **🇪🇸 Carlos Mendoza** (`carlos@mivo.app`): Frontend Lead (Spanish Speaker)
+* **🇮🇳 Priya Sharma** (`priya@mivo.app`): Cloud Architect (Hindi Speaker)
+* **📻 Elena Rostova** (`elena@mivo.app`): Media SFU Infrastructure Specialist
 
 ---
 
@@ -152,7 +151,7 @@ mivo/
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone <repository-url>
+git clone https://github.com/akshaykumar33/Mivo.git
 cd Mivo
 pnpm install
 ```
@@ -163,12 +162,12 @@ Start PostgreSQL, Redis, and MinIO via Docker Compose:
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-### 3. Initialize Database & Seed Roles
+### 3. Initialize Database & Seed
 ```bash
 # Push schema migrations and generate Prisma Client
 pnpm --filter @mivo/database db:push
 
-# Seed default system permissions, roles, and admin user
+# Seed default system permissions, roles, and demo accounts
 pnpm --filter @mivo/database db:seed
 ```
 
@@ -181,53 +180,31 @@ pnpm dev
 * **Backend API**: [`http://localhost:4000/api/v1`](http://localhost:4000/api/v1)
 * **MinIO Storage Console**: [`http://localhost:9001`](http://localhost:9001)
 
-### 5. Verification & Test Suite
+### 5. Run Verification & Test Suites
 ```bash
-# Typecheck all packages
+# Run all 22 modular test suites
+pnpm test:suites
+
+# Typecheck all monorepo packages
 pnpm check:types
-
-# Run all unit tests
-pnpm test
-
-# Build production bundles
-pnpm build
 ```
 
 ---
 
-## 🔒 Security Architecture
+## 📜 Prompts & Specifications Catalog
 
-Mivo operates under a **Zero-Client-Trust** security posture:
-1. **Server-Side Authorization**: Roles sent in HTTP request bodies or WebSocket payloads are ignored. Every capability is validated against database-persisted memberships using `PermissionsGuard`.
-2. **Token Rotation & Revocation**: Refresh tokens are stored in secure `HttpOnly`, `SameSite=Lax` cookies. Database session records allow instant remote session invalidation across devices.
-3. **Boundary Validation**: Every API endpoint and WebSocket handler validates inbound data structures through strict Zod schemas before hitting business logic.
-4. **Information Leak Protection**: Global `HttpExceptionFilter` intercepts all unexpected errors and strips internal stack traces before returning clean, standardized error payloads.
-
----
-
-## 🗺️ Phased Roadmap
-
-* [x] **Phase 1 (V1 Foundation)**: Monorepo workspace, Three-Plane architecture, NestJS REST API, Socket.io presence, Prisma PostgreSQL models, `@mivo/ui` design system, and unified room switcher frontend.
-* [ ] **Phase 2 (V2 Real-Time Chat Subsystem)**: Direct messaging (1-to-1 & group DMs), cursor-paginated chat history, emoji reactions, and thread replies.
-* [ ] **Phase 3 (V3 Media & SFU Pipelines)**: Dedicated Mediasoup / LiveKit SFU binary router integration, simulcast video, and screen audio sharing.
-* [ ] **Phase 4 (V4 Object Storage & Attachments)**: Presigned S3 direct multipart file uploads, virus scanning webhooks, and image thumbnail pipelines.
-* [ ] **Phase 5 (V5 Moderation & Community Ops)**: Granular channel overrides, member timeout/kick/ban workflows, audit log viewer, and invite links.
-* [ ] **Phase 6 (V6 Native & Desktop Shells)**: Electron desktop packaging, global hotkeys, background noise cancellation (RNNoise), and push notifications.
-* [ ] **Phase 7 (V7 Enterprise & Federation)**: SAML/OIDC SSO, end-to-end encrypted room options, and multi-region read replicas.
-
----
-
-## 📜 Contribution & Engineering Protocols
-
-All development in this repository is governed by:
-* [prompts/init_prompt.md](file:///prompts/init_prompt.md) — 50 Master AI software engineering rules.
-* [prompts/commit_prompt.md](file:///prompts/commit_prompt.md) — Commit anatomy, branch taxonomy, and PR guidelines.
-* [prompts/readme_prompt.md](file:///prompts/readme_prompt.md) — Project documentation standards.
+All systems and architectural requirements are documented in modular prompt specifications:
+* [`docs/USER_GUIDE.md`](file:///docs/USER_GUIDE.md) — Comprehensive in-depth platform user manual.
+* [`prompts/ui_prompt.md`](file:///prompts/ui_prompt.md) — Luxury Obsidian UI design system & ergonomics.
+* [`prompts/webrtc_media_pipeline_prompt.md`](file:///prompts/webrtc_media_pipeline_prompt.md) — WebRTC calling, hardware capture & stage tiles.
+* [`prompts/ai_translation_mom_prompt.md`](file:///prompts/ai_translation_mom_prompt.md) — Multilingual translation, TTS & automated MOM.
+* [`prompts/meeting_recording_consent_prompt.md`](file:///prompts/meeting_recording_consent_prompt.md) — Permission-gated recording & consent banner.
+* [`prompts/channel_room_governance_prompt.md`](file:///prompts/channel_room_governance_prompt.md) — Channel privacy, RBAC & lifecycle.
+* [`prompts/host_moderation_pip_prompt.md`](file:///prompts/host_moderation_pip_prompt.md) — Host moderation, floating PiP & smart grid.
+* [`prompts/comprehensive_testing_architecture_prompt.md`](file:///prompts/comprehensive_testing_architecture_prompt.md) — Modular testing pyramid blueprint.
 
 ---
 
 ## ⚖️ License
 
 **Copyright © 2026 Wysbryx / Mivo. All Rights Reserved.**
-
-This software, its source code, documentation, and associated assets are proprietary and confidential property of Wysbryx. Unauthorized copying, distribution, modification, public display, reverse engineering, or commercial exploitation via SaaS without express written permission is strictly prohibited. See [LICENSE](file:///LICENSE) for complete terms.
