@@ -76,7 +76,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
         />
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
             Description
           </label>
           <textarea
@@ -84,11 +84,11 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
             placeholder="Tell members what this community is all about..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+            className="w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>

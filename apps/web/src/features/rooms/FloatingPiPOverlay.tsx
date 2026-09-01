@@ -62,12 +62,12 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
       }}
       className="fixed z-50 select-none shadow-2xl transition-shadow duration-200"
     >
-      <div className="w-80 rounded-3xl bg-[#090B10]/95 border border-white/[0.12] backdrop-blur-2xl overflow-hidden shadow-2xl shadow-black/80">
+      <div className="w-80 rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-2xl overflow-hidden shadow-2xl">
         {/* Header / Drag Bar */}
-        <div className="h-10 px-3.5 bg-gradient-to-r from-violet-600/20 to-transparent border-b border-white/[0.06] flex items-center justify-between cursor-move">
+        <div className="h-10 px-3.5 bg-gradient-to-r from-violet-600/20 to-transparent border-b border-[var(--border-subtle)] flex items-center justify-between cursor-move">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-[11px] font-bold text-white font-display tracking-tight">
+            <span className="text-[11px] font-bold text-[var(--text-primary)] font-display tracking-tight">
               PiP Active Stage ({participants.length})
             </span>
           </div>
@@ -75,14 +75,14 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
               title={isMinimized ? 'Expand PiP' : 'Minimize PiP'}
             >
               {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-white/[0.06] transition-colors"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-rose-400 hover:bg-white/[0.06] transition-colors cursor-pointer"
               title="Close PiP"
             >
               <X className="w-3.5 h-3.5" />

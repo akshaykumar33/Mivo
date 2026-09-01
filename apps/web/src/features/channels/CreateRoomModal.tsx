@@ -72,7 +72,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Initial Mode Selector */}
         <div className="space-y-2">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
             Initial Mode
           </label>
           <div className="grid grid-cols-5 gap-1.5">
@@ -84,13 +84,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => setActiveMode(item.id as RoomCommunicationMode)}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-xs font-medium ${
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-xs font-medium cursor-pointer ${
                     isSelected
-                      ? 'bg-violet-600/25 border-violet-500 text-white shadow-sm'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-violet-600/25 border-violet-500 text-[var(--text-primary)] shadow-sm'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-violet-500/50 hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 mb-1 ${isSelected ? 'text-violet-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 mb-1 ${isSelected ? 'text-violet-400' : 'text-[var(--text-muted)]'}`} />
                   {item.label}
                 </button>
               );
@@ -113,7 +113,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
