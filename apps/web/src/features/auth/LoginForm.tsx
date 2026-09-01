@@ -6,6 +6,7 @@ import { Button, Input } from '@mivo/ui';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import { AuthSessionResponse } from '@mivo/shared';
+import { Sparkles, ArrowRight, ShieldCheck, Palette, Cpu, Radio } from 'lucide-react';
 import Link from 'next/link';
 
 export const LoginForm: React.FC = () => {
@@ -59,22 +60,33 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white font-bold text-xl shadow-lg shadow-violet-600/30 mb-3">
+    <div className="w-full max-w-md p-8 sm:p-10 rounded-3xl bg-[#0C0E17]/90 border border-white/[0.08] shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+      {/* Subtle Ambient Radial Highlight */}
+      <div className="absolute -top-24 -right-24 w-48 h-48 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="text-center mb-8 relative z-10">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-2xl shadow-xl shadow-violet-600/25 mb-4 border border-white/20">
           M
         </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight font-display">Welcome Back</h1>
-        <p className="text-sm text-slate-400 mt-1">Sign in to your Mivo account</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-display">
+          Welcome to Mivo
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-medium">
+          Unified Real-Time Communication Platform
+        </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-3.5 rounded-lg bg-rose-950/60 border border-rose-800/80 text-rose-300 text-sm font-medium">
-          {error}
+        <div className="mb-6 p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs font-semibold flex items-center gap-2">
+          <span>⚠️</span>
+          <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
         <Input
           label="Email Address"
           type="email"
@@ -93,49 +105,85 @@ export const LoginForm: React.FC = () => {
           required
         />
 
-        <Button type="submit" className="w-full mt-2" isLoading={isLoading}>
+        <Button
+          type="submit"
+          className="w-full mt-3 h-11 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-violet-600/25 rounded-xl transition-all"
+          isLoading={isLoading}
+        >
           Sign In
         </Button>
       </form>
 
       {/* 1-Click Demo Accounts */}
-      <div className="mt-6 pt-5 border-t border-slate-800">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 text-center">
-          Quick Demo Accounts (1-Click Login)
+      <div className="mt-8 pt-6 border-t border-white/[0.06] relative z-10">
+        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+          <span className="flex items-center gap-1.5 text-violet-400">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>1-Click Demo Access</span>
+          </span>
+          <span className="text-[10px] text-slate-500 lowercase">Password123!</span>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => handleQuickLogin('dev@mivo.app')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-rose-500/10 border border-white/[0.06] hover:border-rose-500/40 text-left transition-all duration-200 group"
           >
-            👑 Dev Admin
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Dev Admin</div>
+                <div className="text-[10px] text-rose-400/80 font-medium truncate">Owner / Architect</div>
+              </div>
+            </div>
           </button>
+
           <button
             type="button"
             onClick={() => handleQuickLogin('alex@mivo.app')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-violet-500/10 border border-white/[0.06] hover:border-violet-500/40 text-left transition-all duration-200 group"
           >
-            🎨 Alex (Designer)
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-violet-400 group-hover:scale-110 transition-transform" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Alex Rivera</div>
+                <div className="text-[10px] text-violet-400/80 font-medium truncate">Staff Designer</div>
+              </div>
+            </div>
           </button>
+
           <button
             type="button"
             onClick={() => handleQuickLogin('sarah@mivo.app')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/40 text-left transition-all duration-200 group"
           >
-            ⚡ Sarah (Backend)
+            <div className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Sarah Connor</div>
+                <div className="text-[10px] text-cyan-400/80 font-medium truncate">Principal Backend</div>
+              </div>
+            </div>
           </button>
+
           <button
             type="button"
             onClick={() => handleQuickLogin('elena@mivo.app')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800/70 hover:bg-violet-600/30 border border-slate-700/80 hover:border-violet-500/50 text-slate-200 text-xs font-medium text-left truncate transition-colors"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/40 text-left transition-all duration-200 group"
           >
-            📹 Elena (Media)
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">Elena Rostova</div>
+                <div className="text-[10px] text-emerald-400/80 font-medium truncate">Media Specialist</div>
+              </div>
+            </div>
           </button>
         </div>
       </div>
 
-      <div className="mt-6 text-center text-xs text-slate-400">
+      <div className="mt-7 text-center text-xs text-slate-400 relative z-10">
         Don&apos;t have an account?{' '}
         <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold hover:underline">
           Create one now

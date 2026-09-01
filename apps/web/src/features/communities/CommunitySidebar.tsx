@@ -20,7 +20,7 @@ export const CommunitySidebar: React.FC = () => {
 
   return (
     <>
-      <aside className="w-[72px] h-full bg-[#0F131C] border-r border-slate-800/80 flex flex-col items-center py-3.5 space-y-3 z-30 select-none">
+      <aside className="w-[72px] h-full bg-[#07080C] border-r border-white/[0.06] flex flex-col items-center py-4 space-y-3 z-30 select-none">
         {/* Direct Messages / Home icon */}
         <div className="relative group">
           <div
@@ -30,18 +30,19 @@ export const CommunitySidebar: React.FC = () => {
           />
           <Link
             href="/channels"
-            className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
+            className={`flex items-center justify-center w-12 h-12 transition-all duration-200 ${
               isDMsActive
-                ? 'bg-violet-600 text-white rounded-xl shadow-lg shadow-violet-600/30'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-violet-600 hover:text-white hover:rounded-xl'
+                ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-violet-600/30'
+                : 'bg-white/[0.04] text-slate-400 hover:bg-violet-600 hover:text-white rounded-2xl hover:rounded-2xl border border-white/[0.04] hover:border-violet-500/30'
             }`}
+            title="Direct Messages & Hub"
           >
             <MessageSquare className="w-5 h-5" />
           </Link>
         </div>
 
-        {/* Divider */}
-        <div className="w-8 h-[2px] bg-slate-800 rounded-full my-1" />
+        {/* Subtle Divider */}
+        <div className="w-8 h-[1px] bg-white/[0.08] rounded-full my-1" />
 
         {/* Communities Scroll List */}
         <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col items-center space-y-3 py-1">
@@ -63,17 +64,18 @@ export const CommunitySidebar: React.FC = () => {
                 />
                 <Link
                   href={`/communities/${community.id}`}
-                  className={`flex items-center justify-center w-12 h-12 transition-all duration-200 font-semibold text-sm ${
+                  className={`flex items-center justify-center w-12 h-12 transition-all duration-200 font-bold text-sm tracking-wide ${
                     isActive
-                      ? 'bg-violet-600 text-white rounded-xl shadow-lg shadow-violet-600/30'
-                      : 'bg-slate-800/90 text-slate-200 rounded-2xl hover:bg-violet-600 hover:text-white hover:rounded-xl'
+                      ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-violet-600/30 border border-white/20'
+                      : 'bg-white/[0.04] text-slate-300 rounded-2xl hover:bg-violet-600 hover:text-white border border-white/[0.05] hover:border-violet-500/40'
                   }`}
+                  title={community.name}
                 >
                   {community.iconUrl ? (
                     <img
                       src={community.iconUrl}
                       alt={community.name}
-                      className="w-full h-full rounded-xl object-cover"
+                      className="w-full h-full rounded-2xl object-cover"
                     />
                   ) : (
                     initials
@@ -86,7 +88,7 @@ export const CommunitySidebar: React.FC = () => {
           {/* Add Community Button */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-800/60 text-emerald-400 hover:bg-emerald-600 hover:text-white hover:rounded-xl transition-all duration-200 group shadow-sm"
+            className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/[0.03] text-emerald-400 hover:bg-emerald-600 hover:text-white border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-200 group shadow-sm"
             title="Create a Community"
           >
             <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-200" />
@@ -96,7 +98,7 @@ export const CommunitySidebar: React.FC = () => {
         {/* Discovery Button */}
         <Link
           href="/discover"
-          className="flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-800/60 text-cyan-400 hover:bg-cyan-600 hover:text-white hover:rounded-xl transition-all duration-200"
+          className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/[0.03] text-cyan-400 hover:bg-cyan-600 hover:text-white border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-200"
           title="Explore Public Communities"
         >
           <Compass className="w-5 h-5" />
