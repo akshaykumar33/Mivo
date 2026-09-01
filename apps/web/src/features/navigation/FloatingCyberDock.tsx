@@ -16,7 +16,10 @@ import {
   PictureInPicture2,
   BookOpen,
   PhoneOff,
+  Smile,
+  Hand,
 } from 'lucide-react';
+import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 
 export interface FloatingCyberDockProps {
   activeMode: RoomCommunicationMode;
@@ -65,6 +68,20 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
   onToggleDocs,
   onDisconnect,
 }) => {
+  const [isReactionsTrayOpen, setIsReactionsTrayOpen] = React.useState(false);
+  const reactionsTrayRef = React.useRef<HTMLDivElement>(null);
+
+  // Click outside to close reactions tray
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (reactionsTrayRef.current && !reactionsTrayRef.current.contains(e.target as Node)) {
+        setIsReactionsTrayOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const stageModes: Array<{
     id: RoomCommunicationMode;
     label: string;
@@ -109,6 +126,13 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     },
   ];
 
+  const reactionEmojis = ['❤️', '👏', '🔥', '🎉', '👍', '😂', '🚀', '💯'];
+
+  const handleSendReaction = (emoji: string) => {
+    reactionBus.emit(emoji);
+    setIsReactionsTrayOpen(false);
+  };
+
   const isSpeaking = !isMuted && audioLevel > 15;
 
   return (
@@ -117,6 +141,36 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
         activeMode === 'TEXT' ? 'bottom-20 sm:bottom-22' : 'bottom-6'
       } left-1/2 -translate-x-1/2 z-40 pointer-events-auto select-none transition-all duration-300`}
     >
+      {/* Floating Google Meet / Zoom Style Reactions Tray Popover */}
+      {isReactionsTrayOpen && (
+        <div
+          ref={reactionsTrayRef}
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 mb-2 p-2 rounded-[22px] bg-[#0A0D18]/95 border border-white/[0.14] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] flex items-center gap-1.5 ring-1 ring-white/[0.08] animate-slide-up z-50 whitespace-nowrap"
+        >
+          {reactionEmojis.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => handleSendReaction(emoji)}
+              className="p-2 rounded-[14px] hover:bg-white/[0.1] hover:scale-125 active:scale-95 transition-all text-xl cursor-pointer"
+              title={`Send ${emoji} Reaction`}
+            >
+              {emoji}
+            </button>
+          ))}
+
+          <div className="w-[1px] h-6 bg-white/[0.1] mx-1" />
+
+          <button
+            onClick={() => handleSendReaction('✋')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[14px] bg-[#FFBD2E]/15 hover:bg-[#FFBD2E]/30 text-[#FFBD2E] border border-[#FFBD2E]/40 text-xs font-bold transition-all hover:scale-105 cursor-pointer"
+            title="Raise Hand"
+          >
+            <Hand className="w-3.5 h-3.5" />
+            <span>Raise Hand</span>
+          </button>
+        </div>
+      )}
+
       {/* Apple Liquid Glass Floating Dock Container */}
       <div className="relative flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-[26px] bg-[#0A0C14]/85 border border-white/[0.12] backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] ring-1 ring-white/[0.06]">
         {/* Top Specular Line Highlight */}
@@ -206,6 +260,23 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
 
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/screen:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
               {isScreenOn ? 'Sharing Screen' : 'Share Display'}
+            </div>
+          </button>
+
+          {/* Google Meet / Zoom Style In-Meeting Reactions Trigger */}
+          <button
+            onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
+            className={`relative group/react p-2.5 sm:p-3 rounded-[16px] transition-all duration-200 cursor-pointer ${
+              isReactionsTrayOpen
+                ? 'bg-gradient-to-tr from-[#FFBD2E] to-[#FF9F0A] text-black font-bold shadow-[0_0_20px_rgba(255,189,46,0.6)] scale-105'
+                : 'bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white border border-white/[0.08]'
+            }`}
+            title="In-Meeting Emoji Reactions"
+          >
+            <Smile className="w-4 h-4 stroke-[2.2]" />
+
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-[10px] bg-[#141724]/95 border border-white/[0.12] text-[10px] font-semibold text-white opacity-0 pointer-events-none group-hover/react:opacity-100 transition-all duration-150 whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+              Send Reactions
             </div>
           </button>
 
