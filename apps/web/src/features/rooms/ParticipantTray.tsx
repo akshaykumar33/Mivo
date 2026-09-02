@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { RoomMemberDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
-import { Mic, MicOff, Video, Users, Sliders, X, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Video, Users, Sliders, X, Sparkles, Search, UserPlus, Trash2 } from 'lucide-react';
+import { useRoomStore } from '@/stores/roomStore';
 
 export interface ParticipantTrayProps {
   participants: RoomMemberDTO[];
@@ -23,34 +24,87 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
   onClose,
 }) => {
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const { simulateBulkParticipants, clearSimulatedParticipants } = useRoomStore();
+
+  const filteredParticipants = React.useMemo(() => {
+    if (!searchQuery.trim()) return participants;
+    const q = searchQuery.toLowerCase();
+    return participants.filter(
+      (p) =>
+        (p.user.displayName || p.user.username).toLowerCase().includes(q) ||
+        (p.user.customStatus || '').toLowerCase().includes(q)
+    );
+  }, [participants, searchQuery]);
 
   if (!isOpen) return null;
 
   return (
-    <aside className="w-64 h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-2xl p-4 flex flex-col select-none z-20 transition-all">
-      <div className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
-          <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
-          <span>Stage Members</span>
-        </span>
-        <div className="flex items-center gap-1.5">
-          <span className="px-2 py-0.5 rounded-full bg-[#5E5CE6]/20 text-[#5E5CE6] border border-[#5E5CE6]/30 text-[10px] font-bold">
-            {participants.length}
-          </span>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
-              title="Close Roster"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      <div
+        onClick={onClose}
+        className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+      />
 
-      <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin">
-        {participants.map((p) => {
+      <aside className="fixed sm:relative inset-y-0 right-0 w-full sm:w-72 h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-2xl p-4 flex flex-col select-none z-50 sm:z-20 shadow-2xl sm:shadow-none animate-slide-left transition-all">
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
+            <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
+            <span>Stage Members</span>
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="px-2 py-0.5 rounded-full bg-[#5E5CE6]/20 text-[#5E5CE6] border border-[#5E5CE6]/30 text-[10px] font-bold">
+              {participants.length}
+            </span>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                title="Close Roster"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Search Input & Simulation Buttons */}
+        <div className="space-y-2 mb-3">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-white/40 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search stage members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6]"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => simulateBulkParticipants(100)}
+              className="flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 hover:from-[#5E5CE6]/50 hover:to-[#0A84FF]/40 border border-[#5E5CE6]/40 text-[10px] font-bold text-white transition-all cursor-pointer shadow-sm"
+              title="Simulate 100 Joined Users"
+            >
+              <UserPlus className="w-3 h-3 text-[#64D2FF]" />
+              <span>Simulate 100 Users</span>
+            </button>
+            {participants.length > 5 && (
+              <button
+                onClick={() => clearSimulatedParticipants()}
+                className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-rose-950/50 hover:text-rose-400 text-white/40 border border-white/[0.08] transition-colors cursor-pointer"
+                title="Reset Simulation"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin">
+          {filteredParticipants.map((p) => {
           const isMe = p.userId === currentUserId;
           const isMenuOpen = activeMenuUserId === p.userId;
 
@@ -139,5 +193,6 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
         })}
       </div>
     </aside>
+    </>
   );
 };

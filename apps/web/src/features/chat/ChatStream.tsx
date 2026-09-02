@@ -139,13 +139,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
       </div>
 
       {/* Scrollable Message List */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-2.5 sm:space-y-3 scrollbar-thin">
         {/* Welcome Hero at top of stream */}
-        <div className="pt-6 pb-6 mb-4 border-b border-white/[0.06] text-left">
-          <div className="w-14 h-14 rounded-[20px] bg-gradient-to-tr from-[#5E5CE6]/20 to-[#0A84FF]/20 border border-[#5E5CE6]/30 flex items-center justify-center text-[#5E5CE6] mb-3 shadow-[0_8px_24px_rgba(94,92,230,0.2)]">
-            <Hash className="w-7 h-7 stroke-[2.5]" />
+        <div className="pt-4 sm:pt-6 pb-4 sm:pb-6 mb-3 sm:mb-4 border-b border-white/[0.06] text-left">
+          <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-[20px] bg-gradient-to-tr from-[#5E5CE6]/20 to-[#0A84FF]/20 border border-[#5E5CE6]/30 flex items-center justify-center text-[#5E5CE6] mb-3 shadow-[0_8px_24px_rgba(94,92,230,0.2)]">
+            <Hash className="w-6 sm:w-7 h-6 sm:h-7 stroke-[2.5]" />
           </div>
-          <h3 className="text-xl font-bold text-white font-display tracking-tight">
+          <h3 className="text-lg sm:text-xl font-bold text-white font-display tracking-tight">
             Welcome to #{room.name}!
           </h3>
           <p className="text-xs text-white/50 mt-1 max-w-xl leading-relaxed">
@@ -165,7 +165,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           return (
             <div
               key={msg.id}
-              className="flex items-start gap-3 group hover:bg-white/[0.03] p-3 -mx-3 rounded-[18px] transition-all duration-150 relative"
+              className="flex items-start gap-2.5 sm:gap-3 group hover:bg-white/[0.03] p-2 sm:p-3 -mx-2 sm:-mx-3 rounded-[18px] transition-all duration-150 relative"
             >
               <Avatar
                 size="md"
@@ -175,19 +175,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
               />
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white hover:underline cursor-pointer">
+                <div className="flex items-center justify-between mb-1 gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span className="text-xs font-bold text-white hover:underline cursor-pointer truncate">
                       {msg.sender?.displayName || msg.sender?.username}
                     </span>
-                    <span className="text-[10px] text-white/40 font-mono">{timestamp}</span>
-                    <span title="Delivered & Read">
+                    <span className="text-[10px] text-white/40 font-mono flex-shrink-0">{timestamp}</span>
+                    <span title="Delivered & Read" className="flex-shrink-0">
                       <CheckCheck className="w-3.5 h-3.5 text-[#0A84FF]" />
                     </span>
                   </div>
 
-                  {/* Telegram / Slack Style Quick Hover Action Bar */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F1220]/95 px-2 py-0.5 rounded-[12px] border border-white/[0.12] shadow-lg backdrop-blur-xl">
+                  {/* Telegram / Slack Style Quick Hover/Touch Action Bar */}
+                  <div className="flex items-center gap-0.5 sm:gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F1220]/95 px-1.5 sm:px-2 py-0.5 rounded-[12px] border border-white/[0.12] shadow-lg backdrop-blur-xl flex-shrink-0">
                     <button
                       onClick={() => handleAddReaction(msg.id, '❤️')}
                       className="p-1 hover:scale-125 transition-transform text-xs"

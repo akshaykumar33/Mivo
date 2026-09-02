@@ -297,38 +297,38 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xl animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 bg-black/70 backdrop-blur-xl animate-fade-in select-none"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-6xl h-[88vh] rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative text-[var(--text-primary)]"
+        className="w-full max-w-6xl h-full sm:h-[88vh] rounded-none sm:rounded-[28px] bg-[var(--bg-surface-0)] border-0 sm:border border-[var(--border-subtle)] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative text-[var(--text-primary)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Apple Gradient Top Highlight */}
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#5E5CE6]/60 to-transparent" />
 
         {/* Modal Top Header */}
-        <div className="h-16 px-6 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-              <BookOpen className="w-5 h-5 stroke-[2.2]" />
+        <div className="h-14 sm:h-16 px-4 sm:px-6 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
+            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 flex-shrink-0">
+              <BookOpen className="w-4 sm:w-5 h-4 sm:h-5 stroke-[2.2]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-extrabold text-[var(--text-primary)] font-display tracking-tight">
+                <h2 className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)] font-display tracking-tight truncate">
                   Mivo Documentation & Architecture Reference
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/30">
+                <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/30">
                   v1.0 Pro
                 </span>
               </div>
-              <span className="text-[11px] text-[var(--text-muted)] font-medium">
+              <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] font-medium truncate block">
                 Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
@@ -340,9 +340,9 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
         </div>
 
         {/* Modal Main Body Layout */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Left Folder Directory Sidebar */}
-          <aside className="w-80 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col p-4 space-y-3.5 flex-shrink-0">
+          <aside className="w-full md:w-80 max-h-48 md:max-h-none bg-[var(--bg-sidebar)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)] flex flex-col p-3 sm:p-4 space-y-3 flex-shrink-0">
             {/* Search Input with Icon */}
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -487,31 +487,32 @@ function formatMarkdownToHtml(md: string): string {
   const processed = lines.map((line) => {
     let l = line;
     if (l.startsWith('# ')) {
-      return `<h1 class="text-2xl font-extrabold text-white font-display border-b border-white/[0.08] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
+      return `<h1 class="text-2xl font-extrabold text-[var(--text-primary)] font-display border-b border-[var(--border-subtle)] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
     }
     if (l.startsWith('### ')) {
       return `<h3 class="text-sm font-bold text-[#BF5AF2] font-display uppercase tracking-wider mt-5 mb-2">${l.slice(4)}</h3>`;
     }
     if (l.startsWith('## ')) {
-      return `<h2 class="text-lg font-bold text-white font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+      return `<h2 class="text-lg font-bold text-[var(--text-primary)] font-display mt-6 mb-3">${l.slice(3)}</h2>`;
     }
     if (l.startsWith('> [!TIP]') || l.startsWith('> [!NOTE]')) {
       const type = l.includes('TIP') ? 'TIP' : 'NOTE';
       return `<div class="p-3.5 rounded-2xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/35 text-[#64D2FF] text-xs font-medium my-3 flex items-start gap-2.5">
-        <span class="font-bold text-white uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-[#5E5CE6]/30 border border-[#5E5CE6]/40">${type}</span>`;
+        <span class="font-bold uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-[#5E5CE6]/30 border border-[#5E5CE6]/40 text-white">${type}</span>
+      </div>`;
     }
     if (l.startsWith('> ')) {
-      return `<blockquote class="p-3 rounded-2xl bg-white/[0.03] border-l-4 border-[#5E5CE6] text-white/70 text-xs italic my-3">${l.slice(2)}</blockquote>`;
+      return `<blockquote class="p-3 rounded-2xl bg-white/[0.03] border-l-4 border-[#5E5CE6] text-[var(--text-secondary)] text-xs italic my-3">${l.slice(2)}</blockquote>`;
     }
     if (l.startsWith('* ') || l.startsWith('- ')) {
       const itemText = l.slice(2)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-white/[0.06]">$1</code>');
-      return `<li class="text-white/80 ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
+        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-[var(--border-subtle)]">$1</code>');
+      return `<li class="text-[var(--text-secondary)] ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
     }
     return l
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-white/[0.06]">$1</code>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
+      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-[var(--border-subtle)]">$1</code>');
   });
 
   return processed.join('<br />');

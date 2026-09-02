@@ -2,10 +2,13 @@
 
 import * as React from 'react';
 import { CommunitySidebar } from '@/features/communities/CommunitySidebar';
+import { ChannelSidebar } from '@/features/channels/ChannelSidebar';
 import { useAuthStore } from '@/stores/authStore';
+import { useCommunityStore } from '@/stores/communityStore';
 import { useThemeStore, MivoThemeId } from '@/stores/themeStore';
 import { ThemeSwitcherModal } from '@/features/theme/ThemeSwitcherModal';
 import { useRouter } from 'next/navigation';
+import { useNavigationStore } from '@/stores/navigationStore';
 
 export default function DashboardLayout({
   children,
@@ -14,7 +17,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { activeCommunity } = useCommunityStore();
   const { setTheme } = useThemeStore();
+  const { isMobileSidebarOpen, closeMobileSidebar } = useNavigationStore();
 
   // Load saved visual theme on startup
   React.useEffect(() => {
@@ -46,9 +51,33 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-screen w-screen bg-[var(--bg-canvas)] flex overflow-hidden select-none">
-      {/* Leftmost Community Icon Rail */}
-      <CommunitySidebar />
+    <div className="h-screen w-screen bg-[var(--bg-canvas)] flex overflow-hidden select-none relative">
+      {/* Desktop Leftmost Community Icon Rail */}
+      <div className="hidden md:flex h-full flex-shrink-0">
+        <CommunitySidebar />
+      </div>
+
+      {/* Mobile Slide-Over Overlay Drawer */}
+      {isMobileSidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex pointer-events-auto animate-fade-in">
+          {/* Glass Backdrop */}
+          <div
+            onClick={closeMobileSidebar}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+          />
+
+          {/* Drawer container: Community Rail + Channels List */}
+          <div className="relative z-50 flex h-full max-w-[92vw] shadow-2xl animate-slide-right overflow-hidden border-r border-[var(--border-subtle)]">
+            <CommunitySidebar onNavigate={closeMobileSidebar} />
+            {activeCommunity && (
+              <ChannelSidebar
+                communityId={activeCommunity.id}
+                className="flex w-[230px] sm:w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex-col justify-between select-none flex-shrink-0"
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Dynamic Workspace Area */}
       <main className="flex-1 flex overflow-hidden relative bg-[var(--bg-canvas)]">

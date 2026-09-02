@@ -4,17 +4,31 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCommunityStore } from '@/stores/communityStore';
 import { Avatar, Button } from '@mivo/ui';
 import { CommunityDTO } from '@mivo/shared';
-import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight } from 'lucide-react';
+import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight, Menu } from 'lucide-react';
+import { useNavigationStore } from '@/stores/navigationStore';
 import Link from 'next/link';
 
 export default function ChannelsHomePage() {
   const { user } = useAuthStore();
   const { communities } = useCommunityStore();
+  const { toggleMobileSidebar } = useNavigationStore();
 
   return (
-    <div className="flex-1 flex bg-[var(--bg-canvas)] overflow-hidden select-none">
-      {/* Direct Messages Sub-Sidebar */}
-      <aside className="w-64 h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] p-4 flex flex-col justify-between">
+    <div className="flex-1 flex flex-col md:flex-row bg-[var(--bg-canvas)] overflow-hidden select-none">
+      {/* Mobile Top Header */}
+      <div className="md:hidden h-14 px-4 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
+        <button
+          onClick={toggleMobileSidebar}
+          className="p-2 rounded-xl bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+        <span className="font-display font-bold text-xs text-[var(--text-primary)]">Mivo Home</span>
+        <div className="w-8" />
+      </div>
+
+      {/* Direct Messages Sub-Sidebar (Desktop) */}
+      <aside className="hidden md:flex w-64 h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] p-4 flex-col justify-between flex-shrink-0">
         <div className="space-y-5">
           <div className="h-8 px-2 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">

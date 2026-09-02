@@ -97,12 +97,21 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     client.join(`room:${roomId}`);
 
     // Create or update room membership in DB
-    const member = await prisma.roomMember.upsert({
-      where: { roomId_userId: { roomId, userId: user.sub } },
-      update: { joinedAt: new Date() },
-      create: { roomId, userId: user.sub },
-      include: { user: true, room: true },
-    });
+    let member: any;
+    try {
+      member = await prisma.roomMember.upsert({
+        where: { roomId_userId: { roomId, userId: user.sub } },
+        update: { joinedAt: new Date() },
+        create: { roomId, userId: user.sub },
+        include: { user: true, room: true },
+      });
+    } catch (err) {
+      member = await prisma.roomMember.findFirst({
+        where: { roomId, userId: user.sub },
+        include: { user: true, room: true },
+      });
+    }
+    if (!member) return;
 
     const participantDTO: RoomMemberDTO = {
       id: member.id,

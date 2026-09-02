@@ -209,11 +209,17 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           currentUserId={user?.id}
           isMuted={isMuted}
           isCameraOn={isCameraOn}
+          isScreenOn={isScreenOn}
           localStream={localStream}
+          screenStream={screenStream}
           remoteStreams={remoteStreams}
           audioLevel={audioLevel}
           isOpen={isPiPOpen}
           onClose={() => setIsPiPOpen(false)}
+          onToggleMute={() => toggleMute()}
+          onToggleCamera={() => toggleCamera()}
+          onToggleScreen={() => toggleScreenShare()}
+          onDisconnect={handleDisconnect}
         />
 
         {/* Floating Interactive Documentation Hub */}

@@ -34,6 +34,8 @@ interface RoomState {
   toggleDeafen: () => void;
   toggleCamera: () => Promise<void>;
   toggleScreenShare: () => Promise<void>;
+  simulateBulkParticipants: (count?: number) => void;
+  clearSimulatedParticipants: () => void;
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
@@ -48,6 +50,49 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   screenStream: null,
   remoteStreams: {},
   audioLevel: 0,
+
+  simulateBulkParticipants: (count = 100) => {
+    const names = [
+      'Elena Rostova', 'Sarah Connor', 'Marcus Vance', 'Aria Stark', 'Kai Chen',
+      'Maya Lin', 'David Kim', 'Zoe Patel', 'Leo Torres', 'Sofia Rossi',
+      'Liam Smith', 'Emma Johnson', 'Noah Williams', 'Olivia Brown', 'James Jones',
+      'Ava Garcia', 'Logan Miller', 'Mia Davis', 'Lucas Rodriguez', 'Harper Martinez'
+    ];
+    const roles = ['Speaker', 'Host', 'Engineer', 'Designer', 'Architect', 'Member'];
+    
+    const mockMembers: RoomMemberDTO[] = Array.from({ length: count }, (_, i) => {
+      const baseName = names[i % names.length];
+      const displayName = i < names.length ? baseName : `${baseName} #${i + 1}`;
+      const isSpeaking = i % 7 === 0;
+      const isMuted = i % 4 !== 0;
+      const isCameraOn = i % 5 === 0;
+
+      return {
+        id: `sim-member-${i + 1}`,
+        roomId: get().activeRoom?.id || 'sim-room',
+        userId: `sim-user-${i + 1}`,
+        isMuted: isMuted,
+        isDeafened: false,
+        isCameraOn: isCameraOn,
+        isScreenOn: i === 0,
+        joinedAt: new Date(Date.now() - i * 60000).toISOString(),
+        user: {
+          id: `sim-user-${i + 1}`,
+          username: `user_${i + 1}`,
+          displayName: displayName,
+          avatarUrl: null,
+          status: isSpeaking ? 'ONLINE' : (i % 3 === 0 ? 'DND' : 'IDLE'),
+          customStatus: roles[i % roles.length],
+        },
+      };
+    });
+
+    set({ participants: mockMembers });
+  },
+
+  clearSimulatedParticipants: () => {
+    set({ participants: [] });
+  },
 
   joinRoom: async (roomId: string, currentUserId?: string) => {
     set({ isLoading: true });

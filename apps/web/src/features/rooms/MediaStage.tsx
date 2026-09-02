@@ -18,6 +18,11 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Users,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -56,6 +61,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
+  const [isAttendeeDrawerOpen, setIsAttendeeDrawerOpen] = React.useState(true);
 
   // Sync participant list to ordered array
   React.useEffect(() => {
@@ -401,11 +407,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     );
   }
 
-  // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater
+  // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater with Interactive Participant Video Strip
   return (
-    <div className="flex-1 p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden">
-      {/* Primary Dominant Stage */}
-      <div className="flex-1 rounded-3xl bg-[#0B0D14] border border-white/[0.08] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[300px]">
+    <div className="flex-1 p-4 sm:p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-4">
+      {/* Primary Dominant Screen Share Stage */}
+      <div className="flex-1 rounded-3xl bg-[#0B0D14] border border-[var(--border-subtle)] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[280px]">
         {screenStream ? (
           <video
             ref={screenVideoRef}
@@ -427,32 +433,122 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               {mode === 'SCREEN_SHARE' ? 'Interactive Screen Broadcast' : 'Live Broadcaster Stage'}
             </h4>
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
-              Click &quot;Share Screen&quot; in the bottom controls bar to broadcast your window or full display.
+              Click &quot;Share Screen&quot; in the bottom dock to broadcast your window, or collaborate with attendee video feeds below.
             </p>
           </div>
         )}
 
-        {/* Live Badge */}
-        <div className="absolute top-5 left-5 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-lg shadow-rose-600/40 z-10">
+        {/* Live Presentation Status Badge */}
+        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-lg shadow-rose-600/40 z-10">
           <span className="w-2 h-2 rounded-full bg-white animate-ping" />
           <span>{mode === 'SCREEN_SHARE' ? 'PRESENTING' : 'LIVE ON STAGE'}</span>
         </div>
+
+        {/* Participant Count & Quick Drawer Toggle Chip */}
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+          <button
+            onClick={() => setIsAttendeeDrawerOpen(!isAttendeeDrawerOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-0)]/90 hover:bg-[var(--bg-surface-1)] backdrop-blur-md border border-[var(--border-subtle)] text-[11px] font-bold text-[var(--text-primary)] transition-all cursor-pointer shadow-lg"
+            title={isAttendeeDrawerOpen ? 'Collapse Attendee Video Drawer' : 'Expand Attendee Video Drawer'}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>{participants.length} in Meet</span>
+            <span className="text-[var(--text-muted)]">•</span>
+            <span className="text-violet-400 flex items-center gap-1">
+              {isAttendeeDrawerOpen ? (
+                <>
+                  <span>Hide Videos</span>
+                  <EyeOff className="w-3 h-3" />
+                </>
+              ) : (
+                <>
+                  <span>Show Videos</span>
+                  <Eye className="w-3 h-3" />
+                </>
+              )}
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Attendee Filmstrip */}
-      <div className="h-16 mt-4 flex items-center gap-3 overflow-x-auto py-1">
-        {participants.map((p) => (
-          <div
-            key={p.id}
-            className="flex-shrink-0 px-3.5 py-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center gap-2.5 text-xs"
-          >
-            <Avatar size="xs" src={p.user.avatarUrl} fallbackText={p.user.displayName || p.user.username} />
-            <span className="text-[var(--text-primary)] truncate max-w-[100px] font-semibold">
-              {p.user.displayName || p.user.username}
-            </span>
+      {/* Interactive Closeable / Expandable Drag & Drop Video Drawer */}
+      {isAttendeeDrawerOpen ? (
+        <div className="flex-shrink-0 flex flex-col gap-2 animate-slide-up">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+                Meeting Participants ({participants.length}) • Drag or Use ◀ / ▶ to Reorder
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleAutoArrange}
+                className="flex items-center gap-1 text-[10px] font-bold text-violet-400 hover:text-violet-300 px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                title="Auto-Arrange Video Strip"
+              >
+                <LayoutGrid className="w-3 h-3" />
+                <span>Auto-Arrange</span>
+              </button>
+
+              <button
+                onClick={() => setIsAttendeeDrawerOpen(false)}
+                className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                title="Collapse Video Drawer (Full-Screen Share View)"
+              >
+                <ChevronDown className="w-3 h-3" />
+                <span>Hide</span>
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
+
+          <div
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
+          >
+            {sortedParticipants.map((p) => {
+              const isMe = p.userId === currentUserId;
+              const camOn = isMe ? isCameraOn : p.isCameraOn;
+              const participantMuted = isMe ? isMuted : p.isMuted;
+              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+              return (
+                <div key={p.id} className="w-56 sm:w-64 aspect-video flex-shrink-0">
+                  <LiveVideoTile
+                    user={p.user}
+                    isMe={isMe}
+                    isMuted={participantMuted}
+                    isCameraOn={camOn}
+                    isPinned={pinnedUserId === p.userId}
+                    onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
+                    isHost={isHost}
+                    onHostAction={handleHostAction}
+                    mediaStream={participantStream}
+                    audioLevel={isMe ? audioLevel : 0}
+                    onDragStart={handleDragStart(p.userId)}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop(p.userId)}
+                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Collapsed State: Sleek Restore Drawer Button */
+        <div className="flex justify-center flex-shrink-0 animate-fade-in">
+          <button
+            onClick={() => setIsAttendeeDrawerOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] shadow-xl transition-all hover:scale-105 cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
+            <span>Show Attendee Video Drawer ({participants.length})</span>
+            <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

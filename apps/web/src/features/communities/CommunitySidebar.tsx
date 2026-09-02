@@ -16,7 +16,11 @@ const COMMUNITY_PALETTES = [
   'from-[#64D2FF] via-[#5E5CE6] to-[#BF5AF2]',
 ];
 
-export const CommunitySidebar: React.FC = () => {
+export interface CommunitySidebarProps {
+  onNavigate?: () => void;
+}
+
+export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }) => {
   const pathname = usePathname();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -48,6 +52,7 @@ export const CommunitySidebar: React.FC = () => {
           />
           <Link
             href="/channels"
+            onClick={() => onNavigate?.()}
             className={`flex items-center justify-center w-11 h-11 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isDMsActive
                 ? 'bg-gradient-to-br from-[#5E5CE6] to-[#0A84FF] !text-white shadow-[0_6px_20px_rgba(94,92,230,0.45)] border border-white/30 scale-105'
@@ -89,6 +94,7 @@ export const CommunitySidebar: React.FC = () => {
                 />
                 <Link
                   href={`/communities/${community.id}`}
+                  onClick={() => onNavigate?.()}
                   className={`flex items-center justify-center w-11 h-11 rounded-[16px] transition-all duration-200 font-bold text-xs tracking-tight cursor-pointer ${
                     isActive
                       ? `bg-gradient-to-br ${palette} !text-white shadow-[0_6px_20px_rgba(191,90,242,0.4)] border border-white/30 scale-105`

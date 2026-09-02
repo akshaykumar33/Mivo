@@ -35,6 +35,17 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       set({ activeCommunity: res.data, isLoading: false });
       get().fetchMembers(communityId);
     } else {
+      // Fallback: try fetching all communities and selecting first
+      const allRes = await api.get<CommunityDTO[]>('/api/v1/communities');
+      if (allRes.success && allRes.data && allRes.data.length > 0) {
+        const first = allRes.data[0];
+        const firstDetails = await api.get<CommunityDetailsDTO>(`/api/v1/communities/${first.id}`);
+        if (firstDetails.success && firstDetails.data) {
+          set({ communities: allRes.data, activeCommunity: firstDetails.data, isLoading: false });
+          get().fetchMembers(first.id);
+          return;
+        }
+      }
       set({ isLoading: false });
     }
   },

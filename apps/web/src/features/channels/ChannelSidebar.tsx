@@ -24,25 +24,29 @@ import {
   Users,
   Settings,
   Palette,
+  PanelLeftClose,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useThemeStore } from '@/stores/themeStore';
+import { useNavigationStore } from '@/stores/navigationStore';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
 
 export interface ChannelSidebarProps {
   communityId: string;
+  className?: string;
 }
 
 type NavVariant = 'ALL' | 'STAGES' | 'MEMBERS';
 
-export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) => {
+export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, className }) => {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { activeCommunity, selectCommunity } = useCommunityStore();
   const { setIsThemeModalOpen } = useThemeStore();
+  const { closeMobileSidebar, toggleSidebarCollapse } = useNavigationStore();
 
   const [activeTab, setActiveTab] = React.useState<NavVariant>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -60,8 +64,9 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
   if (!activeCommunity) {
     return (
-      <div className="w-[270px] h-full bg-[#090B10]/95 border-r border-white/[0.07] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#5E5CE6] border-t-transparent rounded-full animate-spin" />
+      <div className={className || "w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col justify-center items-center select-none flex-shrink-0"}>
+        <div className="w-6 h-6 border-2 border-[#5E5CE6] border-t-transparent rounded-full animate-spin mb-2" />
+        <span className="text-[11px] font-mono text-[var(--text-muted)]">Loading Spaces...</span>
       </div>
     );
   }
@@ -95,7 +100,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
 
   return (
     <>
-      <aside className="w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col justify-between select-none flex-shrink-0">
+      <aside className={className || "w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col justify-between select-none flex-shrink-0"}>
         {/* Top Header & Search Bar */}
         <div className="flex-shrink-0 flex flex-col">
           {/* Community Title Bar */}
@@ -112,12 +117,21 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
               {isOwnerOrAdmin && (
                 <button
                   onClick={() => setIsRoleManagerOpen(true)}
-                  className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                  className="p-1.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
                   title="Community Roles & Permissions"
                 >
                   <Shield className="w-4 h-4 text-[#BF5AF2]" />
                 </button>
               )}
+
+              {/* Closeable Tray Collapse Button */}
+              <button
+                onClick={toggleSidebarCollapse}
+                className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-all cursor-pointer"
+                title="Collapse Sidebar Tray (Ctrl+\)"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -193,6 +207,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId }) =
                             <Link
                               key={room.id}
                               href={`/communities/${communityId}/rooms/${room.id}`}
+                              onClick={() => closeMobileSidebar()}
                               className={`flex items-center justify-between px-2.5 py-1.5 rounded-[12px] text-xs font-medium transition-all duration-150 group cursor-pointer ${
                                 isRoomActive
                                   ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 text-[var(--text-primary)] font-semibold border border-[#5E5CE6]/40 shadow-[0_4px_16px_rgba(94,92,230,0.25)]'

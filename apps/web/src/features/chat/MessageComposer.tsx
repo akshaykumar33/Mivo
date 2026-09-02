@@ -79,12 +79,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   return (
-    <div className="p-3 sm:p-4 pb-20 sm:pb-24 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] backdrop-blur-2xl select-none z-10 relative">
+    <div className="p-2 sm:p-4 pb-20 sm:pb-24 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] backdrop-blur-2xl select-none z-10 relative">
       {/* Interactive Emoji Picker Popover */}
       {isEmojiPickerOpen && (
         <div
           ref={emojiPickerRef}
-          className="absolute bottom-24 right-6 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 animate-slide-up w-64 ring-1 ring-white/[0.08]"
+          className="absolute bottom-20 sm:bottom-24 right-2 sm:right-6 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 animate-slide-up w-64 max-w-[90vw] ring-1 ring-white/[0.08]"
         >
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] font-display">
             <span>Quick Emojis</span>
