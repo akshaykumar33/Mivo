@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { storageClient } from '@/lib/storage-client';
@@ -35,6 +35,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const docInputRef = React.useRef<HTMLInputElement>(null);
   const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Click outside to close emoji picker
@@ -248,13 +249,33 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
         {/* Apple Luxury Frosted Glass Input Chassis */}
         <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-[#5E5CE6] focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
+          {/* Hidden Document Upload Input */}
+          <input
+            ref={docInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.md,.json,.zip,.tar,.gz,.rar,.7z"
+            className="hidden"
+            onChange={(e) => handleFileUpload(e.target.files)}
+          />
+
           {/* Action Tools Left */}
+          <button
+            type="button"
+            onClick={() => docInputRef.current?.click()}
+            disabled={isUploading}
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-violet-400 hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
+            title="Send Document (PDF, Word, Excel, Zip...)"
+          >
+            <FilePlus className="w-4 h-4 stroke-[2.2]" />
+          </button>
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
-            title="Attach file (Supabase Storage / S3 direct)"
+            title="Attach Media / Images"
           >
             <Paperclip className="w-4 h-4 stroke-[2.2]" />
           </button>

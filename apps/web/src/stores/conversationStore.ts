@@ -9,6 +9,7 @@ import {
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { webrtcMesh } from '@/lib/webrtc-mesh';
+import { getEnhancedAudioStream } from '@/lib/media-manager';
 
 export interface ActiveCallState {
   conversationId: string;
@@ -223,10 +224,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
   initiateCall: async (conversation: ConversationDTO, currentUserId: string) => {
     try {
-      // 1. Acquire microphone
+      // 1. Acquire studio HD microphone
       let stream: MediaStream | null = null;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await getEnhancedAudioStream();
       } catch (e) {
         console.warn('Microphone permission not granted or unavailable:', e);
       }
@@ -288,10 +289,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     if (!incoming) return;
 
     try {
-      // 1. Acquire microphone
+      // 1. Acquire studio HD microphone
       let stream: MediaStream | null = null;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await getEnhancedAudioStream();
       } catch (e) {
         console.warn('Microphone permission not granted or unavailable:', e);
       }

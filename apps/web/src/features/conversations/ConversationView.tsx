@@ -12,14 +12,80 @@ import {
   Smile,
   Users,
   FileText,
+  FileSpreadsheet,
+  FileCode,
+  FolderArchive,
+  FilePlus,
+  File,
   X,
   Download,
+  ExternalLink,
   Sparkles,
-  Radio,
+  Image as ImageIcon,
+  Loader2,
+  ZoomIn,
 } from 'lucide-react';
-import { api } from '@/lib/api-client';
+import { storageClient } from '@/lib/storage-client';
 
-const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀'];
+const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀', '💯', '✨'];
+
+function getDocTypeInfo(filename: string, mimeType?: string) {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  if (ext === 'pdf' || mimeType?.includes('pdf')) {
+    return {
+      label: 'PDF Document',
+      badge: 'PDF',
+      color: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+      type: 'pdf',
+    };
+  }
+  if (['doc', 'docx'].includes(ext) || mimeType?.includes('word')) {
+    return {
+      label: 'Word Document',
+      badge: 'DOCX',
+      color: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      type: 'word',
+    };
+  }
+  if (['xls', 'xlsx', 'csv'].includes(ext) || mimeType?.includes('sheet') || mimeType?.includes('excel')) {
+    return {
+      label: 'Spreadsheet',
+      badge: 'EXCEL',
+      color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      type: 'sheet',
+    };
+  }
+  if (['ppt', 'pptx'].includes(ext) || mimeType?.includes('presentation') || mimeType?.includes('powerpoint')) {
+    return {
+      label: 'Presentation',
+      badge: 'SLIDES',
+      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      type: 'slides',
+    };
+  }
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimeType?.includes('zip') || mimeType?.includes('archive')) {
+    return {
+      label: 'Compressed Archive',
+      badge: 'ARCHIVE',
+      color: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      type: 'archive',
+    };
+  }
+  if (['js', 'ts', 'tsx', 'jsx', 'py', 'json', 'html', 'css', 'go', 'rs', 'sql', 'sh'].includes(ext)) {
+    return {
+      label: 'Source Code',
+      badge: ext.toUpperCase(),
+      color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+      type: 'code',
+    };
+  }
+  return {
+    label: 'Document',
+    badge: ext ? ext.toUpperCase() : 'FILE',
+    color: 'bg-slate-600/20 text-slate-300 border-slate-500/30',
+    type: 'general',
+  };
+}
 
 export const ConversationView: React.FC = () => {
   const { user } = useAuthStore();
@@ -39,10 +105,14 @@ export const ConversationView: React.FC = () => {
   const [inputContent, setInputContent] = React.useState('');
   const [pendingAttachments, setPendingAttachments] = React.useState<AttachmentMetaDTO[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadStatus, setUploadStatus] = React.useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = React.useState(false);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const docInputRef = React.useRef<HTMLInputElement>(null);
+  const mediaInputRef = React.useRef<HTMLInputElement>(null);
   const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const activeConv = conversations.find((c) => c.id === activeConversationId);
@@ -76,33 +146,48 @@ export const ConversationView: React.FC = () => {
     }, 2000);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFilesSelected = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
 
     try {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append('file', file);
+      setUploadStatus(`Uploading ${files.length} file${files.length === 1 ? '' : 's'}...`);
 
-      const token = api.getAccessToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/storage/upload`, {
-        method: 'POST',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success && data.data) {
-        setPendingAttachments((prev) => [...prev, data.data]);
+      const uploaded: AttachmentMetaDTO[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadStatus(`Uploading ${file.name} (${i + 1}/${files.length})...`);
+        const result = await storageClient.uploadFile(file, 'attachments');
+        uploaded.push(result);
       }
-    } catch (err) {
+
+      setPendingAttachments((prev) => [...prev, ...uploaded]);
+    } catch (err: any) {
       console.error('File upload failed:', err);
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadStatus(null);
+      if (docInputRef.current) docInputRef.current.value = '';
+      if (mediaInputRef.current) mediaInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await handleFilesSelected(e.dataTransfer.files);
     }
   };
 
@@ -135,14 +220,21 @@ export const ConversationView: React.FC = () => {
           Select or Create a Conversation
         </h3>
         <p className="text-xs text-[var(--text-muted)] max-w-sm">
-          Pick a direct chat from the sidebar or start a new custom group to exchange instant messages, share attachments, and launch audio calls.
+          Pick a direct chat from the sidebar or start a new custom group to exchange instant messages, share documents, and launch crystal-clear HD audio calls.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[var(--bg-canvas)] h-full overflow-hidden">
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`flex-1 flex flex-col bg-[var(--bg-canvas)] h-full overflow-hidden relative transition-colors ${
+        isDragOver ? 'ring-2 ring-violet-500 ring-inset bg-violet-950/10' : ''
+      }`}
+    >
       {/* Top Header */}
       <header className="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/60 backdrop-blur-md z-10">
         <div className="flex items-center gap-3">
@@ -201,7 +293,7 @@ export const ConversationView: React.FC = () => {
           >
             <Phone className="w-4 h-4" />
             <span className="hidden sm:inline">
-              {activeCall?.conversationId === activeConv.id ? 'Call Active' : 'Audio Call'}
+              {activeCall?.conversationId === activeConv.id ? 'Call Active' : 'HD Audio Call'}
             </span>
           </Button>
         </div>
@@ -217,7 +309,7 @@ export const ConversationView: React.FC = () => {
             <h4 className="text-sm font-bold text-white mb-1">No messages yet</h4>
             <p className="text-xs text-[var(--text-muted)] max-w-xs">
               This is the beginning of your conversation with{' '}
-              <span className="text-violet-300 font-semibold">{title}</span>. Send a greeting or attachment!
+              <span className="text-violet-300 font-semibold">{title}</span>. Share messages, attachments, and documents!
             </p>
           </div>
         ) : (
@@ -264,44 +356,98 @@ export const ConversationView: React.FC = () => {
                   >
                     {msg.content && <p className="whitespace-pre-wrap">{msg.content}</p>}
 
-                    {/* Attachments Display */}
+                    {/* Attachments & Documents Display */}
                     {msg.attachments && msg.attachments.length > 0 && (
-                      <div className="mt-2 space-y-1.5">
+                      <div className="mt-2.5 space-y-2">
                         {msg.attachments.map((att: AttachmentMetaDTO) => {
-                          const isImage = att.type?.startsWith('image/') || att.url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+                          const isImage =
+                            att.type?.startsWith('image/') ||
+                            att.url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+
+                          if (isImage) {
+                            return (
+                              <div
+                                key={att.url || att.name}
+                                onClick={() => setPreviewImageUrl(att.url)}
+                                className="max-w-md max-h-72 rounded-xl overflow-hidden border border-white/10 hover:border-violet-500/50 cursor-pointer group/img transition-all bg-black/40 shadow-sm relative"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={att.url}
+                                  alt={att.name}
+                                  className="w-full h-full object-cover group-hover/img:scale-102 transition-transform duration-200"
+                                />
+                                <div className="absolute top-2 right-2 p-1 rounded-md bg-black/60 text-white opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                  <ZoomIn className="w-3.5 h-3.5" />
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // High-Fidelity Document Card
+                          const docInfo = getDocTypeInfo(att.name, att.type);
+
                           return (
-                            <div key={att.url || att.name} className="rounded-xl overflow-hidden">
-                              {isImage ? (
+                            <div
+                              key={att.url || att.name}
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-black/25 hover:bg-black/40 border border-white/10 hover:border-violet-500/40 transition-all max-w-sm group/doc shadow-sm"
+                            >
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${docInfo.color} group-hover/doc:scale-105 transition-transform`}
+                              >
+                                {docInfo.type === 'sheet' ? (
+                                  <FileSpreadsheet className="w-5 h-5" />
+                                ) : docInfo.type === 'code' ? (
+                                  <FileCode className="w-5 h-5" />
+                                ) : docInfo.type === 'archive' ? (
+                                  <FolderArchive className="w-5 h-5" />
+                                ) : (
+                                  <FileText className="w-5 h-5" />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span
+                                    className="text-xs font-semibold text-white truncate max-w-[170px]"
+                                    title={att.name}
+                                  >
+                                    {att.name}
+                                  </span>
+                                  <span
+                                    className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${docInfo.color}`}
+                                  >
+                                    {docInfo.badge}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-white/50 flex items-center gap-1.5 mt-0.5">
+                                  <span>{storageClient.formatBytes(att.size)}</span>
+                                  <span>•</span>
+                                  <span>{docInfo.label}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
                                 <a
                                   href={att.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="block group/img relative"
+                                  title="Open in new tab"
+                                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                                 >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={att.url}
-                                    alt={att.name}
-                                    className="max-h-60 rounded-xl object-cover hover:opacity-95 transition-opacity"
-                                  />
+                                  <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
-                              ) : (
                                 <a
                                   href={att.url}
+                                  download={att.name}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-black/20 hover:bg-black/30 border border-white/10 text-white transition-colors"
+                                  title="Download Document"
+                                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                                 >
-                                  <FileText className="w-4 h-4 text-violet-300 shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="truncate text-xs font-medium">{att.name}</div>
-                                    <div className="text-[10px] text-white/60">
-                                      {(att.size / 1024).toFixed(1)} KB
-                                    </div>
-                                  </div>
-                                  <Download className="w-3.5 h-3.5 text-white/70" />
+                                  <Download className="w-3.5 h-3.5" />
                                 </a>
-                              )}
+                              </div>
                             </div>
                           );
                         })}
@@ -342,47 +488,83 @@ export const ConversationView: React.FC = () => {
         </div>
       )}
 
-      {/* Pending Attachments Strip */}
+      {/* Uploading Status Banner */}
+      {isUploading && (
+        <div className="px-6 py-2 bg-violet-600/10 border-t border-violet-500/20 text-xs text-violet-300 flex items-center gap-2 animate-pulse">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400" />
+          <span>{uploadStatus || 'Uploading to Supabase S3...'}</span>
+        </div>
+      )}
+
+      {/* Staged Attachments / Documents Strip */}
       {pendingAttachments.length > 0 && (
-        <div className="px-6 py-2 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]">
-          {pendingAttachments.map((att) => (
-            <div
-              key={att.url || att.name}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-white text-xs"
-            >
-              <FileText className="w-3.5 h-3.5 text-violet-300" />
-              <span className="max-w-[140px] truncate">{att.name}</span>
-              <button
-                type="button"
-                onClick={() => setPendingAttachments((prev) => prev.filter((p) => p.url !== att.url))}
-                className="text-violet-300 hover:text-white"
+        <div className="px-6 py-2.5 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]">
+          {pendingAttachments.map((att) => {
+            const docInfo = getDocTypeInfo(att.name, att.type);
+            return (
+              <div
+                key={att.url || att.name}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-white text-xs shadow-sm"
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
+                <div className={`p-1 rounded-lg border ${docInfo.color}`}>
+                  <FileText className="w-3 h-3" />
+                </div>
+                <span className="max-w-[140px] truncate font-medium">{att.name}</span>
+                <span className="text-[10px] text-white/50">({storageClient.formatBytes(att.size)})</span>
+                <button
+                  type="button"
+                  onClick={() => setPendingAttachments((prev) => prev.filter((p) => p.url !== att.url))}
+                  className="text-violet-300 hover:text-white p-0.5 rounded transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Input Box Footer */}
       <footer className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]/90 backdrop-blur-md">
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-          {/* File Upload Hidden Input & Trigger */}
+          {/* Document Upload Hidden Input & Button */}
           <input
             type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
+            ref={docInputRef}
+            onChange={(e) => handleFilesSelected(e.target.files)}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.md,.json,.zip,.tar,.gz,.rar,.7z"
+            multiple
             className="hidden"
-            id="dm-file-upload"
+            id="dm-doc-upload"
           />
           <button
             type="button"
             disabled={isUploading}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => docInputRef.current?.click()}
             className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
-            title="Attach file or image"
+            title="Send Document (PDF, Word, Excel, Zip...)"
           >
-            <Paperclip className={`w-4 h-4 ${isUploading ? 'animate-spin' : ''}`} />
+            <FilePlus className="w-4 h-4 text-violet-400" />
+          </button>
+
+          {/* Media / Photo Upload Hidden Input & Button */}
+          <input
+            type="file"
+            ref={mediaInputRef}
+            onChange={(e) => handleFilesSelected(e.target.files)}
+            accept="image/*,video/*,audio/*"
+            multiple
+            className="hidden"
+            id="dm-media-upload"
+          />
+          <button
+            type="button"
+            disabled={isUploading}
+            onClick={() => mediaInputRef.current?.click()}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
+            title="Attach Image or Video"
+          >
+            <ImageIcon className="w-4 h-4 text-cyan-400" />
           </button>
 
           {/* Quick Emoji Trigger */}
@@ -393,7 +575,7 @@ export const ConversationView: React.FC = () => {
               className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
               title="Add emoji"
             >
-              <Smile className="w-4 h-4" />
+              <Smile className="w-4 h-4 text-amber-400" />
             </button>
             {showEmojiPicker && (
               <div className="absolute bottom-12 left-0 p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1 z-20">
@@ -417,7 +599,7 @@ export const ConversationView: React.FC = () => {
           {/* Message Input */}
           <input
             type="text"
-            placeholder={`Message ${title}...`}
+            placeholder={`Message ${title}... (or drag and drop documents)`}
             value={inputContent}
             onChange={handleInputChange}
             className="flex-1 bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
@@ -427,13 +609,36 @@ export const ConversationView: React.FC = () => {
           <Button
             type="submit"
             size="sm"
-            disabled={!inputContent.trim() && pendingAttachments.length === 0}
+            disabled={(!inputContent.trim() && pendingAttachments.length === 0) || isUploading}
             className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/30"
           >
             <Send className="w-4 h-4" />
           </Button>
         </form>
       </footer>
+
+      {/* Lightbox Modal for Image Preview */}
+      {previewImageUrl && (
+        <div
+          onClick={() => setPreviewImageUrl(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button
+              onClick={() => setPreviewImageUrl(null)}
+              className="absolute -top-10 right-0 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImageUrl}
+              alt="Enlarged preview"
+              className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

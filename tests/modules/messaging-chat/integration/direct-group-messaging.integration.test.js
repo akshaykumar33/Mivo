@@ -179,6 +179,59 @@ async function run() {
   }
   console.log('   ✅ Real-time DM delivery and database persistence verified.');
 
+  // 6b. Test Real-time Custom Group Document Sending & Persistence
+  await new Promise((resolve) => {
+    socket1.emit('dm:join', { conversationId: groupConvId }, (res) => resolve(res));
+  });
+  await new Promise((resolve) => {
+    socket2.emit('dm:join', { conversationId: groupConvId }, (res) => resolve(res));
+  });
+
+  const groupDocContent = `Group Sprint Document at ${Date.now()}`;
+  const groupDocAttachment = {
+    name: 'Quarterly_Roadmap_2026.docx',
+    url: 'https://storage.supabase.co/mivo-files/Quarterly_Roadmap_2026.docx',
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    size: 153600,
+  };
+
+  const groupMsgPromise = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for group dm:new_message')), 5000);
+    socket2.on('dm:new_message', (msg) => {
+      if (msg.conversationId === groupConvId) {
+        clearTimeout(timer);
+        resolve(msg);
+      }
+    });
+  });
+
+  socket1.emit('dm:send_message', {
+    conversationId: groupConvId,
+    content: groupDocContent,
+    attachments: [groupDocAttachment],
+  });
+
+  const receivedGroupMsg = await groupMsgPromise;
+  if (
+    receivedGroupMsg.content !== groupDocContent ||
+    !receivedGroupMsg.attachments ||
+    receivedGroupMsg.attachments.length === 0 ||
+    receivedGroupMsg.attachments[0].name !== 'Quarterly_Roadmap_2026.docx'
+  ) {
+    throw new Error('Received Group message does not match sent document attachment');
+  }
+
+  const groupMessagesRes = await (
+    await fetch(`${BASE_HTTP_URL}/conversations/${groupConvId}/messages`, {
+      headers: { Authorization: `Bearer ${user2.accessToken}` },
+    })
+  ).json();
+
+  if (!groupMessagesRes.success || !groupMessagesRes.data.some((m) => m.content === groupDocContent)) {
+    throw new Error('Group document message was not persisted to database');
+  }
+  console.log('   ✅ Real-time Group document sending and database persistence verified.');
+
   // 7. Test Typing Indicators & Reactions
   const typingPromise = new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:typing')), 4000);
