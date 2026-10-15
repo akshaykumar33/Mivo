@@ -80,3 +80,23 @@ export class RoomsController {
     };
   }
 }
+
+@Controller('api/v1/channels/:channelId/rooms')
+@UseGuards(JwtAuthGuard)
+export class ChannelRoomsController {
+  constructor(private roomsService: RoomsService) {}
+
+  @Post()
+  @UsePipes(new ZodValidationPipe(CreateRoomSchema))
+  async createRoom(
+    @Param('channelId') channelId: string,
+    @Body() body: CreateRoomInput
+  ): Promise<ApiResponse<RoomDTO>> {
+    const room = await this.roomsService.createRoom(channelId, body);
+    return {
+      success: true,
+      data: room,
+    };
+  }
+}
+

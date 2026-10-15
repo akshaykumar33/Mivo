@@ -32,7 +32,28 @@ async function run() {
     throw new Error('No channels found for community');
   }
 
+  // Verify documented contract: POST /api/v1/channels/:channelId/rooms
+  const testChannelId = details.data.channels[0].id;
+  const createRoomRes = await (
+    await fetch(`${BASE_URL}/channels/${testChannelId}/rooms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authRes.data.accessToken}`,
+      },
+      body: JSON.stringify({
+        name: `Contract Test Room ${Date.now()}`,
+        activeMode: 'TEXT',
+      }),
+    })
+  ).json();
+
+  if (!createRoomRes.success || !createRoomRes.data?.id) {
+    throw new Error(`POST /channels/:channelId/rooms failed: ${JSON.stringify(createRoomRes)}`);
+  }
+
   console.log(`   ✅ Community channels & room hierarchy verified (${details.data.channels.length} channels).`);
+  console.log(`   ✅ Contract POST /api/v1/channels/:channelId/rooms verified (Created room: ${createRoomRes.data.name}).`);
 }
 
 run().catch((e) => {

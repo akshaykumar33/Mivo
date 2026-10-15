@@ -214,26 +214,29 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_CHANGE_MODE)
+  @SubscribeMessage('room:mode_change_request')
   async handleRoomChangeMode(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: RoomChangeModePayload
+    @MessageBody() data: any
   ) {
     const user = client.data?.user;
-    if (!user || !data.roomId || !data.activeMode) return;
+    const activeMode = data?.activeMode || data?.mode;
+    if (!user || !data?.roomId || !activeMode) return;
 
     await prisma.room.update({
       where: { id: data.roomId },
-      data: { activeMode: data.activeMode },
+      data: { activeMode },
     });
 
     this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_MODE_CHANGED, {
       roomId: data.roomId,
-      activeMode: data.activeMode,
+      activeMode,
       updatedBy: user.sub,
     });
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_UPDATE_MEDIA_STATE)
+  @SubscribeMessage('room:participant_state')
   async handleMediaState(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: RoomUpdateMediaStatePayload
