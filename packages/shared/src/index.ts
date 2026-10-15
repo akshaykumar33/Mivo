@@ -11,6 +11,7 @@ export * from './types/channel.js';
 export * from './types/room.js';
 export * from './types/rbac.js';
 export * from './types/message.js';
+export * from './types/conversation.js';
 
 // Schemas
 export * from './schemas/auth.schema.js';
@@ -20,6 +21,7 @@ export * from './schemas/room.schema.js';
 export * from './schemas/rbac.schema.js';
 export * from './schemas/message.schema.js';
 export * from './schemas/storage.schema.js';
+export * from './schemas/conversation.schema.js';
 
 // Events
 export * from './events/realtime.events.js';

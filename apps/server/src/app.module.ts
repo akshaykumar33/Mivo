@@ -9,6 +9,7 @@ import { RealtimeModule } from './realtime/realtime.module.js';
 import { MessagesModule } from './messages/messages.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { StorageModule } from './storage/storage.module.js';
+import { ConversationsModule } from './conversations/conversations.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { StorageModule } from './storage/storage.module.js';
     RoomsModule,
     RealtimeModule,
     MessagesModule,
+    ConversationsModule,
     AiModule,
     StorageModule,
   ],

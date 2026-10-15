@@ -20,6 +20,7 @@ const MODULE_TESTS = [
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/message-formatter.unit.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-persistence.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/socket-realtime-flow.integration.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/direct-group-messaging.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/e2e/chat-translation-tts.e2e.test.js' },
 
   // 4. WebRTC Media Stage Module

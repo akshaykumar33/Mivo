@@ -35,12 +35,15 @@ model User {
   updatedAt        DateTime          @updatedAt @db.Timestamptz(6)
   deletedAt        DateTime?         @db.Timestamptz(6)
 
-  sessions         Session[]
-  ownedCommunities Community[]       @relation("CommunityOwner")
-  memberships      CommunityMember[]
-  roomMemberships  RoomMember[]
-  messages         Message[]
-  auditLogs        AuditLog[]
+  sessions                Session[]
+  ownedCommunities        Community[]          @relation("CommunityOwner")
+  memberships             CommunityMember[]
+  roomMemberships         RoomMember[]
+  messages                Message[]
+  createdConversations    Conversation[]       @relation("ConversationCreator")
+  conversationMemberships ConversationMember[]
+  directMessages          DirectMessage[]
+  auditLogs               AuditLog[]
 
   @@index([email])
   @@index([username])
@@ -296,3 +299,66 @@ model Message {
   @@index([senderId])
   @@map("messages")
 }
+
+// -----------------------------------------------------------------------------
+// DIRECT & GROUP CONVERSATION DOMAIN
+// -----------------------------------------------------------------------------
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+model Conversation {
+  id          String               @id @default(uuid()) @db.Uuid
+  type        ConversationType     @default(DIRECT)
+  name        String?              @db.VarChar(64)
+  iconUrl     String?              @db.VarChar(512)
+  createdById String?              @db.Uuid
+  createdAt   DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime             @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?            @db.Timestamptz(6)
+
+  creator     User?                @relation("ConversationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members     ConversationMember[]
+  messages    DirectMessage[]
+
+  @@index([type])
+  @@index([createdById])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  userId         String       @db.Uuid
+  joinedAt       DateTime     @default(now()) @db.Timestamptz(6)
+  lastReadAt     DateTime?    @db.Timestamptz(6)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model DirectMessage {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  senderId       String       @db.Uuid
+  content        String       @db.Text
+  attachments    Json?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(6)
+  deletedAt      DateTime?    @db.Timestamptz(6)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("direct_messages")
+}
+

@@ -36,6 +36,28 @@ export const REALTIME_EVENTS = {
   CHAT_REACTION_ADD: 'chat:reaction_add',
   CHAT_REACTION_ADDED: 'chat:reaction_added',
 
+  // Direct & Group Messaging
+  DM_JOIN: 'dm:join',
+  DM_LEAVE: 'dm:leave',
+  DM_SEND_MESSAGE: 'dm:send_message',
+  DM_NEW_MESSAGE: 'dm:new_message',
+  DM_TYPING: 'dm:typing',
+  DM_STOP_TYPING: 'dm:stop_typing',
+  DM_REACTION_ADD: 'dm:reaction_add',
+  DM_REACTION_ADDED: 'dm:reaction_added',
+
+  // Audio Calling (Direct & Group)
+  CALL_INVITE: 'call:invite',
+  CALL_INCOMING: 'call:incoming',
+  CALL_ACCEPT: 'call:accept',
+  CALL_ACCEPTED: 'call:accepted',
+  CALL_DECLINE: 'call:decline',
+  CALL_DECLINED: 'call:declined',
+  CALL_END: 'call:end',
+  CALL_ENDED: 'call:ended',
+  CALL_PARTICIPANT_JOINED: 'call:participant_joined',
+  CALL_PARTICIPANT_LEFT: 'call:participant_left',
+
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',
@@ -53,6 +75,56 @@ export interface ChatReactionAddedBroadcast {
   messageId: string;
   emoji: string;
   userId: string;
+}
+
+export interface DmJoinPayload {
+  conversationId: string;
+}
+
+export interface DmLeavePayload {
+  conversationId: string;
+}
+
+export interface DmTypingPayload {
+  conversationId: string;
+  userId: string;
+  username: string;
+}
+
+export interface DmReactionPayload {
+  conversationId: string;
+  messageId: string;
+  emoji: string;
+}
+
+export interface DmReactionAddedBroadcast {
+  conversationId: string;
+  messageId: string;
+  emoji: string;
+  userId: string;
+}
+
+export interface CallInvitePayload {
+  conversationId: string;
+  recipientId?: string;
+}
+
+export interface CallIncomingBroadcast {
+  conversationId: string;
+  callerId: string;
+  callerName: string;
+  callerAvatar?: string | null;
+  isGroup: boolean;
+  groupName?: string | null;
+}
+
+export interface CallActionPayload {
+  conversationId: string;
+}
+
+export interface CallEndedBroadcast {
+  conversationId: string;
+  reason?: string;
 }
 
 export interface RoomHostActionPayload {
