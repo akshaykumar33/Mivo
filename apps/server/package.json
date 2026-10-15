@@ -25,6 +25,7 @@
     "@nestjs/platform-express": "^11.0.11",
     "@nestjs/platform-socket.io": "^11.0.11",
     "@nestjs/websockets": "^11.0.11",
+    "@socket.io/redis-adapter": "^8.3.0",
     "argon2": "^0.41.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

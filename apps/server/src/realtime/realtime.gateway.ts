@@ -68,10 +68,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const user = client.data?.user;
     if (user?.sub) {
-      const isFullyOffline = this.presenceService.setUserOffline(user.sub, client.id);
+      const isFullyOffline = await this.presenceService.setUserOffline(user.sub, client.id);
       if (isFullyOffline) {
         this.server.emit(REALTIME_EVENTS.PRESENCE_USER_UPDATED, {
           userId: user.sub,
@@ -82,10 +82,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage(REALTIME_EVENTS.PRESENCE_HEARTBEAT)
-  handleHeartbeat(@ConnectedSocket() client: Socket, @MessageBody() data: PresenceHeartbeatPayload) {
+  async handleHeartbeat(@ConnectedSocket() client: Socket, @MessageBody() data: PresenceHeartbeatPayload) {
     const user = client.data?.user;
     if (!user) return;
-    this.presenceService.heartbeat(user.sub, data.status, data.customStatus);
+    await this.presenceService.heartbeat(user.sub, data.status, data.customStatus);
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_JOIN)
