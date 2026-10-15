@@ -335,4 +335,34 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       hostName: user.displayName || user.username || 'Host',
     });
   }
+
+  @SubscribeMessage(REALTIME_EVENTS.CHAT_TYPING)
+  handleChatTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data.roomId) return;
+
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_TYPING, {
+      roomId: data.roomId,
+      userId: user.sub,
+      username: user.displayName || user.username || 'Someone',
+    });
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CHAT_STOP_TYPING)
+  handleChatStopTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data.roomId) return;
+
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_STOP_TYPING, {
+      roomId: data.roomId,
+      userId: user.sub,
+      username: user.displayName || user.username || 'Someone',
+    });
+  }
 }

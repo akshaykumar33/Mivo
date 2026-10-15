@@ -1,9 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api-client';
-import { MessageDTO } from '@mivo/shared';
+import { realtime } from '@/lib/socket-client';
+import { storageClient } from '@/lib/storage-client';
+import { MessageDTO, AttachmentMetaDTO } from '@mivo/shared';
 
 export interface MessageComposerProps {
   roomId: string;
@@ -24,10 +26,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   onMessageSent,
 }) => {
   const [content, setContent] = React.useState('');
+  const [stagedAttachments, setStagedAttachments] = React.useState<AttachmentMetaDTO[]>([]);
   const [isSending, setIsSending] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Click outside to close emoji picker
   React.useEffect(() => {
@@ -42,17 +50,62 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEmojiPickerOpen]);
 
+  // Emit typing indicator
+  const handleTyping = () => {
+    realtime.emit('chat:typing', { roomId });
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      realtime.emit('chat:stop_typing', { roomId });
+    }, 2500);
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+
+    try {
+      const uploadPromises = Array.from(files).map((file) =>
+        storageClient.uploadFile(file, 'attachments')
+      );
+      const results = await Promise.all(uploadPromises);
+      setStagedAttachments((prev) => [...prev, ...results]);
+    } catch (err: any) {
+      console.error('File upload failed:', err);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (indexToRemove: number) => {
+    setStagedAttachments((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
   const handleSend = async () => {
     const text = content.trim();
-    if (!text || isSending) return;
+    if ((!text && stagedAttachments.length === 0) || isSending || isUploading) return;
 
     setIsSending(true);
+    const textToSend = text || (stagedAttachments.length > 0 ? 'Sent attachments' : '');
+    const attachmentsToSend = [...stagedAttachments];
+
     setContent('');
+    setStagedAttachments([]);
     setIsEmojiPickerOpen(false);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    realtime.emit('chat:stop_typing', { roomId });
 
     try {
       const res = await api.post<MessageDTO>(`/api/v1/rooms/${roomId}/messages`, {
-        content: text,
+        content: textToSend,
+        attachments: attachmentsToSend.length > 0 ? attachmentsToSend : undefined,
       });
 
       if (res.success && res.data) {
@@ -68,6 +121,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   const handleInsertEmoji = (emoji: string) => {
     setContent((prev) => prev + emoji);
+    handleTyping();
     textareaRef.current?.focus();
   };
 
@@ -78,8 +132,42 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(e.dataTransfer.files);
+    }
+  };
+
   return (
-    <div className="p-2 sm:p-4 pb-20 sm:pb-24 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] backdrop-blur-2xl select-none z-10 relative">
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`p-2 sm:p-4 pb-20 sm:pb-24 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] backdrop-blur-2xl select-none z-10 relative transition-colors ${
+        isDragging ? 'bg-[#5E5CE6]/10 border-[#5E5CE6]' : ''
+      }`}
+    >
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => handleFileUpload(e.target.files)}
+        multiple
+        className="hidden"
+      />
+
       {/* Interactive Emoji Picker Popover */}
       {isEmojiPickerOpen && (
         <div
@@ -111,14 +199,62 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-2">
+        {/* Staged Attachments Preview Bar */}
+        {(stagedAttachments.length > 0 || isUploading) && (
+          <div className="flex items-center gap-2 overflow-x-auto py-1 px-1">
+            {stagedAttachments.map((att, idx) => {
+              const isImg = storageClient.isImage(att.type);
+              return (
+                <div
+                  key={`${att.url}-${idx}`}
+                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-xs shadow-sm flex-shrink-0 animate-fade-in group relative"
+                >
+                  {isImg ? (
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
+                      <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-[#5E5CE6]/20 flex items-center justify-center text-[#64D2FF] flex-shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                  )}
+
+                  <div className="max-w-[140px] truncate text-[11px] leading-tight">
+                    <p className="font-semibold text-[var(--text-primary)] truncate">{att.name}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{storageClient.formatBytes(att.size)}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAttachment(idx)}
+                    className="p-1 rounded-md text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors ml-1"
+                    title="Remove attachment"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {isUploading && (
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 text-xs text-[#64D2FF] flex-shrink-0 animate-pulse">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Uploading to Storage...</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Apple Luxury Frosted Glass Input Chassis */}
         <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-[#5E5CE6] focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
           {/* Action Tools Left */}
           <button
             type="button"
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
-            title="Attach file (Drag & Drop supported)"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
+            title="Attach file (Supabase Storage / S3 direct)"
           >
             <Paperclip className="w-4 h-4 stroke-[2.2]" />
           </button>
@@ -128,9 +264,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             ref={textareaRef}
             rows={1}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              handleTyping();
+            }}
             onKeyDown={handleKeyDown}
-            placeholder={`Message #${roomName}... (Press Enter to send)`}
+            placeholder={
+              isDragging
+                ? 'Drop files to upload to Supabase Storage...'
+                : `Message #${roomName}... (Press Enter to send)`
+            }
             className="flex-1 bg-transparent border-0 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none py-1.5 max-h-32 font-medium"
           />
 
@@ -150,19 +293,18 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           <button
             type="button"
             onClick={handleSend}
-            disabled={!content.trim() || isSending}
+            disabled={(!content.trim() && stagedAttachments.length === 0) || isSending || isUploading}
             className={`p-2 rounded-[12px] transition-all duration-200 cursor-pointer ${
-              content.trim() && !isSending
+              (content.trim() || stagedAttachments.length > 0) && !isSending && !isUploading
                 ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] hover:scale-105 text-white shadow-md shadow-[#5E5CE6]/30'
                 : 'bg-white/[0.04] text-white/20 cursor-not-allowed'
             }`}
             title="Send Message"
           >
-            <Send className="w-4 h-4" />
+            {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
       </div>
     </div>
   );
 };
-

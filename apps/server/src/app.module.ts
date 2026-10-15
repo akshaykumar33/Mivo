@@ -8,6 +8,7 @@ import { RbacModule } from './rbac/rbac.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { MessagesModule } from './messages/messages.module.js';
 import { AiModule } from './ai/ai.module.js';
+import { StorageModule } from './storage/storage.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AiModule } from './ai/ai.module.js';
     RealtimeModule,
     MessagesModule,
     AiModule,
+    StorageModule,
   ],
 })
 export class AppModule {}

@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuth: (user: UserDTO, accessToken: string) => void;
+  updateUser: (user: Partial<UserDTO>) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -23,6 +24,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     api.setAccessToken(accessToken);
     realtime.connect(accessToken);
     set({ user, accessToken, isAuthenticated: true, isLoading: false });
+  },
+
+  updateUser: (updatedFields) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updatedFields } : null,
+    }));
   },
 
   logout: async () => {

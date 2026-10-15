@@ -19,6 +19,7 @@ export * from './schemas/channel.schema.js';
 export * from './schemas/room.schema.js';
 export * from './schemas/rbac.schema.js';
 export * from './schemas/message.schema.js';
+export * from './schemas/storage.schema.js';
 
 // Events
 export * from './events/realtime.events.js';

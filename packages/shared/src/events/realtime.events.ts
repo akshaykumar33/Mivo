@@ -31,6 +31,8 @@ export const REALTIME_EVENTS = {
   // Realtime Messaging
   CHAT_SEND_MESSAGE: 'chat:send_message',
   CHAT_NEW_MESSAGE: 'chat:new_message',
+  CHAT_TYPING: 'chat:typing',
+  CHAT_STOP_TYPING: 'chat:stop_typing',
 
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
@@ -51,6 +53,12 @@ export interface RoomRecordingStatePayload {
   isRecording: boolean;
   hostName: string;
   startedAt?: string;
+}
+
+export interface ChatTypingPayload {
+  roomId: string;
+  userId: string;
+  username: string;
 }
 
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
