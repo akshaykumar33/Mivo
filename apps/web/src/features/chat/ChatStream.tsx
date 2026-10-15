@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { MessageDTO, RoomDTO, AttachmentMetaDTO } from '@mivo/shared';
+import { MessageDTO, RoomDTO, AttachmentMetaDTO, REALTIME_EVENTS } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { Avatar, Badge } from '@mivo/ui';
@@ -90,14 +90,32 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
       }
     };
 
-    realtime.on('chat:new_message', handleNewMessage);
-    realtime.on('chat:typing', handleTyping);
-    realtime.on('chat:stop_typing', handleStopTyping);
+    const handleReactionAdded = (data: { roomId: string; messageId: string; emoji: string }) => {
+      if (data.roomId === room.id) {
+        setMessageReactions((prev) => {
+          const currentMsg = prev[data.messageId] || {};
+          const currentCount = currentMsg[data.emoji] || 0;
+          return {
+            ...prev,
+            [data.messageId]: {
+              ...currentMsg,
+              [data.emoji]: currentCount + 1,
+            },
+          };
+        });
+      }
+    };
+
+    realtime.on(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
+    realtime.on(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
+    realtime.on(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
+    realtime.on(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
 
     return () => {
-      realtime.off('chat:new_message', handleNewMessage);
-      realtime.off('chat:typing', handleTyping);
-      realtime.off('chat:stop_typing', handleStopTyping);
+      realtime.off(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
+      realtime.off(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
+      realtime.off(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
+      realtime.off(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
     };
   }, [room.id]);
 
@@ -137,6 +155,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           [emoji]: currentCount + 1,
         },
       };
+    });
+
+    realtime.emit(REALTIME_EVENTS.CHAT_REACTION_ADD, {
+      roomId: room.id,
+      messageId: msgId,
+      emoji,
     });
   };
 

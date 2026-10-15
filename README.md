@@ -106,7 +106,7 @@ graph TD
 
 ---
 
-## 📂 Modular Testing Architecture (22/22 Suites Passing)
+## 📂 Modular Testing Architecture (23/23 Suites Passing)
 
 All test suites and fixtures are organized by feature domain in `tests/`:
 
@@ -117,14 +117,14 @@ tests/
 └── 📁 modules/                                 # 7 Core Feature Modules
     ├── 📁 auth-identity/                       # Unit, Integration & E2E Auth suites
     ├── 📁 communities-rbac/                    # Workspace & Channel hierarchy suites
-    ├── 📁 messaging-chat/                      # Real-time chat & translation suites
+    ├── 📁 messaging-chat/                      # Real-time chat, Socket.io & translation suites
     ├── 📁 webrtc-media-stage/                  # WebRTC mesh & stage mode suites
     ├── 📁 host-moderation/                     # Remote mute, kick & host transfer suites
     ├── 📁 ai-scribe-mom/                       # Whisper dictation & MOM email suites
     └── 📁 recording-compliance/                # Session recording & consent banner suites
 ```
 
-Run all 22 modular test suites anytime with:
+Run all 23 modular test suites anytime with:
 ```bash
 pnpm test:suites
 ```

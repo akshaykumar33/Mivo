@@ -19,6 +19,7 @@ const MODULE_TESTS = [
   // 3. Messaging & Chat Module
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/message-formatter.unit.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-persistence.integration.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/socket-realtime-flow.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/e2e/chat-translation-tts.e2e.test.js' },
 
   // 4. WebRTC Media Stage Module
@@ -63,7 +64,7 @@ for (const test of MODULE_TESTS) {
 console.log('═══════════════════════════════════════════════════════════════');
 console.log(`📊 FINAL MODULAR TEST RUN RESULTS: ${passedCount}/${MODULE_TESTS.length} SUITES PASSED`);
 if (failedCount === 0) {
-  console.log('🎉 100% SUCCESS — ALL 7 MODULES & 22 TEST SUITES VERIFIED OPERATIONAL!');
+  console.log(`🎉 100% SUCCESS — ALL 7 MODULES & ${MODULE_TESTS.length} TEST SUITES VERIFIED OPERATIONAL!`);
 } else {
   console.error(`⚠️ ${failedCount} suite(s) failed.`);
 }

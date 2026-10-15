@@ -19,6 +19,7 @@ import {
   RoomChangeModePayload,
   RoomUpdateMediaStatePayload,
   RoomMemberDTO,
+  MessageDTO,
 } from '@mivo/shared';
 
 @WebSocketGateway({
@@ -39,7 +40,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   async handleConnection(client: Socket) {
     try {
-      const authHeader = client.handshake.headers.authorization || client.handshake.auth?.token;
+      const authHeader =
+        client.handshake.auth?.token ||
+        client.handshake.headers.authorization ||
+        (client.handshake.query?.token as string);
+
       if (!authHeader) {
         client.disconnect();
         return;
@@ -51,6 +56,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       });
 
       client.data.user = payload;
+      client.data.rooms = new Set<string>();
       this.presenceService.setUserOnline(payload.sub, client.id);
 
       client.emit(REALTIME_EVENTS.CONNECTION_ACK, {
@@ -72,6 +78,24 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (user?.sub) {
       const isFullyOffline = await this.presenceService.setUserOffline(user.sub, client.id);
+      
+      // Clean up room memberships for this socket session
+      const joinedRooms = Array.from((client.data?.rooms as Set<string>) || []);
+      if (isFullyOffline && joinedRooms.length > 0) {
+        for (const roomId of joinedRooms) {
+          try {
+            await prisma.roomMember.deleteMany({
+              where: { roomId, userId: user.sub },
+            });
+            this.server.to(`room:${roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_LEFT, {
+              roomId,
+              userId: user.sub,
+              reason: 'Disconnected',
+            });
+          } catch {}
+        }
+      }
+
       if (isFullyOffline) {
         this.server.emit(REALTIME_EVENTS.PRESENCE_USER_UPDATED, {
           userId: user.sub,
@@ -95,6 +119,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const roomId = data.roomId;
     client.join(`room:${roomId}`);
+    if (!client.data.rooms) client.data.rooms = new Set<string>();
+    client.data.rooms.add(roomId);
 
     // Create or update room membership in DB
     let member: any;
@@ -175,6 +201,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const roomId = data.roomId;
     client.leave(`room:${roomId}`);
+    client.data?.rooms?.delete(roomId);
 
     await prisma.roomMember.deleteMany({
       where: { roomId, userId: user.sub },
@@ -365,4 +392,83 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       username: user.displayName || user.username || 'Someone',
     });
   }
+
+  @SubscribeMessage(REALTIME_EVENTS.CHAT_SEND_MESSAGE)
+  async handleChatMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; content?: string; attachments?: any[] }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) {
+      return { success: false, error: 'Unauthorized or missing room ID' };
+    }
+
+    const trimmedContent = data.content?.trim() || '';
+    if (!trimmedContent && (!data.attachments || data.attachments.length === 0)) {
+      return { success: false, error: 'Message content or attachments required' };
+    }
+
+    try {
+      const room = await prisma.room.findUnique({
+        where: { id: data.roomId },
+      });
+
+      if (!room || room.deletedAt) {
+        return { success: false, error: 'Room not found' };
+      }
+
+      const message = await prisma.message.create({
+        data: {
+          roomId: data.roomId,
+          senderId: user.sub,
+          content: trimmedContent || (data.attachments?.length ? 'Sent attachments' : ''),
+          attachments: data.attachments || undefined,
+        },
+        include: {
+          sender: true,
+        },
+      });
+
+      const dto: MessageDTO = {
+        id: message.id,
+        roomId: message.roomId,
+        senderId: message.senderId,
+        content: message.content,
+        attachments: message.attachments as any,
+        createdAt: message.createdAt.toISOString(),
+        updatedAt: message.updatedAt.toISOString(),
+        sender: {
+          id: message.sender.id,
+          username: message.sender.username,
+          displayName: message.sender.displayName,
+          avatarUrl: message.sender.avatarUrl,
+          status: message.sender.status,
+          customStatus: message.sender.customStatus,
+        },
+      };
+
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, dto);
+
+      return { success: true, data: dto };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to process message' };
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CHAT_REACTION_ADD)
+  handleChatReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; messageId: string; emoji: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.messageId || !data?.emoji) return;
+
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_REACTION_ADDED, {
+      roomId: data.roomId,
+      messageId: data.messageId,
+      emoji: data.emoji,
+      userId: user.sub,
+    });
+  }
 }
+

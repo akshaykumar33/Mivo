@@ -6,6 +6,7 @@ class SocketClient {
   private socket: Socket | null = null;
   private currentToken: string | null = null;
   private joinedRooms: Set<string> = new Set();
+  private listeners: Map<string, Set<(...args: any[]) => void>> = new Map();
   private isConnecting: boolean = false;
 
   connect(initialToken?: string): Socket {
@@ -41,6 +42,13 @@ class SocketClient {
       reconnectionDelayMax: 5000,
       randomizationFactor: 0.5,
       timeout: 10000,
+    });
+
+    // Reattach any pre-registered listeners to the active socket
+    this.listeners.forEach((callbacks, event) => {
+      callbacks.forEach((cb) => {
+        this.socket?.on(event, cb);
+      });
     });
 
     this.socket.on('connect', () => {
@@ -90,20 +98,28 @@ class SocketClient {
   }
 
   on(event: string, callback: (...args: any[]) => void) {
-    if (this.socket) {
-      this.socket.on(event, callback);
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event)!.add(callback);
+
+    const s = this.getSocket();
+    if (s) {
+      s.on(event, callback);
     }
   }
 
   off(event: string, callback: (...args: any[]) => void) {
+    this.listeners.get(event)?.delete(callback);
     if (this.socket) {
       this.socket.off(event, callback);
     }
   }
 
   emit(event: string, ...args: any[]) {
-    if (this.socket) {
-      this.socket.emit(event, ...args);
+    const s = this.getSocket();
+    if (s) {
+      s.emit(event, ...args);
     }
   }
 

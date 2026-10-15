@@ -33,12 +33,27 @@ export const REALTIME_EVENTS = {
   CHAT_NEW_MESSAGE: 'chat:new_message',
   CHAT_TYPING: 'chat:typing',
   CHAT_STOP_TYPING: 'chat:stop_typing',
+  CHAT_REACTION_ADD: 'chat:reaction_add',
+  CHAT_REACTION_ADDED: 'chat:reaction_added',
 
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',
   SIGNALING_ICE_CANDIDATE: 'signaling:ice_candidate',
 } as const;
+
+export interface ChatReactionPayload {
+  roomId: string;
+  messageId: string;
+  emoji: string;
+}
+
+export interface ChatReactionAddedBroadcast {
+  roomId: string;
+  messageId: string;
+  emoji: string;
+  userId: string;
+}
 
 export interface RoomHostActionPayload {
   roomId: string;
