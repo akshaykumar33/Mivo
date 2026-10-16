@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@mivo/database';
-import { UpdateProfileInput, UserDTO } from '@mivo/shared';
+import { UpdateProfileInput, UserDTO, UserSummaryDTO } from '@mivo/shared';
 
 @Injectable()
 export class UsersService {
@@ -56,5 +56,42 @@ export class UsersService {
       createdAt: updated.createdAt.toISOString(),
       lastSeenAt: updated.lastSeenAt ? updated.lastSeenAt.toISOString() : null,
     };
+  }
+
+  async searchUsers(query?: string, currentUserId?: string): Promise<UserSummaryDTO[]> {
+    const trimmed = query?.trim().toLowerCase();
+    const users = await prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        ...(currentUserId && { id: { not: currentUserId } }),
+        ...(trimmed
+          ? {
+              OR: [
+                { username: { contains: trimmed, mode: 'insensitive' } },
+                { displayName: { contains: trimmed, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+      },
+      take: 20,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        status: true,
+        customStatus: true,
+      },
+    });
+
+    return users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+      status: u.status,
+      customStatus: u.customStatus,
+    }));
   }
 }

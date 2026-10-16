@@ -13,10 +13,20 @@ import { FloatingCyberDock } from '@/features/navigation/FloatingCyberDock';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { LiveSubtitlesOverlay } from './LiveSubtitlesOverlay';
 import { FloatingReactionsLayer } from './FloatingReactionsLayer';
-import { RoomCommunicationMode, REALTIME_EVENTS, RoomRecordingStatePayload } from '@mivo/shared';
+import {
+  RoomCommunicationMode,
+  REALTIME_EVENTS,
+  RoomRecordingStatePayload,
+  ExternalMeetingBridgeDTO,
+  MeetingBridgeActivatedBroadcast,
+  MeetingBridgeRemovedBroadcast,
+} from '@mivo/shared';
 import { useRouter } from 'next/navigation';
 import { realtime } from '@/lib/socket-client';
+import { api } from '@/lib/api-client';
 import { recorderManager } from '@/lib/recorder-manager';
+import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBanner';
+import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
 
 export interface UnifiedRoomViewProps {
   communityId: string;
@@ -51,6 +61,52 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const [isRecording, setIsRecording] = React.useState(false);
   const [recordingHostName, setRecordingHostName] = React.useState('Host');
   const [isSubtitlesEnabled, setIsSubtitlesEnabled] = React.useState(true);
+  const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
+  const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
+
+  const fetchBridge = React.useCallback(() => {
+    if (!roomId) return;
+    api.get<{ bridge: ExternalMeetingBridgeDTO | null }>(`/api/v1/meetings/room/${roomId}/bridge`).then((res) => {
+      if (res.success && res.data) {
+        setActiveBridge(res.data.bridge);
+      }
+    });
+  }, [roomId]);
+
+  React.useEffect(() => {
+    fetchBridge();
+  }, [fetchBridge]);
+
+  // Listen for external meeting bridge realtime events
+  React.useEffect(() => {
+    const socket = realtime.getSocket();
+    if (!socket || !roomId) return;
+
+    const handleBridgeActivated = (data: MeetingBridgeActivatedBroadcast) => {
+      if (data.roomId === roomId) {
+        setActiveBridge({
+          roomId: data.roomId,
+          meeting: data.meeting,
+          activatedAt: data.activatedAt,
+          activatedBy: data.activatedBy,
+        });
+      }
+    };
+
+    const handleBridgeRemoved = (data: MeetingBridgeRemovedBroadcast) => {
+      if (data.roomId === roomId) {
+        setActiveBridge(null);
+      }
+    };
+
+    socket.on(REALTIME_EVENTS.MEETING_BRIDGE_ACTIVATED, handleBridgeActivated);
+    socket.on(REALTIME_EVENTS.MEETING_BRIDGE_REMOVED, handleBridgeRemoved);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.MEETING_BRIDGE_ACTIVATED, handleBridgeActivated);
+      socket.off(REALTIME_EVENTS.MEETING_BRIDGE_REMOVED, handleBridgeRemoved);
+    };
+  }, [roomId]);
 
   React.useEffect(() => {
     if (roomId && user?.id) {
@@ -149,6 +205,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         onToggleRecording={handleToggleRecording}
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
         onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
+        onToggleMeetingHub={() => setIsMeetingHubOpen(!isMeetingHubOpen)}
+        hasActiveBridge={!!activeBridge}
+      />
+
+      {/* External Meeting Bridge Live Banner (Google Meet & MS Teams) */}
+      <RoomMeetingBridgeBanner
+        bridge={activeBridge}
+        roomId={roomId}
+        isHost={isHost}
+        onBridgeRemoved={() => setActiveBridge(null)}
       />
 
       {/* Permission-Gated Room-Wide Recording Consent Alert Banner */}
@@ -248,6 +314,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
           onToggleDocs={() => setIsDocsOpen(!isDocsOpen)}
           onDisconnect={handleDisconnect}
+        />
+
+        {/* External Meeting Hub Modal (Google Meet & MS Teams) */}
+        <ExternalMeetingHubModal
+          isOpen={isMeetingHubOpen}
+          onClose={() => setIsMeetingHubOpen(false)}
+          roomId={roomId}
+          roomName={activeRoom.name}
+          activeBridge={activeBridge}
+          onBridgeUpdated={fetchBridge}
         />
       </div>
     </div>

@@ -1,12 +1,27 @@
 /**
  * Mivo In-Browser Meeting Recorder Manager
- * Captures live room audio and video streams using HTML5 MediaRecorder API
+ * Captures live room audio and video streams using HTML5 MediaRecorder API,
+ * downloads locally, and automatically uploads to Supabase S3 Storage.
  */
+
+import { storageClient } from './storage-client';
+
+export interface RecordedSessionMeta {
+  filename: string;
+  blob: Blob;
+  downloadUrl: string;
+  cloudUrl?: string;
+}
 
 export class RecorderManager {
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
   private isRecording = false;
+  private onRecordingUploadedCallback?: (meta: RecordedSessionMeta) => void;
+
+  onRecordingComplete(callback: (meta: RecordedSessionMeta) => void) {
+    this.onRecordingUploadedCallback = callback;
+  }
 
   async startRecording(streamToRecord?: MediaStream | null): Promise<boolean> {
     try {
@@ -51,8 +66,8 @@ export class RecorderManager {
         }
       };
 
-      this.mediaRecorder.onstop = () => {
-        this.downloadRecording();
+      this.mediaRecorder.onstop = async () => {
+        await this.handleRecordingFinished();
       };
 
       this.mediaRecorder.start(1000);
@@ -71,21 +86,43 @@ export class RecorderManager {
     }
   }
 
-  private downloadRecording() {
+  private async handleRecordingFinished() {
     if (this.recordedChunks.length === 0) return;
 
+    const filename = `mivo-meeting-${Date.now()}.webm`;
     const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
+    const downloadUrl = URL.createObjectURL(blob);
+
+    // 1. Local browser download
     const a = document.createElement('a');
     a.style.display = 'none';
-    a.href = url;
-    a.download = `mivo-meeting-recording-${Date.now()}.webm`;
+    a.href = downloadUrl;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
     }, 100);
+
+    const meta: RecordedSessionMeta = {
+      filename,
+      blob,
+      downloadUrl,
+    };
+
+    // 2. Cloud Upload to Supabase Storage / S3
+    try {
+      const file = new File([blob], filename, { type: 'video/webm' });
+      const cloudUpload = await storageClient.uploadFile(file, 'recordings');
+      meta.cloudUrl = cloudUpload.url;
+      console.log('✅ Meeting recording backed up to Supabase S3 Storage:', cloudUpload.url);
+    } catch (err) {
+      console.warn('Could not back up recording to cloud storage:', err);
+    }
+
+    if (this.onRecordingUploadedCallback) {
+      this.onRecordingUploadedCallback(meta);
+    }
   }
 
   getRecordingStatus(): boolean {

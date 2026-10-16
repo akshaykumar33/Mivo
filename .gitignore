@@ -43,3 +43,8 @@ test-results/
 
 # Turborepo
 .turbo/
+
+# Agent Customizations & Skills
+.agents/
+skills-lock.json
+

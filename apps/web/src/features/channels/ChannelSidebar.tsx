@@ -33,6 +33,7 @@ import { useNavigationStore } from '@/stores/navigationStore';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
+import { EditProfileModal } from '@/features/auth/EditProfileModal';
 
 export interface ChannelSidebarProps {
   communityId: string;
@@ -53,6 +54,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
   const [isCreateChannelOpen, setIsCreateChannelOpen] = React.useState(false);
   const [selectedChannelForRoom, setSelectedChannelForRoom] = React.useState<string | null>(null);
   const [isRoleManagerOpen, setIsRoleManagerOpen] = React.useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(false);
   const [isDeafened, setIsDeafened] = React.useState(false);
 
@@ -247,15 +249,20 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
 
         {/* macOS Style User Status Footer */}
         <div className="h-16 bg-[var(--bg-sidebar)] px-3.5 border-t border-[var(--border-subtle)] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            onClick={() => setIsEditProfileOpen(true)}
+            className="flex items-center gap-2.5 min-w-0 text-left hover:bg-white/[0.06] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group"
+            title="Edit profile & upload custom avatar (Supabase Storage)"
+          >
             <Avatar
               size="sm"
               status={user?.status || 'ONLINE'}
               fallbackText={user?.displayName || user?.username}
               src={user?.avatarUrl}
+              className="group-hover:scale-105 transition-transform"
             />
             <div className="min-w-0">
-              <div className="text-xs font-bold text-[var(--text-primary)] truncate">
+              <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-[#64D2FF] transition-colors">
                 {user?.displayName || user?.username}
               </div>
               <div
@@ -265,7 +272,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
                 {activeCommunity.currentUserRole?.name || 'Member'}
               </div>
             </div>
-          </div>
+          </button>
 
 
           <div className="flex items-center gap-1">
@@ -331,6 +338,11 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
         communityId={communityId}
         isOpen={isRoleManagerOpen}
         onClose={() => setIsRoleManagerOpen(false)}
+      />
+
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
       />
     </>
   );

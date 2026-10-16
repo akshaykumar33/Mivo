@@ -76,14 +76,17 @@ export class WebRTCMeshManager {
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
       });
-      await pc.setLocalDescription(offer);
+      const optimizedSdp = this.optimizeAudioSdp(offer.sdp || '');
+      const sdpDescription = new RTCSessionDescription({ type: offer.type, sdp: optimizedSdp });
+      await pc.setLocalDescription(sdpDescription);
+      this.configureHighQualityAudioSender(pc);
 
       const socket = realtime.getSocket();
       if (socket && this.currentRoomId) {
         socket.emit(REALTIME_EVENTS.SIGNALING_OFFER, {
           roomId: this.currentRoomId,
           targetUserId: peerUserId,
-          sdp: offer,
+          sdp: sdpDescription,
         });
       }
     } catch (e) {
@@ -98,6 +101,12 @@ export class WebRTCMeshManager {
       this.peers.delete(peerUserId);
     }
     this.remoteStreams.delete(peerUserId);
+    if (typeof document !== 'undefined') {
+      const audioElem = document.getElementById(`remote-audio-${peerUserId}`);
+      if (audioElem) {
+        audioElem.remove();
+      }
+    }
     this.onPeerDisconnectedCallback?.(peerUserId);
   }
 
@@ -105,6 +114,9 @@ export class WebRTCMeshManager {
     this.peers.forEach((pc) => pc.close());
     this.peers.clear();
     this.remoteStreams.clear();
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('audio[id^="remote-audio-"]').forEach((elem) => elem.remove());
+    }
     this.localStream = null;
     this.currentRoomId = null;
     this.currentUserId = null;
@@ -154,6 +166,7 @@ export class WebRTCMeshManager {
       document.body.appendChild(audioElem);
     }
     audioElem.srcObject = stream;
+    audioElem.volume = 1.0;
     audioElem.play().catch(() => {});
   }
 
@@ -182,12 +195,15 @@ export class WebRTCMeshManager {
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
+        const optimizedAnswerSdp = this.optimizeAudioSdp(answer.sdp || '');
+        const answerDescription = new RTCSessionDescription({ type: answer.type, sdp: optimizedAnswerSdp });
+        await pc.setLocalDescription(answerDescription);
+        this.configureHighQualityAudioSender(pc);
 
         socket.emit(REALTIME_EVENTS.SIGNALING_ANSWER, {
           roomId: this.currentRoomId,
           targetUserId: senderId,
-          sdp: answer,
+          sdp: answerDescription,
         });
       } catch (e) {
         console.warn('Failed to handle incoming signaling offer:', e);
@@ -221,6 +237,56 @@ export class WebRTCMeshManager {
         }
       }
     });
+  }
+
+  /**
+   * Optimize WebRTC SDP for high-definition Opus voice audio:
+   * Sets maxaveragebitrate=128000 (128 kbps HD voice),
+   * enables stereo spatial sound, in-band forward error correction (FEC),
+   * and discontinuous transmission (DTX) to prevent packet loss.
+   */
+  private optimizeAudioSdp(sdp: string): string {
+    if (!sdp) return sdp;
+    const opusMatch = sdp.match(/a=rtpmap:(\d+)\s+opus\/48000/i);
+    if (!opusMatch) return sdp;
+    const pt = opusMatch[1];
+
+    const fmtpRegex = new RegExp(`a=fmtp:${pt}\\s+(.*)`);
+    if (fmtpRegex.test(sdp)) {
+      return sdp.replace(fmtpRegex, (_match, params) => {
+        let p = params;
+        if (!p.includes('maxaveragebitrate=')) p += ';maxaveragebitrate=128000';
+        if (!p.includes('stereo=')) p += ';stereo=1;sprop-stereo=1';
+        if (!p.includes('useinbandfec=')) p += ';useinbandfec=1';
+        if (!p.includes('usedtx=')) p += ';usedtx=1';
+        return `a=fmtp:${pt} ${p}`;
+      });
+    }
+
+    return sdp.replace(
+      new RegExp(`(a=rtpmap:${pt}\\s+opus\\/48000[^\r\n]*)`),
+      `$1\r\na=fmtp:${pt} maxaveragebitrate=128000;stereo=1;sprop-stereo=1;useinbandfec=1;usedtx=1`
+    );
+  }
+
+  /**
+   * Configure high bitrate and priority on RTCRtpSender for HD voice transmission
+   */
+  private configureHighQualityAudioSender(pc: RTCPeerConnection) {
+    try {
+      pc.getSenders().forEach((sender) => {
+        if (sender.track?.kind === 'audio') {
+          const params = sender.getParameters();
+          if (!params.encodings || params.encodings.length === 0) {
+            params.encodings = [{}];
+          }
+          params.encodings[0].maxBitrate = 128000; // 128 kbps
+          (params.encodings[0] as any).priority = 'high';
+          (params.encodings[0] as any).networkPriority = 'high';
+          sender.setParameters(params).catch(() => {});
+        }
+      });
+    } catch {}
   }
 }
 

@@ -15,12 +15,15 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.1",
     "@mivo/shared": "workspace:*",
-    "argon2": "^0.41.1"
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^6.4.1",
+    "argon2": "^0.41.1",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
+    "@types/pg": "^8.23.1",
     "prisma": "^6.4.1",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.3",

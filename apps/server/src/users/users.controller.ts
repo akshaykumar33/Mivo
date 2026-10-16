@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, Param, Query } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
 import { CurrentUser } from '../common/current-user.decorator.js';
@@ -8,6 +8,7 @@ import {
   UpdateProfileInput,
   ApiResponse,
   UserDTO,
+  UserSummaryDTO,
   JwtPayload,
 } from '@mivo/shared';
 
@@ -15,6 +16,18 @@ import {
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  @Get()
+  async searchUsers(
+    @CurrentUser() user: JwtPayload,
+    @Query('q') query?: string
+  ): Promise<ApiResponse<UserSummaryDTO[]>> {
+    const users = await this.usersService.searchUsers(query, user.sub);
+    return {
+      success: true,
+      data: users,
+    };
+  }
 
   @Get('me')
   async getMyProfile(@CurrentUser() user: JwtPayload): Promise<ApiResponse<UserDTO>> {

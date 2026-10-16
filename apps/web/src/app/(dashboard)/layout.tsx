@@ -7,6 +7,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCommunityStore } from '@/stores/communityStore';
 import { useThemeStore, MivoThemeId } from '@/stores/themeStore';
 import { ThemeSwitcherModal } from '@/features/theme/ThemeSwitcherModal';
+import { IncomingCallModal } from '@/features/conversations/IncomingCallModal';
+import { ActiveCallOverlay } from '@/features/conversations/ActiveCallOverlay';
+import { useConversationStore } from '@/stores/conversationStore';
 import { useRouter } from 'next/navigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
@@ -16,10 +19,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const { activeCommunity } = useCommunityStore();
   const { setTheme } = useThemeStore();
   const { isMobileSidebarOpen, closeMobileSidebar } = useNavigationStore();
+  const { setupRealtimeListeners } = useConversationStore();
 
   // Load saved visual theme on startup
   React.useEffect(() => {
@@ -28,6 +32,12 @@ export default function DashboardLayout({
       setTheme(saved);
     }
   }, [setTheme]);
+
+  React.useEffect(() => {
+    if (user?.id) {
+      setupRealtimeListeners(user.id);
+    }
+  }, [user?.id, setupRealtimeListeners]);
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -83,6 +93,10 @@ export default function DashboardLayout({
       <main className="flex-1 flex overflow-hidden relative bg-[var(--bg-canvas)]">
         {children}
       </main>
+
+      {/* Global Realtime Audio Calling & Modals */}
+      <IncomingCallModal />
+      <ActiveCallOverlay />
 
       {/* Global Visual Theme Engine Modal */}
       <ThemeSwitcherModal />

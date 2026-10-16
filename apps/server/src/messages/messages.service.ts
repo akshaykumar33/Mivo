@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { prisma } from '@mivo/database';
-import { MessageDTO, SendMessageInput } from '@mivo/shared';
+import { MessageDTO, SendMessageInput, REALTIME_EVENTS } from '@mivo/shared';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
 @Injectable()
@@ -96,7 +96,7 @@ export class MessagesService {
     };
 
     // Broadcast in real time to everyone connected to this room
-    this.realtimeGateway.server.to(`room:${roomId}`).emit('chat:new_message', dto);
+    this.realtimeGateway.server.to(`room:${roomId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, dto);
 
     return dto;
   }

@@ -30,7 +30,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
     fetchCommunities();
   }, [fetchCommunities]);
 
-  const isDMsActive = pathname.startsWith('/channels');
+  const isDMsActive = pathname.startsWith('/conversations') || pathname.startsWith('/channels');
 
   return (
     <>
@@ -51,7 +51,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
             }`}
           />
           <Link
-            href="/channels"
+            href="/conversations"
             onClick={() => onNavigate?.()}
             className={`flex items-center justify-center w-11 h-11 rounded-[16px] transition-all duration-200 cursor-pointer ${
               isDMsActive

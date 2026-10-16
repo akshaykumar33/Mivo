@@ -14,6 +14,8 @@ export const ChangeRoomModeSchema = z.object({
   activeMode: z.enum(['TEXT', 'VOICE', 'VIDEO', 'SCREEN_SHARE', 'STREAM']),
 });
 
+export const UpdateRoomModeSchema = ChangeRoomModeSchema;
+
 export const UpdateRoomParticipantStateSchema = z.object({
   isMuted: z.boolean().optional(),
   isDeafened: z.boolean().optional(),
@@ -24,4 +26,5 @@ export const UpdateRoomParticipantStateSchema = z.object({
 export type CreateRoomInput = z.infer<typeof CreateRoomSchema>;
 export type UpdateRoomInput = z.infer<typeof UpdateRoomSchema>;
 export type ChangeRoomModeInput = z.infer<typeof ChangeRoomModeSchema>;
+export type UpdateRoomModeInput = ChangeRoomModeInput;
 export type UpdateRoomParticipantStateInput = z.infer<typeof UpdateRoomParticipantStateSchema>;

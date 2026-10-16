@@ -164,6 +164,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
       const socket = realtime.getSocket();
       if (socket) {
+        realtime.trackRoomJoin(roomId);
         socket.emit(REALTIME_EVENTS.ROOM_JOIN, { roomId });
 
         socket.off(REALTIME_EVENTS.ROOM_JOINED);
@@ -239,6 +240,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   leaveRoom: () => {
     const { activeRoom } = get();
     if (activeRoom) {
+      realtime.trackRoomLeave(activeRoom.id);
       const socket = realtime.getSocket();
       if (socket) {
         socket.emit(REALTIME_EVENTS.ROOM_LEAVE, { roomId: activeRoom.id });

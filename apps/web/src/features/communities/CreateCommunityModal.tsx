@@ -6,6 +6,8 @@ import { api } from '@/lib/api-client';
 import { useCommunityStore } from '@/stores/communityStore';
 import { CommunityDTO } from '@mivo/shared';
 import { useRouter } from 'next/navigation';
+import { storageClient } from '@/lib/storage-client';
+import { Camera, Loader2 } from 'lucide-react';
 
 export interface CreateCommunityModalProps {
   isOpen: boolean;
@@ -19,12 +21,30 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
   const [name, setName] = React.useState('');
   const [slug, setSlug] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [iconUrl, setIconUrl] = React.useState('');
+  const [isUploadingIcon, setIsUploadingIcon] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleNameChange = (val: string) => {
     setName(val);
     setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+  };
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingIcon(true);
+    try {
+      const uploaded = await storageClient.uploadFile(file, 'communities');
+      setIconUrl(uploaded.url);
+    } catch (err: any) {
+      console.error('Failed to upload community icon:', err);
+    } finally {
+      setIsUploadingIcon(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +56,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
       name,
       slug,
       description: description || undefined,
+      iconUrl: iconUrl || undefined,
       visibility: 'PUBLIC',
     });
 
@@ -59,6 +80,47 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Community Icon Upload */}
+        <div className="flex items-center gap-4 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)]">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="w-14 h-14 rounded-2xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#64D2FF] cursor-pointer hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0 relative group"
+            title="Upload custom icon (Supabase S3)"
+          >
+            {iconUrl ? (
+              <img src={iconUrl} alt="Community Icon" className="w-full h-full object-cover" />
+            ) : (
+              <Camera className="w-6 h-6" />
+            )}
+            {isUploadingIcon && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-[var(--text-primary)] font-display">Community Icon</p>
+            <p className="text-[11px] text-[var(--text-muted)]">Upload an image to Supabase Storage</p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingIcon}
+              className="text-[11px] font-semibold text-[#64D2FF] hover:underline cursor-pointer mt-0.5"
+            >
+              {isUploadingIcon ? 'Uploading...' : 'Choose file...'}
+            </button>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleIconUpload}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+
         <Input
           label="Community Name"
           placeholder="e.g. Design Guild"

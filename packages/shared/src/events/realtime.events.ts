@@ -31,12 +31,107 @@ export const REALTIME_EVENTS = {
   // Realtime Messaging
   CHAT_SEND_MESSAGE: 'chat:send_message',
   CHAT_NEW_MESSAGE: 'chat:new_message',
+  CHAT_TYPING: 'chat:typing',
+  CHAT_STOP_TYPING: 'chat:stop_typing',
+  CHAT_REACTION_ADD: 'chat:reaction_add',
+  CHAT_REACTION_ADDED: 'chat:reaction_added',
+
+  // Direct & Group Messaging
+  DM_JOIN: 'dm:join',
+  DM_LEAVE: 'dm:leave',
+  DM_SEND_MESSAGE: 'dm:send_message',
+  DM_NEW_MESSAGE: 'dm:new_message',
+  DM_TYPING: 'dm:typing',
+  DM_STOP_TYPING: 'dm:stop_typing',
+  DM_REACTION_ADD: 'dm:reaction_add',
+  DM_REACTION_ADDED: 'dm:reaction_added',
+
+  // Audio Calling (Direct & Group)
+  CALL_INVITE: 'call:invite',
+  CALL_INCOMING: 'call:incoming',
+  CALL_ACCEPT: 'call:accept',
+  CALL_ACCEPTED: 'call:accepted',
+  CALL_DECLINE: 'call:decline',
+  CALL_DECLINED: 'call:declined',
+  CALL_END: 'call:end',
+  CALL_ENDED: 'call:ended',
+  CALL_PARTICIPANT_JOINED: 'call:participant_joined',
+  CALL_PARTICIPANT_LEFT: 'call:participant_left',
+
+  // External Meetings & Bridges
+  MEETING_BRIDGE_ACTIVATED: 'meeting:bridge_activated',
+  MEETING_BRIDGE_REMOVED: 'meeting:bridge_removed',
+  DM_MEETING_BRIDGE_ACTIVATED: 'dm:meeting_bridge_activated',
+  DM_MEETING_BRIDGE_REMOVED: 'dm:meeting_bridge_removed',
 
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',
   SIGNALING_ICE_CANDIDATE: 'signaling:ice_candidate',
 } as const;
+
+export interface ChatReactionPayload {
+  roomId: string;
+  messageId: string;
+  emoji: string;
+}
+
+export interface ChatReactionAddedBroadcast {
+  roomId: string;
+  messageId: string;
+  emoji: string;
+  userId: string;
+}
+
+export interface DmJoinPayload {
+  conversationId: string;
+}
+
+export interface DmLeavePayload {
+  conversationId: string;
+}
+
+export interface DmTypingPayload {
+  conversationId: string;
+  userId: string;
+  username: string;
+}
+
+export interface DmReactionPayload {
+  conversationId: string;
+  messageId: string;
+  emoji: string;
+}
+
+export interface DmReactionAddedBroadcast {
+  conversationId: string;
+  messageId: string;
+  emoji: string;
+  userId: string;
+}
+
+export interface CallInvitePayload {
+  conversationId: string;
+  recipientId?: string;
+}
+
+export interface CallIncomingBroadcast {
+  conversationId: string;
+  callerId: string;
+  callerName: string;
+  callerAvatar?: string | null;
+  isGroup: boolean;
+  groupName?: string | null;
+}
+
+export interface CallActionPayload {
+  conversationId: string;
+}
+
+export interface CallEndedBroadcast {
+  conversationId: string;
+  reason?: string;
+}
 
 export interface RoomHostActionPayload {
   roomId: string;
@@ -51,6 +146,12 @@ export interface RoomRecordingStatePayload {
   isRecording: boolean;
   hostName: string;
   startedAt?: string;
+}
+
+export interface ChatTypingPayload {
+  roomId: string;
+  userId: string;
+  username: string;
 }
 
 export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
@@ -111,4 +212,19 @@ export interface RoomParticipantStateUpdatedBroadcast {
   isDeafened: boolean;
   isCameraOn: boolean;
   isScreenOn: boolean;
+}
+
+export interface MeetingBridgeActivatedBroadcast {
+  roomId?: string;
+  conversationId?: string;
+  meeting: import('../types/meeting.js').ExternalMeetingDTO;
+  activatedBy: import('../types/user.js').UserSummaryDTO;
+  activatedAt: string;
+}
+
+export interface MeetingBridgeRemovedBroadcast {
+  roomId?: string;
+  conversationId?: string;
+  removedBy: import('../types/user.js').UserSummaryDTO;
+  removedAt: string;
 }

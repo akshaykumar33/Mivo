@@ -19,6 +19,8 @@ const MODULE_TESTS = [
   // 3. Messaging & Chat Module
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/message-formatter.unit.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-persistence.integration.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/socket-realtime-flow.integration.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/direct-group-messaging.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/e2e/chat-translation-tts.e2e.test.js' },
 
   // 4. WebRTC Media Stage Module
@@ -41,6 +43,10 @@ const MODULE_TESTS = [
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/unit/recording-duration-timer.unit.test.js' },
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/integration/socket-rec-broadcast.integration.test.js' },
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/e2e/consent-banner-download.e2e.test.js' },
+
+  // 8. Universal File Viewer & Media Streamer Module
+  { module: 'file-viewer', file: 'tests/modules/files/unit/file-viewer.unit.test.js' },
+  { module: 'file-viewer', file: 'tests/modules/files/unit/video-optimizer.unit.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');
@@ -52,7 +58,7 @@ let failedCount = 0;
 
 for (const test of MODULE_TESTS) {
   try {
-    execSync(`node ${test.file}`, { stdio: 'inherit' });
+    execSync(`node --experimental-strip-types ${test.file}`, { stdio: 'inherit' });
     passedCount++;
   } catch (err) {
     console.error(`❌ Test Failed: ${test.file}`);
@@ -63,7 +69,7 @@ for (const test of MODULE_TESTS) {
 console.log('═══════════════════════════════════════════════════════════════');
 console.log(`📊 FINAL MODULAR TEST RUN RESULTS: ${passedCount}/${MODULE_TESTS.length} SUITES PASSED`);
 if (failedCount === 0) {
-  console.log('🎉 100% SUCCESS — ALL 7 MODULES & 22 TEST SUITES VERIFIED OPERATIONAL!');
+  console.log(`🎉 100% SUCCESS — ALL 7 MODULES & ${MODULE_TESTS.length} TEST SUITES VERIFIED OPERATIONAL!`);
 } else {
   console.error(`⚠️ ${failedCount} suite(s) failed.`);
 }

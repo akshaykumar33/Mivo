@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
-import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen, Menu, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
+import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen, Menu, PanelLeftOpen, PanelLeftClose, Video } from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 
@@ -16,6 +16,8 @@ export interface RoomHeaderProps {
   onToggleRecording?: () => void;
   onToggleParticipants?: () => void;
   onToggleWhisper?: () => void;
+  onToggleMeetingHub?: () => void;
+  hasActiveBridge?: boolean;
 }
 
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
@@ -27,6 +29,8 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   onToggleRecording,
   onToggleParticipants,
   onToggleWhisper,
+  onToggleMeetingHub,
+  hasActiveBridge = false,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
@@ -147,6 +151,20 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
               <span className="hidden xl:inline">{isRecording ? 'Recording...' : 'Record'}</span>
             </button>
           )}
+
+          {/* External Meeting Bridge Trigger */}
+          <button
+            onClick={onToggleMeetingHub}
+            className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-200 shadow-sm cursor-pointer ${
+              hasActiveBridge
+                ? 'bg-[#30D158]/20 hover:bg-[#30D158]/30 text-[#30D158] border border-[#30D158]/40 animate-pulse'
+                : 'bg-[#5E5CE6]/15 hover:bg-[#5E5CE6] text-[#64D2FF] hover:!text-white border border-[#5E5CE6]/30 hover:border-[#5E5CE6]'
+            }`}
+            title="External Meeting Hub (Google Meet & MS Teams)"
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">{hasActiveBridge ? 'Call Bridged' : 'Meet & Teams'}</span>
+          </button>
 
           {/* Whisper AI Scribe & Notes Drawer */}
           <button

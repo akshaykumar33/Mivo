@@ -4,6 +4,30 @@
  * with graceful fallback to Canvas-generated synthetic streams when hardware is unavailable.
  */
 
+export const HD_VOICE_CONSTRAINTS: MediaTrackConstraints = {
+  echoCancellation: { ideal: true },
+  noiseSuppression: { ideal: true },
+  autoGainControl: { ideal: true },
+  sampleRate: { ideal: 48000 }, // 48kHz Studio Quality
+  sampleSize: { ideal: 16 },
+  channelCount: { ideal: 2 },   // Stereo high-fidelity
+};
+
+/**
+ * Acquire studio-grade microphone stream with automatic fallback
+ */
+export async function getEnhancedAudioStream(): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: HD_VOICE_CONSTRAINTS,
+      video: false,
+    });
+  } catch (err) {
+    console.warn('Advanced HD audio constraints rejected by hardware, falling back to basic audio:', err);
+    return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  }
+}
+
 export class MediaManager {
   private localStream: MediaStream | null = null;
   private screenStream: MediaStream | null = null;
@@ -14,18 +38,18 @@ export class MediaManager {
   private onAudioLevelCallback: ((level: number) => void) | null = null;
 
   /**
-   * Acquire live microphone stream and set up Web Audio API volume monitoring
+   * Acquire live microphone stream with HD studio audio processing
    */
   async startMicrophone(onAudioLevel?: (level: number) => void): Promise<MediaStream> {
     this.onAudioLevelCallback = onAudioLevel || null;
 
     try {
       if (!this.localStream) {
-        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        this.localStream = await getEnhancedAudioStream();
       } else {
         const hasAudio = this.localStream.getAudioTracks().length > 0;
         if (!hasAudio) {
-          const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const audioStream = await getEnhancedAudioStream();
           audioStream.getAudioTracks().forEach((track) => this.localStream?.addTrack(track));
         } else {
           this.localStream.getAudioTracks().forEach((track) => (track.enabled = true));
