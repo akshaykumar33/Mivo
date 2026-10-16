@@ -10,6 +10,7 @@ import { MessagesModule } from './messages/messages.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { ConversationsModule } from './conversations/conversations.module.js';
+import { MeetingsModule } from './meetings/meetings.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ConversationsModule } from './conversations/conversations.module.js';
     RealtimeModule,
     MessagesModule,
     ConversationsModule,
+    MeetingsModule,
     AiModule,
     StorageModule,
   ],

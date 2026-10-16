@@ -12,6 +12,7 @@ export * from './types/room.js';
 export * from './types/rbac.js';
 export * from './types/message.js';
 export * from './types/conversation.js';
+export * from './types/meeting.js';
 
 // Schemas
 export * from './schemas/auth.schema.js';
@@ -22,6 +23,7 @@ export * from './schemas/rbac.schema.js';
 export * from './schemas/message.schema.js';
 export * from './schemas/storage.schema.js';
 export * from './schemas/conversation.schema.js';
+export * from './schemas/meeting.schema.js';
 
 // Events
 export * from './events/realtime.events.js';

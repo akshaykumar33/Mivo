@@ -3,10 +3,11 @@
 import * as React from 'react';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
-import { ConversationDTO, DirectMessageDTO, AttachmentMetaDTO } from '@mivo/shared';
+import { ConversationDTO, DirectMessageDTO, AttachmentMetaDTO, ExternalMeetingBridgeDTO, REALTIME_EVENTS, MeetingBridgeActivatedBroadcast, MeetingBridgeRemovedBroadcast } from '@mivo/shared';
 import { Avatar, Button } from '@mivo/ui';
 import {
   Phone,
+  Video,
   Paperclip,
   Send,
   Smile,
@@ -26,6 +27,12 @@ import {
   ZoomIn,
 } from 'lucide-react';
 import { storageClient } from '@/lib/storage-client';
+import { api } from '@/lib/api-client';
+import { realtime } from '@/lib/socket-client';
+import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
+import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBanner';
+import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
+import { GoogleMeetIcon, MicrosoftTeamsIcon } from '@/features/meetings/ExternalMeetingIcons';
 
 const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀', '💯', '✨'];
 
@@ -109,6 +116,8 @@ export const ConversationView: React.FC = () => {
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
   const [isDragOver, setIsDragOver] = React.useState(false);
+  const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
+  const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const docInputRef = React.useRef<HTMLInputElement>(null);
@@ -129,6 +138,57 @@ export const ConversationView: React.FC = () => {
     activeConv?.type === 'GROUP'
       ? activeConv.name || 'Custom Group'
       : otherMember?.displayName || otherMember?.username || 'Direct Message';
+
+  // Fetch active external meeting bridge for this conversation
+  const fetchBridge = React.useCallback(async (conversationId: string) => {
+    try {
+      const res = await api.get<{ bridge: ExternalMeetingBridgeDTO | null }>(
+        `/api/v1/meetings/conversation/${conversationId}/bridge`
+      );
+      if (res.success && res.data) {
+        setActiveBridge(res.data.bridge);
+      }
+    } catch (err) {
+      console.error('Failed to load conversation meeting bridge:', err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!activeConversationId) {
+      setActiveBridge(null);
+      return;
+    }
+
+    fetchBridge(activeConversationId);
+
+    const socket = realtime.getSocket();
+    if (!socket) return;
+
+    const handleBridgeActivated = (payload: MeetingBridgeActivatedBroadcast) => {
+      if (payload.conversationId === activeConversationId) {
+        setActiveBridge({
+          conversationId: payload.conversationId,
+          meeting: payload.meeting,
+          activatedAt: payload.activatedAt,
+          activatedBy: payload.activatedBy,
+        });
+      }
+    };
+
+    const handleBridgeRemoved = (payload: MeetingBridgeRemovedBroadcast) => {
+      if (payload.conversationId === activeConversationId) {
+        setActiveBridge(null);
+      }
+    };
+
+    socket.on(REALTIME_EVENTS.DM_MEETING_BRIDGE_ACTIVATED, handleBridgeActivated);
+    socket.on(REALTIME_EVENTS.DM_MEETING_BRIDGE_REMOVED, handleBridgeRemoved);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.DM_MEETING_BRIDGE_ACTIVATED, handleBridgeActivated);
+      socket.off(REALTIME_EVENTS.DM_MEETING_BRIDGE_REMOVED, handleBridgeRemoved);
+    };
+  }, [activeConversationId, fetchBridge]);
 
   // Scroll to bottom on new messages
   React.useEffect(() => {
@@ -282,8 +342,31 @@ export const ConversationView: React.FC = () => {
           </div>
         </div>
 
-        {/* Header Action: Start Audio Call */}
+        {/* Header Actions: Meet & Teams and HD Audio Call */}
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setIsMeetingHubOpen(true)}
+            className={`gap-2 transition-all duration-200 ${
+              activeBridge
+                ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
+                : 'bg-white/[0.05] hover:bg-white/[0.1] text-white/90 border-white/[0.1]'
+            }`}
+            title="Start or manage Google Meet / Microsoft Teams meeting"
+          >
+            <div className="flex items-center -space-x-1">
+              <GoogleMeetIcon className="w-3.5 h-3.5" />
+              <MicrosoftTeamsIcon className="w-3.5 h-3.5" />
+            </div>
+            <span className="hidden sm:inline font-bold">
+              {activeBridge ? 'Meeting Live' : 'Meet & Teams'}
+            </span>
+            {activeBridge && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+            )}
+          </Button>
+
           <Button
             size="sm"
             variant="secondary"
@@ -298,6 +381,16 @@ export const ConversationView: React.FC = () => {
           </Button>
         </div>
       </header>
+
+      {/* Active External Meeting Bridge Banner */}
+      {activeBridge && activeConv && (
+        <RoomMeetingBridgeBanner
+          bridge={activeBridge}
+          conversationId={activeConv.id}
+          isHost={activeConv.createdById === user?.id || activeBridge.activatedBy.id === user?.id}
+          onBridgeRemoved={() => setActiveBridge(null)}
+        />
+      )}
 
       {/* Message Stream */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
@@ -359,7 +452,33 @@ export const ConversationView: React.FC = () => {
                     {/* Attachments & Documents Display */}
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="mt-2.5 space-y-2">
-                        {msg.attachments.map((att: AttachmentMetaDTO) => {
+                        {msg.attachments.map((att: any) => {
+                          if (att.type === 'external-meeting' && att.meeting) {
+                            return (
+                              <ExternalMeetingCard
+                                key={att.meeting.id || msg.id}
+                                meeting={att.meeting}
+                                conversationId={activeConv.id}
+                                isCurrentlyBridged={activeBridge?.meeting.id === att.meeting.id}
+                                onBridgeActivated={() => {
+                                  setActiveBridge({
+                                    conversationId: activeConv.id,
+                                    meeting: att.meeting,
+                                    activatedAt: new Date().toISOString(),
+                                    activatedBy: {
+                                      id: user?.id || '',
+                                      username: user?.username || '',
+                                      displayName: user?.displayName || user?.username || 'User',
+                                      avatarUrl: user?.avatarUrl || null,
+                                      status: user?.status || 'ONLINE',
+                                      customStatus: user?.customStatus || null,
+                                    },
+                                  });
+                                }}
+                              />
+                            );
+                          }
+
                           const isImage =
                             att.type?.startsWith('image/') ||
                             att.url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
@@ -567,6 +686,16 @@ export const ConversationView: React.FC = () => {
             <ImageIcon className="w-4 h-4 text-cyan-400" />
           </button>
 
+          {/* Instant Google Meet & Teams Button */}
+          <button
+            type="button"
+            onClick={() => setIsMeetingHubOpen(true)}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors group relative"
+            title="Start Google Meet or Microsoft Teams session"
+          >
+            <Video className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+          </button>
+
           {/* Quick Emoji Trigger */}
           <div className="relative">
             <button
@@ -638,6 +767,22 @@ export const ConversationView: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* External Meeting Hub Modal */}
+      {activeConv && (
+        <ExternalMeetingHubModal
+          isOpen={isMeetingHubOpen}
+          onClose={() => setIsMeetingHubOpen(false)}
+          conversationId={activeConv.id}
+          conversationName={title}
+          activeBridge={activeBridge}
+          onBridgeUpdated={() => {
+            if (activeConversationId) {
+              fetchBridge(activeConversationId);
+            }
+          }}
+        />
       )}
     </div>
   );

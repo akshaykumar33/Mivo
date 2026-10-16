@@ -58,6 +58,12 @@ export const REALTIME_EVENTS = {
   CALL_PARTICIPANT_JOINED: 'call:participant_joined',
   CALL_PARTICIPANT_LEFT: 'call:participant_left',
 
+  // External Meetings & Bridges
+  MEETING_BRIDGE_ACTIVATED: 'meeting:bridge_activated',
+  MEETING_BRIDGE_REMOVED: 'meeting:bridge_removed',
+  DM_MEETING_BRIDGE_ACTIVATED: 'dm:meeting_bridge_activated',
+  DM_MEETING_BRIDGE_REMOVED: 'dm:meeting_bridge_removed',
+
   // WebRTC Signaling
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',
@@ -206,4 +212,19 @@ export interface RoomParticipantStateUpdatedBroadcast {
   isDeafened: boolean;
   isCameraOn: boolean;
   isScreenOn: boolean;
+}
+
+export interface MeetingBridgeActivatedBroadcast {
+  roomId?: string;
+  conversationId?: string;
+  meeting: import('../types/meeting.js').ExternalMeetingDTO;
+  activatedBy: import('../types/user.js').UserSummaryDTO;
+  activatedAt: string;
+}
+
+export interface MeetingBridgeRemovedBroadcast {
+  roomId?: string;
+  conversationId?: string;
+  removedBy: import('../types/user.js').UserSummaryDTO;
+  removedAt: string;
 }

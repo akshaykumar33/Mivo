@@ -29,6 +29,7 @@ import {
 import { translationManager } from '@/lib/translation-manager';
 import { storageClient } from '@/lib/storage-client';
 import { LanguageSelectorPopover } from './LanguageSelectorPopover';
+import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
 
 export interface ChatStreamProps {
   room: RoomDTO;
@@ -332,7 +333,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                 {/* Attachments Section (Supabase Storage / S3) */}
                 {attachments.length > 0 && (
                   <div className="mt-2 space-y-2">
-                    {attachments.map((att, attIdx) => {
+                    {attachments.map((att: any, attIdx) => {
+                      if (att.type === 'external-meeting' && att.meeting) {
+                        return (
+                          <ExternalMeetingCard
+                            key={`${att.meeting.id}-${attIdx}`}
+                            meeting={att.meeting}
+                            roomId={room.id}
+                          />
+                        );
+                      }
+
                       const isImg = storageClient.isImage(att.type);
                       const isVid = storageClient.isVideo(att.type);
                       const isAud = storageClient.isAudio(att.type);

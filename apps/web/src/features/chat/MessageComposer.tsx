@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { storageClient } from '@/lib/storage-client';
 import { MessageDTO, AttachmentMetaDTO } from '@mivo/shared';
+import { GoogleMeetIcon, MicrosoftTeamsIcon } from '../meetings/ExternalMeetingIcons';
+import { ExternalMeetingHubModal } from '../meetings/ExternalMeetingHubModal';
 
 export interface MessageComposerProps {
   roomId: string;
@@ -30,26 +32,51 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const [isSending, setIsSending] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
+  const [isMeetingMenuOpen, setIsMeetingMenuOpen] = React.useState(false);
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = React.useState(false);
+  const [isCreatingQuickMeeting, setIsCreatingQuickMeeting] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
+  const meetingMenuRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const docInputRef = React.useRef<HTMLInputElement>(null);
   const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Click outside to close emoji picker
+  // Click outside to close emoji picker or meeting menu
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
         setIsEmojiPickerOpen(false);
       }
+      if (meetingMenuRef.current && !meetingMenuRef.current.contains(e.target as Node)) {
+        setIsMeetingMenuOpen(false);
+      }
     };
-    if (isEmojiPickerOpen) {
+    if (isEmojiPickerOpen || isMeetingMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isEmojiPickerOpen]);
+  }, [isEmojiPickerOpen, isMeetingMenuOpen]);
+
+  const handleQuickMeeting = async (provider: 'GOOGLE_MEET' | 'MS_TEAMS') => {
+    setIsMeetingMenuOpen(false);
+    setIsCreatingQuickMeeting(true);
+    try {
+      await api.post('/api/v1/meetings/generate', {
+        provider,
+        title: `${roomName} Sync`,
+        roomId,
+        shareToChat: true,
+        bridgeToRoom: false,
+      });
+    } catch (err) {
+      console.error('Failed to generate quick meeting:', err);
+    } finally {
+      setIsCreatingQuickMeeting(false);
+    }
+  };
 
   // Emit typing indicator
   const handleTyping = () => {
@@ -280,6 +307,77 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             <Paperclip className="w-4 h-4 stroke-[2.2]" />
           </button>
 
+          {/* External Meeting Button & Popover */}
+          <div className="relative" ref={meetingMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsMeetingMenuOpen(!isMeetingMenuOpen)}
+              disabled={isCreatingQuickMeeting}
+              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                isMeetingMenuOpen
+                  ? 'text-white bg-[#5E5CE6] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[#64D2FF] hover:bg-white/[0.08]'
+              }`}
+              title="Google Meet & Microsoft Teams"
+            >
+              {isCreatingQuickMeeting ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#64D2FF]" />
+              ) : (
+                <Video className="w-4 h-4 stroke-[2.2]" />
+              )}
+            </button>
+
+            {isMeetingMenuOpen && (
+              <div className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-[#0F1220]/95 border border-white/[0.12] shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                  External Meeting Hub
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickMeeting('GOOGLE_MEET')}
+                  className="w-full p-2 rounded-xl hover:bg-[#00AC47]/15 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#00AC47]/20 flex items-center justify-center p-1.5 flex-shrink-0">
+                    <GoogleMeetIcon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white group-hover:text-[#34D399]">Google Meet</div>
+                    <div className="text-[10px] text-white/40">1-click create & share</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickMeeting('MS_TEAMS')}
+                  className="w-full p-2 rounded-xl hover:bg-[#505AC9]/20 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#505AC9]/25 flex items-center justify-center p-1.5 flex-shrink-0">
+                    <MicrosoftTeamsIcon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white group-hover:text-[#A5B4FC]">Microsoft Teams</div>
+                    <div className="text-[10px] text-white/40">1-click create & share</div>
+                  </div>
+                </button>
+
+                <div className="pt-1 mt-1 border-t border-white/[0.08]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMeetingMenuOpen(false);
+                      setIsMeetingModalOpen(true);
+                    }}
+                    className="w-full p-2 rounded-xl hover:bg-white/[0.08] text-left flex items-center gap-2 text-xs font-semibold text-[#64D2FF] transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Meeting Hub & Bridge...</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Expandable Textarea */}
           <textarea
             ref={textareaRef}
@@ -326,6 +424,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           </button>
         </div>
       </div>
+
+      <ExternalMeetingHubModal
+        isOpen={isMeetingModalOpen}
+        onClose={() => setIsMeetingModalOpen(false)}
+        roomId={roomId}
+        roomName={roomName}
+      />
     </div>
   );
 };
