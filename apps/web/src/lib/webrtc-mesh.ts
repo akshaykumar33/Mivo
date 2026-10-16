@@ -101,6 +101,12 @@ export class WebRTCMeshManager {
       this.peers.delete(peerUserId);
     }
     this.remoteStreams.delete(peerUserId);
+    if (typeof document !== 'undefined') {
+      const audioElem = document.getElementById(`remote-audio-${peerUserId}`);
+      if (audioElem) {
+        audioElem.remove();
+      }
+    }
     this.onPeerDisconnectedCallback?.(peerUserId);
   }
 
@@ -108,6 +114,9 @@ export class WebRTCMeshManager {
     this.peers.forEach((pc) => pc.close());
     this.peers.clear();
     this.remoteStreams.clear();
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('audio[id^="remote-audio-"]').forEach((elem) => elem.remove());
+    }
     this.localStream = null;
     this.currentRoomId = null;
     this.currentUserId = null;

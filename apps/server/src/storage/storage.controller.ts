@@ -72,8 +72,8 @@ export class StorageController {
   }
 
   @Get('files/*path')
-  async serveFile(@Param('path') pathParam: string, @Res() res: Response) {
-    const fileKey = pathParam;
+  async serveFile(@Param('path') pathParam: string | string[], @Res() res: Response) {
+    const fileKey = Array.isArray(pathParam) ? pathParam.join('/') : pathParam;
     if (!fileKey) {
       throw new NotFoundException({ code: 'FILE_NOT_FOUND', message: 'File key missing' });
     }

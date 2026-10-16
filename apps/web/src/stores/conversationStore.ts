@@ -490,13 +490,13 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       });
     });
 
-    socket.on(REALTIME_EVENTS.DM_STOP_TYPING, (data: { conversationId: string; userId: string }) => {
+    socket.on(REALTIME_EVENTS.DM_STOP_TYPING, (data: { conversationId: string; userId: string; username?: string }) => {
       set((state) => {
         const current = state.typingUsers[data.conversationId] || [];
         return {
           typingUsers: {
             ...state.typingUsers,
-            [data.conversationId]: current.filter((u) => u !== data.userId),
+            [data.conversationId]: current.filter((u) => u !== data.username && u !== data.userId),
           },
         };
       });

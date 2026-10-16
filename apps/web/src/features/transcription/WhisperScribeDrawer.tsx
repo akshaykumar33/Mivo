@@ -178,6 +178,12 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
         recognitionRef.current = recognition;
       }
     }
+
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+    };
   }, [currentUser, targetLang]);
 
   const toggleTranscription = () => {

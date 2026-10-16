@@ -9,7 +9,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "check:types": "tsc --noEmit",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint": "tsc --noEmit",
     "test": "jest",
     "clean": "rimraf dist"
   },

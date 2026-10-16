@@ -648,6 +648,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     client.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_STOP_TYPING, {
       conversationId: data.conversationId,
       userId: user.sub,
+      username: user.username || user.displayName || 'Someone',
     });
   }
 

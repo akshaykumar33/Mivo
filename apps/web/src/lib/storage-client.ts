@@ -73,8 +73,11 @@ export class StorageClient {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('mivo_access_token') : null;
-    const res = await fetch(`/api/v1/storage/upload?category=${category}`, {
+    const token =
+      api.getAccessToken() ||
+      (typeof window !== 'undefined' ? localStorage.getItem('mivo_access_token') : null);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const res = await fetch(`${baseUrl}/api/v1/storage/upload?category=${category}`, {
       method: 'POST',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

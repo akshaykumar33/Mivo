@@ -119,7 +119,9 @@ export class StorageService implements OnModuleInit {
     category = 'attachments'
   ): Promise<AttachmentMetaDTO> {
     const cleanFilename = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
-    const key = `${category}/${userId}/${Date.now()}-${cleanFilename}`;
+    const timestamp = Date.now();
+    const filenameWithTimestamp = `${timestamp}-${cleanFilename}`;
+    const key = `${category}/${userId}/${filenameWithTimestamp}`;
 
     let uploadedToS3 = false;
     let fileUrl = '';
@@ -154,7 +156,7 @@ export class StorageService implements OnModuleInit {
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
-      const localFilePath = path.join(targetDir, `${Date.now()}-${cleanFilename}`);
+      const localFilePath = path.join(targetDir, filenameWithTimestamp);
       fs.writeFileSync(localFilePath, file.buffer);
       fileUrl = `/api/v1/storage/files/${key}`;
     }
@@ -172,6 +174,7 @@ export class StorageService implements OnModuleInit {
    * Retrieves a locally buffered file by key.
    */
   getLocalFilePath(key: string): string | null {
+    if (!key || typeof key !== 'string') return null;
     const safeKey = key.replace(/\.\./g, '');
     const localPath = path.join(this.localUploadsDir, safeKey);
     if (fs.existsSync(localPath)) {

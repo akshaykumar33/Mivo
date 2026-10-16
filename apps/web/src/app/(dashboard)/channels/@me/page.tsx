@@ -14,10 +14,6 @@ export default function DirectMessagesPage() {
 
       {/* Main Conversation Stream View */}
       <ConversationView />
-
-      {/* Global Realtime Audio Calling Modals */}
-      <IncomingCallModal />
-      <ActiveCallOverlay />
     </div>
   );
 }

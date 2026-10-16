@@ -2,6 +2,7 @@
   "name": "mivo-monorepo",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Unified Real-Time Communication & Social Platform",
   "scripts": {
     "dev": "turbo run dev",
