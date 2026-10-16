@@ -17,6 +17,12 @@ export class StorageClient {
     onProgress?: (progress: number) => void
   ): Promise<AttachmentMetaDTO> {
     try {
+      // 0. For video files, route directly to server multipart upload so FFmpeg can optimize with +faststart and generate poster
+      const isVideo = file.type?.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi|m4v|flv|wmv)$/i.test(file.name);
+      if (isVideo) {
+        return await this.uploadViaServer(file, category);
+      }
+
       // 1. Request presigned URL from backend
       const presignedRes = await api.post<PresignedUrlResponseDTO>('/api/v1/storage/presigned-url', {
         filename: file.name,

@@ -149,7 +149,15 @@ export const UniversalFileViewerModal: React.FC<UniversalFileViewerModalProps> =
       case 'youtube':
         return <MediaViewer url={file.url} fileName={file.name} type="youtube" />;
       case 'video':
-        return <MediaViewer url={file.url} fileName={file.name} type="video" />;
+        return (
+          <MediaViewer
+            url={file.url}
+            fileName={file.name}
+            type="video"
+            posterUrl={file.posterUrl}
+            isOptimized={file.isOptimized}
+          />
+        );
       case 'audio':
         return <MediaViewer url={file.url} fileName={file.name} type="audio" />;
       case 'presentation':

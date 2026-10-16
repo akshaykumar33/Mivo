@@ -23,6 +23,8 @@ export interface FileViewerItem {
   type?: string;
   size?: number;
   content?: string; // Optional raw string for snippets
+  posterUrl?: string; // Companion poster frame extracted by FFmpeg
+  isOptimized?: boolean; // FFmpeg +faststart enabled indicator
 }
 
 /**

@@ -25,4 +25,8 @@ export interface AttachmentMetaDTO {
   size: number;
   type: string;
   key?: string;
+  posterUrl?: string;
+  isOptimized?: boolean;
+  duration?: number;
 }
+

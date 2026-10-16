@@ -44,8 +44,9 @@ const MODULE_TESTS = [
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/integration/socket-rec-broadcast.integration.test.js' },
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/e2e/consent-banner-download.e2e.test.js' },
 
-  // 8. Universal File Viewer Module
+  // 8. Universal File Viewer & Media Streamer Module
   { module: 'file-viewer', file: 'tests/modules/files/unit/file-viewer.unit.test.js' },
+  { module: 'file-viewer', file: 'tests/modules/files/unit/video-optimizer.unit.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');
