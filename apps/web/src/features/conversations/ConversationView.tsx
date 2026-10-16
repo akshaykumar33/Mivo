@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
   Loader2,
   ZoomIn,
+  Eye,
 } from 'lucide-react';
 import { storageClient } from '@/lib/storage-client';
 import { api } from '@/lib/api-client';
@@ -33,6 +34,12 @@ import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
 import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBanner';
 import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
 import { GoogleMeetIcon, MicrosoftTeamsIcon } from '@/features/meetings/ExternalMeetingIcons';
+import {
+  UniversalFileViewerModal,
+  YouTubeEmbedCard,
+  extractYouTubeUrls,
+  FileViewerItem,
+} from '@/features/files';
 
 const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀', '💯', '✨'];
 
@@ -114,7 +121,7 @@ export const ConversationView: React.FC = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadStatus, setUploadStatus] = React.useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
-  const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
+  const [activeViewerFile, setActiveViewerFile] = React.useState<FileViewerItem | null>(null);
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
   const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
@@ -447,7 +454,25 @@ export const ConversationView: React.FC = () => {
                         : 'bg-[var(--bg-surface-1)] text-slate-200 border border-[var(--border-subtle)] rounded-tl-xs'
                     }`}
                   >
-                    {msg.content && <p className="whitespace-pre-wrap">{msg.content}</p>}
+                    {msg.content && (
+                      <div>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        {/* Auto-detected YouTube Videos inline in conversation */}
+                        {extractYouTubeUrls(msg.content).map((yt) => (
+                          <YouTubeEmbedCard
+                            key={yt.videoId}
+                            url={yt.url}
+                            onOpenViewer={(url) =>
+                              setActiveViewerFile({
+                                name: 'YouTube Video',
+                                url,
+                                type: 'video/youtube',
+                              })
+                            }
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Attachments & Documents Display */}
                     {msg.attachments && msg.attachments.length > 0 && (
@@ -487,7 +512,14 @@ export const ConversationView: React.FC = () => {
                             return (
                               <div
                                 key={att.url || att.name}
-                                onClick={() => setPreviewImageUrl(att.url)}
+                                onClick={() =>
+                                  setActiveViewerFile({
+                                    name: att.name,
+                                    url: att.url,
+                                    type: att.type,
+                                    size: att.size,
+                                  })
+                                }
                                 className="max-w-md max-h-72 rounded-xl overflow-hidden border border-white/10 hover:border-violet-500/50 cursor-pointer group/img transition-all bg-black/40 shadow-sm relative"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -496,8 +528,9 @@ export const ConversationView: React.FC = () => {
                                   alt={att.name}
                                   className="w-full h-full object-cover group-hover/img:scale-102 transition-transform duration-200"
                                 />
-                                <div className="absolute top-2 right-2 p-1 rounded-md bg-black/60 text-white opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                  <ZoomIn className="w-3.5 h-3.5" />
+                                <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-md text-white opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center gap-1 text-[11px]">
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>View</span>
                                 </div>
                               </div>
                             );
@@ -509,7 +542,15 @@ export const ConversationView: React.FC = () => {
                           return (
                             <div
                               key={att.url || att.name}
-                              className="flex items-center gap-3 p-3 rounded-2xl bg-black/25 hover:bg-black/40 border border-white/10 hover:border-violet-500/40 transition-all max-w-sm group/doc shadow-sm"
+                              onClick={() =>
+                                setActiveViewerFile({
+                                  name: att.name,
+                                  url: att.url,
+                                  type: att.type,
+                                  size: att.size,
+                                })
+                              }
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-black/25 hover:bg-black/40 border border-white/10 hover:border-violet-500/40 transition-all max-w-sm group/doc shadow-sm cursor-pointer"
                             >
                               <div
                                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${docInfo.color} group-hover/doc:scale-105 transition-transform`}
@@ -546,7 +587,25 @@ export const ConversationView: React.FC = () => {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-1 shrink-0">
+                              <div
+                                className="flex items-center gap-1 shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setActiveViewerFile({
+                                      name: att.name,
+                                      url: att.url,
+                                      type: att.type,
+                                      size: att.size,
+                                    })
+                                  }
+                                  title="View Document (Read-Only)"
+                                  className="p-1.5 rounded-lg hover:bg-violet-500/20 text-white/60 hover:text-violet-300 transition-colors"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
                                 <a
                                   href={att.url}
                                   target="_blank"
@@ -632,8 +691,24 @@ export const ConversationView: React.FC = () => {
                 <span className="text-[10px] text-white/50">({storageClient.formatBytes(att.size)})</span>
                 <button
                   type="button"
-                  onClick={() => setPendingAttachments((prev) => prev.filter((p) => p.url !== att.url))}
+                  onClick={() =>
+                    setActiveViewerFile({
+                      name: att.name,
+                      url: att.url,
+                      type: att.type,
+                      size: att.size,
+                    })
+                  }
                   className="text-violet-300 hover:text-white p-0.5 rounded transition-colors"
+                  title="Preview document"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingAttachments((prev) => prev.filter((p) => p.url !== att.url))}
+                  className="text-violet-300 hover:text-rose-400 p-0.5 rounded transition-colors"
+                  title="Remove attachment"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -746,28 +821,12 @@ export const ConversationView: React.FC = () => {
         </form>
       </footer>
 
-      {/* Lightbox Modal for Image Preview */}
-      {previewImageUrl && (
-        <div
-          onClick={() => setPreviewImageUrl(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-        >
-          <div className="relative max-w-4xl max-h-[90vh]">
-            <button
-              onClick={() => setPreviewImageUrl(null)}
-              className="absolute -top-10 right-0 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewImageUrl}
-              alt="Enlarged preview"
-              className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
-            />
-          </div>
-        </div>
-      )}
+      {/* Universal Read-Only File Viewer Modal */}
+      <UniversalFileViewerModal
+        file={activeViewerFile}
+        isOpen={!!activeViewerFile}
+        onClose={() => setActiveViewerFile(null)}
+      />
 
       {/* External Meeting Hub Modal */}
       {activeConv && (

@@ -1,13 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles, Eye } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { storageClient } from '@/lib/storage-client';
 import { MessageDTO, AttachmentMetaDTO } from '@mivo/shared';
 import { GoogleMeetIcon, MicrosoftTeamsIcon } from '../meetings/ExternalMeetingIcons';
 import { ExternalMeetingHubModal } from '../meetings/ExternalMeetingHubModal';
+import { UniversalFileViewerModal, FileViewerItem } from '@/features/files';
 
 export interface MessageComposerProps {
   roomId: string;
@@ -29,6 +30,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 }) => {
   const [content, setContent] = React.useState('');
   const [stagedAttachments, setStagedAttachments] = React.useState<AttachmentMetaDTO[]>([]);
+  const [previewFile, setPreviewFile] = React.useState<FileViewerItem | null>(null);
   const [isSending, setIsSending] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
@@ -255,8 +257,24 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
                   <button
                     type="button"
+                    onClick={() =>
+                      setPreviewFile({
+                        name: att.name,
+                        url: att.url,
+                        type: att.type,
+                        size: att.size,
+                      })
+                    }
+                    className="p-1 rounded-md text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-colors ml-1"
+                    title="Preview attachment (Read-Only)"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleRemoveAttachment(idx)}
-                    className="p-1 rounded-md text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors ml-1"
+                    className="p-1 rounded-md text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                     title="Remove attachment"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -430,6 +448,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         onClose={() => setIsMeetingModalOpen(false)}
         roomId={roomId}
         roomName={roomName}
+      />
+
+      {/* Universal Read-Only File Viewer Modal */}
+      <UniversalFileViewerModal
+        file={previewFile}
+        isOpen={!!previewFile}
+        onClose={() => setPreviewFile(null)}
       />
     </div>
   );

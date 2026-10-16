@@ -43,6 +43,9 @@ const MODULE_TESTS = [
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/unit/recording-duration-timer.unit.test.js' },
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/integration/socket-rec-broadcast.integration.test.js' },
   { module: 'recording-compliance', file: 'tests/modules/recording-compliance/e2e/consent-banner-download.e2e.test.js' },
+
+  // 8. Universal File Viewer Module
+  { module: 'file-viewer', file: 'tests/modules/files/unit/file-viewer.unit.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');
@@ -54,7 +57,7 @@ let failedCount = 0;
 
 for (const test of MODULE_TESTS) {
   try {
-    execSync(`node ${test.file}`, { stdio: 'inherit' });
+    execSync(`node --experimental-strip-types ${test.file}`, { stdio: 'inherit' });
     passedCount++;
   } catch (err) {
     console.error(`❌ Test Failed: ${test.file}`);

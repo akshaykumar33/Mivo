@@ -25,11 +25,18 @@ import {
   Film,
   Music,
   X,
+  Eye,
 } from 'lucide-react';
 import { translationManager } from '@/lib/translation-manager';
 import { storageClient } from '@/lib/storage-client';
 import { LanguageSelectorPopover } from './LanguageSelectorPopover';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
+import {
+  UniversalFileViewerModal,
+  YouTubeEmbedCard,
+  extractYouTubeUrls,
+  FileViewerItem,
+} from '@/features/files';
 
 export interface ChatStreamProps {
   room: RoomDTO;
@@ -42,7 +49,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   const [translatedMessages, setTranslatedMessages] = React.useState<Record<string, string>>({});
   const [messageReactions, setMessageReactions] = React.useState<Record<string, Record<string, number>>>({});
   const [typingUsers, setTypingUsers] = React.useState<Record<string, string>>({});
-  const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+  const [activeViewerFile, setActiveViewerFile] = React.useState<FileViewerItem | null>(null);
   const scrollBottomRef = React.useRef<HTMLDivElement>(null);
 
   // 1. Fetch historical messages for the room
@@ -169,24 +176,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] relative overflow-hidden select-none">
-      {/* Lightbox Modal for Attachment Images */}
-      {previewImage && (
-        <div
-          onClick={() => setPreviewImage(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
-        >
-          <div className="relative max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl">
-            <img src={previewImage} alt="Attachment Full View" className="w-full h-full object-contain" />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Modern Room Header */}
       <div className="h-12 border-b border-[var(--border-subtle)] px-3 sm:px-6 flex items-center justify-between bg-[var(--bg-surface-0)] backdrop-blur-xl z-20 flex-shrink-0">
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
@@ -323,10 +312,26 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                   </div>
                 </div>
 
-                {/* Original Message Text */}
+                {/* Original Message Text + YouTube Link Previews */}
                 {msg.content && msg.content !== 'Sent attachments' && (
-                  <div className="text-sm text-white/90 leading-relaxed break-words select-text font-normal">
-                    {msg.content}
+                  <div>
+                    <div className="text-sm text-white/90 leading-relaxed break-words select-text font-normal">
+                      {msg.content}
+                    </div>
+                    {/* Auto-detected YouTube Videos inline in stream */}
+                    {extractYouTubeUrls(msg.content).map((yt) => (
+                      <YouTubeEmbedCard
+                        key={yt.videoId}
+                        url={yt.url}
+                        onOpenViewer={(url) =>
+                          setActiveViewerFile({
+                            name: 'YouTube Video',
+                            url,
+                            type: 'video/youtube',
+                          })
+                        }
+                      />
+                    ))}
                   </div>
                 )}
 
@@ -352,43 +357,94 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                         return (
                           <div
                             key={`${att.url}-${attIdx}`}
-                            onClick={() => setPreviewImage(att.url)}
-                            className="max-w-md max-h-80 rounded-2xl overflow-hidden border border-white/10 hover:border-[#5E5CE6] cursor-zoom-in group/img transition-all bg-black/40 shadow-md"
+                            onClick={() =>
+                              setActiveViewerFile({
+                                name: att.name,
+                                url: att.url,
+                                type: att.type,
+                                size: att.size,
+                              })
+                            }
+                            className="max-w-md max-h-80 rounded-2xl overflow-hidden border border-white/10 hover:border-[#5E5CE6] cursor-pointer group/img transition-all bg-black/40 shadow-md relative"
                           >
                             <img
                               src={att.url}
                               alt={att.name}
                               className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
                             />
+                            <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-md text-white opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center gap-1 text-[11px]">
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View</span>
+                            </div>
                           </div>
                         );
                       }
 
                       if (isVid) {
                         return (
-                          <div key={`${att.url}-${attIdx}`} className="max-w-lg rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-md">
+                          <div
+                            key={`${att.url}-${attIdx}`}
+                            className="max-w-lg rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-md group relative"
+                          >
                             <video controls src={att.url} className="w-full max-h-80" />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveViewerFile({
+                                  name: att.name,
+                                  url: att.url,
+                                  type: att.type,
+                                  size: att.size,
+                                })
+                              }
+                              className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+                              title="Expand in Video Viewer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         );
                       }
 
                       if (isAud) {
                         return (
-                          <div key={`${att.url}-${attIdx}`} className="p-2 rounded-xl bg-white/[0.04] border border-white/10 max-w-sm">
-                            <audio controls src={att.url} className="w-full h-8" />
+                          <div
+                            key={`${att.url}-${attIdx}`}
+                            className="p-2 rounded-xl bg-white/[0.04] border border-white/10 max-w-sm flex items-center gap-2"
+                          >
+                            <audio controls src={att.url} className="w-full h-8 flex-1" />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveViewerFile({
+                                  name: att.name,
+                                  url: att.url,
+                                  type: att.type,
+                                  size: att.size,
+                                })
+                              }
+                              className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                              title="Open Audio Viewer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         );
                       }
 
-                      // Generic File Attachment Card
+                      // Universal File Attachment Card
                       return (
-                        <a
+                        <div
                           key={`${att.url}-${attIdx}`}
-                          href={att.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download={att.name}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 max-w-sm transition-all group/file shadow-sm"
+                          onClick={() =>
+                            setActiveViewerFile({
+                              name: att.name,
+                              url: att.url,
+                              type: att.type,
+                              size: att.size,
+                            })
+                          }
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 max-w-sm transition-all group/file shadow-sm cursor-pointer"
                         >
                           <div className="w-10 h-10 rounded-xl bg-[#5E5CE6]/20 border border-[#5E5CE6]/30 flex items-center justify-center text-[#64D2FF] flex-shrink-0 group-hover/file:scale-110 transition-transform">
                             <FileText className="w-5 h-5" />
@@ -397,10 +453,37 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             <p className="text-xs font-semibold text-white truncate">{att.name}</p>
                             <p className="text-[10px] text-white/50">{storageClient.formatBytes(att.size)}</p>
                           </div>
-                          <div className="p-1.5 rounded-lg text-white/40 group-hover/file:text-white group-hover/file:bg-white/10 transition-colors">
-                            <Download className="w-4 h-4" />
+                          <div
+                            className="flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveViewerFile({
+                                  name: att.name,
+                                  url: att.url,
+                                  type: att.type,
+                                  size: att.size,
+                                })
+                              }
+                              className="p-1.5 rounded-lg text-white/60 hover:text-[#64D2FF] hover:bg-white/10 transition-colors"
+                              title="View Document (Read-Only)"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <a
+                              href={att.url}
+                              download={att.name}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                              title="Download File"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
                           </div>
-                        </a>
+                        </div>
                       );
                     })}
                   </div>
@@ -464,6 +547,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
         roomId={room.id}
         roomName={room.name}
         onMessageSent={handleMessageSent}
+      />
+
+      {/* Universal Read-Only File Viewer Modal */}
+      <UniversalFileViewerModal
+        file={activeViewerFile}
+        isOpen={!!activeViewerFile}
+        onClose={() => setActiveViewerFile(null)}
       />
     </div>
   );
