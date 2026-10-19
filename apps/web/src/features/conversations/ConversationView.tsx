@@ -105,6 +105,22 @@ function getDocTypeInfo(filename: string, mimeType?: string) {
   };
 }
 
+function sanitizeChatMessage(content: string, hasMeetingAttachment: boolean): string | null {
+  if (!content) return null;
+  if (content === 'Sent attachments') return null;
+  if (
+    hasMeetingAttachment &&
+    (content.includes('Created Google Meet Session') ||
+      content.includes('Created Microsoft Teams Session') ||
+      (content.includes('Created') && content.includes('Session:')))
+  ) {
+    return null;
+  }
+  // Strip any raw unicode emojis from message text completely
+  const stripped = content.replace(/(\p{Extended_Pictographic}|\p{Emoji_Presentation})/gu, '').trim();
+  return stripped.length > 0 ? stripped : null;
+}
+
 export const ConversationView: React.FC = () => {
   const { user } = useAuthStore();
   const {
@@ -506,25 +522,31 @@ export const ConversationView: React.FC = () => {
                         : 'bg-[var(--bg-surface-0)] text-[#111827] border border-[var(--border-subtle)] shadow-sm rounded-tl-xs'
                     }`}
                   >
-                    {msg.content && (
-                      <div>
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
-                        {/* Auto-detected YouTube Videos inline in conversation */}
-                        {extractYouTubeUrls(msg.content).map((yt) => (
-                          <YouTubeEmbedCard
-                            key={yt.videoId}
-                            url={yt.url}
-                            onOpenViewer={(url) =>
-                              setActiveViewerFile({
-                                name: 'YouTube Video',
-                                url,
-                                type: 'video/youtube',
-                              })
-                            }
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      const hasMeeting = msg.attachments?.some((a: any) => a.type === 'external-meeting');
+                      const cleaned = sanitizeChatMessage(msg.content || '', !!hasMeeting);
+                      if (!cleaned) return null;
+
+                      return (
+                        <div>
+                          <p className="whitespace-pre-wrap">{cleaned}</p>
+                          {/* Auto-detected YouTube Videos inline in conversation */}
+                          {extractYouTubeUrls(cleaned).map((yt) => (
+                            <YouTubeEmbedCard
+                              key={yt.videoId}
+                              url={yt.url}
+                              onOpenViewer={(url) =>
+                                setActiveViewerFile({
+                                  name: 'YouTube Video',
+                                  url,
+                                  type: 'video/youtube',
+                                })
+                              }
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Attachments & Documents Display */}
                     {msg.attachments && msg.attachments.length > 0 && (

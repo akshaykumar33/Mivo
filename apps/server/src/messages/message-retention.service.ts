@@ -29,7 +29,7 @@ export class MessageRetentionService implements OnModuleInit, OnModuleDestroy {
   private timer: NodeJS.Timeout | null = null;
 
   onModuleInit() {
-    this.logger.log(`⏳ Auto-disappearing message retention enabled (> 1 year / ${DEFAULT_MESSAGE_RETENTION_DAYS} days)`);
+    this.logger.log(`Auto-disappearing message retention enabled (> 1 year / ${DEFAULT_MESSAGE_RETENTION_DAYS} days)`);
 
     // Schedule initial cleanup run shortly after startup (5 seconds delay)
     const initialDelay = setTimeout(() => {
@@ -75,7 +75,7 @@ export class MessageRetentionService implements OnModuleInit, OnModuleDestroy {
 
   async purgeExpiredMessages(retentionDays = DEFAULT_MESSAGE_RETENTION_DAYS): Promise<PurgeResult> {
     const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
-    this.logger.log(`🧹 Running message retention purge for messages created before ${cutoffDate.toISOString()}...`);
+    this.logger.log(`Running message retention purge for messages created before ${cutoffDate.toISOString()}...`);
 
     try {
       // 1. Purge room messages older than retention cutoff
@@ -115,7 +115,7 @@ export class MessageRetentionService implements OnModuleInit, OnModuleDestroy {
       };
 
       this.logger.log(
-        `✅ Retention purge complete: ${deletedRoomMessages.count} room messages, ${deletedDirectMessages.count} DMs purged; ${clearedStatuses.count} expired statuses cleared.`
+        `Retention purge complete: ${deletedRoomMessages.count} room messages, ${deletedDirectMessages.count} DMs purged; ${clearedStatuses.count} expired statuses cleared.`
       );
 
       return result;

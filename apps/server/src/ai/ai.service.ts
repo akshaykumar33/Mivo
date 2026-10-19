@@ -151,35 +151,35 @@ Verbal Transcript (${transcript.length} turns):
 ${transcriptText}
 
 Output Format Requirements:
-# 📋 Executive Minutes of Meeting: #${roomName}
+# Executive Minutes of Meeting: #${roomName}
 **Date:** ${dateStr} at ${timeStr}  
 **Platform:** Mivo Real-Time Stage  
 **Attendees:** ${attendees.join(', ')}
 
 ---
 
-## 1. 🎯 Executive Summary
+## 1. Executive Summary
 (Synthesize the core goals and progress in 2-3 crisp sentences)
 
 ---
 
-## 2. 💡 Key Decisions & Architectural Alignments
+## 2. Key Decisions & Architectural Alignments
 (Bulleted list of key consensus decisions reached)
 
 ---
 
-## 3. ✅ Action Items & Owners
+## 3. Action Items & Owners
 (Checklist of tasks, with owners and deadlines inferred from context)
 - [ ] **[Owner]:** Task description
 
 ---
 
-## 4. 📊 Discussion Highlights & In-Meeting Notes
+## 4. Discussion Highlights & In-Meeting Notes
 ${userNotes ? userNotes : '(Synthesized discussion topics)'}
 
 ---
 
-## 5. 📜 Full Verified Transcript Log
+## 5. Full Verified Transcript Log
 ${transcript.map((t) => `* **[${t.time}] ${t.speaker}:** ${t.text}`).join('\n')}
 
 ---
@@ -213,38 +213,38 @@ ${transcript.map((t) => `* **[${t.time}] ${t.speaker}:** ${t.text}`).join('\n')}
     }
 
     // Default structured template
-    const defaultMOM = `# 📋 Executive Minutes of Meeting (MOM): #${roomName}
+    const defaultMOM = `# Executive Minutes of Meeting (MOM): #${roomName}
 **Date:** ${dateStr} at ${timeStr}  
 **Platform:** Mivo Real-Time Stage  
 **Attendees:** ${attendees.length > 0 ? attendees.join(', ') : 'All room members'}  
 
 ---
 
-## 1. 🎯 Executive Summary
+## 1. Executive Summary
 During the session in **#${roomName}**, participants synchronized on platform milestones, verified live WebRTC media audio/video streaming, and configured real-time AI transcription & translation workflows.
 
 ---
 
-## 2. 💡 Key Decisions
+## 2. Key Decisions
 - [x] Verified WebRTC mesh calling with active speaker decibel monitoring.
 - [x] Enabled real-time multilingual translation and audio speech synthesis.
 - [x] Configured automated post-call Minutes of Meeting (MOM) email delivery.
 
 ---
 
-## 3. ✅ Action Items
+## 3. Action Items
 - [ ] **Action Item 1:** Review multilingual transcript output with international team members.
 - [ ] **Action Item 2:** Verify recording playback file integrity.
 - [ ] **Action Item 3:** Follow up on deliverables before the next sync.
 
 ---
 
-## 4. 📊 In-Meeting Notes
+## 4. In-Meeting Notes
 ${userNotes || 'No custom notes provided.'}
 
 ---
 
-## 5. 📜 Full Verified Transcript (${transcript.length} entries)
+## 5. Full Verified Transcript (${transcript.length} entries)
 ${
   transcript.length > 0
     ? transcript

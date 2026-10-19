@@ -23,7 +23,7 @@ export class PresenceService implements OnModuleInit {
           lazyConnect: true,
         });
         await this.redisClient.connect();
-        this.logger.log('⚡ Redis presence registry connected');
+        this.logger.log('Redis presence registry connected');
       } catch (err: any) {
         this.logger.warn(`Redis presence fallback to memory: ${err.message}`);
         this.redisClient = null;

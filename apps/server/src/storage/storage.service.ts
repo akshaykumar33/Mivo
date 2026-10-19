@@ -131,7 +131,7 @@ export class StorageService implements OnModuleInit {
 
     // Faststart FFmpeg optimization and poster generation for videos
     if (isVideo) {
-      this.logger.log(`🎬 Optimizing video "${file.originalname}" with FFmpeg (+faststart MOOV atom)...`);
+      this.logger.log(`Optimizing video "${file.originalname}" with FFmpeg (+faststart MOOV atom)...`);
       try {
         const optResult = await this.videoOptimizer.optimizeVideo(file.buffer, file.originalname);
         fileBuffer = optResult.optimizedBuffer;

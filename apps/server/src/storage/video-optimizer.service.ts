@@ -26,7 +26,7 @@ export class VideoOptimizerService {
       if (ffmpegInstaller && ffmpegInstaller.path) {
         ffmpeg.setFfmpegPath(ffmpegInstaller.path);
         this.isFfmpegAvailable = true;
-        this.logger.log(`⚡ FFmpeg initialized successfully at: ${ffmpegInstaller.path}`);
+        this.logger.log(`FFmpeg initialized successfully at: ${ffmpegInstaller.path}`);
       }
     } catch (err: any) {
       this.logger.warn(`Could not initialize FFmpeg: ${err.message}. Fast video optimization disabled.`);
@@ -139,7 +139,7 @@ export class VideoOptimizerService {
         const savedBytes = Math.max(0, originalSize - optimizedSize);
 
         this.logger.log(
-          `🚀 FFmpeg optimized "${fileName}": ${originalSize} -> ${optimizedSize} bytes ` +
+          `FFmpeg optimized "${fileName}": ${originalSize} -> ${optimizedSize} bytes ` +
           `(MOOV +faststart enabled, saved ${((savedBytes / originalSize) * 100).toFixed(1)}%)`
         );
 

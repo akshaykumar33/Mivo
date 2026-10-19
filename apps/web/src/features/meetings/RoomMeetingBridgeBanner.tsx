@@ -58,17 +58,15 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
 
   return (
     <div
-      className={`w-full px-4 py-2.5 border-b flex items-center justify-between gap-3 text-xs backdrop-blur-2xl transition-all duration-300 z-10 select-none shadow-md ${
-        isGoogle
-          ? 'bg-gradient-to-r from-[#00AC47]/20 via-[#0B1A12]/90 to-[#0F1220]/95 border-[#00AC47]/30 text-white'
-          : 'bg-gradient-to-r from-[#505AC9]/20 via-[#12142E]/90 to-[#0F1220]/95 border-[#505AC9]/35 text-white'
+      className={`w-full px-4 py-2.5 border-b flex items-center justify-between gap-3 text-xs backdrop-blur-2xl transition-all duration-300 z-10 select-none shadow-sm bg-[var(--bg-surface-0)]/95 border-[var(--border-subtle)] ${
+        isGoogle ? 'border-b-emerald-500/40' : 'border-b-indigo-500/40'
       }`}
     >
       {/* Left: Provider & Info */}
       <div className="flex items-center gap-2.5 min-w-0">
         <div
-          className={`w-7 h-7 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 shadow-sm ${
-            isGoogle ? 'bg-[#00AC47]/25 border border-[#00AC47]/40' : 'bg-[#505AC9]/30 border border-[#505AC9]/50'
+          className={`w-7 h-7 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 shadow-xs border ${
+            isGoogle ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50 border-indigo-200'
           }`}
         >
           {isGoogle ? (
@@ -80,19 +78,19 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
 
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="w-2 h-2 rounded-full bg-[#30D158] animate-pulse" />
-            <span className="font-extrabold uppercase tracking-wider text-[10px] text-white/90">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className={`font-extrabold uppercase tracking-wider text-[10px] ${isGoogle ? 'text-emerald-700' : 'text-indigo-700'}`}>
               {isGoogle ? 'Google Meet Active' : 'MS Teams Active'}
             </span>
           </div>
 
-          <span className="text-white/30 hidden sm:inline">•</span>
+          <span className="text-[#71717A]/40 hidden sm:inline">•</span>
 
-          <span className="font-bold text-white truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+          <span className="font-bold text-[#111827] truncate max-w-[200px] sm:max-w-xs md:max-w-md">
             {meeting.title}
           </span>
 
-          <span className="font-mono text-[11px] text-white/50 bg-white/[0.08] px-2 py-0.5 rounded-md hidden md:inline">
+          <span className="font-mono text-[11px] text-[#71717A] bg-black/[0.04] border border-black/[0.06] px-2 py-0.5 rounded-md hidden md:inline font-semibold">
             {meeting.meetingCode}
           </span>
         </div>
@@ -103,10 +101,10 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
         {/* Copy Invite Link */}
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.12] text-white/80 hover:text-white transition-all cursor-pointer font-medium"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[#71717A] hover:text-[#111827] transition-all cursor-pointer font-semibold shadow-xs"
           title="Copy external meeting invite link"
         >
-          {copied ? <Check className="w-3.5 h-3.5 text-[#30D158]" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
           <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
         </button>
 
@@ -115,10 +113,10 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
           href={meeting.meetingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-white shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-white shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
             isGoogle
-              ? 'bg-[#00AC47] hover:bg-[#00C250] shadow-[0_2px_12px_rgba(0,172,71,0.4)]'
-              : 'bg-[#505AC9] hover:bg-[#626CDA] shadow-[0_2px_12px_rgba(80,90,201,0.4)]'
+              ? 'bg-[#00AC47] hover:bg-[#00963E] shadow-emerald-600/25'
+              : 'bg-[#4F46E5] hover:bg-[#4338CA] shadow-indigo-600/25'
           }`}
         >
           <span>Join Call</span>
@@ -129,7 +127,7 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
         <button
           onClick={handleDisconnect}
           disabled={isRemoving}
-          className="p-1 rounded-lg text-white/40 hover:text-[#FF453A] hover:bg-white/[0.08] transition-colors cursor-pointer ml-1"
+          className="p-1 rounded-lg text-[#71717A] hover:text-rose-600 hover:bg-black/[0.05] transition-colors cursor-pointer ml-1"
           title="Disconnect external meeting bridge from stage"
         >
           <X className="w-4 h-4" />

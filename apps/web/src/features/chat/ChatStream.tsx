@@ -39,6 +39,22 @@ import {
   FileViewerItem,
 } from '@/features/files';
 
+function sanitizeChatMessage(content: string, hasMeetingAttachment: boolean): string | null {
+  if (!content) return null;
+  if (content === 'Sent attachments') return null;
+  if (
+    hasMeetingAttachment &&
+    (content.includes('Created Google Meet Session') ||
+      content.includes('Created Microsoft Teams Session') ||
+      (content.includes('Created') && content.includes('Session:')))
+  ) {
+    return null;
+  }
+  // Strip any raw unicode emojis from message text completely
+  const stripped = content.replace(/(\p{Extended_Pictographic}|\p{Emoji_Presentation})/gu, '').trim();
+  return stripped.length > 0 ? stripped : null;
+}
+
 export interface ChatStreamProps {
   room: RoomDTO;
 }
@@ -320,27 +336,35 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                 </div>
 
                 {/* Original Message Text + YouTube Link Previews */}
-                {msg.content && msg.content !== 'Sent attachments' && (
-                  <div>
-                    <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
-                      {msg.content}
+                {(() => {
+                  const cleaned = sanitizeChatMessage(
+                    msg.content || '',
+                    attachments.some((a: any) => a.type === 'external-meeting')
+                  );
+                  if (!cleaned) return null;
+
+                  return (
+                    <div>
+                      <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
+                        {cleaned}
+                      </div>
+                      {/* Auto-detected YouTube Videos inline in stream */}
+                      {extractYouTubeUrls(cleaned).map((yt) => (
+                        <YouTubeEmbedCard
+                          key={yt.videoId}
+                          url={yt.url}
+                          onOpenViewer={(url) =>
+                            setActiveViewerFile({
+                              name: 'YouTube Video',
+                              url,
+                              type: 'video/youtube',
+                            })
+                          }
+                        />
+                      ))}
                     </div>
-                    {/* Auto-detected YouTube Videos inline in stream */}
-                    {extractYouTubeUrls(msg.content).map((yt) => (
-                      <YouTubeEmbedCard
-                        key={yt.videoId}
-                        url={yt.url}
-                        onOpenViewer={(url) =>
-                          setActiveViewerFile({
-                            name: 'YouTube Video',
-                            url,
-                            type: 'video/youtube',
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Attachments Section (Supabase Storage / S3) */}
                 {attachments.length > 0 && (

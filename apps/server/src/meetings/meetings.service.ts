@@ -128,7 +128,7 @@ export class MeetingsService {
     // If shareToChat is true and roomId is provided, post invite card into the room chat
     if (input.shareToChat && input.roomId) {
       await this.messagesService.createMessage(input.roomId, userId, {
-        content: `📅 Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
+        content: `Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
         attachments: [
           {
             type: 'external-meeting',
@@ -141,7 +141,7 @@ export class MeetingsService {
     // If shareToChat is true and conversationId is provided, post invite card into group conversation
     if (input.shareToChat && input.conversationId) {
       await this.conversationsService.createMessage(input.conversationId, userId, {
-        content: `📅 Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
+        content: `Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
         attachments: [
           {
             type: 'external-meeting',

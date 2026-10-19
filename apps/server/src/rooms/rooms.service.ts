@@ -130,7 +130,7 @@ export class RoomsService {
       message: `Meeting summary and transcript for #${room.name} successfully dispatched to ${userEmail}.`,
     };
 
-    console.log(`📧 [Whisper Scribe] Meeting summary emailed to ${userEmail} for room "${room.name}"`);
+    console.log(`[Whisper Scribe] Meeting summary emailed to ${userEmail} for room "${room.name}"`);
     return summary;
   }
 }
