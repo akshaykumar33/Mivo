@@ -42,17 +42,17 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl">
+    <div className="w-full max-w-md p-6 sm:p-8 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[#111827]">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white font-bold text-xl shadow-lg shadow-violet-600/30 mb-3">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] text-white font-extrabold text-xl shadow-[0_8px_24px_rgba(220,38,38,0.35)] mb-3 border border-white/40">
           M
         </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight font-display">Create an Account</h1>
-        <p className="text-sm text-slate-400 mt-1">Join the next-gen communication platform</p>
+        <h1 className="text-2xl font-extrabold text-[#111827] tracking-tight font-display">Create an Account</h1>
+        <p className="text-xs sm:text-sm text-[#71717A] mt-1 font-medium">Join the next-gen communication platform</p>
       </div>
 
       {error && (
-        <div className="mb-6 p-3.5 rounded-lg bg-rose-950/60 border border-rose-800/80 text-rose-300 text-sm font-medium">
+        <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
           {error}
         </div>
       )}
@@ -99,9 +99,9 @@ export const RegisterForm: React.FC = () => {
         </Button>
       </form>
 
-      <div className="mt-6 text-center text-xs text-slate-400">
+      <div className="mt-6 text-center text-xs text-[#71717A]">
         Already have an account?{' '}
-        <Link href="/login" className="text-violet-400 hover:text-violet-300 font-semibold hover:underline">
+        <Link href="/login" className="text-red-600 hover:text-red-700 font-bold hover:underline">
           Log in
         </Link>
       </div>
