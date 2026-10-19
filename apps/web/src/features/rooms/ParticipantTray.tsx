@@ -5,6 +5,7 @@ import { RoomMemberDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
 import { Mic, MicOff, Video, Users, Sliders, X, Sparkles, Search, UserPlus, Trash2 } from 'lucide-react';
 import { useRoomStore } from '@/stores/roomStore';
+import { usePresenceStore } from '@/stores/presenceStore';
 
 export interface ParticipantTrayProps {
   participants: RoomMemberDTO[];
@@ -25,6 +26,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
 }) => {
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const userStatuses = usePresenceStore((s) => s.userStatuses);
   const { simulateBulkParticipants, clearSimulatedParticipants } = useRoomStore();
 
   const filteredParticipants = React.useMemo(() => {
@@ -111,23 +113,33 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
           return (
             <div key={p.id} className="relative group">
               <div className="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-white/[0.04] transition-colors">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Avatar
-                    size="sm"
-                    src={p.user.avatarUrl}
-                    fallbackText={p.user.displayName || p.user.username}
-                    status={p.user.status}
-                  />
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                      <span>{p.user.displayName || p.user.username}</span>
-                      {isMe && <span className="text-[10px] text-[#5E5CE6] font-semibold">(You)</span>}
+                {(() => {
+                  const livePresence = userStatuses[p.user.id];
+                  const liveStatus = livePresence?.status || p.user.status;
+                  const liveCustomStatus = livePresence?.customStatus !== undefined ? livePresence.customStatus : p.user.customStatus;
+
+                  return (
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar
+                        size="sm"
+                        src={p.user.avatarUrl}
+                        fallbackText={p.user.displayName || p.user.username}
+                        status={liveStatus}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-white truncate flex items-center gap-1">
+                          <span>{p.user.displayName || p.user.username}</span>
+                          {isMe && <span className="text-[10px] text-[#5E5CE6] font-semibold">(You)</span>}
+                        </div>
+                        {liveCustomStatus && (
+                          <div className="text-[10px] text-white/50 truncate flex items-center gap-1">
+                            <span className="truncate">{liveCustomStatus}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {p.user.customStatus && (
-                      <div className="text-[10px] text-white/40 truncate">{p.user.customStatus}</div>
-                    )}
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <div className="flex items-center gap-1.5">
                   {p.isMuted ? (

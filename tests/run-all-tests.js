@@ -10,6 +10,7 @@ const MODULE_TESTS = [
   { module: 'auth-identity', file: 'tests/modules/auth-identity/unit/password-hash.unit.test.js' },
   { module: 'auth-identity', file: 'tests/modules/auth-identity/unit/slack-status-availability.unit.test.js' },
   { module: 'auth-identity', file: 'tests/modules/auth-identity/integration/login-session.integration.test.js' },
+  { module: 'auth-identity', file: 'tests/modules/auth-identity/integration/slack-status-availability.integration.test.js' },
   { module: 'auth-identity', file: 'tests/modules/auth-identity/e2e/multi-user-auth.e2e.test.js' },
 
   // 2. Communities & RBAC Module

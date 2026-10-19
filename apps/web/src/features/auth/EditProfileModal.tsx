@@ -62,7 +62,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       const payload: UpdateProfileInput = {
         displayName: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
-        customStatus: customStatus.trim() || undefined,
+        customStatus: customStatus.trim() ? customStatus.trim() : null,
         avatarUrl: avatarUrl ? avatarUrl : null,
       };
 

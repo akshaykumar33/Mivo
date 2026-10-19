@@ -1,14 +1,20 @@
 'use client';
-
 import * as React from 'react';
 import { useCommunityStore } from '@/stores/communityStore';
 import { useTicketStore } from '@/stores/ticketStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useUserPresence } from '@/stores/presenceStore';
+import { useThemeStore } from '@/stores/themeStore';
+import { Avatar } from '@mivo/ui';
 import { Plus, Compass, MessageSquare, BookOpen, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
+import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { EditProfileModal } from '@/features/auth/EditProfileModal';
 
 const COMMUNITY_PALETTES = [
   'from-[#DC2626] via-[#EF4444] to-[#F87171]',
@@ -24,9 +30,15 @@ export interface CommunitySidebarProps {
 
 export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }) => {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const userPresence = useUserPresence(user?.id, user);
+  const { setIsThemeModalOpen } = useThemeStore();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
 
   React.useEffect(() => {
     fetchCommunities();
@@ -149,8 +161,52 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
           </div>
         </div>
 
-        {/* Bottom Tool Icons (Docs Hub & Discover) */}
-        <div className="w-full flex flex-col items-center space-y-2 pt-2 border-t border-[var(--border-subtle)]">
+        {/* Bottom Tool Icons (Profile, Docs Hub & Discover) */}
+        <div className="w-full flex flex-col items-center space-y-2.5 pt-2 pb-2 border-t border-[var(--border-subtle)]">
+          {/* User Profile Avatar with Presence & Slack Status Trigger */}
+          {user && (
+            <div className="relative group flex items-center justify-center w-full pb-1">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="relative p-0.5 rounded-[16px] hover:scale-110 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-[#DC2626]/40"
+                title="Your Profile, Availability & Status (Slack)"
+              >
+                <Avatar
+                  size="sm"
+                  status={userPresence.status}
+                  fallbackText={user.displayName || user.username}
+                  src={user.avatarUrl}
+                />
+                {userPresence.customStatus && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#DC2626] text-white rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm ring-1 ring-[var(--bg-surface-0)]">
+                    •
+                  </span>
+                )}
+              </button>
+
+              <div className="absolute left-[72px] px-3 py-1.5 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
+                <div className="font-bold flex items-center gap-1.5">
+                  <span>{user.displayName || user.username}</span>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      userPresence.status === 'ONLINE'
+                        ? 'bg-emerald-500'
+                        : userPresence.status === 'IDLE'
+                        ? 'bg-amber-500'
+                        : userPresence.status === 'DND'
+                        ? 'bg-red-500'
+                        : 'bg-zinc-400'
+                    }`}
+                  />
+                </div>
+                <div className="text-[10px] text-[var(--text-muted)] truncate max-w-[140px]">
+                  {userPresence.customStatus ? userPresence.customStatus : userPresence.status.toLowerCase()}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="relative group flex items-center justify-center w-full">
             <button
               onClick={() => setIsDocsOpen(true)}
@@ -190,9 +246,27 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
               Explore Communities
             </div>
           </div>
-
         </div>
       </aside>
+
+      <SlackUserMenuPopover
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenFullModal={() => setIsSlackStatusOpen(true)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        placement="side-rail"
+      />
+
+      <SlackStatusModal
+        isOpen={isSlackStatusOpen}
+        onClose={() => setIsSlackStatusOpen(false)}
+      />
+
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
 
       <CreateCommunityModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />

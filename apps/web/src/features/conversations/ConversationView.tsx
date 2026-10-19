@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useUserPresence } from '@/stores/presenceStore';
 import { ConversationDTO, DirectMessageDTO, AttachmentMetaDTO, ExternalMeetingBridgeDTO, REALTIME_EVENTS, MeetingBridgeActivatedBroadcast, MeetingBridgeRemovedBroadcast } from '@mivo/shared';
 import { Avatar, Button } from '@mivo/ui';
 import {
@@ -170,6 +171,8 @@ export const ConversationView: React.FC = () => {
     activeConv?.type === 'DIRECT'
       ? activeConv.members.find((m) => m.userId !== user?.id)?.user
       : null;
+
+  const otherPresence = useUserPresence(otherMember?.id, otherMember);
 
   const title =
     activeConv?.type === 'GROUP'
@@ -364,11 +367,11 @@ export const ConversationView: React.FC = () => {
             {activeConv.type === 'DIRECT' && otherMember && (
               <span
                 className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-surface-0)] ${
-                  otherMember.status === 'ONLINE'
+                  otherPresence.status === 'ONLINE'
                     ? 'bg-emerald-500'
-                    : otherMember.status === 'DND'
+                    : otherPresence.status === 'DND'
                     ? 'bg-rose-500'
-                    : otherMember.status === 'IDLE'
+                    : otherPresence.status === 'IDLE'
                     ? 'bg-amber-500'
                     : 'bg-slate-500'
                 }`}
@@ -393,19 +396,19 @@ export const ConversationView: React.FC = () => {
               {activeConv.type === 'DIRECT' ? (
                 <>
                   <span>
-                    {otherMember?.status === 'ONLINE'
+                    {otherPresence.status === 'ONLINE'
                       ? 'Active now'
-                      : otherMember?.status === 'IDLE'
+                      : otherPresence.status === 'IDLE'
                       ? 'Away'
-                      : otherMember?.status === 'DND'
+                      : otherPresence.status === 'DND'
                       ? 'Do Not Disturb'
                       : 'Offline'}
                   </span>
-                  {otherMember?.customStatus && (
+                  {otherPresence.customStatus && (
                     <>
                       <span>•</span>
                       <span className="text-[#DC2626] font-semibold flex items-center gap-1">
-                        {otherMember.customStatus}
+                        {otherPresence.customStatus}
                       </span>
                     </>
                   )}

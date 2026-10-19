@@ -36,6 +36,8 @@ import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
 import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
+import { useUserPresence } from '@/stores/presenceStore';
 
 export interface ChannelSidebarProps {
   communityId: string;
@@ -47,6 +49,7 @@ type NavVariant = 'ALL' | 'STAGES' | 'MEMBERS';
 export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, className }) => {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const presence = useUserPresence(user?.id, user);
   const { activeCommunity, selectCommunity } = useCommunityStore();
   const { setIsThemeModalOpen } = useThemeStore();
   const { closeMobileSidebar, toggleSidebarCollapse } = useNavigationStore();
@@ -56,6 +59,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
   const [isCreateChannelOpen, setIsCreateChannelOpen] = React.useState(false);
   const [selectedChannelForRoom, setSelectedChannelForRoom] = React.useState<string | null>(null);
   const [isRoleManagerOpen, setIsRoleManagerOpen] = React.useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(false);
@@ -278,13 +282,13 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
         <div className="h-16 bg-[var(--bg-sidebar)] px-3 border-t border-[var(--border-subtle)] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <button
-              onClick={() => setIsSlackStatusOpen(true)}
-              className="relative group p-0.5 rounded-full hover:ring-2 hover:ring-[#30D158]/50 transition-all cursor-pointer flex-shrink-0"
-              title="Set availability & status (like Slack)"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="relative group p-0.5 rounded-full hover:ring-2 hover:ring-[#DC2626]/40 transition-all cursor-pointer flex-shrink-0"
+              title="Your Profile, Availability & Status (Slack)"
             >
               <Avatar
                 size="sm"
-                status={user?.status || 'ONLINE'}
+                status={presence.status}
                 fallbackText={user?.displayName || user?.username}
                 src={user?.avatarUrl}
                 className="group-hover:scale-105 transition-transform"
@@ -292,20 +296,20 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
             </button>
             <div className="min-w-0 flex-1">
               <div
-                onClick={() => setIsEditProfileOpen(true)}
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="text-xs font-bold text-[#111827] truncate hover:text-[#DC2626] transition-colors cursor-pointer"
-                title="Edit profile & upload avatar"
+                title="Open user availability & status menu"
               >
                 {user?.displayName || user?.username}
               </div>
               <button
-                onClick={() => setIsSlackStatusOpen(true)}
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-1 text-[10px] text-left truncate text-[var(--text-muted)] hover:text-[#111827] transition-colors cursor-pointer w-full group"
                 title="Set Slack status / availability"
               >
-                {user?.customStatus ? (
+                {presence.customStatus ? (
                   <span className="text-[#DC2626] font-semibold truncate flex items-center gap-1">
-                    <span className="truncate">{user.customStatus}</span>
+                    <span className="truncate">{presence.customStatus}</span>
                   </span>
                 ) : (
                   <span
@@ -390,6 +394,15 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
         communityId={communityId}
         isOpen={isRoleManagerOpen}
         onClose={() => setIsRoleManagerOpen(false)}
+      />
+
+      <SlackUserMenuPopover
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenFullModal={() => setIsSlackStatusOpen(true)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        placement="bottom-bar"
       />
 
       <EditProfileModal

@@ -287,20 +287,68 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
             <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">
               Custom Status Message
             </label>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-600 flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-[#DC2626]" />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-600 flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-[#DC2626]" />
+                </div>
+
+                {/* Status Text Input */}
+                <input
+                  type="text"
+                  value={statusText}
+                  onChange={(e) => setStatusText(e.target.value)}
+                  placeholder="What's your status? (e.g. In an architecture sync)"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                  maxLength={100}
+                />
               </div>
 
-              {/* Status Text Input */}
-              <input
-                type="text"
-                value={statusText}
-                onChange={(e) => setStatusText(e.target.value)}
-                placeholder="What's your status? (e.g. In an architecture sync)"
-                className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
-                maxLength={100}
-              />
+              {/* Quick Status Emojis */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[10px] text-[var(--text-muted)] font-medium mr-1">Prefix icon:</span>
+                {['💬', '🎯', '☕', '🚗', '🌴', '🤒', '💻', '⚡', '🎧', '🚀', '🔥', '✨'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      const clean = statusText.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '').trim();
+                      setStatusText(`${emoji} ${clean}`.trim());
+                    }}
+                    className="w-7 h-7 rounded-lg bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] flex items-center justify-center text-sm hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                    title={`Add ${emoji}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Preview Box */}
+          <div className="p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center gap-3">
+            <Avatar
+              size="sm"
+              status={selectedStatus}
+              fallbackText={user?.displayName || user?.username}
+              src={user?.avatarUrl}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Colleagues see you as
+              </div>
+              <div className="text-xs font-bold text-[#111827] flex items-center gap-1.5 truncate">
+                <span>{user?.displayName || user?.username}</span>
+                {statusText.trim() ? (
+                  <span className="text-[#DC2626] font-semibold truncate bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 text-[11px]">
+                    {statusText.trim()}
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-normal text-[var(--text-muted)]">
+                    (No custom status)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

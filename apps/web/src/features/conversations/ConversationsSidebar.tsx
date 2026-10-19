@@ -1,17 +1,23 @@
 'use client';
-
 import * as React from 'react';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useUserPresence, usePresenceStore } from '@/stores/presenceStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { ConversationDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
 import { Plus, Users, MessageSquare, Volume2, Search, Smile, Menu } from 'lucide-react';
 import { CreateConversationModal } from './CreateConversationModal';
 import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
+import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 export const ConversationsSidebar: React.FC = () => {
   const { user } = useAuthStore();
+  const presence = useUserPresence(user?.id, user);
+  const userStatuses = usePresenceStore((s) => s.userStatuses);
+  const { setIsThemeModalOpen } = useThemeStore();
   const {
     conversations,
     activeConversationId,
@@ -22,7 +28,9 @@ export const ConversationsSidebar: React.FC = () => {
   } = useConversationStore();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [filterQuery, setFilterQuery] = React.useState('');
   const { toggleMobileSidebar } = useNavigationStore();
 
@@ -138,6 +146,10 @@ export const ConversationsSidebar: React.FC = () => {
               const other = isGroup ? null : c.members.find((m) => m.userId !== user?.id)?.user;
               const title = isGroup ? c.name || 'Group' : other?.displayName || other?.username || 'User';
 
+              const otherLive = other ? userStatuses[other.id] : undefined;
+              const otherStatus = otherLive?.status || other?.status || 'ONLINE';
+              const otherCustomStatus = otherLive?.customStatus !== undefined ? otherLive.customStatus : other?.customStatus;
+
               const lastMessageSnippet = c.lastMessage
                 ? c.lastMessage.content || (c.lastMessage.attachments?.length ? 'Shared attachment' : '')
                 : 'No messages yet';
@@ -162,11 +174,11 @@ export const ConversationsSidebar: React.FC = () => {
                     {!isGroup && other && (
                       <span
                         className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-sidebar)] ${
-                          other.status === 'ONLINE'
+                          otherStatus === 'ONLINE'
                             ? 'bg-emerald-500'
-                            : other.status === 'DND'
+                            : otherStatus === 'DND'
                             ? 'bg-rose-500'
-                            : other.status === 'IDLE'
+                            : otherStatus === 'IDLE'
                             ? 'bg-amber-500'
                             : 'bg-slate-500'
                         }`}
@@ -178,12 +190,12 @@ export const ConversationsSidebar: React.FC = () => {
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-1.5 truncate">
                         <span className="text-xs font-bold truncate text-[#111827]">{title}</span>
-                        {!isGroup && other?.customStatus && (
+                        {!isGroup && otherCustomStatus && (
                           <span
                             className="text-[10px] text-[#DC2626] bg-red-500/10 px-1 rounded truncate max-w-[90px] font-semibold"
-                            title={other.customStatus}
+                            title={otherCustomStatus}
                           >
-                            {other.customStatus}
+                            {otherCustomStatus}
                           </span>
                         )}
                       </div>
@@ -208,14 +220,14 @@ export const ConversationsSidebar: React.FC = () => {
       <div className="h-16 px-3 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between shrink-0">
         <button
           type="button"
-          onClick={() => setIsSlackStatusOpen(true)}
+          onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
           className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group flex-1"
-          title="Set availability & status (like Slack)"
+          title="Your Profile, Availability & Status (Slack)"
         >
           <div className="relative shrink-0">
             <Avatar
               size="sm"
-              status={user?.status || 'ONLINE'}
+              status={presence.status}
               fallbackText={user?.displayName || user?.username}
               src={user?.avatarUrl}
               className="group-hover:scale-105 transition-transform"
@@ -226,10 +238,10 @@ export const ConversationsSidebar: React.FC = () => {
               {user?.displayName || user?.username}
             </div>
             <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
-              {user?.customStatus ? (
-                <span className="text-[#DC2626] font-semibold truncate">{user.customStatus}</span>
+              {presence.customStatus ? (
+                <span className="text-[#DC2626] font-semibold truncate">{presence.customStatus}</span>
               ) : (
-                <span className="capitalize">{user?.status?.toLowerCase() || 'online'}</span>
+                <span className="capitalize">{presence.status.toLowerCase()}</span>
               )}
             </div>
           </div>
@@ -245,8 +257,24 @@ export const ConversationsSidebar: React.FC = () => {
         </button>
       </div>
 
+      {/* Slack User Menu Popover */}
+      <SlackUserMenuPopover
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenFullModal={() => setIsSlackStatusOpen(true)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        placement="bottom-bar"
+      />
+
       {/* Direct/Group Creation Modal */}
       <CreateConversationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
 
       {/* Slack Availability & Status Modal */}
       <SlackStatusModal

@@ -4,6 +4,7 @@ import * as React from 'react';
 import { MessageDTO, RoomDTO, AttachmentMetaDTO, REALTIME_EVENTS } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
+import { usePresenceStore } from '@/stores/presenceStore';
 import { Avatar, Badge } from '@mivo/ui';
 import { MessageComposer } from './MessageComposer';
 import {
@@ -60,6 +61,7 @@ export interface ChatStreamProps {
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
+  const userStatuses = usePresenceStore((s) => s.userStatuses);
   const [messages, setMessages] = React.useState<MessageDTO[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [chatTargetLang, setChatTargetLang] = React.useState('es');
@@ -254,23 +256,38 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           const reactions = messageReactions[msg.id] || {};
           const attachments = (msg.attachments as AttachmentMetaDTO[]) || [];
 
+          const senderPresence = msg.sender?.id ? userStatuses[msg.sender.id] : undefined;
+          const senderStatus = senderPresence?.status || msg.sender?.status || 'ONLINE';
+          const senderCustomStatus = senderPresence?.customStatus !== undefined ? senderPresence.customStatus : msg.sender?.customStatus;
+
           return (
             <div
               key={msg.id}
               className="flex items-start gap-2.5 sm:gap-3 group px-2 py-1.5 rounded-2xl hover:bg-black/[0.02] transition-colors"
             >
-              <Avatar
-                fallbackText={msg.sender?.displayName || msg.sender?.username || 'U'}
-                src={msg.sender?.avatarUrl || undefined}
-                className="w-8 h-8 rounded-xl ring-1 ring-red-500/20 flex-shrink-0"
-              />
+              <div className="relative shrink-0">
+                <Avatar
+                  fallbackText={msg.sender?.displayName || msg.sender?.username || 'U'}
+                  src={msg.sender?.avatarUrl || undefined}
+                  status={senderStatus}
+                  className="w-8 h-8 rounded-xl ring-1 ring-red-500/20 flex-shrink-0"
+                />
+              </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap">
                     <span className="text-xs font-bold text-[#111827] hover:underline cursor-pointer truncate">
                       {msg.sender?.displayName || msg.sender?.username}
                     </span>
+                    {senderCustomStatus && (
+                      <span
+                        className="text-[10px] text-[#DC2626] font-semibold bg-red-500/10 px-1.5 py-0.5 rounded-full border border-red-500/20 truncate max-w-[130px]"
+                        title={senderCustomStatus}
+                      >
+                        {senderCustomStatus}
+                      </span>
+                    )}
                     <span className="text-[10px] text-[#71717A] font-mono flex-shrink-0">{timestamp}</span>
                     <span title="Delivered & Read" className="flex-shrink-0">
                       <CheckCheck className="w-3.5 h-3.5 text-red-600" />

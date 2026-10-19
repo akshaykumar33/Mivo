@@ -1,17 +1,29 @@
 'use client';
 
+import * as React from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCommunityStore } from '@/stores/communityStore';
+import { useUserPresence } from '@/stores/presenceStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { Avatar, Button } from '@mivo/ui';
 import { CommunityDTO } from '@mivo/shared';
-import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight, Menu } from 'lucide-react';
+import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight, Menu, Smile } from 'lucide-react';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import Link from 'next/link';
 
 export default function ChannelsHomePage() {
   const { user } = useAuthStore();
+  const presence = useUserPresence(user?.id, user);
   const { communities } = useCommunityStore();
   const { toggleMobileSidebar } = useNavigationStore();
+  const { setIsThemeModalOpen } = useThemeStore();
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
 
   return (
     <div className="flex-1 flex flex-col md:flex-row bg-[var(--bg-canvas)] overflow-hidden select-none">
@@ -65,7 +77,72 @@ export default function ChannelsHomePage() {
             </div>
           </div>
         </div>
+
+        {/* Slack-style Current User Footer */}
+        {user && (
+          <div className="p-2 -mx-2 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between shrink-0 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 rounded-xl transition-all cursor-pointer group flex-1"
+              title="Set availability & status (like Slack)"
+            >
+              <div className="relative shrink-0">
+                <Avatar
+                  size="sm"
+                  status={presence.status}
+                  fallbackText={user.displayName || user.username}
+                  src={user.avatarUrl}
+                  className="group-hover:scale-105 transition-transform"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-[#DC2626] transition-colors">
+                  {user.displayName || user.username}
+                </div>
+                <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
+                  {presence.customStatus ? (
+                    <span className="text-[#DC2626] font-semibold truncate">{presence.customStatus}</span>
+                  ) : (
+                    <span className="capitalize">{presence.status.toLowerCase()}</span>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsSlackStatusOpen(true)}
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-all cursor-pointer"
+              title="Set Availability & Status"
+            >
+              <Smile className="w-4 h-4 text-[#DC2626]" />
+            </button>
+          </div>
+        )}
       </aside>
+
+      {/* Slack User Menu Popover */}
+      <SlackUserMenuPopover
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenFullModal={() => setIsSlackStatusOpen(true)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        placement="bottom-bar"
+      />
+
+      {/* Slack Availability & Status Modal */}
+      <SlackStatusModal
+        isOpen={isSlackStatusOpen}
+        onClose={() => setIsSlackStatusOpen(false)}
+      />
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
 
       {/* Main Home Hub View */}
       <section className="flex-1 bg-[var(--bg-canvas)] flex flex-col items-center justify-center p-8 sm:p-12 text-center relative overflow-hidden">
