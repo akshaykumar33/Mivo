@@ -19,6 +19,16 @@ export class UsersService {
     return !isNaN(time) && time <= Date.now();
   }
 
+  private stripEmojis(text: string | null | undefined): string | null | undefined {
+    if (text === undefined) return undefined;
+    if (text === null) return null;
+    const cleaned = text
+      .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return cleaned || null;
+  }
+
   async getProfile(userId: string): Promise<UserDTO> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -31,7 +41,7 @@ export class UsersService {
       });
     }
 
-    let customStatus = user.customStatus;
+    let customStatus = (this.stripEmojis(user.customStatus) ?? null) as string | null;
     let customStatusExpiresAt = user.customStatusExpiresAt;
 
     if (this.isStatusExpired(customStatusExpiresAt)) {
@@ -62,11 +72,12 @@ export class UsersService {
   }
 
   async updateStatus(userId: string, input: UpdateStatusInput): Promise<UserDTO> {
+    const sanitizedCustomStatus = this.stripEmojis(input.customStatus);
     const expired = this.isStatusExpired(input.customStatusExpiresAt);
     const activeCustomStatus = expired
       ? null
-      : input.customStatus !== undefined
-      ? input.customStatus
+      : sanitizedCustomStatus !== undefined
+      ? sanitizedCustomStatus
       : undefined;
     const activeExpiresAt = expired
       ? null
@@ -121,11 +132,12 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, input: UpdateProfileInput): Promise<UserDTO> {
+    const sanitizedCustomStatus = this.stripEmojis(input.customStatus);
     const expired = this.isStatusExpired(input.customStatusExpiresAt);
     const activeCustomStatus = expired
       ? null
-      : input.customStatus !== undefined
-      ? input.customStatus
+      : sanitizedCustomStatus !== undefined
+      ? sanitizedCustomStatus
       : undefined;
     const activeExpiresAt = expired
       ? null

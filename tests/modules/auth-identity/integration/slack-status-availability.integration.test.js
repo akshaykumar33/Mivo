@@ -34,14 +34,14 @@ async function run() {
     },
     body: JSON.stringify({
       status: 'IDLE',
-      customStatus: '💬 In a design meeting',
+      customStatus: 'In a design meeting',
       customStatusExpiresAt: oneHourLater,
     }),
   });
   const setStatusData = await setStatusRes.json();
   assert.strictEqual(setStatusData.success, true, 'Status update must succeed');
   assert.strictEqual(setStatusData.data.status, 'IDLE');
-  assert.strictEqual(setStatusData.data.customStatus, '💬 In a design meeting');
+  assert.strictEqual(setStatusData.data.customStatus, 'In a design meeting');
   assert.ok(setStatusData.data.customStatusExpiresAt, 'Expiry time must be set');
   console.log('   ✅ Set availability to Away (IDLE) with custom status & 1h expiration.');
 
@@ -52,10 +52,10 @@ async function run() {
   const profileData = await profileRes.json();
   assert.strictEqual(profileData.success, true);
   assert.strictEqual(profileData.data.status, 'IDLE');
-  assert.strictEqual(profileData.data.customStatus, '💬 In a design meeting');
+  assert.strictEqual(profileData.data.customStatus, 'In a design meeting');
   console.log('   ✅ Verified persistence of status and expiration in PostgreSQL profile.');
 
-  // 4. Update Availability to DND (Do Not Disturb) with Custom Status '🎯 Deep work & focus'
+  // 4. Update Availability to DND (Do Not Disturb) with Custom Status 'Deep work & focus'
   const setDndRes = await fetch(`${BASE_URL}/users/me/status`, {
     method: 'PATCH',
     headers: {
@@ -64,13 +64,13 @@ async function run() {
     },
     body: JSON.stringify({
       status: 'DND',
-      customStatus: '🎯 Deep work & focus',
+      customStatus: 'Deep work & focus',
       customStatusExpiresAt: new Date(Date.now() + 120 * 60 * 1000).toISOString(),
     }),
   });
   const setDndData = await setDndRes.json();
   assert.strictEqual(setDndData.data.status, 'DND');
-  assert.strictEqual(setDndData.data.customStatus, '🎯 Deep work & focus');
+  assert.strictEqual(setDndData.data.customStatus, 'Deep work & focus');
   console.log('   ✅ Updated availability to DND with 2h focus mode status.');
 
   // 5. Clear Custom Status (like Slack clear button)
@@ -103,7 +103,7 @@ async function run() {
     },
     body: JSON.stringify({
       status: 'ONLINE',
-      customStatus: '☕ Out to lunch',
+      customStatus: 'Out to lunch',
       customStatusExpiresAt: pastTime,
     }),
   });
@@ -128,7 +128,7 @@ async function run() {
     socket.on('connect', () => {
       // Listen for presence broadcast
       socket.on('presence:user_updated', (data) => {
-        if (data.userId === userId && data.customStatus === '🌴 Vacationing') {
+        if (data.userId === userId && data.customStatus === 'Vacationing') {
           assert.strictEqual(data.status, 'IDLE');
           clearTimeout(timeout);
           socket.disconnect();
@@ -140,7 +140,7 @@ async function run() {
       // Emit presence update via socket
       socket.emit('presence:update', {
         status: 'IDLE',
-        customStatus: '🌴 Vacationing',
+        customStatus: 'Vacationing',
         customStatusExpiresAt: null,
       });
     });

@@ -162,10 +162,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (!user) return { success: false, error: 'Unauthorized' };
 
+    const cleanCustomStatus = data.customStatus
+      ? data.customStatus.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '').replace(/\s+/g, ' ').trim() || null
+      : data.customStatus === null
+      ? null
+      : undefined;
+
     const updated = await this.presenceService.updateUserPresence(
       user.sub,
       data.status,
-      data.customStatus,
+      cleanCustomStatus,
       data.customStatusExpiresAt
     );
 

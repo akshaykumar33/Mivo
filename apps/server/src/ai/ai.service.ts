@@ -323,32 +323,38 @@ Provide a concise, helpful, and direct answer with markdown formatting where app
   }
 
   /**
-   * Generate a smart Slack-style custom status with emoji
+   * Generate a smart Slack-style custom status (Plain text, absolutely NO emojis)
    */
   async generateCustomStatus(
     topic?: string,
     availability?: string,
     userApiKey?: string
   ): Promise<{ statusText: string; engine: 'gemini-ai' | 'smart-generator' }> {
+    const stripEmojis = (text: string): string =>
+      text
+        .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     const apiKey = this.getEffectiveApiKey(userApiKey);
 
     if (apiKey) {
       try {
         const prompt = `You are an AI assistant for Mivo, a real-time team communication app.
-Generate ONE short, punchy Slack-style custom status message for a user.
+Generate ONE short, professional custom status message for a user.
 ${availability ? `Current availability: ${availability}.` : ''}
-${topic ? `User's idea/topic: "${topic}".` : 'No specific topic provided. Suggest an engaging, focused work or daily status.'}
+${topic ? `User's topic/focus: "${topic}".` : 'No specific topic provided. Suggest a focused work or daily status.'}
 
-Requirements:
-1. Must start with a single appropriate emoji (e.g. 🎯, 🚀, 💬, ☕, 🎧, ⚡, 🌴, 🤒, 🚗, 💻, 🔥).
-2. Followed by a concise phrase (2 to 6 words max, under 45 characters total).
-3. Do NOT include quotes, explanations, or multiple options. Return ONLY the status line.
+STRICT REQUIREMENTS:
+1. Do NOT include ANY emojis, icons, emoticons, or special unicode symbols. Plain English words only.
+2. Short, professional, and concise phrase (2 to 6 words max, under 45 characters total).
+3. Do NOT include quotes, explanations, or multiple options. Return ONLY the plain text status phrase.
 Example outputs:
-🎯 Deep work on deliverables
-☕ Quick coffee recharge
-🎧 Heads down in flow state
-🚀 Shipping new release
-💬 In collaborative reviews
+Deep work on deliverables
+Quick coffee recharge
+Heads down in flow state
+Shipping new release
+In collaborative reviews
 `;
 
         const response = await fetch(
@@ -359,8 +365,8 @@ Example outputs:
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
-                temperature: 0.8,
-                maxOutputTokens: 60,
+                temperature: 0.7,
+                maxOutputTokens: 50,
               },
             }),
           }
@@ -370,7 +376,7 @@ Example outputs:
           const data: any = await response.json();
           let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
           if (reply) {
-            reply = reply.replace(/^["'`]|["'`]$/g, '').split('\n')[0].trim();
+            reply = stripEmojis(reply.replace(/^["'`]|["'`]$/g, '').split('\n')[0].trim());
             if (reply.length > 0) {
               return { statusText: reply, engine: 'gemini-ai' };
             }
@@ -381,45 +387,46 @@ Example outputs:
       }
     }
 
-    // Intelligent heuristic status generator
+    // Intelligent heuristic status generator (Pure text, NO emojis)
     const smartStatuses = [
-      '🎯 Deep work on sprint deliverables',
-      '🎧 In the flow zone — ping for urgent',
-      '☕ Quick coffee recharge & planning',
-      '🚀 Deploying updates & monitoring',
-      '💬 Syncing in collaborative reviews',
-      '⚡ Squashing bugs & refactoring',
-      '💡 Brainstorming architecture ideas',
-      '🚗 In transit / commuting',
-      '🌴 Stepping away for a breather',
-      '🤒 Resting & recovering today',
-      '💻 Pair programming session',
-      '📈 Reviewing metrics & sprint health',
-      '🔥 Fixing production edge case',
-      '✨ Researching product improvements',
+      'Deep work on sprint deliverables',
+      'In the flow zone — ping for urgent',
+      'Quick coffee recharge & planning',
+      'Deploying updates & monitoring',
+      'Syncing in collaborative reviews',
+      'Squashing bugs & refactoring',
+      'Brainstorming architecture ideas',
+      'In transit / commuting',
+      'Stepping away for a breather',
+      'Resting & recovering today',
+      'Pair programming session',
+      'Reviewing metrics & sprint health',
+      'Fixing production edge case',
+      'Researching product improvements',
     ];
 
     if (topic && topic.trim()) {
-      const lower = topic.toLowerCase();
+      const cleanTopic = stripEmojis(topic);
+      const lower = cleanTopic.toLowerCase();
       if (lower.includes('meet') || lower.includes('sync') || lower.includes('call')) {
-        return { statusText: '💬 In collaborative meetings', engine: 'smart-generator' };
+        return { statusText: 'In collaborative meetings', engine: 'smart-generator' };
       }
       if (lower.includes('focus') || lower.includes('code') || lower.includes('dev')) {
-        return { statusText: '🎯 Deep focus coding session', engine: 'smart-generator' };
+        return { statusText: 'Deep focus coding session', engine: 'smart-generator' };
       }
       if (lower.includes('food') || lower.includes('lunch') || lower.includes('eat') || lower.includes('coffee')) {
-        return { statusText: '☕ Out for a quick meal & coffee', engine: 'smart-generator' };
+        return { statusText: 'Out for a quick meal & coffee', engine: 'smart-generator' };
       }
       if (lower.includes('travel') || lower.includes('flight') || lower.includes('drive')) {
-        return { statusText: '🚗 Traveling / Commuting', engine: 'smart-generator' };
+        return { statusText: 'Traveling / Commuting', engine: 'smart-generator' };
       }
       if (lower.includes('sick') || lower.includes('doctor') || lower.includes('rest')) {
-        return { statusText: '🤒 Out sick & recovering', engine: 'smart-generator' };
+        return { statusText: 'Out sick & recovering', engine: 'smart-generator' };
       }
       if (lower.includes('gym') || lower.includes('workout') || lower.includes('run')) {
-        return { statusText: '💪 Workout & gym session', engine: 'smart-generator' };
+        return { statusText: 'Workout & gym session', engine: 'smart-generator' };
       }
-      return { statusText: `⚡ ${topic.trim()}`, engine: 'smart-generator' };
+      return { statusText: cleanTopic, engine: 'smart-generator' };
     }
 
     const randomIndex = Math.floor(Math.random() * smartStatuses.length);

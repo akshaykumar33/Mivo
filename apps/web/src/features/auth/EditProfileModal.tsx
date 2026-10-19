@@ -41,21 +41,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         setCustomStatus(res.data.statusText);
       } else {
         const fallbacks = [
-          '🎯 Deep work on deliverables',
-          '🎧 In flow state — slow to reply',
-          '☕ Quick coffee recharge & planning',
-          '🚀 Deploying updates & monitoring',
-          '💬 Syncing in collaborative reviews',
-          '⚡ Squashing bugs & refactoring',
+          'Deep work on deliverables',
+          'In flow state — slow to reply',
+          'Quick coffee recharge & planning',
+          'Deploying updates & monitoring',
+          'Syncing in collaborative reviews',
+          'Squashing bugs & refactoring',
         ];
         setCustomStatus(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
       }
     } catch {
       const fallbacks = [
-        '🎯 Deep work on sprint items',
-        '🎧 In flow state — ping for urgent',
-        '☕ Quick coffee recharge',
-        '🚀 Deploying updates',
+        'Deep work on sprint items',
+        'In flow state — ping for urgent',
+        'Quick coffee recharge',
+        'Deploying updates',
       ];
       setCustomStatus(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
     } finally {
@@ -98,10 +98,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     setSaveSuccess(false);
 
     try {
+      const cleanCustomStatus = customStatus
+        .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
       const payload: UpdateProfileInput = {
         displayName: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
-        customStatus: customStatus.trim() ? customStatus.trim() : null,
+        customStatus: cleanCustomStatus || null,
         avatarUrl: avatarUrl ? avatarUrl : null,
       };
 

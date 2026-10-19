@@ -110,26 +110,26 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
         setStatusText(res.data.statusText);
       } else {
         const fallbacks = [
-          '🎯 Deep work on sprint deliverables',
-          '🎧 In flow state — slow to reply',
-          '☕ Quick coffee recharge & planning',
-          '🚀 Deploying updates & monitoring',
-          '💬 Syncing in collaborative reviews',
-          '⚡ Squashing bugs & refactoring',
-          '💡 Brainstorming architecture ideas',
-          '💻 Pair programming session',
-          '🌴 Stepping away for a breather',
+          'Deep work on sprint deliverables',
+          'In flow state — slow to reply',
+          'Quick coffee recharge & planning',
+          'Deploying updates & monitoring',
+          'Syncing in collaborative reviews',
+          'Squashing bugs & refactoring',
+          'Brainstorming architecture ideas',
+          'Pair programming session',
+          'Stepping away for a breather',
         ];
         setStatusText(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
       }
     } catch {
       const fallbacks = [
-        '🎯 Deep work on deliverables',
-        '🎧 In flow state — ping for urgent',
-        '☕ Quick coffee recharge',
-        '🚀 Deploying updates & monitoring',
-        '💬 In collaborative reviews',
-        '⚡ Code review & refactoring',
+        'Deep work on deliverables',
+        'In flow state — ping for urgent',
+        'Quick coffee recharge',
+        'Deploying updates & monitoring',
+        'In collaborative reviews',
+        'Code review & refactoring',
       ];
       setStatusText(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
     } finally {
@@ -141,8 +141,11 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
     if (user && isOpen) {
       setSelectedStatus(user.status || 'ONLINE');
       if (user.customStatus) {
-        // Strip any legacy leading emoji if present
-        const cleanStatus = user.customStatus.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '');
+        // Strip any legacy emoji if present
+        const cleanStatus = user.customStatus
+          .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+          .replace(/\s+/g, ' ')
+          .trim();
         setStatusText(cleanStatus);
       } else {
         setStatusText('');
@@ -227,7 +230,10 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
     setSavedSuccess(false);
 
     try {
-      const trimmed = statusText.trim();
+      const trimmed = statusText
+        .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
       const combinedStatus = trimmed || null;
       const expiresAt = trimmed ? calculateExpiresAt(clearDuration) : null;
 
@@ -391,25 +397,6 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                   className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                   maxLength={100}
                 />
-              </div>
-
-              {/* Quick Status Emojis */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                <span className="text-[10px] text-[var(--text-muted)] font-medium mr-1">Prefix icon:</span>
-                {['💬', '🎯', '☕', '🚗', '🌴', '🤒', '💻', '⚡', '🎧', '🚀', '🔥', '✨'].map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => {
-                      const clean = statusText.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '').trim();
-                      setStatusText(`${emoji} ${clean}`.trim());
-                    }}
-                    className="w-7 h-7 rounded-lg bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] flex items-center justify-center text-sm hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                    title={`Add ${emoji}`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
