@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { usePresenceStore } from '@/stores/presenceStore';
 import { UserStatus } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
+import { api } from '@/lib/api-client';
 import {
   X,
   Smile,
@@ -26,6 +27,7 @@ import {
   Laptop,
   Target,
   HeartPulse,
+  ChevronDown,
 } from 'lucide-react';
 
 export interface SlackStatusModalProps {
@@ -51,6 +53,16 @@ const STATUS_PRESETS: StatusPreset[] = [
   { icon: Coffee, text: 'Out to lunch', durationMinutes: 60, label: '1 hour', color: 'text-orange-600' },
 ];
 
+const DURATION_OPTIONS = [
+  { value: 'dont_clear', label: "Don't clear automatically", sublabel: 'Persistent' },
+  { value: '30m', label: '30 minutes', sublabel: '30m' },
+  { value: '1h', label: '1 hour', sublabel: '1h' },
+  { value: '2h', label: '2 hours', sublabel: '2h' },
+  { value: '4h', label: '4 hours', sublabel: '4h' },
+  { value: 'today', label: 'Today (End of day 23:59)', sublabel: 'Today' },
+  { value: 'this_week', label: 'This week', sublabel: '7 days' },
+];
+
 export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuthStore();
   const { updateAvailabilityAndStatus } = usePresenceStore();
@@ -58,8 +70,72 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
   const [selectedStatus, setSelectedStatus] = React.useState<UserStatus>(user?.status || 'ONLINE');
   const [statusText, setStatusText] = React.useState<string>('');
   const [clearDuration, setClearDuration] = React.useState<string>('dont_clear');
+  const [isDurationOpen, setIsDurationOpen] = React.useState(false);
+  const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [savedSuccess, setSavedSuccess] = React.useState(false);
+  const durationDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        durationDropdownRef.current &&
+        !durationDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDurationOpen(false);
+      }
+    };
+
+    if (isDurationOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isDurationOpen]);
+
+  const handleGenerateStatus = async () => {
+    setIsGenerating(true);
+    try {
+      const savedKey = typeof window !== 'undefined' ? localStorage.getItem('mivo_gemini_api_key') : null;
+      const cleanTopic = statusText.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '').trim();
+
+      const res = await api.post<{ statusText: string; engine: string }>('/api/v1/ai/generate-status', {
+        topic: cleanTopic || undefined,
+        availability: selectedStatus,
+        apiKey: savedKey || undefined,
+      });
+
+      if (res.success && res.data?.statusText) {
+        setStatusText(res.data.statusText);
+      } else {
+        const fallbacks = [
+          '🎯 Deep work on sprint deliverables',
+          '🎧 In flow state — slow to reply',
+          '☕ Quick coffee recharge & planning',
+          '🚀 Deploying updates & monitoring',
+          '💬 Syncing in collaborative reviews',
+          '⚡ Squashing bugs & refactoring',
+          '💡 Brainstorming architecture ideas',
+          '💻 Pair programming session',
+          '🌴 Stepping away for a breather',
+        ];
+        setStatusText(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+      }
+    } catch {
+      const fallbacks = [
+        '🎯 Deep work on deliverables',
+        '🎧 In flow state — ping for urgent',
+        '☕ Quick coffee recharge',
+        '🚀 Deploying updates & monitoring',
+        '💬 In collaborative reviews',
+        '⚡ Code review & refactoring',
+      ];
+      setStatusText(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   React.useEffect(() => {
     if (user && isOpen) {
@@ -289,9 +365,22 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
             </label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-600 flex-shrink-0">
-                  <Sparkles className="w-4 h-4 text-[#DC2626]" />
-                </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateStatus}
+                  disabled={isGenerating}
+                  title="Generate status with AI"
+                  className="h-10 px-3 rounded-xl bg-gradient-to-r from-red-500/15 via-red-500/20 to-amber-500/15 hover:from-red-500/25 hover:to-amber-500/25 border border-red-500/30 text-[#DC2626] flex items-center gap-1.5 flex-shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer group disabled:opacity-60 disabled:hover:scale-100 shadow-xs"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#DC2626]" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-[#DC2626] group-hover:rotate-12 transition-transform" />
+                  )}
+                  <span className="text-xs font-bold">
+                    {isGenerating ? 'Generating...' : 'Generate'}
+                  </span>
+                </button>
 
                 {/* Status Text Input */}
                 <input
@@ -384,25 +473,74 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
             </div>
           </div>
 
-          {/* Clear After Duration Select */}
-          <div>
+          {/* Clear After Duration Select with Rounded Border */}
+          <div className="relative" ref={durationDropdownRef}>
             <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#DC2626]" />
               <span>Clear status after</span>
             </label>
-            <select
-              value={clearDuration}
-              onChange={(e) => setClearDuration(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] focus:outline-none focus:border-[#DC2626] cursor-pointer"
+
+            {/* Custom Styled Trigger with Rounded Border */}
+            <button
+              type="button"
+              onClick={() => setIsDurationOpen((prev) => !prev)}
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-[#DC2626]/40 text-xs text-[#111827] flex items-center justify-between transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20"
             >
-              <option value="dont_clear">Don't clear automatically</option>
-              <option value="30m">30 minutes</option>
-              <option value="1h">1 hour</option>
-              <option value="2h">2 hours</option>
-              <option value="4h">4 hours</option>
-              <option value="today">Today (End of day 23:59)</option>
-              <option value="this_week">This week</option>
-            </select>
+              <div className="flex items-center gap-2 font-medium">
+                <Clock className="w-3.5 h-3.5 text-[#DC2626]" />
+                <span>
+                  {DURATION_OPTIONS.find((opt) => opt.value === clearDuration)?.label || "Don't clear automatically"}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-[var(--text-muted)] transition-transform duration-200 ${
+                  isDurationOpen ? 'rotate-180 text-[#DC2626]' : ''
+                }`}
+              />
+            </button>
+
+            {/* Custom Rounded Options Dropdown Menu */}
+            {isDurationOpen && (
+              <div className="absolute bottom-full left-0 right-0 mb-1.5 z-50 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-2xl p-1.5 shadow-2xl ring-1 ring-black/10 backdrop-blur-xl animate-fade-in">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] px-2.5 py-1">
+                  Expiration Duration
+                </div>
+                <div className="space-y-0.5">
+                  {DURATION_OPTIONS.map((opt) => {
+                    const isSelected = clearDuration === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setClearDuration(opt.value);
+                          setIsDurationOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-red-500/10 text-[#DC2626] font-bold border border-red-500/25 shadow-xs'
+                            : 'text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] hover:text-[#111827]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              isSelected ? 'bg-[#DC2626]' : 'bg-transparent border border-[var(--border-subtle)]'
+                            }`}
+                          />
+                          <span>{opt.label}</span>
+                        </div>
+                        {isSelected ? (
+                          <Check className="w-3.5 h-3.5 text-[#DC2626]" />
+                        ) : opt.sublabel ? (
+                          <span className="text-[10px] text-[var(--text-muted)] font-mono">{opt.sublabel}</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

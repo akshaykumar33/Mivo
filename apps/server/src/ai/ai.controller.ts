@@ -81,4 +81,27 @@ export class AiController {
       data: result,
     };
   }
+
+  @Post('generate-status')
+  async generateStatus(
+    @Body()
+    body: {
+      topic?: string;
+      availability?: string;
+      apiKey?: string;
+    },
+    @Headers('x-gemini-api-key') headerKey?: string
+  ): Promise<ApiResponse<{ statusText: string; engine: string }>> {
+    const effectiveKey = body.apiKey || headerKey;
+    const result = await this.aiService.generateCustomStatus(
+      body.topic,
+      body.availability,
+      effectiveKey
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
 }
+
