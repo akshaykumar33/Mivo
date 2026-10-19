@@ -63,9 +63,9 @@ export const IncomingCallModal: React.FC = () => {
           <button
             type="button"
             onClick={declineCall}
-            className="flex flex-col items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors group"
+            className="flex flex-col items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#DC2626] transition-colors group cursor-pointer"
           >
-            <div className="w-14 h-14 rounded-full bg-rose-600/20 border border-rose-500/40 flex items-center justify-center text-rose-500 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-lg shadow-rose-900/30">
+            <div className="w-14 h-14 rounded-full bg-rose-600/15 border border-rose-500/30 flex items-center justify-center text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-lg shadow-rose-900/10">
               <PhoneOff className="w-6 h-6" />
             </div>
             <span className="font-semibold text-[11px]">Decline</span>
@@ -76,12 +76,12 @@ export const IncomingCallModal: React.FC = () => {
             onClick={() => {
               if (user) acceptCall(user.id);
             }}
-            className="flex flex-col items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors group"
+            className="flex flex-col items-center gap-1.5 text-xs text-[#6B7280] hover:text-emerald-700 transition-colors group cursor-pointer"
           >
-            <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center text-white group-hover:scale-105 group-hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/50 animate-bounce">
+            <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center text-white group-hover:scale-105 group-hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/20 animate-bounce">
               <Phone className="w-6 h-6" />
             </div>
-            <span className="font-semibold text-emerald-400 text-[11px]">Accept</span>
+            <span className="font-semibold text-emerald-700 text-[11px]">Accept</span>
           </button>
         </div>
       </div>

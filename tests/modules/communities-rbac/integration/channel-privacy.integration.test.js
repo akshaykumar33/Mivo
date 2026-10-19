@@ -3,6 +3,12 @@
  * Integration Test: Channel & Room Hierarchy Retrieval
  */
 
+try {
+  process.loadEnvFile('.env');
+} catch {}
+
+import { prisma } from '../../../../packages/database/dist/index.js';
+
 const BASE_URL = 'http://localhost:4000/api/v1';
 
 async function run() {
@@ -34,26 +40,37 @@ async function run() {
 
   // Verify documented contract: POST /api/v1/channels/:channelId/rooms
   const testChannelId = details.data.channels[0].id;
-  const createRoomRes = await (
-    await fetch(`${BASE_URL}/channels/${testChannelId}/rooms`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authRes.data.accessToken}`,
-      },
-      body: JSON.stringify({
-        name: `Contract Test Room ${Date.now()}`,
-        activeMode: 'TEXT',
-      }),
-    })
-  ).json();
+  let createdRoomId = null;
 
-  if (!createRoomRes.success || !createRoomRes.data?.id) {
-    throw new Error(`POST /channels/:channelId/rooms failed: ${JSON.stringify(createRoomRes)}`);
+  try {
+    const createRoomRes = await (
+      await fetch(`${BASE_URL}/channels/${testChannelId}/rooms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authRes.data.accessToken}`,
+        },
+        body: JSON.stringify({
+          name: `Contract Test Room ${Date.now()}`,
+          activeMode: 'TEXT',
+        }),
+      })
+    ).json();
+
+    if (!createRoomRes.success || !createRoomRes.data?.id) {
+      throw new Error(`POST /channels/:channelId/rooms failed: ${JSON.stringify(createRoomRes)}`);
+    }
+
+    createdRoomId = createRoomRes.data.id;
+
+    console.log(`   ✅ Community channels & room hierarchy verified (${details.data.channels.length} channels).`);
+    console.log(`   ✅ Contract POST /api/v1/channels/:channelId/rooms verified (Created room: ${createRoomRes.data.name}).`);
+  } finally {
+    if (createdRoomId) {
+      await prisma.room.delete({ where: { id: createdRoomId } }).catch(() => {});
+    }
+    await prisma.$disconnect();
   }
-
-  console.log(`   ✅ Community channels & room hierarchy verified (${details.data.channels.length} channels).`);
-  console.log(`   ✅ Contract POST /api/v1/channels/:channelId/rooms verified (Created room: ${createRoomRes.data.name}).`);
 }
 
 run().catch((e) => {

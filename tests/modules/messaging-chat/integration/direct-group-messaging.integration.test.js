@@ -3,6 +3,12 @@
  * Integration Test: Direct Messaging, Custom Group Creation, Attachments, and Audio Calling Signaling
  */
 
+try {
+  process.loadEnvFile('.env');
+} catch {}
+
+import { prisma } from '../../../../packages/database/dist/index.js';
+
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { io } = require('../../../../apps/web/node_modules/socket.io-client');
@@ -42,7 +48,12 @@ function connectSocket(token) {
 async function run() {
   console.log('🧪 [messaging-chat/integration] Running direct-group-messaging.integration.test.js...');
 
-  // 1. Authenticate two test users
+  let groupConvId = null;
+  let socket1 = null;
+  let socket2 = null;
+
+  try {
+    // 1. Authenticate two test users
   const user1 = await loginUser('dev@mivo.app', 'Password123!');
   const user2 = await loginUser('alex@mivo.app', 'Password123!');
 
@@ -124,12 +135,12 @@ async function run() {
   ) {
     throw new Error(`Custom group creation failed: ${JSON.stringify(groupRes)}`);
   }
-  const groupConvId = groupRes.data.id;
-  console.log('   ✅ Custom group conversation creation with member selection verified.');
+    groupConvId = groupRes.data.id;
+    console.log('   ✅ Custom group conversation creation with member selection verified.');
 
-  // 5. Connect Socket.IO clients for User 1 & User 2
-  const socket1 = await connectSocket(user1.accessToken);
-  const socket2 = await connectSocket(user2.accessToken);
+    // 5. Connect Socket.IO clients for User 1 & User 2
+    socket1 = await connectSocket(user1.accessToken);
+    socket2 = await connectSocket(user2.accessToken);
 
   // Join DM room on socket
   await new Promise((resolve) => {
@@ -354,13 +365,19 @@ async function run() {
 
   socket2.emit('call:decline', { conversationId: groupConvId });
   await groupDeclinePromise;
-  console.log('   ✅ Group audio call invitation & decline verified.');
+    console.log('   ✅ Group audio call invitation & decline verified.');
 
-  // Cleanup
-  socket1.disconnect();
-  socket2.disconnect();
-
-  console.log('   🎉 All Direct & Group Messaging + Audio Calling features fully verified!');
+    console.log('   🎉 All Direct & Group Messaging + Audio Calling features fully verified!');
+  } finally {
+    if (socket1) socket1.disconnect();
+    if (socket2) socket2.disconnect();
+    if (groupConvId) {
+      await prisma.directMessage.deleteMany({ where: { conversationId: groupConvId } }).catch(() => {});
+      await prisma.conversationMember.deleteMany({ where: { conversationId: groupConvId } }).catch(() => {});
+      await prisma.conversation.delete({ where: { id: groupConvId } }).catch(() => {});
+    }
+    await prisma.$disconnect();
+  }
 }
 
 run().catch((e) => {
