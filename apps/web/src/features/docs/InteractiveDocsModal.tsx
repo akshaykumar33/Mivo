@@ -413,7 +413,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           </aside>
 
           {/* Right Article Viewer */}
-          <main className="flex-1 bg-[var(--bg-canvas)] p-6 sm:p-10 overflow-y-auto select-text">
+          <main className="flex-1 bg-[var(--bg-canvas)] p-4 sm:p-10 overflow-y-auto select-text">
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Article Meta Bar */}
               <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">

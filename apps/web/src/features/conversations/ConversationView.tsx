@@ -26,7 +26,10 @@ import {
   Loader2,
   ZoomIn,
   Eye,
+  ChevronLeft,
+  Menu,
 } from 'lucide-react';
+import { useNavigationStore } from '@/stores/navigationStore';
 import { storageClient } from '@/lib/storage-client';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
@@ -114,7 +117,9 @@ export const ConversationView: React.FC = () => {
     addReaction,
     initiateCall,
     activeCall,
+    selectConversation,
   } = useConversationStore();
+  const { toggleMobileSidebar } = useNavigationStore();
 
   const [inputContent, setInputContent] = React.useState('');
   const [pendingAttachments, setPendingAttachments] = React.useState<AttachmentMetaDTO[]>([]);
@@ -311,9 +316,29 @@ export const ConversationView: React.FC = () => {
       }`}
     >
       {/* Top Header */}
-      <header className="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/80 backdrop-blur-md z-10">
-        <div className="flex items-center gap-3">
-          <div className="relative">
+      <header className="h-16 border-b border-[var(--border-subtle)] px-3 sm:px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/80 backdrop-blur-md z-10 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          {/* Mobile Back Button to Conversation List */}
+          <button
+            type="button"
+            onClick={() => selectConversation(null)}
+            className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
+            title="Back to conversations"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          {/* Mobile Hamburger Drawer Trigger */}
+          <button
+            type="button"
+            onClick={toggleMobileSidebar}
+            className="md:hidden p-1.5 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-1 flex-shrink-0"
+            title="Open workspaces"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+
+          <div className="relative flex-shrink-0">
             <Avatar
               fallbackText={title}
               src={activeConv.iconUrl || otherMember?.avatarUrl || undefined}
@@ -376,12 +401,12 @@ export const ConversationView: React.FC = () => {
         </div>
 
         {/* Header Actions: Meet & Teams and HD Audio Call */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <Button
             size="sm"
             variant="secondary"
             onClick={() => setIsMeetingHubOpen(true)}
-            className={`gap-2 transition-all duration-200 ${
+            className={`gap-1.5 sm:gap-2 transition-all duration-200 text-xs px-2.5 sm:px-3 ${
               activeBridge
                 ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
                 : 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border-[var(--border-subtle)]'
@@ -405,9 +430,9 @@ export const ConversationView: React.FC = () => {
             variant="secondary"
             onClick={handleStartCall}
             disabled={activeCall?.conversationId === activeConv.id}
-            className="gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 border-emerald-500/30"
+            className="gap-1.5 sm:gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 border-emerald-500/30 text-xs px-2.5 sm:px-3"
           >
-            <Phone className="w-4 h-4" />
+            <Phone className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             <span className="hidden sm:inline">
               {activeCall?.conversationId === activeConv.id ? 'Call Active' : 'HD Audio Call'}
             </span>
@@ -745,8 +770,8 @@ export const ConversationView: React.FC = () => {
       )}
 
       {/* Input Box Footer */}
-      <footer className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]/90 backdrop-blur-md">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+      <footer className="p-2 sm:p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]/90 backdrop-blur-md">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2">
           {/* Document Upload Hidden Input & Button */}
           <input
             type="file"
@@ -761,10 +786,10 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => docInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs flex-shrink-0"
             title="Send Document (PDF, Word, Excel, Zip...)"
           >
-            <FilePlus className="w-4 h-4 text-[#DC2626]" />
+            <FilePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DC2626]" />
           </button>
 
           {/* Media / Photo Upload Hidden Input & Button */}
@@ -781,34 +806,34 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => mediaInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs flex-shrink-0"
             title="Attach Image or Video"
           >
-            <ImageIcon className="w-4 h-4 text-[#D97706]" />
+            <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D97706]" />
           </button>
 
           {/* Instant Google Meet & Teams Button */}
           <button
             type="button"
             onClick={() => setIsMeetingHubOpen(true)}
-            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs group relative"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs group relative flex-shrink-0"
             title="Start Google Meet or Microsoft Teams session"
           >
-            <Video className="w-4 h-4 text-[#059669] group-hover:scale-110 transition-transform" />
+            <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#059669] group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Quick Emoji Trigger */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <button
               type="button"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
+              className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
               title="Add emoji"
             >
-              <Smile className="w-4 h-4 text-[#DC2626]" />
+              <Smile className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DC2626]" />
             </button>
             {showEmojiPicker && (
-              <div className="absolute bottom-12 left-0 p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1 z-20">
+              <div className="absolute bottom-12 left-0 sm:left-auto p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1 z-20 max-w-[90vw] overflow-x-auto">
                 {EMOJI_OPTIONS.map((e) => (
                   <button
                     key={e}
@@ -829,10 +854,10 @@ export const ConversationView: React.FC = () => {
           {/* Message Input */}
           <input
             type="text"
-            placeholder={`Message ${title}... (or drag and drop documents)`}
+            placeholder={`Message ${title}...`}
             value={inputContent}
             onChange={handleInputChange}
-            className="flex-1 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+            className="min-w-0 flex-1 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
           />
 
           {/* Send Button */}
@@ -840,9 +865,9 @@ export const ConversationView: React.FC = () => {
             type="submit"
             size="sm"
             disabled={(!inputContent.trim() && pendingAttachments.length === 0) || isUploading}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] text-white shadow-md shadow-red-600/30 cursor-pointer"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] text-white shadow-md shadow-red-600/30 cursor-pointer flex-shrink-0"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         </form>
       </footer>

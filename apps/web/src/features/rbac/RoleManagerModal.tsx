@@ -46,9 +46,9 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
       description="Inspect and manage role hierarchies and granular capability flags."
       maxWidth="xl"
     >
-      <div className="flex gap-4 min-h-[380px]">
+      <div className="flex flex-col sm:flex-row gap-4 min-h-[380px]">
         {/* Role List Sidebar */}
-        <div className="w-1/3 border-r border-[var(--border-subtle)] pr-3 space-y-1.5 overflow-y-auto max-h-[360px]">
+        <div className="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)] pb-3 sm:pb-0 sm:pr-3 space-y-1.5 overflow-y-auto max-h-[140px] sm:max-h-[360px]">
           <div className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
             Hierarchy
           </div>
@@ -79,7 +79,7 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
         </div>
 
         {/* Permissions Inspector */}
-        <div className="flex-1 pl-1 overflow-y-auto max-h-[360px] space-y-3">
+        <div className="w-full sm:w-2/3 sm:pl-1 overflow-y-auto max-h-[300px] sm:max-h-[360px] space-y-3">
           {selectedRole ? (
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">

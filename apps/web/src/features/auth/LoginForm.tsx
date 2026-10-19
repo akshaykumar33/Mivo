@@ -63,7 +63,7 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl p-8 sm:p-10 rounded-[32px] bg-[#0A0D15]/90 border border-white/[0.14] shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl relative overflow-hidden text-white">
+    <div className="w-full max-w-xl p-5 sm:p-8 md:p-10 rounded-3xl sm:rounded-[32px] bg-[#0A0D15]/90 border border-white/[0.14] shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl relative overflow-hidden text-white">
       {/* Apple Aurora Radial Orbs */}
       <div className="absolute -top-32 -left-32 w-72 h-72 bg-gradient-to-tr from-[#5E5CE6]/30 to-[#0A84FF]/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-72 h-72 bg-gradient-to-bl from-[#BF5AF2]/25 to-[#FF375F]/20 rounded-full blur-3xl pointer-events-none" />
@@ -147,7 +147,7 @@ export const LoginForm: React.FC = () => {
           <span className="text-[10px] text-white/40 font-mono">Password123!</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
           <button
             type="button"
             onClick={() => handleQuickLogin('dev@mivo.app', 'Dev Admin')}

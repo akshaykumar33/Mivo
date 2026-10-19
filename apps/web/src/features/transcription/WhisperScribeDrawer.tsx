@@ -336,7 +336,7 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
           className="fixed inset-0 bg-black/50 backdrop-blur-md pointer-events-auto transition-opacity"
         />
 
-        <aside className="relative w-84 sm:w-[440px] h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-3xl flex flex-col select-none z-50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pointer-events-auto animate-slide-left">
+        <aside className="relative w-full sm:w-[440px] max-w-full sm:max-w-[440px] h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-3xl flex flex-col select-none z-50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pointer-events-auto animate-slide-left">
           {/* Apple Translucent Header */}
           <div className="h-16 px-5 border-b border-[var(--border-subtle)] flex items-center justify-between bg-gradient-to-r from-[#5E5CE6]/10 via-[#BF5AF2]/10 to-transparent">
             <div className="flex items-center gap-3">

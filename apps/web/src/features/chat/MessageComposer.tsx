@@ -293,7 +293,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         )}
 
         {/* Input Chassis */}
-        <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-red-500 focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
+        <div className="relative flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-red-500 focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
           {/* Hidden Document Upload Input */}
           <input
             ref={docInputRef}
@@ -309,7 +309,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => docInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50"
+            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50 flex-shrink-0"
             title="Send Document (PDF, Word, Excel, Zip...)"
           >
             <FilePlus className="w-4 h-4 stroke-[2.2]" />
@@ -319,19 +319,19 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50"
+            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50 flex-shrink-0"
             title="Attach Media / Images"
           >
             <Paperclip className="w-4 h-4 stroke-[2.2]" />
           </button>
 
           {/* External Meeting Button & Popover */}
-          <div className="relative" ref={meetingMenuRef}>
+          <div className="relative flex-shrink-0" ref={meetingMenuRef}>
             <button
               type="button"
               onClick={() => setIsMeetingMenuOpen(!isMeetingMenuOpen)}
               disabled={isCreatingQuickMeeting}
-              className={`p-2 rounded-xl transition-all cursor-pointer ${
+              className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
                 isMeetingMenuOpen
                   ? 'text-white bg-[#DC2626] shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05]'
@@ -411,13 +411,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                 ? 'Drop files to upload to Supabase Storage...'
                 : `Message #${roomName}... (Press Enter to send)`
             }
-            className="flex-1 bg-transparent border-0 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none py-1.5 max-h-32 font-medium"
+            className="flex-1 min-w-0 bg-transparent border-0 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none py-1.5 max-h-32 font-medium"
           />
 
           <button
             type="button"
             onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-            className={`p-1.5 rounded-[10px] transition-colors cursor-pointer ${
+            className={`p-1.5 sm:p-2 rounded-[10px] transition-colors cursor-pointer flex-shrink-0 ${
               isEmojiPickerOpen
                 ? 'text-[#FFD60A] bg-[#FFD60A]/15 border border-[#FFD60A]/30'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05]'
@@ -431,7 +431,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={handleSend}
             disabled={(!content.trim() && stagedAttachments.length === 0) || isSending || isUploading}
-            className={`p-2 rounded-[12px] transition-all duration-200 cursor-pointer ${
+            className={`p-1.5 sm:p-2 rounded-[12px] transition-all duration-200 cursor-pointer flex-shrink-0 ${
               (content.trim() || stagedAttachments.length > 0) && !isSending && !isUploading
                 ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] hover:scale-105 text-white shadow-md shadow-red-600/30'
                 : 'bg-black/[0.05] text-[#71717A]/40 cursor-not-allowed'

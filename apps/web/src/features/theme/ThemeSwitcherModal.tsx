@@ -33,38 +33,38 @@ export const ThemeSwitcherModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in"
       onClick={() => setIsThemeModalOpen(false)}
     >
       <div
-        className="w-full max-w-2xl rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-6 shadow-2xl backdrop-blur-2xl text-[var(--text-primary)] relative overflow-hidden ring-1 ring-black/[0.05]"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-4 sm:p-6 shadow-2xl backdrop-blur-2xl text-[var(--text-primary)] relative ring-1 ring-black/[0.05] custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow Accent */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-red-600/20 via-rose-500/15 to-amber-500/20 blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-[var(--border-subtle)] relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-lg shadow-red-600/25">
-              <Palette className="w-5 h-5 text-white" />
+        <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-subtle)] relative z-10 gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-lg shadow-red-600/25 flex-shrink-0">
+              <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold font-display text-[#111827] tracking-tight flex items-center gap-2">
-                <span>Visual Themes & Aesthetics</span>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-lg font-bold font-display text-[#111827] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span>Visual Themes</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/20">
                   Multi-Theme Engine
                 </span>
               </h2>
-              <p className="text-xs text-[#4B5563]">
-                Customize your appearance: Velvet Crimson & Silk Cream, OLED dark, or bright palettes.
+              <p className="text-[11px] sm:text-xs text-[#4B5563] truncate">
+                Customize your appearance with Velvet Crimson, OLED dark, or light palettes.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setIsThemeModalOpen(false)}
-            className="p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer flex-shrink-0"
             title="Close [ESC]"
           >
             <X className="w-5 h-5" />

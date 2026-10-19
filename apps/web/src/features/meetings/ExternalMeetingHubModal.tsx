@@ -144,39 +144,39 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-3xl bg-[#0F1220]/95 border border-white/[0.12] shadow-[0_24px_80px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-xl rounded-3xl bg-[#0F1220]/95 border border-white/[0.12] shadow-[0_24px_80px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh]">
         {/* Top Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-white/[0.08] flex items-center justify-between gap-4 bg-gradient-to-r from-white/[0.03] to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] p-2 flex items-center justify-center shadow-lg shadow-[#5E5CE6]/30">
-              <Zap className="w-5 h-5 text-white" />
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-white/[0.08] flex items-center justify-between gap-2 sm:gap-4 bg-gradient-to-r from-white/[0.03] to-transparent">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] p-2 flex items-center justify-center shadow-lg shadow-[#5E5CE6]/30 flex-shrink-0">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                <span>External Meeting Hub</span>
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span>Meeting Hub</span>
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/40">
                   Google & Teams
                 </span>
               </h3>
-              <p className="text-xs text-white/50">
-                Generate instant meetings, bridge calls to this stage, or sync enterprise calendars.
+              <p className="text-[11px] sm:text-xs text-white/50 truncate sm:whitespace-normal">
+                Generate instant meetings or bridge calls.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-white/[0.08] px-6 bg-black/20 text-xs font-semibold">
+        <div className="flex border-b border-white/[0.08] px-3 sm:px-6 bg-black/20 text-xs font-semibold overflow-x-auto scrollbar-none no-scrollbar">
           <button
             onClick={() => setActiveTab('instant')}
-            className={`py-3 px-3 border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2.5 sm:px-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer flex-shrink-0 ${
               activeTab === 'instant'
                 ? 'border-[#5E5CE6] text-white font-bold'
                 : 'border-transparent text-white/50 hover:text-white'

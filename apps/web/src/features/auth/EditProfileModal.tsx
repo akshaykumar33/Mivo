@@ -83,8 +83,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in">
-      <div className="w-full max-w-md bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-2xl relative overflow-hidden ring-1 ring-white/10">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-4 sm:p-6 shadow-2xl relative ring-1 ring-white/10 custom-scrollbar">
         {/* Glow Accent */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#5E5CE6]/20 to-[#0A84FF]/20 blur-3xl pointer-events-none" />
 

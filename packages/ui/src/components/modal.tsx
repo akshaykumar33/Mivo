@@ -53,18 +53,18 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Modal Dialog Content */}
       <div
         className={cn(
-          'relative w-full rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200',
+          'relative w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-4 sm:p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200',
           maxWidths[maxWidth]
         )}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h3>
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)] gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] truncate">{title}</h3>
             {description && <p className="text-xs text-[var(--text-muted)] mt-0.5">{description}</p>}
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-black/[0.05] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+            className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-black/[0.05] hover:text-[var(--text-primary)] transition-colors cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>

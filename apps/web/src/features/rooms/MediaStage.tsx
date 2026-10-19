@@ -176,7 +176,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   if (mode === 'VOICE') {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 pb-28 sm:p-8 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-8 pb-28 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
@@ -303,7 +303,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
-      <div className="flex-1 p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden">
+      <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden">
         {pinnedParticipant ? (
           // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
@@ -409,7 +409,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater with Interactive Participant Video Strip
   return (
-    <div className="flex-1 p-4 sm:p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-4">
+    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-3 sm:gap-4">
       {/* Primary Dominant Screen Share Stage */}
       <div className="flex-1 rounded-3xl bg-[#0B0D14] border border-[var(--border-subtle)] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[280px]">
         {screenStream ? (

@@ -122,7 +122,7 @@ export const NotificationCenterModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in select-none">
       {/* Backdrop */}
       <div
         onClick={() => setIsCenterOpen(false)}
@@ -130,9 +130,9 @@ export const NotificationCenterModal: React.FC = () => {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-xl max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
+      <div className="relative w-full max-w-xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
         {/* Top Header */}
-        <div className="px-6 py-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-white/[0.02]">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.4)]">
               <Bell className="w-5 h-5 text-white stroke-[2.2]" />
@@ -173,7 +173,7 @@ export const NotificationCenterModal: React.FC = () => {
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="px-6 py-2.5 border-b border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-shrink-0 bg-black/[0.01]">
+        <div className="px-4 sm:px-6 py-2.5 border-b border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-shrink-0 bg-black/[0.01]">
           {[
             { id: 'ALL' as NotificationFilter, label: 'All', icon: Inbox },
             { id: 'MESSAGE' as NotificationFilter, label: 'Messages', icon: MessageSquare },

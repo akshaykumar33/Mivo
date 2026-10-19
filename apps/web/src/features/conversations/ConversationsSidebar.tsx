@@ -5,9 +5,10 @@ import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ConversationDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
-import { Plus, Users, MessageSquare, Volume2, Search, Smile } from 'lucide-react';
+import { Plus, Users, MessageSquare, Volume2, Search, Smile, Menu } from 'lucide-react';
 import { CreateConversationModal } from './CreateConversationModal';
 import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { useNavigationStore } from '@/stores/navigationStore';
 
 export const ConversationsSidebar: React.FC = () => {
   const { user } = useAuthStore();
@@ -23,6 +24,7 @@ export const ConversationsSidebar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
   const [filterQuery, setFilterQuery] = React.useState('');
+  const { toggleMobileSidebar } = useNavigationStore();
 
   React.useEffect(() => {
     if (user?.id) {
@@ -68,12 +70,20 @@ export const ConversationsSidebar: React.FC = () => {
   });
 
   return (
-    <aside className="w-64 h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col justify-between select-none">
+    <aside className="w-full h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col justify-between select-none">
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header Bar */}
         <div className="h-16 px-4 border-b border-[var(--border-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-[#DC2626]" />
+            <button
+              type="button"
+              onClick={toggleMobileSidebar}
+              className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
+              title="Open workspaces menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <MessageSquare className="w-4 h-4 text-[#DC2626] flex-shrink-0" />
             <span className="text-xs font-bold uppercase tracking-wider text-[#111827] font-display">
               Conversations
             </span>

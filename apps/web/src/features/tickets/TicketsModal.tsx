@@ -122,18 +122,18 @@ export const TicketsModal: React.FC = () => {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
+      <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-white/[0.02]">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[var(--border-subtle)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#F59E0B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.35)]">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#F59E0B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.35)] flex-shrink-0">
               <Ticket className="w-5 h-5 text-white stroke-[2.2]" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight truncate">
                 Support & Issues Hub
               </h2>
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="text-xs text-[var(--text-secondary)] truncate">
                 Manage incident reports, feature requests, & service tickets
               </p>
             </div>
