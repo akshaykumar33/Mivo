@@ -29,6 +29,7 @@ model User {
   bannerUrl        String?           @db.VarChar(512)
   bio              String?           @db.VarChar(256)
   customStatus     String?           @db.VarChar(128)
+  customStatusExpiresAt DateTime?    @db.Timestamptz(6)
   status           UserStatus        @default(OFFLINE)
   isEmailVerified  Boolean           @default(false)
   lastSeenAt       DateTime?         @db.Timestamptz(6)

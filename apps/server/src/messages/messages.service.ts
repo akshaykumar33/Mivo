@@ -22,10 +22,14 @@ export class MessagesService {
       });
     }
 
+    // Auto-disappearing retention: exclude messages older than 1 year (365 days)
+    const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
     const messages = await prisma.message.findMany({
       where: {
         roomId,
         deletedAt: null,
+        createdAt: { gte: retentionCutoff },
       },
       include: {
         sender: true,
@@ -49,6 +53,7 @@ export class MessagesService {
         avatarUrl: m.sender.avatarUrl,
         status: m.sender.status,
         customStatus: m.sender.customStatus,
+        customStatusExpiresAt: m.sender.customStatusExpiresAt ? m.sender.customStatusExpiresAt.toISOString() : null,
       },
     }));
   }
@@ -92,6 +97,7 @@ export class MessagesService {
         avatarUrl: message.sender.avatarUrl,
         status: message.sender.status,
         customStatus: message.sender.customStatus,
+        customStatusExpiresAt: message.sender.customStatusExpiresAt ? message.sender.customStatusExpiresAt.toISOString() : null,
       },
     };
 

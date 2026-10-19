@@ -25,6 +25,7 @@ import {
   Settings,
   Palette,
   PanelLeftClose,
+  Smile,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,6 +35,7 @@ import { CreateChannelModal } from './CreateChannelModal';
 import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
 import { EditProfileModal } from '@/features/auth/EditProfileModal';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 
 export interface ChannelSidebarProps {
   communityId: string;
@@ -55,6 +57,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
   const [selectedChannelForRoom, setSelectedChannelForRoom] = React.useState<string | null>(null);
   const [isRoleManagerOpen, setIsRoleManagerOpen] = React.useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
+  const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(false);
   const [isDeafened, setIsDeafened] = React.useState(false);
 
@@ -247,38 +250,63 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
                 </div>
               </div>
 
-        {/* macOS Style User Status Footer */}
-        <div className="h-16 bg-[var(--bg-sidebar)] px-3.5 border-t border-[var(--border-subtle)] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
-          <button
-            onClick={() => setIsEditProfileOpen(true)}
-            className="flex items-center gap-2.5 min-w-0 text-left hover:bg-white/[0.06] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group"
-            title="Edit profile & upload custom avatar (Supabase Storage)"
-          >
-            <Avatar
-              size="sm"
-              status={user?.status || 'ONLINE'}
-              fallbackText={user?.displayName || user?.username}
-              src={user?.avatarUrl}
-              className="group-hover:scale-105 transition-transform"
-            />
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-[#64D2FF] transition-colors">
+        {/* macOS / Slack Style User Status Footer */}
+        <div className="h-16 bg-[var(--bg-sidebar)] px-3 border-t border-[var(--border-subtle)] flex items-center justify-between backdrop-blur-xl flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => setIsSlackStatusOpen(true)}
+              className="relative group p-0.5 rounded-full hover:ring-2 hover:ring-[#30D158]/50 transition-all cursor-pointer flex-shrink-0"
+              title="Set availability & status (like Slack)"
+            >
+              <Avatar
+                size="sm"
+                status={user?.status || 'ONLINE'}
+                fallbackText={user?.displayName || user?.username}
+                src={user?.avatarUrl}
+                className="group-hover:scale-105 transition-transform"
+              />
+            </button>
+            <div className="min-w-0 flex-1">
+              <div
+                onClick={() => setIsEditProfileOpen(true)}
+                className="text-xs font-bold text-[var(--text-primary)] truncate hover:text-[#64D2FF] transition-colors cursor-pointer"
+                title="Edit profile & upload avatar"
+              >
                 {user?.displayName || user?.username}
               </div>
-              <div
-                className="text-[10px] font-semibold truncate"
-                style={{ color: roleColor }}
+              <button
+                onClick={() => setIsSlackStatusOpen(true)}
+                className="flex items-center gap-1 text-[10px] text-left truncate text-[var(--text-muted)] hover:text-white transition-colors cursor-pointer w-full group"
+                title="Set Slack status / availability"
               >
-                {activeCommunity.currentUserRole?.name || 'Member'}
-              </div>
+                {user?.customStatus ? (
+                  <span className="text-[#64D2FF] font-medium truncate flex items-center gap-1">
+                    <span className="truncate">{user.customStatus}</span>
+                  </span>
+                ) : (
+                  <span
+                    className="text-[10px] font-semibold truncate"
+                    style={{ color: roleColor }}
+                  >
+                    {activeCommunity.currentUserRole?.name || 'Member'}
+                  </span>
+                )}
+              </button>
             </div>
-          </button>
+          </div>
 
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => setIsSlackStatusOpen(true)}
+              className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[#30D158] hover:bg-[#30D158]/10 transition-all cursor-pointer"
+              title="Set Availability & Status (like Slack)"
+            >
+              <Smile className="w-3.5 h-3.5 text-[#30D158]" />
+            </button>
 
-          <div className="flex items-center gap-1">
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className={`p-2 rounded-[10px] transition-all cursor-pointer ${
+              className={`p-1.5 rounded-[10px] transition-all cursor-pointer ${
                 isMuted
                   ? 'text-[#FF453A] bg-[#FF453A]/15 border border-[#FF453A]/30 shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08]'
@@ -290,7 +318,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
 
             <button
               onClick={() => setIsDeafened(!isDeafened)}
-              className={`p-2 rounded-[10px] transition-all cursor-pointer ${
+              className={`p-1.5 rounded-[10px] transition-all cursor-pointer ${
                 isDeafened
                   ? 'text-[#FF453A] bg-[#FF453A]/15 border border-[#FF453A]/30 shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08]'
@@ -302,7 +330,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
 
             <button
               onClick={() => setIsThemeModalOpen(true)}
-              className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[#BF5AF2] hover:bg-white/[0.08] transition-all cursor-pointer"
+              className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[#BF5AF2] hover:bg-white/[0.08] transition-all cursor-pointer"
               title="Visual Themes & Dark/Bright Mode"
             >
               <Palette className="w-3.5 h-3.5 text-[#BF5AF2]" />
@@ -310,7 +338,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
 
             <button
               onClick={() => logout()}
-              className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all cursor-pointer"
+              className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -343,6 +371,11 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
       <EditProfileModal
         isOpen={isEditProfileOpen}
         onClose={() => setIsEditProfileOpen(false)}
+      />
+
+      <SlackStatusModal
+        isOpen={isSlackStatusOpen}
+        onClose={() => setIsSlackStatusOpen(false)}
       />
     </>
   );

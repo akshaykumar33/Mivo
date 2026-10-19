@@ -6,6 +6,8 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import {
   UpdateProfileSchema,
   UpdateProfileInput,
+  UpdateStatusSchema,
+  UpdateStatusInput,
   ApiResponse,
   UserDTO,
   UserSummaryDTO,
@@ -44,6 +46,18 @@ export class UsersController {
     @Body(new ZodValidationPipe(UpdateProfileSchema)) body: UpdateProfileInput
   ): Promise<ApiResponse<UserDTO>> {
     const updated = await this.usersService.updateProfile(user.sub, body);
+    return {
+      success: true,
+      data: updated,
+    };
+  }
+
+  @Patch('me/status')
+  async updateMyStatus(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(UpdateStatusSchema)) body: UpdateStatusInput
+  ): Promise<ApiResponse<UserDTO>> {
+    const updated = await this.usersService.updateStatus(user.sub, body);
     return {
       success: true,
       data: updated,

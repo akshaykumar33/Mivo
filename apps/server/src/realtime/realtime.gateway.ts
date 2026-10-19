@@ -14,6 +14,7 @@ import { prisma } from '@mivo/database';
 import {
   REALTIME_EVENTS,
   PresenceHeartbeatPayload,
+  PresenceUpdatePayload,
   RoomJoinPayload,
   RoomLeavePayload,
   RoomChangeModePayload,
@@ -59,17 +60,45 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       client.data.user = payload;
       client.data.rooms = new Set<string>();
       client.join(`user:${payload.sub}`);
-      this.presenceService.setUserOnline(payload.sub, client.id);
+
+      // Query current user status from DB
+      const dbUser = await prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { status: true, customStatus: true, customStatusExpiresAt: true },
+      });
+
+      const isExpired =
+        dbUser?.customStatusExpiresAt && new Date(dbUser.customStatusExpiresAt).getTime() <= Date.now();
+      const effectiveCustomStatus = isExpired ? null : dbUser?.customStatus || null;
+      const effectiveExpiresAt = isExpired
+        ? null
+        : dbUser?.customStatusExpiresAt
+        ? dbUser.customStatusExpiresAt.toISOString()
+        : null;
+      const effectiveStatus = dbUser?.status && dbUser.status !== 'OFFLINE' ? dbUser.status : 'ONLINE';
+
+      this.presenceService.setUserOnline(
+        payload.sub,
+        client.id,
+        effectiveStatus,
+        effectiveCustomStatus,
+        effectiveExpiresAt
+      );
 
       client.emit(REALTIME_EVENTS.CONNECTION_ACK, {
         userId: payload.sub,
+        status: effectiveStatus,
+        customStatus: effectiveCustomStatus,
+        customStatusExpiresAt: effectiveExpiresAt,
         timestamp: new Date().toISOString(),
       });
 
       // Broadcast presence update
       this.server.emit(REALTIME_EVENTS.PRESENCE_USER_UPDATED, {
         userId: payload.sub,
-        status: 'ONLINE',
+        status: effectiveStatus,
+        customStatus: effectiveCustomStatus,
+        customStatusExpiresAt: effectiveExpiresAt,
       });
     } catch {
       client.disconnect();
@@ -102,6 +131,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.server.emit(REALTIME_EVENTS.PRESENCE_USER_UPDATED, {
           userId: user.sub,
           status: 'OFFLINE',
+          customStatus: null,
+          customStatusExpiresAt: null,
         });
       }
     }
@@ -111,7 +142,37 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   async handleHeartbeat(@ConnectedSocket() client: Socket, @MessageBody() data: PresenceHeartbeatPayload) {
     const user = client.data?.user;
     if (!user) return;
-    await this.presenceService.heartbeat(user.sub, data.status, data.customStatus);
+    await this.presenceService.heartbeat(
+      user.sub,
+      data.status,
+      data.customStatus,
+      data.customStatusExpiresAt
+    );
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.PRESENCE_UPDATE)
+  async handlePresenceUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PresenceUpdatePayload
+  ) {
+    const user = client.data?.user;
+    if (!user) return { success: false, error: 'Unauthorized' };
+
+    const updated = await this.presenceService.updateUserPresence(
+      user.sub,
+      data.status,
+      data.customStatus,
+      data.customStatusExpiresAt
+    );
+
+    this.server.emit(REALTIME_EVENTS.PRESENCE_USER_UPDATED, {
+      userId: user.sub,
+      status: updated.status,
+      customStatus: updated.customStatus,
+      customStatusExpiresAt: updated.customStatusExpiresAt,
+    });
+
+    return { success: true, data: updated };
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_JOIN)
@@ -141,6 +202,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
     if (!member) return;
 
+    const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
+
     const participantDTO: RoomMemberDTO = {
       id: member.id,
       roomId: member.roomId,
@@ -156,7 +219,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         displayName: member.user.displayName,
         avatarUrl: member.user.avatarUrl,
         status: member.user.status,
-        customStatus: member.user.customStatus,
+        customStatus: isExpired(member.user.customStatusExpiresAt) ? null : member.user.customStatus,
+        customStatusExpiresAt: isExpired(member.user.customStatusExpiresAt) || !member.user.customStatusExpiresAt ? null : member.user.customStatusExpiresAt.toISOString(),
       },
     };
 
@@ -175,24 +239,28 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     client.emit(REALTIME_EVENTS.ROOM_JOINED, {
       roomId,
       activeMode: member.room.activeMode,
-      members: allRoomMembers.map((m) => ({
-        id: m.id,
-        roomId: m.roomId,
-        userId: m.userId,
-        isMuted: m.isMuted,
-        isDeafened: m.isDeafened,
-        isCameraOn: m.isCameraOn,
-        isScreenOn: m.isScreenOn,
-        joinedAt: m.joinedAt.toISOString(),
-        user: {
-          id: m.user.id,
-          username: m.user.username,
-          displayName: m.user.displayName,
-          avatarUrl: m.user.avatarUrl,
-          status: m.user.status,
-          customStatus: m.user.customStatus,
-        },
-      })),
+      members: allRoomMembers.map((m) => {
+        const exp = isExpired(m.user.customStatusExpiresAt);
+        return {
+          id: m.id,
+          roomId: m.roomId,
+          userId: m.userId,
+          isMuted: m.isMuted,
+          isDeafened: m.isDeafened,
+          isCameraOn: m.isCameraOn,
+          isScreenOn: m.isScreenOn,
+          joinedAt: m.joinedAt.toISOString(),
+          user: {
+            id: m.user.id,
+            username: m.user.username,
+            displayName: m.user.displayName,
+            avatarUrl: m.user.avatarUrl,
+            status: m.user.status,
+            customStatus: exp ? null : m.user.customStatus,
+            customStatusExpiresAt: exp || !m.user.customStatusExpiresAt ? null : m.user.customStatusExpiresAt.toISOString(),
+          },
+        };
+      }),
     });
   }
 
@@ -455,6 +523,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
       });
 
+      const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
+      const expired = isExpired(message.sender.customStatusExpiresAt);
+
       const dto: MessageDTO = {
         id: message.id,
         roomId: message.roomId,
@@ -469,7 +540,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           displayName: message.sender.displayName,
           avatarUrl: message.sender.avatarUrl,
           status: message.sender.status,
-          customStatus: message.sender.customStatus,
+          customStatus: expired ? null : message.sender.customStatus,
+          customStatusExpiresAt:
+            expired || !message.sender.customStatusExpiresAt
+              ? null
+              : message.sender.customStatusExpiresAt.toISOString(),
         },
       };
 
@@ -585,6 +660,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         data: { updatedAt: new Date() },
       });
 
+      const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
+      const expired = isExpired(message.sender.customStatusExpiresAt);
+
       const dto: DirectMessageDTO = {
         id: message.id,
         conversationId: message.conversationId,
@@ -599,7 +677,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           displayName: message.sender.displayName,
           avatarUrl: message.sender.avatarUrl,
           status: message.sender.status,
-          customStatus: message.sender.customStatus,
+          customStatus: expired ? null : message.sender.customStatus,
+          customStatusExpiresAt:
+            expired || !message.sender.customStatusExpiresAt
+              ? null
+              : message.sender.customStatusExpiresAt.toISOString(),
         },
       };
 

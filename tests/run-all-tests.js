@@ -8,6 +8,7 @@ import { execSync } from 'child_process';
 const MODULE_TESTS = [
   // 1. Auth & Identity Module
   { module: 'auth-identity', file: 'tests/modules/auth-identity/unit/password-hash.unit.test.js' },
+  { module: 'auth-identity', file: 'tests/modules/auth-identity/unit/slack-status-availability.unit.test.js' },
   { module: 'auth-identity', file: 'tests/modules/auth-identity/integration/login-session.integration.test.js' },
   { module: 'auth-identity', file: 'tests/modules/auth-identity/e2e/multi-user-auth.e2e.test.js' },
 
@@ -18,6 +19,8 @@ const MODULE_TESTS = [
 
   // 3. Messaging & Chat Module
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/message-formatter.unit.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/auto-disappearing-messages.unit.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-retention-db.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-persistence.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/socket-realtime-flow.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/direct-group-messaging.integration.test.js' },

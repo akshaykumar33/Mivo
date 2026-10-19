@@ -28,8 +28,18 @@ export const UpdateProfileSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
   bannerUrl: z.string().url().nullable().optional(),
   customStatus: z.string().max(128).nullable().optional(),
+  customStatusExpiresAt: z.string().nullable().optional(),
+  status: z.enum(['ONLINE', 'IDLE', 'DND', 'OFFLINE']).optional(),
+});
+
+export const UpdateStatusSchema = z.object({
+  status: z.enum(['ONLINE', 'IDLE', 'DND', 'OFFLINE']).optional(),
+  customStatus: z.string().max(128).nullable().optional(),
+  customStatusExpiresAt: z.string().nullable().optional(),
 });
 
 export type RegisterInput = z.infer<typeof RegisterRequestSchema>;
 export type LoginInput = z.infer<typeof LoginRequestSchema>;
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
+export type UpdateStatusInput = z.infer<typeof UpdateStatusSchema>;
+

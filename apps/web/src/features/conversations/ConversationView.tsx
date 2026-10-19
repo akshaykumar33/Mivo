@@ -339,12 +339,30 @@ export const ConversationView: React.FC = () => {
                 )
               )}
             </div>
-            <div className="text-[11px] text-[var(--text-muted)]">
-              {activeConv.type === 'DIRECT'
-                ? otherMember?.status === 'ONLINE'
-                  ? 'Active now'
-                  : 'Offline'
-                : `${activeConv.members.map((m) => m.user.displayName || m.user.username).join(', ')}`}
+            <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
+              {activeConv.type === 'DIRECT' ? (
+                <>
+                  <span>
+                    {otherMember?.status === 'ONLINE'
+                      ? 'Active now'
+                      : otherMember?.status === 'IDLE'
+                      ? 'Away'
+                      : otherMember?.status === 'DND'
+                      ? 'Do Not Disturb'
+                      : 'Offline'}
+                  </span>
+                  {otherMember?.customStatus && (
+                    <>
+                      <span>•</span>
+                      <span className="text-[#64D2FF] font-medium flex items-center gap-1">
+                        {otherMember.customStatus}
+                      </span>
+                    </>
+                  )}
+                </>
+              ) : (
+                `${activeConv.members.map((m) => m.user.displayName || m.user.username).join(', ')}`
+              )}
             </div>
           </div>
         </div>

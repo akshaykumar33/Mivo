@@ -5,8 +5,9 @@ import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ConversationDTO } from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
-import { Plus, Users, MessageSquare, Volume2, Search } from 'lucide-react';
+import { Plus, Users, MessageSquare, Volume2, Search, Smile } from 'lucide-react';
 import { CreateConversationModal } from './CreateConversationModal';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 
 export const ConversationsSidebar: React.FC = () => {
   const { user } = useAuthStore();
@@ -20,6 +21,7 @@ export const ConversationsSidebar: React.FC = () => {
   } = useConversationStore();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
   const [filterQuery, setFilterQuery] = React.useState('');
 
   React.useEffect(() => {
@@ -140,8 +142,18 @@ export const ConversationsSidebar: React.FC = () => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold truncate text-white">{title}</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-xs font-semibold truncate text-white">{title}</span>
+                        {!isGroup && other?.customStatus && (
+                          <span
+                            className="text-[10px] text-[#64D2FF] truncate max-w-[90px] font-medium"
+                            title={other.customStatus}
+                          >
+                            {other.customStatus}
+                          </span>
+                        )}
+                      </div>
                       {unread > 0 && (
                         <span className="px-1.5 py-0.5 rounded-full bg-violet-600 text-white font-bold text-[10px] min-w-[18px] text-center">
                           {unread}
@@ -159,8 +171,56 @@ export const ConversationsSidebar: React.FC = () => {
         </div>
       </div>
 
+      {/* Slack-style Current User Footer */}
+      <div className="h-16 px-3 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between shrink-0">
+        <button
+          type="button"
+          onClick={() => setIsSlackStatusOpen(true)}
+          className="flex items-center gap-2.5 min-w-0 text-left hover:bg-white/[0.05] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group flex-1"
+          title="Set availability & status (like Slack)"
+        >
+          <div className="relative shrink-0">
+            <Avatar
+              size="sm"
+              status={user?.status || 'ONLINE'}
+              fallbackText={user?.displayName || user?.username}
+              src={user?.avatarUrl}
+              className="group-hover:scale-105 transition-transform"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-white truncate group-hover:text-[#64D2FF] transition-colors">
+              {user?.displayName || user?.username}
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
+              {user?.customStatus ? (
+                <span className="text-[#64D2FF] font-medium truncate">{user.customStatus}</span>
+              ) : (
+                <span className="capitalize">{user?.status?.toLowerCase() || 'online'}</span>
+              )}
+            </div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsSlackStatusOpen(true)}
+          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[#30D158] hover:bg-[#30D158]/10 transition-all cursor-pointer"
+          title="Set Availability & Status"
+        >
+          <Smile className="w-4 h-4 text-[#30D158]" />
+        </button>
+      </div>
+
       {/* Direct/Group Creation Modal */}
       <CreateConversationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* Slack Availability & Status Modal */}
+      <SlackStatusModal
+        isOpen={isSlackStatusOpen}
+        onClose={() => setIsSlackStatusOpen(false)}
+      />
     </aside>
   );
 };
+

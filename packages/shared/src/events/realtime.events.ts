@@ -159,7 +159,22 @@ export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_E
 export interface PresenceHeartbeatPayload {
   status: UserStatus;
   customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
 }
+
+export interface PresenceUpdatePayload {
+  status: UserStatus;
+  customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
+}
+
+export interface PresenceUserUpdatedBroadcast {
+  userId: string;
+  status: UserStatus;
+  customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
+}
+
 
 export interface RoomJoinPayload {
   roomId: string;
