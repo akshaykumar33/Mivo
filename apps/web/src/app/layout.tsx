@@ -44,7 +44,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased h-screen w-screen overflow-hidden">
+      <body className="antialiased h-screen w-screen overflow-hidden" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
