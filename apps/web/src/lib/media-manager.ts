@@ -264,7 +264,7 @@ export class MediaManager {
 
       // Text Overlay
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 32px Outfit, Inter, sans-serif';
+      ctx.font = '600 32px "Plus Jakarta Sans", Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(
         type === 'CAMERA' ? 'Mivo Live Camera Feed' : 'Mivo Screen Broadcast',

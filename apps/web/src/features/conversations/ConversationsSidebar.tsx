@@ -31,13 +31,36 @@ export const ConversationsSidebar: React.FC = () => {
     }
   }, [user?.id, loadConversations, setupRealtimeListeners]);
 
-  const filteredConversations = conversations.filter((c) => {
+  // Memoized deduplication ensuring no duplicate conversation IDs or direct chats exist in UI
+  const uniqueConversations = React.useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenDirectUserIds = new Set<string>();
+    const result: ConversationDTO[] = [];
+
+    for (const c of conversations) {
+      if (!c || !c.id || seenIds.has(c.id)) continue;
+      seenIds.add(c.id);
+
+      if (c.type === 'DIRECT') {
+        const otherUserId = c.members?.find((m) => m.userId !== user?.id)?.userId;
+        if (otherUserId) {
+          if (seenDirectUserIds.has(otherUserId)) continue;
+          seenDirectUserIds.add(otherUserId);
+        }
+      }
+
+      result.push(c);
+    }
+    return result;
+  }, [conversations, user?.id]);
+
+  const filteredConversations = uniqueConversations.filter((c: ConversationDTO) => {
     if (!filterQuery.trim()) return true;
     const q = filterQuery.toLowerCase();
     if (c.type === 'GROUP') {
       return (c.name || '').toLowerCase().includes(q);
     }
-    const other = c.members.find((m) => m.userId !== user?.id)?.user;
+    const other = c.members?.find((m) => m.userId !== user?.id)?.user;
     return (
       (other?.displayName || '').toLowerCase().includes(q) ||
       (other?.username || '').toLowerCase().includes(q)
@@ -51,7 +74,7 @@ export const ConversationsSidebar: React.FC = () => {
         <div className="h-16 px-4 border-b border-[var(--border-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-[#DC2626]" />
-            <span className="text-xs font-black uppercase tracking-wider text-[#111827] font-display">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#111827] font-display">
               Conversations
             </span>
           </div>

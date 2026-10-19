@@ -59,7 +59,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
     api.get<MessageDTO[]>(`/api/v1/rooms/${room.id}/messages`).then((res) => {
       if (isMounted && res.success && res.data) {
-        setMessages(res.data);
+        const seen = new Set<string>();
+        const uniqueMessages = res.data.filter((m) => {
+          if (!m.id || seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
+        setMessages(uniqueMessages);
       }
       if (isMounted) {
         setIsLoading(false);

@@ -9,9 +9,6 @@ import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
-import { useAuthStore } from '@/stores/authStore';
-import { Avatar } from '@mivo/ui';
-import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 
 const COMMUNITY_PALETTES = [
   'from-[#DC2626] via-[#EF4444] to-[#F87171]',
@@ -27,15 +24,22 @@ export interface CommunitySidebarProps {
 
 export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }) => {
   const pathname = usePathname();
-  const { user } = useAuthStore();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
-  const [isStatusModalOpen, setIsStatusModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     fetchCommunities();
   }, [fetchCommunities]);
+
+  const uniqueCommunities = React.useMemo(() => {
+    const seen = new Set<string>();
+    return communities.filter((c) => {
+      if (!c || !c.id || seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
+  }, [communities]);
 
   const isDMsActive = pathname.startsWith('/conversations') || pathname.startsWith('/channels');
 
@@ -83,7 +87,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
 
         {/* Communities App Icons Scroll List */}
         <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col items-center space-y-2 py-1 scrollbar-none">
-          {communities.map((community, index) => {
+          {uniqueCommunities.map((community, index) => {
             const isActive = pathname.includes(`/communities/${community.id}`);
             const initials = community.name
               .split(' ')
@@ -187,39 +191,11 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
             </div>
           </div>
 
-          {/* User Availability & Slack Status Trigger */}
-          <div className="relative group flex items-center justify-center w-full pt-1">
-            <button
-              onClick={() => setIsStatusModalOpen(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-[#DC2626]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
-              title="Set availability & status"
-            >
-              <Avatar
-                size="sm"
-                status={user?.status || 'ONLINE'}
-                fallbackText={user?.displayName || user?.username}
-                src={user?.avatarUrl}
-              />
-            </button>
-
-            <div className="absolute left-[72px] px-3 py-1.5 rounded-[12px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-2xl backdrop-blur-xl z-50">
-              <div className="font-bold flex items-center gap-1.5">
-                <span>{user?.displayName || user?.username}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-red-500/10 uppercase tracking-wider font-semibold text-[#DC2626]">
-                  {user?.status || 'ONLINE'}
-                </span>
-              </div>
-              <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                {user?.customStatus ? `"${user.customStatus}" • ` : ''}Click to set status
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
 
       <CreateCommunityModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
-      <SlackStatusModal isOpen={isStatusModalOpen} onClose={() => setIsStatusModalOpen(false)} />
     </>
   );
 };

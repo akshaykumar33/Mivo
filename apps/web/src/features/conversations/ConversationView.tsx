@@ -132,7 +132,15 @@ export const ConversationView: React.FC = () => {
   const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const activeConv = conversations.find((c) => c.id === activeConversationId);
-  const convMessages = (activeConversationId && messages[activeConversationId]) || [];
+  const rawMessages = (activeConversationId && messages[activeConversationId]) || [];
+  const convMessages = React.useMemo(() => {
+    const seen = new Set<string>();
+    return rawMessages.filter((m) => {
+      if (!m || !m.id || seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [rawMessages]);
   const currentTyping = (activeConversationId && typingUsers[activeConversationId]) || [];
 
   // Determine other user for direct conversations

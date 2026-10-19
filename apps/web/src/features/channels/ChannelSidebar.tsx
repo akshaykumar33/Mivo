@@ -67,6 +67,50 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
     }
   }, [communityId, selectCommunity]);
 
+  // Filter channels and rooms based on active navigation tab & search query (with strict deduplication)
+  const filteredChannels = React.useMemo(() => {
+    if (!activeCommunity?.channels) return [];
+    const seenChannelIds = new Set<string>();
+    const uniqueChannels = activeCommunity.channels.filter((ch) => {
+      if (!ch || !ch.id || seenChannelIds.has(ch.id)) return false;
+      seenChannelIds.add(ch.id);
+      return true;
+    });
+
+    return uniqueChannels
+      .map((ch) => {
+        const seenRoomIds = new Set<string>();
+        const uniqueRooms = (ch.rooms || []).filter((r) => {
+          if (!r || !r.id || seenRoomIds.has(r.id)) return false;
+          seenRoomIds.add(r.id);
+          return true;
+        });
+
+        const matchingRooms = uniqueRooms.filter((r) => {
+          const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
+          if (!matchesSearch) return false;
+          if (activeTab === 'STAGES') {
+            return (
+              r.activeMode === 'VOICE' ||
+              r.activeMode === 'VIDEO' ||
+              r.activeMode === 'SCREEN_SHARE' ||
+              r.activeMode === 'STREAM'
+            );
+          }
+          return true;
+        });
+
+        return {
+          ...ch,
+          rooms: matchingRooms,
+        };
+      })
+      .filter((ch) => {
+        if (activeTab === 'STAGES') return ch.rooms.length > 0;
+        return ch.name.toLowerCase().includes(searchQuery.toLowerCase()) || ch.rooms.length > 0;
+      });
+  }, [activeCommunity?.channels, searchQuery, activeTab]);
+
   if (!activeCommunity) {
     return (
       <div className={className || "w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col justify-center items-center select-none flex-shrink-0"}>
@@ -82,26 +126,6 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
     activeCommunity.currentUserRole?.permissions.includes('community.manage' as any);
 
   const roleColor = activeCommunity.currentUserRole?.color || '#DC2626';
-
-  // Filter channels and rooms based on active navigation tab & search query
-  const filteredChannels = (activeCommunity.channels || []).map((ch) => {
-    const matchingRooms = (ch.rooms || []).filter((r) => {
-      const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
-      if (!matchesSearch) return false;
-      if (activeTab === 'STAGES') {
-        return r.activeMode === 'VOICE' || r.activeMode === 'VIDEO' || r.activeMode === 'SCREEN_SHARE' || r.activeMode === 'STREAM';
-      }
-      return true;
-    });
-
-    return {
-      ...ch,
-      rooms: matchingRooms,
-    };
-  }).filter((ch) => {
-    if (activeTab === 'STAGES') return ch.rooms.length > 0;
-    return ch.name.toLowerCase().includes(searchQuery.toLowerCase()) || ch.rooms.length > 0;
-  });
 
   return (
     <>
