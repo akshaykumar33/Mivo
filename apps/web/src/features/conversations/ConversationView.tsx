@@ -280,10 +280,10 @@ export const ConversationView: React.FC = () => {
   if (!activeConv) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[var(--bg-canvas)] text-center select-none">
-        <div className="w-16 h-16 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-4 shadow-inner">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-[#DC2626] mb-4 shadow-inner">
           <Users className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-white font-display mb-1">
+        <h3 className="text-lg font-bold text-[#111827] font-display mb-1">
           Select or Create a Conversation
         </h3>
         <p className="text-xs text-[var(--text-muted)] max-w-sm">
@@ -299,11 +299,11 @@ export const ConversationView: React.FC = () => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`flex-1 flex flex-col bg-[var(--bg-canvas)] h-full overflow-hidden relative transition-colors ${
-        isDragOver ? 'ring-2 ring-violet-500 ring-inset bg-violet-950/10' : ''
+        isDragOver ? 'ring-2 ring-[#DC2626] ring-inset bg-red-950/5' : ''
       }`}
     >
       {/* Top Header */}
-      <header className="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/60 backdrop-blur-md z-10">
+      <header className="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/80 backdrop-blur-md z-10">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Avatar
@@ -328,9 +328,9 @@ export const ConversationView: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white font-display">{title}</h2>
+              <h2 className="text-sm font-bold text-[#111827] font-display">{title}</h2>
               {activeConv.type === 'GROUP' ? (
-                <span className="px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[10px] font-semibold">
+                <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-[#DC2626] border border-red-500/20 text-[10px] font-semibold">
                   Group • {activeConv.members.length} members
                 </span>
               ) : (
@@ -354,7 +354,7 @@ export const ConversationView: React.FC = () => {
                   {otherMember?.customStatus && (
                     <>
                       <span>•</span>
-                      <span className="text-[#64D2FF] font-medium flex items-center gap-1">
+                      <span className="text-[#DC2626] font-semibold flex items-center gap-1">
                         {otherMember.customStatus}
                       </span>
                     </>
@@ -375,8 +375,8 @@ export const ConversationView: React.FC = () => {
             onClick={() => setIsMeetingHubOpen(true)}
             className={`gap-2 transition-all duration-200 ${
               activeBridge
-                ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
-                : 'bg-white/[0.05] hover:bg-white/[0.1] text-white/90 border-white/[0.1]'
+                ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
+                : 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border-[var(--border-subtle)]'
             }`}
             title="Start or manage Google Meet / Microsoft Teams meeting"
           >
@@ -397,7 +397,7 @@ export const ConversationView: React.FC = () => {
             variant="secondary"
             onClick={handleStartCall}
             disabled={activeCall?.conversationId === activeConv.id}
-            className="gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border-emerald-500/30"
+            className="gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 border-emerald-500/30"
           >
             <Phone className="w-4 h-4" />
             <span className="hidden sm:inline">
@@ -421,13 +421,13 @@ export const ConversationView: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
         {convMessages.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600/20 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#DC2626]/20 to-[#991B1B]/20 border border-[#DC2626]/30 flex items-center justify-center text-[#DC2626] mb-3">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-bold text-white mb-1">No messages yet</h4>
+            <h4 className="text-sm font-bold text-[#111827] mb-1">No messages yet</h4>
             <p className="text-xs text-[var(--text-muted)] max-w-xs">
               This is the beginning of your conversation with{' '}
-              <span className="text-violet-300 font-semibold">{title}</span>. Share messages, attachments, and documents!
+              <span className="text-[#DC2626] font-semibold">{title}</span>. Share messages, attachments, and documents!
             </p>
           </div>
         ) : (
@@ -460,7 +460,7 @@ export const ConversationView: React.FC = () => {
                       isMe ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {!isMe && <span className="font-semibold text-slate-300">{senderName}</span>}
+                    {!isMe && <span className="font-semibold text-[#111827]">{senderName}</span>}
                     <span>{formattedTime}</span>
                   </div>
 
@@ -468,8 +468,8 @@ export const ConversationView: React.FC = () => {
                   <div
                     className={`rounded-2xl p-3 text-xs leading-relaxed transition-all shadow-md ${
                       isMe
-                        ? 'bg-violet-600 text-white rounded-tr-xs'
-                        : 'bg-[var(--bg-surface-1)] text-slate-200 border border-[var(--border-subtle)] rounded-tl-xs'
+                        ? 'bg-gradient-to-r from-[#DC2626] via-[#B91C1C] to-[#991B1B] text-white shadow-[0_4px_16px_rgba(220,38,38,0.25)] rounded-tr-xs'
+                        : 'bg-[var(--bg-surface-0)] text-[#111827] border border-[var(--border-subtle)] shadow-sm rounded-tl-xs'
                     }`}
                   >
                     {msg.content && (
@@ -538,7 +538,7 @@ export const ConversationView: React.FC = () => {
                                     size: att.size,
                                   })
                                 }
-                                className="max-w-md max-h-72 rounded-xl overflow-hidden border border-white/10 hover:border-violet-500/50 cursor-pointer group/img transition-all bg-black/40 shadow-sm relative"
+                                className="max-w-md max-h-72 rounded-xl overflow-hidden border border-[var(--border-subtle)] hover:border-[#DC2626]/50 cursor-pointer group/img transition-all bg-black/5 shadow-sm relative"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
@@ -568,7 +568,7 @@ export const ConversationView: React.FC = () => {
                                   size: att.size,
                                 })
                               }
-                              className="flex items-center gap-3 p-3 rounded-2xl bg-black/25 hover:bg-black/40 border border-white/10 hover:border-violet-500/40 transition-all max-w-sm group/doc shadow-sm cursor-pointer"
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-[#DC2626]/40 transition-all max-w-sm group/doc shadow-sm cursor-pointer"
                             >
                               <div
                                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${docInfo.color} group-hover/doc:scale-105 transition-transform`}
@@ -587,7 +587,7 @@ export const ConversationView: React.FC = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
                                   <span
-                                    className="text-xs font-semibold text-white truncate max-w-[170px]"
+                                    className="text-xs font-semibold text-[#111827] truncate max-w-[170px]"
                                     title={att.name}
                                   >
                                     {att.name}
@@ -598,7 +598,7 @@ export const ConversationView: React.FC = () => {
                                     {docInfo.badge}
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-white/50 flex items-center gap-1.5 mt-0.5">
+                                <div className="text-[10px] text-[var(--text-muted)] flex items-center gap-1.5 mt-0.5">
                                   <span>{storageClient.formatBytes(att.size)}</span>
                                   <span>•</span>
                                   <span>{docInfo.label}</span>
@@ -620,7 +620,7 @@ export const ConversationView: React.FC = () => {
                                     })
                                   }
                                   title="View Document (Read-Only)"
-                                  className="p-1.5 rounded-lg hover:bg-violet-500/20 text-white/60 hover:text-violet-300 transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-[#DC2626] transition-colors"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                 </button>
@@ -629,7 +629,7 @@ export const ConversationView: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Open in new tab"
-                                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[#111827] transition-colors"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
@@ -639,7 +639,7 @@ export const ConversationView: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Download Document"
-                                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[#111827] transition-colors"
                                 >
                                   <Download className="w-3.5 h-3.5" />
                                 </a>
@@ -658,7 +658,7 @@ export const ConversationView: React.FC = () => {
                         key={emoji}
                         type="button"
                         onClick={() => addReaction(activeConv.id, msg.id, emoji)}
-                        className="p-1 rounded-md hover:bg-white/[0.08] text-xs transition-colors"
+                        className="p-1 rounded-md hover:bg-black/5 text-xs transition-colors"
                       >
                         {emoji}
                       </button>
@@ -674,11 +674,11 @@ export const ConversationView: React.FC = () => {
 
       {/* Typing Indicator */}
       {currentTyping.length > 0 && (
-        <div className="px-6 py-1 text-[11px] text-violet-400 font-medium flex items-center gap-2">
+        <div className="px-6 py-1 text-[11px] text-[#DC2626] font-medium flex items-center gap-2">
           <span className="flex gap-1 items-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" />
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.2s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.4s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce [animation-delay:0.2s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce [animation-delay:0.4s]" />
           </span>
           <span>{currentTyping.join(', ')} is typing...</span>
         </div>
@@ -686,9 +686,9 @@ export const ConversationView: React.FC = () => {
 
       {/* Uploading Status Banner */}
       {isUploading && (
-        <div className="px-6 py-2 bg-violet-600/10 border-t border-violet-500/20 text-xs text-violet-300 flex items-center gap-2 animate-pulse">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400" />
-          <span>{uploadStatus || 'Uploading to Supabase S3...'}</span>
+        <div className="px-6 py-2 bg-red-600/10 border-t border-red-500/20 text-xs text-[#DC2626] flex items-center gap-2 animate-pulse">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DC2626]" />
+          <span>{uploadStatus || 'Uploading file...'}</span>
         </div>
       )}
 
@@ -700,13 +700,13 @@ export const ConversationView: React.FC = () => {
             return (
               <div
                 key={att.url || att.name}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-white text-xs shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-[#111827] text-xs shadow-sm"
               >
                 <div className={`p-1 rounded-lg border ${docInfo.color}`}>
                   <FileText className="w-3 h-3" />
                 </div>
-                <span className="max-w-[140px] truncate font-medium">{att.name}</span>
-                <span className="text-[10px] text-white/50">({storageClient.formatBytes(att.size)})</span>
+                <span className="max-w-[140px] truncate font-semibold">{att.name}</span>
+                <span className="text-[10px] text-[var(--text-muted)]">({storageClient.formatBytes(att.size)})</span>
                 <button
                   type="button"
                   onClick={() =>
@@ -717,7 +717,7 @@ export const ConversationView: React.FC = () => {
                       size: att.size,
                     })
                   }
-                  className="text-violet-300 hover:text-white p-0.5 rounded transition-colors"
+                  className="text-[#DC2626] hover:text-[#991B1B] p-0.5 rounded transition-colors"
                   title="Preview document"
                 >
                   <Eye className="w-3.5 h-3.5" />
@@ -725,7 +725,7 @@ export const ConversationView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPendingAttachments((prev) => prev.filter((p) => p.url !== att.url))}
-                  className="text-violet-300 hover:text-rose-400 p-0.5 rounded transition-colors"
+                  className="text-[var(--text-muted)] hover:text-rose-600 p-0.5 rounded transition-colors"
                   title="Remove attachment"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -753,10 +753,10 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => docInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
             title="Send Document (PDF, Word, Excel, Zip...)"
           >
-            <FilePlus className="w-4 h-4 text-violet-400" />
+            <FilePlus className="w-4 h-4 text-[#DC2626]" />
           </button>
 
           {/* Media / Photo Upload Hidden Input & Button */}
@@ -773,20 +773,20 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => mediaInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
             title="Attach Image or Video"
           >
-            <ImageIcon className="w-4 h-4 text-cyan-400" />
+            <ImageIcon className="w-4 h-4 text-[#D97706]" />
           </button>
 
           {/* Instant Google Meet & Teams Button */}
           <button
             type="button"
             onClick={() => setIsMeetingHubOpen(true)}
-            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors group relative"
+            className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs group relative"
             title="Start Google Meet or Microsoft Teams session"
           >
-            <Video className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+            <Video className="w-4 h-4 text-[#059669] group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Quick Emoji Trigger */}
@@ -794,10 +794,10 @@ export const ConversationView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors"
+              className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
               title="Add emoji"
             >
-              <Smile className="w-4 h-4 text-amber-400" />
+              <Smile className="w-4 h-4 text-[#DC2626]" />
             </button>
             {showEmojiPicker && (
               <div className="absolute bottom-12 left-0 p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1 z-20">
@@ -809,7 +809,7 @@ export const ConversationView: React.FC = () => {
                       setInputContent((prev) => prev + e);
                       setShowEmojiPicker(false);
                     }}
-                    className="p-1.5 hover:bg-white/[0.1] rounded-lg text-sm"
+                    className="p-1.5 hover:bg-black/5 rounded-lg text-sm cursor-pointer"
                   >
                     {e}
                   </button>
@@ -824,7 +824,7 @@ export const ConversationView: React.FC = () => {
             placeholder={`Message ${title}... (or drag and drop documents)`}
             value={inputContent}
             onChange={handleInputChange}
-            className="flex-1 bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
+            className="flex-1 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
           />
 
           {/* Send Button */}
@@ -832,7 +832,7 @@ export const ConversationView: React.FC = () => {
             type="submit"
             size="sm"
             disabled={(!inputContent.trim() && pendingAttachments.length === 0) || isUploading}
-            className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/30"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] text-white shadow-md shadow-red-600/30 cursor-pointer"
           >
             <Send className="w-4 h-4" />
           </Button>

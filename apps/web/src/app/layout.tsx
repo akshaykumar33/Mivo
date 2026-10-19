@@ -26,9 +26,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var theme = localStorage.getItem('mivo_theme') || 'midnight';
+                var theme = localStorage.getItem('mivo_theme');
+                if (!theme || theme === 'midnight') {
+                  theme = 'crimson-cream';
+                  localStorage.setItem('mivo_theme', 'crimson-cream');
+                }
                 document.documentElement.setAttribute('data-theme', theme);
-                if (theme === 'light-frost' || theme === 'solar-warm') {
+                if (theme === 'crimson-cream' || theme === 'light-frost' || theme === 'solar-warm') {
                   document.documentElement.classList.add('light-mode');
                   document.documentElement.classList.remove('dark-mode');
                 } else {

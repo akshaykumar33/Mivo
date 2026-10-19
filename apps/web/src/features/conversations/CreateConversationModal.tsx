@@ -118,10 +118,10 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               setActiveTab('direct');
               setErrorMsg(null);
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               activeTab === 'direct'
-                ? 'bg-violet-600 text-white shadow-md'
-                : 'text-[var(--text-secondary)] hover:text-white'
+                ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-md'
+                : 'text-[var(--text-secondary)] hover:text-[#111827]'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -133,10 +133,10 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               setActiveTab('group');
               setErrorMsg(null);
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               activeTab === 'group'
-                ? 'bg-violet-600 text-white shadow-md'
-                : 'text-[var(--text-secondary)] hover:text-white'
+                ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-md'
+                : 'text-[var(--text-secondary)] hover:text-[#111827]'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -145,7 +145,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 font-medium">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 font-medium">
             {errorMsg}
           </div>
         )}
@@ -160,7 +160,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                 placeholder="Search by name or username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
               />
             </div>
 
@@ -180,7 +180,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                     type="button"
                     disabled={isSubmitting}
                     onClick={() => handleStartDM(u.id)}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors group text-left"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-black/[0.04] transition-colors group text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -202,7 +202,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                         />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-white group-hover:text-violet-300 transition-colors">
+                        <div className="text-xs font-semibold text-[#111827] group-hover:text-[#DC2626] transition-colors">
                           {u.displayName || u.username}
                         </div>
                         <div className="text-[11px] text-[var(--text-muted)]">
@@ -210,7 +210,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    <div className="text-xs font-semibold text-[#DC2626] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                       <span>Message</span>
                     </div>
                   </button>
@@ -244,7 +244,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                   placeholder="https://example.com/icon.png"
                   value={groupIconUrl}
                   onChange={(e) => setGroupIconUrl(e.target.value)}
-                  className="w-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
+                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -252,7 +252,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
                 <span>Select Members</span>
-                <span className="text-[11px] text-violet-400 font-bold">
+                <span className="text-[11px] text-[#DC2626] font-bold">
                   {selectedUserIds.length} selected
                 </span>
               </div>
@@ -264,7 +264,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                   placeholder="Filter users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
+                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 />
               </div>
 
@@ -277,8 +277,8 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       onClick={() => toggleSelectUser(u.id)}
                       className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-violet-600/20 border border-violet-500/40 text-white'
-                          : 'hover:bg-white/[0.04] text-[var(--text-secondary)]'
+                          ? 'bg-red-500/10 border border-red-500/30 text-[#111827]'
+                          : 'hover:bg-black/[0.04] text-[var(--text-secondary)]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -288,7 +288,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                           size="xs"
                         />
                         <div>
-                          <div className="text-xs font-semibold text-white">
+                          <div className="text-xs font-semibold text-[#111827]">
                             {u.displayName || u.username}
                           </div>
                           <div className="text-[10px] text-[var(--text-muted)]">@{u.username}</div>
@@ -298,8 +298,8 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <div
                         className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
                           isSelected
-                            ? 'bg-violet-600 border-violet-500 text-white'
-                            : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)]'
+                            ? 'bg-[#DC2626] border-[#DC2626] text-white shadow-xs'
+                            : 'border-[var(--border-subtle)] bg-[var(--bg-surface-0)]'
                         }`}
                       >
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}

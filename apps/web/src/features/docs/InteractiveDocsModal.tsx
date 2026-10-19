@@ -304,25 +304,25 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
         className="w-full max-w-6xl h-full sm:h-[88vh] rounded-none sm:rounded-[28px] bg-[var(--bg-surface-0)] border-0 sm:border border-[var(--border-subtle)] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl relative text-[var(--text-primary)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Apple Gradient Top Highlight */}
-        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#5E5CE6]/60 to-transparent" />
+        {/* Top Highlight */}
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#DC2626]/60 to-transparent" />
 
         {/* Modal Top Header */}
         <div className="h-14 sm:h-16 px-4 sm:px-6 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
-            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 flex-shrink-0">
+            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center text-white shadow-lg shadow-red-600/25 flex-shrink-0">
               <BookOpen className="w-4 sm:w-5 h-4 sm:h-5 stroke-[2.2]" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)] font-display tracking-tight truncate">
+                <h2 className="text-xs sm:text-sm font-extrabold text-[#111827] font-display tracking-tight truncate">
                   Mivo Documentation & Architecture Reference
                 </h2>
-                <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#5E5CE6]/20 text-[#64D2FF] border border-[#5E5CE6]/30">
+                <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-red-500/10 text-red-600 border border-red-500/25">
                   v1.0 Pro
                 </span>
               </div>
-              <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] font-medium truncate block">
+              <span className="text-[10px] sm:text-[11px] text-[#4B5563] font-medium truncate block">
                 Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
               </span>
             </div>
@@ -331,7 +331,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
               title="Close Documentation (Esc)"
             >
               <X className="w-5 h-5" />
@@ -345,13 +345,13 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           <aside className="w-full md:w-80 max-h-48 md:max-h-none bg-[var(--bg-sidebar)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)] flex flex-col p-3 sm:p-4 space-y-3 flex-shrink-0">
             {/* Search Input with Icon */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#71717A] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search articles & guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/[0.03] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#5E5CE6] focus:bg-white/[0.06] font-medium transition-all"
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder-[#71717A] focus:outline-none focus:border-red-500 font-medium transition-all"
               />
             </div>
 
@@ -365,13 +365,13 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <div key={categoryName} className="space-y-1">
                     <button
                       onClick={() => toggleCategory(categoryName)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.03] transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[#4B5563] hover:text-[#111827] hover:bg-black/[0.04] transition-colors"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isExpanded ? (
-                          <FolderOpen className="w-3.5 h-3.5 text-[#5E5CE6]" />
+                          <FolderOpen className="w-3.5 h-3.5 text-red-600" />
                         ) : (
-                          <Folder className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                          <Folder className="w-3.5 h-3.5 text-[#71717A]" />
                         )}
                         <span className="truncate">{categoryName}</span>
                       </span>
@@ -390,15 +390,15 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                               onClick={() => setSelectedArticleId(art.id)}
                               className={`w-full flex flex-col gap-0.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-[#5E5CE6]/30 to-[#0A84FF]/20 border border-[#5E5CE6]/40 text-[var(--text-primary)] shadow-md'
-                                  : 'text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)]'
+                                  ? 'bg-red-500/10 border border-red-500/30 text-red-700 shadow-sm'
+                                  : 'text-[#4B5563] hover:bg-black/[0.04] hover:text-[#111827]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate">
-                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-[#64D2FF]' : 'text-[var(--text-muted)]'}`} />
+                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-red-600' : 'text-[#71717A]'}`} />
                                 <span className="truncate text-xs font-semibold">{art.title}</span>
                               </div>
-                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-[var(--text-muted)]">
+                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-[#71717A]">
                                 <span>{art.readTime}</span>
                               </div>
                             </button>
@@ -417,11 +417,11 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Article Meta Bar */}
               <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                  <Compass className="w-3.5 h-3.5 text-[#5E5CE6]" />
+                <div className="flex items-center gap-2 text-xs text-[#71717A]">
+                  <Compass className="w-3.5 h-3.5 text-red-600" />
                   <span>{activeArticle.category}</span>
                   <span>/</span>
-                  <span className="text-[var(--text-primary)] font-medium">{activeArticle.title}</span>
+                  <span className="text-[#111827] font-semibold">{activeArticle.title}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-mono">
@@ -442,19 +442,19 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                 {/* Code Block if Present */}
                 {activeArticle.codeSnippet && (
                   <div className="rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] overflow-hidden my-5 shadow-lg">
-                    <div className="px-4 py-2.5 bg-white/[0.03] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+                    <div className="px-4 py-2.5 bg-black/[0.02] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[#71717A]">
                       <div className="flex items-center gap-2">
-                        <Terminal className="w-3.5 h-3.5 text-violet-400" />
-                        <span className="font-mono text-[11px] uppercase tracking-wider">{activeArticle.codeSnippet.lang}</span>
+                        <Terminal className="w-3.5 h-3.5 text-red-600" />
+                        <span className="font-mono text-[11px] uppercase tracking-wider font-semibold text-[#111827]">{activeArticle.codeSnippet.lang}</span>
                       </div>
                       <button
                         onClick={() => handleCopyCode(activeArticle.codeSnippet!.code)}
-                        className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-[11px] text-[#4B5563] hover:text-[#111827] transition-colors cursor-pointer"
                       >
                         {copiedSnippet ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-emerald-400 font-semibold">Copied!</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600 font-semibold">Copied!</span>
                           </>
                         ) : (
                           <>
@@ -464,7 +464,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                         )}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-[#64D2FF] overflow-x-auto leading-relaxed">
+                    <pre className="p-4 text-xs font-mono text-red-800 bg-[#FFFDF9] overflow-x-auto leading-relaxed border-t border-[var(--border-subtle)]">
                       <code>{activeArticle.codeSnippet.code}</code>
                     </pre>
                   </div>
@@ -487,32 +487,32 @@ function formatMarkdownToHtml(md: string): string {
   const processed = lines.map((line) => {
     let l = line;
     if (l.startsWith('# ')) {
-      return `<h1 class="text-2xl font-extrabold text-[var(--text-primary)] font-display border-b border-[var(--border-subtle)] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
+      return `<h1 class="text-2xl font-extrabold text-[#111827] font-display border-b border-[var(--border-subtle)] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
     }
     if (l.startsWith('### ')) {
-      return `<h3 class="text-sm font-bold text-[#BF5AF2] font-display uppercase tracking-wider mt-5 mb-2">${l.slice(4)}</h3>`;
+      return `<h3 class="text-sm font-bold text-red-600 font-display uppercase tracking-wider mt-5 mb-2">${l.slice(4)}</h3>`;
     }
     if (l.startsWith('## ')) {
-      return `<h2 class="text-lg font-bold text-[var(--text-primary)] font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+      return `<h2 class="text-lg font-bold text-[#111827] font-display mt-6 mb-3">${l.slice(3)}</h2>`;
     }
     if (l.startsWith('> [!TIP]') || l.startsWith('> [!NOTE]')) {
       const type = l.includes('TIP') ? 'TIP' : 'NOTE';
-      return `<div class="p-3.5 rounded-2xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/35 text-[#64D2FF] text-xs font-medium my-3 flex items-start gap-2.5">
-        <span class="font-bold uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-[#5E5CE6]/30 border border-[#5E5CE6]/40 text-white">${type}</span>
+      return `<div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium my-3 flex items-start gap-2.5">
+        <span class="font-bold uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-amber-600 text-white">${type}</span>
       </div>`;
     }
     if (l.startsWith('> ')) {
-      return `<blockquote class="p-3 rounded-2xl bg-white/[0.03] border-l-4 border-[#5E5CE6] text-[var(--text-secondary)] text-xs italic my-3">${l.slice(2)}</blockquote>`;
+      return `<blockquote class="p-3 rounded-2xl bg-red-50/50 border-l-4 border-red-500 text-[#4B5563] text-xs italic my-3">${l.slice(2)}</blockquote>`;
     }
     if (l.startsWith('* ') || l.startsWith('- ')) {
       const itemText = l.slice(2)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
-        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-[var(--border-subtle)]">$1</code>');
-      return `<li class="text-[var(--text-secondary)] ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#111827] font-semibold">$1</strong>')
+        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 font-mono text-xs border border-red-200">$1</code>');
+      return `<li class="text-[#4B5563] ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
     }
     return l
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
-      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/[0.08] text-[#64D2FF] font-mono text-xs border border-[var(--border-subtle)]">$1</code>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#111827] font-semibold">$1</strong>')
+      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 font-mono text-xs border border-red-200">$1</code>');
   });
 
   return processed.join('<br />');

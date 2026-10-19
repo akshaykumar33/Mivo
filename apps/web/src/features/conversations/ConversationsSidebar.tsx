@@ -50,8 +50,8 @@ export const ConversationsSidebar: React.FC = () => {
         {/* Header Bar */}
         <div className="h-16 px-4 border-b border-[var(--border-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-violet-400" />
-            <span className="text-xs font-bold uppercase tracking-wider text-white font-display">
+            <MessageSquare className="w-4 h-4 text-[#DC2626]" />
+            <span className="text-xs font-black uppercase tracking-wider text-[#111827] font-display">
               Conversations
             </span>
           </div>
@@ -59,7 +59,7 @@ export const ConversationsSidebar: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="w-7 h-7 rounded-lg bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white flex items-center justify-center transition-all shadow-sm"
+            className="w-7 h-7 rounded-lg bg-[#DC2626]/10 hover:bg-[#DC2626] text-[#DC2626] hover:text-white flex items-center justify-center transition-all shadow-sm border border-[#DC2626]/20 cursor-pointer"
             title="Start Direct Message or Create Custom Group"
           >
             <Plus className="w-4 h-4" />
@@ -75,7 +75,7 @@ export const ConversationsSidebar: React.FC = () => {
               placeholder="Find or start conversation..."
               value={filterQuery}
               onChange={(e) => setFilterQuery(e.target.value)}
-              className="w-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-violet-500 transition-colors"
+              className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
             />
           </div>
         </div>
@@ -84,14 +84,14 @@ export const ConversationsSidebar: React.FC = () => {
         <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 custom-scrollbar">
           {filteredConversations.length === 0 ? (
             <div className="py-12 px-4 text-center">
-              <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center mx-auto mb-3 text-[var(--text-muted)]">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-3 text-[#DC2626]">
                 <Users className="w-5 h-5" />
               </div>
               <p className="text-xs text-[var(--text-muted)] mb-3">No conversations yet</p>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-violet-600/20 text-violet-300 hover:bg-violet-600 hover:text-white text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white hover:from-[#EF4444] hover:to-[#DC2626] text-xs font-semibold shadow-md transition-all inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Start Chat</span>
@@ -114,10 +114,10 @@ export const ConversationsSidebar: React.FC = () => {
                   key={c.id}
                   type="button"
                   onClick={() => selectConversation(c.id)}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left ${
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer ${
                     isActive
-                      ? 'bg-violet-600/20 border border-violet-500/40 text-white shadow-sm'
-                      : 'hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-white border border-transparent'
+                      ? 'bg-[#DC2626]/10 border border-[#DC2626]/30 text-[#111827] shadow-sm font-semibold'
+                      : 'hover:bg-black/[0.04] text-[var(--text-secondary)] hover:text-[#111827] border border-transparent'
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -144,10 +144,10 @@ export const ConversationsSidebar: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-xs font-semibold truncate text-white">{title}</span>
+                        <span className="text-xs font-bold truncate text-[#111827]">{title}</span>
                         {!isGroup && other?.customStatus && (
                           <span
-                            className="text-[10px] text-[#64D2FF] truncate max-w-[90px] font-medium"
+                            className="text-[10px] text-[#DC2626] bg-red-500/10 px-1 rounded truncate max-w-[90px] font-semibold"
                             title={other.customStatus}
                           >
                             {other.customStatus}
@@ -155,7 +155,7 @@ export const ConversationsSidebar: React.FC = () => {
                         )}
                       </div>
                       {unread > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-violet-600 text-white font-bold text-[10px] min-w-[18px] text-center">
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#DC2626] text-white font-bold text-[10px] min-w-[18px] text-center shadow-xs">
                           {unread}
                         </span>
                       )}
@@ -176,7 +176,7 @@ export const ConversationsSidebar: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsSlackStatusOpen(true)}
-          className="flex items-center gap-2.5 min-w-0 text-left hover:bg-white/[0.05] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group flex-1"
+          className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group flex-1"
           title="Set availability & status (like Slack)"
         >
           <div className="relative shrink-0">
@@ -189,12 +189,12 @@ export const ConversationsSidebar: React.FC = () => {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-white truncate group-hover:text-[#64D2FF] transition-colors">
+            <div className="text-xs font-bold text-[#111827] truncate group-hover:text-[#DC2626] transition-colors">
               {user?.displayName || user?.username}
             </div>
             <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
               {user?.customStatus ? (
-                <span className="text-[#64D2FF] font-medium truncate">{user.customStatus}</span>
+                <span className="text-[#DC2626] font-semibold truncate">{user.customStatus}</span>
               ) : (
                 <span className="capitalize">{user?.status?.toLowerCase() || 'online'}</span>
               )}
@@ -205,10 +205,10 @@ export const ConversationsSidebar: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsSlackStatusOpen(true)}
-          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[#30D158] hover:bg-[#30D158]/10 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-all cursor-pointer"
           title="Set Availability & Status"
         >
-          <Smile className="w-4 h-4 text-[#30D158]" />
+          <Smile className="w-4 h-4 text-[#DC2626]" />
         </button>
       </div>
 

@@ -40,11 +40,11 @@ export const ActiveCallOverlay: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-6 duration-300">
-      <div className="flex items-center gap-4 bg-[var(--bg-surface-0)]/95 backdrop-blur-xl border border-violet-500/40 p-3.5 rounded-2xl shadow-2xl shadow-violet-950/60 text-white">
+      <div className="flex items-center gap-4 bg-[var(--bg-surface-0)]/95 backdrop-blur-xl border border-red-500/30 p-3.5 rounded-2xl shadow-2xl shadow-red-950/20 text-[#111827]">
         {/* Call Info & Pulsing Indicator */}
         <div className="flex items-center gap-3 pr-2 border-r border-[var(--border-subtle)]">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center font-bold text-xs shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] text-white flex items-center justify-center font-bold text-xs shadow-md shadow-red-600/25">
               {activeCall.isGroup ? <Users className="w-5 h-5" /> : <Radio className="w-5 h-5 animate-pulse" />}
             </div>
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -55,17 +55,17 @@ export const ActiveCallOverlay: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white max-w-[140px] truncate">
+              <span className="text-xs font-bold text-[#111827] max-w-[140px] truncate">
                 {activeCall.isGroup ? activeCall.groupName || 'Group Call' : 'Direct Audio Call'}
               </span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-600/30 text-violet-300 border border-violet-500/30">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/25">
                 {activeCall.status === 'dialing' ? 'Dialing...' : formatTimer(duration)}
               </span>
             </div>
-            <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5 mt-0.5">
+            <div className="text-[11px] text-[#4B5563] flex items-center gap-1.5 mt-0.5">
               <span>{callParticipants.length} participant{callParticipants.length === 1 ? '' : 's'}</span>
               <span>•</span>
-              <span className="text-emerald-400 font-medium">Encrypted WebRTC</span>
+              <span className="text-emerald-600 font-semibold">Encrypted WebRTC</span>
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@ export const ActiveCallOverlay: React.FC = () => {
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
               isCallMuted
                 ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/40'
-                : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white'
+                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[#4B5563] hover:text-[#111827]'
             }`}
           >
             {isCallMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -94,7 +94,7 @@ export const ActiveCallOverlay: React.FC = () => {
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
               isCallDeafened
                 ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/40'
-                : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white'
+                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[#4B5563] hover:text-[#111827]'
             }`}
           >
             {isCallDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

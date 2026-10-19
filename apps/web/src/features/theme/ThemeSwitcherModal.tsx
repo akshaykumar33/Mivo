@@ -22,8 +22,10 @@ export const ThemeSwitcherModal: React.FC = () => {
   // Load saved theme on mount
   React.useEffect(() => {
     const saved = localStorage.getItem('mivo_theme') as MivoThemeId;
-    if (saved && ['midnight', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
+    if (saved && saved !== 'midnight' && ['crimson-cream', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
       setTheme(saved);
+    } else {
+      setTheme('crimson-cream');
     }
   }, [setTheme]);
 
@@ -35,34 +37,34 @@ export const ThemeSwitcherModal: React.FC = () => {
       onClick={() => setIsThemeModalOpen(false)}
     >
       <div
-        className="w-full max-w-2xl rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-6 shadow-2xl backdrop-blur-2xl text-[var(--text-primary)] relative overflow-hidden ring-1 ring-white/[0.06]"
+        className="w-full max-w-2xl rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-6 shadow-2xl backdrop-blur-2xl text-[var(--text-primary)] relative overflow-hidden ring-1 ring-black/[0.05]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow Accent */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-violet-600/20 via-indigo-500/15 to-cyan-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-red-600/20 via-rose-500/15 to-amber-500/20 blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-5 border-b border-[var(--border-subtle)] relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#BF5AF2] flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-lg shadow-red-600/25">
               <Palette className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold font-display text-[var(--text-primary)] tracking-tight flex items-center gap-2">
+              <h2 className="text-lg font-bold font-display text-[#111827] tracking-tight flex items-center gap-2">
                 <span>Visual Themes & Aesthetics</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.08] text-violet-300 border border-white/[0.1]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/20">
                   Multi-Theme Engine
                 </span>
               </h2>
-              <p className="text-xs text-[var(--text-muted)]">
-                Choose between OLED dark palettes, cyberpunk neon, or ultra-crisp bright modes.
+              <p className="text-xs text-[#4B5563]">
+                Customize your appearance: Velvet Crimson & Silk Cream, OLED dark, or bright palettes.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setIsThemeModalOpen(false)}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
             title="Close [ESC]"
           >
             <X className="w-5 h-5" />
@@ -81,13 +83,13 @@ export const ThemeSwitcherModal: React.FC = () => {
                 onClick={() => setTheme(t.id)}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition-all duration-200 cursor-pointer relative group ${
                   isActive
-                    ? 'border-[#5E5CE6] bg-[var(--bg-surface-2)] ring-2 ring-[#5E5CE6]/40 shadow-[0_8px_24px_rgba(94,92,230,0.25)]'
-                    : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] hover:border-[#5E5CE6]/30'
+                    ? 'border-[#DC2626] bg-[var(--bg-surface-2)] ring-2 ring-[#DC2626]/30 shadow-[0_8px_24px_rgba(220,38,38,0.18)]'
+                    : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] hover:border-[#DC2626]/40'
                 }`}
               >
                 {/* Active Selection Checkmark */}
                 {isActive && (
-                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#5E5CE6] flex items-center justify-center shadow-md">
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#DC2626] flex items-center justify-center shadow-md">
                     <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
                   </div>
                 )}
@@ -145,8 +147,8 @@ export const ThemeSwitcherModal: React.FC = () => {
         {/* Modal Footer */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-[var(--text-muted)]">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span>Theme persists automatically in your local browser settings</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[#4B5563]">Theme persists automatically in your local browser settings</span>
           </div>
           <button
             onClick={() => setIsThemeModalOpen(false)}

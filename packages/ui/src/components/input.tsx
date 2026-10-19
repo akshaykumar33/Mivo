@@ -23,7 +23,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           className={cn(
             'w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all duration-150',
-            'focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20',
+            'focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20',
             className

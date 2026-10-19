@@ -134,14 +134,14 @@ export const NotificationCenterModal: React.FC = () => {
         {/* Top Header */}
         <div className="px-6 py-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] flex items-center justify-center shadow-[0_4px_16px_rgba(94,92,230,0.4)]">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.4)]">
               <Bell className="w-5 h-5 text-white stroke-[2.2]" />
             </div>
             <div>
               <h2 className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight flex items-center gap-2">
                 Notifications Hub
                 {counts.ALL > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FF453A]/20 text-[#FF453A] border border-[#FF453A]/30">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-[#DC2626] border border-red-500/30">
                     {counts.ALL} unread
                   </span>
                 )}
@@ -156,16 +156,16 @@ export const NotificationCenterModal: React.FC = () => {
             {counts.ALL > 0 && (
               <button
                 onClick={() => markAllAsRead()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-[var(--text-secondary)] hover:text-white border border-white/10 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 hover:bg-black/10 text-xs text-[var(--text-secondary)] hover:text-[#111827] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                 title="Mark all as read"
               >
-                <CheckCheck className="w-3.5 h-3.5 text-[#30D158]" />
+                <CheckCheck className="w-3.5 h-3.5 text-[#059669]" />
                 <span className="hidden sm:inline">Mark all read</span>
               </button>
             )}
             <button
               onClick={() => setIsCenterOpen(false)}
-              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-white transition-colors"
+              className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -173,7 +173,7 @@ export const NotificationCenterModal: React.FC = () => {
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="px-6 py-2.5 border-b border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-shrink-0 bg-white/[0.01]">
+        <div className="px-6 py-2.5 border-b border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-shrink-0 bg-black/[0.01]">
           {[
             { id: 'ALL' as NotificationFilter, label: 'All', icon: Inbox },
             { id: 'MESSAGE' as NotificationFilter, label: 'Messages', icon: MessageSquare },
@@ -191,8 +191,8 @@ export const NotificationCenterModal: React.FC = () => {
                 onClick={() => setFilter(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                   active
-                    ? 'bg-gradient-to-r from-[#5E5CE6] to-[#0A84FF] text-white shadow-md'
-                    : 'bg-white/5 hover:bg-white/10 text-[var(--text-secondary)] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#DC2626] to-[#991B1B] text-white shadow-md'
+                    : 'bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -200,7 +200,7 @@ export const NotificationCenterModal: React.FC = () => {
                 {count > 0 && (
                   <span
                     className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      active ? 'bg-white/30 text-white' : 'bg-[#FF453A]/25 text-[#FF453A]'
+                      active ? 'bg-white/30 text-white' : 'bg-red-500/20 text-[#DC2626]'
                     }`}
                   >
                     {count}
@@ -216,7 +216,7 @@ export const NotificationCenterModal: React.FC = () => {
                 setIsCenterOpen(false);
                 setIsTicketModalOpen(true);
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#FF9F0A]/10 hover:bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/25 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 border border-amber-500/25 text-xs font-semibold transition-colors cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">New Ticket</span>
@@ -228,12 +228,12 @@ export const NotificationCenterModal: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5 scrollbar-thin">
           {isLoading && notifications.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 border-2 border-[#5E5CE6] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#DC2626] border-t-transparent rounded-full animate-spin" />
               <span className="text-xs text-[var(--text-secondary)]">Loading notifications...</span>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4">
-              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-black/5 border border-[var(--border-subtle)] flex items-center justify-center mb-3">
                 <Inbox className="w-7 h-7 text-[var(--text-secondary)]/50" />
               </div>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
@@ -256,8 +256,8 @@ export const NotificationCenterModal: React.FC = () => {
                   onClick={() => handleAction(n)}
                   className={`group relative p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 ${
                     n.isRead
-                      ? 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/15'
-                      : 'bg-gradient-to-r from-white/[0.07] to-white/[0.03] border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-white/30'
+                      ? 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] hover:border-black/10'
+                      : 'bg-gradient-to-r from-red-500/10 via-amber-500/5 to-transparent border-red-500/30 shadow-xs hover:border-red-500/50'
                   }`}
                 >
                   {/* Category Icon Badge */}
@@ -275,7 +275,7 @@ export const NotificationCenterModal: React.FC = () => {
                           {n.title}
                         </span>
                         {!n.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-[#0A84FF] shadow-[0_0_8px_#0A84FF] flex-shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-[#DC2626] shadow-[0_0_8px_#DC2626] flex-shrink-0" />
                         )}
                       </div>
                       <span className="text-[10px] text-[var(--text-secondary)] flex-shrink-0">
@@ -288,7 +288,7 @@ export const NotificationCenterModal: React.FC = () => {
                     </p>
 
                     <div className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-[var(--text-primary)]/70 group-hover:text-[var(--text-primary)]">
-                      <span className="flex items-center gap-1 text-[#0A84FF]">
+                      <span className="flex items-center gap-1 text-[#DC2626]">
                         View details <ExternalLink className="w-3 h-3" />
                       </span>
                     </div>
@@ -301,7 +301,7 @@ export const NotificationCenterModal: React.FC = () => {
                         e.stopPropagation();
                         markAsRead(n.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-white/10 hover:bg-[#30D158] hover:text-black text-[var(--text-secondary)] transition-all flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-black/5 hover:bg-[#DC2626] hover:text-white text-[var(--text-secondary)] transition-all flex-shrink-0 cursor-pointer"
                       title="Mark as read"
                     >
                       <Check className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -314,11 +314,11 @@ export const NotificationCenterModal: React.FC = () => {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-[var(--border-subtle)] bg-white/[0.01] flex items-center justify-between text-xs text-[var(--text-secondary)] flex-shrink-0">
+        <div className="px-6 py-3 border-t border-[var(--border-subtle)] bg-black/[0.01] flex items-center justify-between text-xs text-[var(--text-secondary)] flex-shrink-0">
           <span>Realtime event sync active</span>
           <button
             onClick={() => setIsCenterOpen(false)}
-            className="px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+            className="px-4 py-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border border-[var(--border-subtle)] font-medium transition-colors cursor-pointer"
           >
             Close
           </button>

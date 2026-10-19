@@ -284,16 +284,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             })}
 
             {isUploading && (
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 text-xs text-[#64D2FF] flex-shrink-0 animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Uploading to Storage...</span>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-red-500/10 border border-red-500/25 text-xs text-red-600 flex-shrink-0 animate-pulse">
+                <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                <span className="font-semibold">Uploading to Storage...</span>
               </div>
             )}
           </div>
         )}
 
-        {/* Apple Luxury Frosted Glass Input Chassis */}
-        <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-[#5E5CE6] focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
+        {/* Input Chassis */}
+        <div className="relative flex items-center gap-2 p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-red-500 focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
           {/* Hidden Document Upload Input */}
           <input
             ref={docInputRef}
@@ -309,7 +309,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => docInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-violet-400 hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50"
             title="Send Document (PDF, Word, Excel, Zip...)"
           >
             <FilePlus className="w-4 h-4 stroke-[2.2]" />
@@ -319,7 +319,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors cursor-pointer disabled:opacity-50"
             title="Attach Media / Images"
           >
             <Paperclip className="w-4 h-4 stroke-[2.2]" />
@@ -333,60 +333,60 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               disabled={isCreatingQuickMeeting}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
                 isMeetingMenuOpen
-                  ? 'text-white bg-[#5E5CE6] shadow-sm'
-                  : 'text-[var(--text-muted)] hover:text-[#64D2FF] hover:bg-white/[0.08]'
+                  ? 'text-white bg-[#DC2626] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05]'
               }`}
               title="Google Meet & Microsoft Teams"
             >
               {isCreatingQuickMeeting ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#64D2FF]" />
+                <Loader2 className="w-4 h-4 animate-spin text-red-600" />
               ) : (
                 <Video className="w-4 h-4 stroke-[2.2]" />
               )}
             </button>
 
             {isMeetingMenuOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-[#0F1220]/95 border border-white/[0.12] shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider">
+              <div className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2 py-1.5 text-[10px] font-bold text-[#71717A] uppercase tracking-wider">
                   External Meeting Hub
                 </div>
 
                 <button
                   type="button"
                   onClick={() => handleQuickMeeting('GOOGLE_MEET')}
-                  className="w-full p-2 rounded-xl hover:bg-[#00AC47]/15 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
+                  className="w-full p-2 rounded-xl hover:bg-emerald-500/10 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#00AC47]/20 flex items-center justify-center p-1.5 flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center p-1.5 flex-shrink-0">
                     <GoogleMeetIcon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-white group-hover:text-[#34D399]">Google Meet</div>
-                    <div className="text-[10px] text-white/40">1-click create & share</div>
+                    <div className="text-xs font-bold text-[#111827] group-hover:text-emerald-700">Google Meet</div>
+                    <div className="text-[10px] text-[#71717A]">1-click create & share</div>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickMeeting('MS_TEAMS')}
-                  className="w-full p-2 rounded-xl hover:bg-[#505AC9]/20 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
+                  className="w-full p-2 rounded-xl hover:bg-indigo-500/10 text-left flex items-center gap-2.5 transition-colors cursor-pointer group"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#505AC9]/25 flex items-center justify-center p-1.5 flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center p-1.5 flex-shrink-0">
                     <MicrosoftTeamsIcon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-white group-hover:text-[#A5B4FC]">Microsoft Teams</div>
-                    <div className="text-[10px] text-white/40">1-click create & share</div>
+                    <div className="text-xs font-bold text-[#111827] group-hover:text-indigo-700">Microsoft Teams</div>
+                    <div className="text-[10px] text-[#71717A]">1-click create & share</div>
                   </div>
                 </button>
 
-                <div className="pt-1 mt-1 border-t border-white/[0.08]">
+                <div className="pt-1 mt-1 border-t border-[var(--border-subtle)]">
                   <button
                     type="button"
                     onClick={() => {
                       setIsMeetingMenuOpen(false);
                       setIsMeetingModalOpen(true);
                     }}
-                    className="w-full p-2 rounded-xl hover:bg-white/[0.08] text-left flex items-center gap-2 text-xs font-semibold text-[#64D2FF] transition-colors cursor-pointer"
+                    className="w-full p-2 rounded-xl hover:bg-black/[0.04] text-left flex items-center gap-2 text-xs font-semibold text-red-600 transition-colors cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Meeting Hub & Bridge...</span>
@@ -420,7 +420,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             className={`p-1.5 rounded-[10px] transition-colors cursor-pointer ${
               isEmojiPickerOpen
                 ? 'text-[#FFD60A] bg-[#FFD60A]/15 border border-[#FFD60A]/30'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.06]'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05]'
             }`}
             title="Insert Emoji"
           >
@@ -433,12 +433,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             disabled={(!content.trim() && stagedAttachments.length === 0) || isSending || isUploading}
             className={`p-2 rounded-[12px] transition-all duration-200 cursor-pointer ${
               (content.trim() || stagedAttachments.length > 0) && !isSending && !isUploading
-                ? 'bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] hover:scale-105 text-white shadow-md shadow-[#5E5CE6]/30'
-                : 'bg-white/[0.04] text-white/20 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] hover:scale-105 text-white shadow-md shadow-red-600/30'
+                : 'bg-black/[0.05] text-[#71717A]/40 cursor-not-allowed'
             }`}
             title="Send Message"
           >
-            {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {isSending ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
       </div>

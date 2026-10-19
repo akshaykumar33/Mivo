@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export type MivoThemeId =
+  | 'crimson-cream'
   | 'midnight'
   | 'titanium'
   | 'cyber'
@@ -22,6 +23,19 @@ export interface MivoThemeMeta {
 }
 
 export const MIVO_THEMES: MivoThemeMeta[] = [
+  {
+    id: 'crimson-cream',
+    name: 'Velvet Crimson & Silk Cream',
+    category: 'light',
+    description: 'Sophisticated warm cream canvas with velvet crimson red, obsidian black typography, and radiant accents.',
+    colors: {
+      bg: '#FAF6F0',
+      sidebar: '#F4ECE1',
+      card: '#FFFFFF',
+      accent: '#DC2626',
+      text: '#111827',
+    },
+  },
   {
     id: 'midnight',
     name: 'Midnight OLED',
@@ -97,14 +111,14 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  currentTheme: 'midnight',
+  currentTheme: 'crimson-cream',
   isThemeModalOpen: false,
   setIsThemeModalOpen: (open) => set({ isThemeModalOpen: open }),
   setTheme: (theme: MivoThemeId) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('mivo_theme', theme);
       document.documentElement.setAttribute('data-theme', theme);
-      if (theme === 'light-frost' || theme === 'solar-warm') {
+      if (theme === 'crimson-cream' || theme === 'light-frost' || theme === 'solar-warm') {
         document.documentElement.classList.add('light-mode');
         document.documentElement.classList.remove('dark-mode');
       } else {

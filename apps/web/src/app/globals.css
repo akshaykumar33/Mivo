@@ -6,6 +6,49 @@
 
 @layer base {
   :root,
+  [data-theme="crimson-cream"] {
+    --bg-canvas: #FAF6F0;
+    --bg-sidebar: #F4ECE1;
+    --bg-surface-0: #FFFFFF;
+    --bg-surface-1: #FAF5ED;
+    --bg-surface-2: #F0E6D8;
+    --bg-surface-3: #E6D7C3;
+    --border-subtle: rgba(185, 28, 28, 0.12);
+    --border-active: rgba(220, 38, 38, 0.45);
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #71717A;
+    
+    /* Brand Red & Cream Signature Tokens */
+    --brand-red: #DC2626;
+    --brand-red-deep: #991B1B;
+    --brand-red-light: #EF4444;
+    --brand-cream: #FAF6F0;
+    --brand-cream-card: #FFFFFF;
+    --brand-cream-muted: #F4ECE1;
+
+    /* Radiant Accents & System Colors */
+    --radiant-red: #DC2626;
+    --radiant-ruby: #E11D48;
+    --radiant-coral: #F43F5E;
+    --radiant-amber: #D97706;
+    --radiant-emerald: #059669;
+    --radiant-cyan: #0284C7;
+    --radiant-purple: #7C3AED;
+
+    --apple-blue: #0284C7;
+    --apple-indigo: #DC2626;
+    --apple-purple: #B91C1C;
+    --apple-pink: #E11D48;
+    --apple-red: #DC2626;
+    --apple-orange: #EA580C;
+    --apple-yellow: #D97706;
+    --apple-green: #059669;
+    --apple-mint: #0D9488;
+    --apple-teal: #0891B2;
+    --apple-cyan: #0284C7;
+  }
+
   [data-theme="midnight"] {
     --bg-canvas: #06070B;
     --bg-sidebar: #090B12;
@@ -18,8 +61,6 @@
     --text-primary: #FFFFFF;
     --text-secondary: rgba(255, 255, 255, 0.65);
     --text-muted: rgba(255, 255, 255, 0.45);
-    
-    /* Apple macOS & iOS 18 System Colors */
     --apple-blue: #0A84FF;
     --apple-indigo: #5E5CE6;
     --apple-purple: #BF5AF2;
@@ -61,8 +102,7 @@
     --text-muted: rgba(255, 255, 255, 0.5);
   }
 
-  [data-theme="light-frost"],
-  .light-mode {
+  [data-theme="light-frost"] {
     --bg-canvas: #F4F5F9;
     --bg-sidebar: #EAECEF;
     --bg-surface-0: #FFFFFF;
@@ -104,9 +144,38 @@
   }
 
   ::selection {
-    background: rgba(94, 92, 230, 0.45);
-    color: #FFFFFF;
+    background: rgba(220, 38, 38, 0.2);
+    color: #991B1B;
   }
+}
+
+.text-radiant-red {
+  color: #DC2626;
+}
+.text-radiant-ruby {
+  color: #E11D48;
+}
+.text-radiant-amber {
+  color: #D97706;
+}
+.text-radiant-emerald {
+  color: #059669;
+}
+.text-radiant-gradient {
+  background: linear-gradient(135deg, #E11D48 0%, #DC2626 50%, #991B1B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-radiant-gold {
+  background: linear-gradient(135deg, #EA580C 0%, #D97706 60%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.bg-crimson-gradient {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 55%, #991B1B 100%);
+}
+.shadow-crimson-glow {
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.35);
 }
 
 .font-display {

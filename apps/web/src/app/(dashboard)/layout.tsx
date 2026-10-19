@@ -32,11 +32,13 @@ export default function DashboardLayout({
   const { setupRealtimeListeners: setupNotificationListeners, fetchUnreadCount } = useNotificationStore();
   const { setupRealtimeListeners: setupTicketListeners } = useTicketStore();
 
-  // Load saved visual theme on startup
+  // Load saved visual theme on startup, defaulting to the new Crimson & Cream palette
   React.useEffect(() => {
     const saved = localStorage.getItem('mivo_theme') as MivoThemeId;
-    if (saved && ['midnight', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
+    if (saved && saved !== 'midnight' && ['crimson-cream', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
       setTheme(saved);
+    } else {
+      setTheme('crimson-cream');
     }
   }, [setTheme]);
 

@@ -84,13 +84,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => setActiveMode(item.id as RoomCommunicationMode)}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-xs font-medium cursor-pointer ${
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-xs font-semibold cursor-pointer ${
                     isSelected
-                      ? 'bg-violet-600/25 border-violet-500 text-[var(--text-primary)] shadow-sm'
-                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-violet-500/50 hover:text-[var(--text-primary)]'
+                      ? 'bg-red-500/15 border-red-500 text-red-700 shadow-sm shadow-red-500/10'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[#4B5563] hover:border-red-400 hover:text-[#111827]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 mb-1 ${isSelected ? 'text-violet-400' : 'text-[var(--text-muted)]'}`} />
+                  <Icon className={`w-4 h-4 mb-1 ${isSelected ? 'text-red-600' : 'text-[#71717A]'}`} />
                   {item.label}
                 </button>
               );
