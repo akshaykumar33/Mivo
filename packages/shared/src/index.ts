@@ -13,6 +13,8 @@ export * from './types/rbac.js';
 export * from './types/message.js';
 export * from './types/conversation.js';
 export * from './types/meeting.js';
+export * from './types/notification.js';
+export * from './types/ticket.js';
 
 // Schemas
 export * from './schemas/auth.schema.js';
@@ -24,6 +26,7 @@ export * from './schemas/message.schema.js';
 export * from './schemas/storage.schema.js';
 export * from './schemas/conversation.schema.js';
 export * from './schemas/meeting.schema.js';
+export * from './schemas/ticket.schema.js';
 
 // Events
 export * from './events/realtime.events.js';

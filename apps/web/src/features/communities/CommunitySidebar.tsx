@@ -2,11 +2,16 @@
 
 import * as React from 'react';
 import { useCommunityStore } from '@/stores/communityStore';
-import { Plus, Compass, MessageSquare, BookOpen } from 'lucide-react';
+import { useTicketStore } from '@/stores/ticketStore';
+import { Plus, Compass, MessageSquare, BookOpen, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
+import { useAuthStore } from '@/stores/authStore';
+import { Avatar } from '@mivo/ui';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 
 const COMMUNITY_PALETTES = [
   'from-[#5E5CE6] via-[#0A84FF] to-[#64D2FF]',
@@ -22,9 +27,11 @@ export interface CommunitySidebarProps {
 
 export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }) => {
   const pathname = usePathname();
+  const { user } = useAuthStore();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     fetchCommunities();
@@ -67,6 +74,9 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
             Overview & DMs
           </div>
         </div>
+
+        {/* Notifications Hub Bell */}
+        <NotificationBell size="lg" />
 
         {/* Apple macOS Glass Divider */}
         <div className="w-7 h-[1px] bg-[var(--border-subtle)] rounded-full my-0.5" />
@@ -150,6 +160,20 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
             </div>
           </div>
 
+          {/* Support & Issues Tickets */}
+          <div className="relative group flex items-center justify-center w-full">
+            <button
+              onClick={() => useTicketStore.getState().setIsModalOpen(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] text-[#FF9F0A] hover:bg-[#FF9F0A] hover:!text-black border border-[#FF9F0A]/20 hover:border-[#FF9F0A]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+            >
+              <Ticket className="w-4 h-4 stroke-[2.2]" />
+            </button>
+
+            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
+              Support & Tickets Hub
+            </div>
+          </div>
+
           <div className="relative group flex items-center justify-center w-full">
             <Link
               href="/discover"
@@ -162,11 +186,40 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
               Explore Communities
             </div>
           </div>
+
+          {/* User Availability & Slack Status Trigger */}
+          <div className="relative group flex items-center justify-center w-full pt-1">
+            <button
+              onClick={() => setIsStatusModalOpen(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-[#30D158]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+              title="Set availability & status"
+            >
+              <Avatar
+                size="sm"
+                status={user?.status || 'ONLINE'}
+                fallbackText={user?.displayName || user?.username}
+                src={user?.avatarUrl}
+              />
+            </button>
+
+            <div className="absolute left-[72px] px-3 py-1.5 rounded-[12px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-2xl backdrop-blur-xl z-50">
+              <div className="font-bold flex items-center gap-1.5">
+                <span>{user?.displayName || user?.username}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/10 uppercase tracking-wider font-semibold text-[#64D2FF]">
+                  {user?.status || 'ONLINE'}
+                </span>
+              </div>
+              <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                {user?.customStatus ? `"${user.customStatus}" • ` : ''}Click to set status
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
       <CreateCommunityModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
+      <SlackStatusModal isOpen={isStatusModalOpen} onClose={() => setIsStatusModalOpen(false)} />
     </>
   );
 };

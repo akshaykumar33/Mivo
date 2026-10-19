@@ -15,12 +15,15 @@ import {
   REALTIME_EVENTS,
 } from '@mivo/shared';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
 export class ConversationsService {
   constructor(
     @Inject(forwardRef(() => RealtimeGateway))
-    private realtimeGateway: RealtimeGateway
+    private realtimeGateway: RealtimeGateway,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService
   ) {}
 
   async listConversations(userId: string): Promise<ConversationDTO[]> {
@@ -250,6 +253,27 @@ export class ConversationsService {
 
     // Broadcast to real-time conversation room
     this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+
+    // Dispatch notification to other conversation members
+    const otherMembers = await prisma.conversationMember.findMany({
+      where: { conversationId, userId: { not: senderId } },
+      include: { conversation: true },
+    });
+
+    const senderName = message.sender.displayName || message.sender.username;
+    for (const m of otherMembers) {
+      const convTitle = m.conversation.type === 'GROUP' ? m.conversation.name || 'Group' : senderName;
+      this.notificationsService
+        .createNotification(
+          m.userId,
+          'MESSAGE',
+          `New message from ${senderName}`,
+          text ? (text.length > 80 ? `${text.slice(0, 80)}...` : text) : 'Sent an attachment',
+          conversationId,
+          { conversationId, senderId, senderName, conversationTitle: convTitle }
+        )
+        .catch(() => {});
+    }
 
     return dto;
   }

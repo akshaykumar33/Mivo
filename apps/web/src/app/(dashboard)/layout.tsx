@@ -9,7 +9,12 @@ import { useThemeStore, MivoThemeId } from '@/stores/themeStore';
 import { ThemeSwitcherModal } from '@/features/theme/ThemeSwitcherModal';
 import { IncomingCallModal } from '@/features/conversations/IncomingCallModal';
 import { ActiveCallOverlay } from '@/features/conversations/ActiveCallOverlay';
+import { NotificationCenterModal } from '@/features/notifications/NotificationCenterModal';
+import { NotificationToast } from '@/features/notifications/NotificationToast';
+import { TicketsModal } from '@/features/tickets/TicketsModal';
 import { useConversationStore } from '@/stores/conversationStore';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useTicketStore } from '@/stores/ticketStore';
 import { useRouter } from 'next/navigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
@@ -24,6 +29,8 @@ export default function DashboardLayout({
   const { setTheme } = useThemeStore();
   const { isMobileSidebarOpen, closeMobileSidebar } = useNavigationStore();
   const { setupRealtimeListeners } = useConversationStore();
+  const { setupRealtimeListeners: setupNotificationListeners, fetchUnreadCount } = useNotificationStore();
+  const { setupRealtimeListeners: setupTicketListeners } = useTicketStore();
 
   // Load saved visual theme on startup
   React.useEffect(() => {
@@ -36,8 +43,15 @@ export default function DashboardLayout({
   React.useEffect(() => {
     if (user?.id) {
       setupRealtimeListeners(user.id);
+      fetchUnreadCount();
+      const unsubNotifs = setupNotificationListeners();
+      const unsubTickets = setupTicketListeners();
+      return () => {
+        unsubNotifs();
+        unsubTickets();
+      };
     }
-  }, [user?.id, setupRealtimeListeners]);
+  }, [user?.id, setupRealtimeListeners, setupNotificationListeners, setupTicketListeners, fetchUnreadCount]);
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -97,6 +111,11 @@ export default function DashboardLayout({
       {/* Global Realtime Audio Calling & Modals */}
       <IncomingCallModal />
       <ActiveCallOverlay />
+
+      {/* Global Notifications & Support Modals */}
+      <NotificationCenterModal />
+      <NotificationToast />
+      <TicketsModal />
 
       {/* Global Visual Theme Engine Modal */}
       <ThemeSwitcherModal />

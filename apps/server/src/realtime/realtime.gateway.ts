@@ -7,9 +7,11 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
+import { Inject, forwardRef } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { PresenceService } from './presence.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { prisma } from '@mivo/database';
 import {
   REALTIME_EVENTS,
@@ -37,7 +39,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   constructor(
     private jwtService: JwtService,
-    private presenceService: PresenceService
+    private presenceService: PresenceService,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -803,6 +807,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       const otherMembers = conv.members.filter((m) => m.userId !== user.sub);
       for (const m of otherMembers) {
         this.server.to(`user:${m.userId}`).emit(REALTIME_EVENTS.CALL_INCOMING, broadcastPayload);
+        this.notificationsService
+          ?.createNotification(
+            m.userId,
+            'CALL',
+            `Incoming Call from ${callerName}`,
+            conv.type === 'GROUP' ? `Group voice call in ${conv.name || 'group conversation'}` : 'Incoming voice call',
+            data.conversationId,
+            { conversationId: data.conversationId, callerId: user.sub, callerName, isGroup: conv.type === 'GROUP' }
+          )
+          .catch(() => {});
       }
 
       return { success: true, conversationId: data.conversationId };
