@@ -9,19 +9,13 @@ import { MessageDTO, AttachmentMetaDTO } from '@mivo/shared';
 import { GoogleMeetIcon, MicrosoftTeamsIcon } from '../meetings/ExternalMeetingIcons';
 import { ExternalMeetingHubModal } from '../meetings/ExternalMeetingHubModal';
 import { UniversalFileViewerModal, FileViewerItem } from '@/features/files';
+import { GraphicalReaction, GRAPHICAL_REACTIONS } from '@/features/reactions';
 
 export interface MessageComposerProps {
   roomId: string;
   roomName: string;
   onMessageSent?: (msg: MessageDTO) => void;
 }
-
-const EMOJI_PALETTE = [
-  '😀', '😂', '😍', '🥳', '😎', '🤩', '🔥', '🚀',
-  '❤️', '👍', '👏', '🙌', '💯', '✨', '💡', '🎯',
-  '🦾', '🧠', '☕', '⚡', '🎉', '🤝', '💻', '🌟',
-  '🏆', '👀', '🤙', '🫡', '🙏', '🌈', '🍕', '🍻'
-];
 
 export const MessageComposer: React.FC<MessageComposerProps> = ({
   roomId,
@@ -202,27 +196,31 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       {isEmojiPickerOpen && (
         <div
           ref={emojiPickerRef}
-          className="absolute bottom-20 sm:bottom-24 right-2 sm:right-6 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 animate-slide-up w-64 max-w-[90vw] ring-1 ring-white/[0.08]"
+          className="absolute bottom-20 sm:bottom-24 right-2 sm:right-6 p-3 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] z-50 animate-slide-up w-72 max-w-[90vw] ring-1 ring-black/[0.06]"
         >
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] font-display">
-            <span>Quick Emojis</span>
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[#111827] font-display">
+            <span>Reactions & Emojis</span>
             <button
               onClick={() => setIsEmojiPickerOpen(false)}
-              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-8 gap-1.5 place-items-center">
-            {EMOJI_PALETTE.map((emoji) => (
+          <div className="grid grid-cols-5 gap-2 place-items-center py-1">
+            {GRAPHICAL_REACTIONS.map((r) => (
               <button
-                key={emoji}
+                key={r.id}
                 type="button"
-                onClick={() => handleInsertEmoji(emoji)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.1] hover:scale-125 transition-all text-base cursor-pointer"
+                onClick={() => {
+                  handleInsertEmoji(`:${r.id}: `);
+                  setIsEmojiPickerOpen(false);
+                }}
+                className="p-2 rounded-xl hover:bg-black/5 hover:scale-125 transition-transform cursor-pointer flex items-center justify-center"
+                title={r.label}
               >
-                {emoji}
+                <GraphicalReaction name={r.id} size="md" />
               </button>
             ))}
           </div>

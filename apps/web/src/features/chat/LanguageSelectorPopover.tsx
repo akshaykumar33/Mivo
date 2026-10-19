@@ -39,9 +39,8 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-semibold text-[#111827] transition-all cursor-pointer shadow-sm hover:scale-102"
       >
-        <span className="text-sm">{activeLang.flag}</span>
+        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/10 text-red-600 border border-red-500/20">{activeLang.code.toUpperCase()}</span>
         <span className="text-[#111827]">{activeLang.name}</span>
-        <span className="text-[10px] text-[#71717A] font-mono uppercase">({activeLang.code})</span>
         <ChevronDown className={`w-3.5 h-3.5 text-[#71717A] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#111827]' : ''}`} />
       </button>
 
@@ -72,7 +71,9 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-base flex-shrink-0">{lang.flag}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold flex-shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-black/5 text-[#71717A] border-black/10'}`}>
+                      {lang.code.toUpperCase()}
+                    </span>
                     <div className="text-left min-w-0">
                       <div className="font-semibold truncate">{lang.name}</div>
                       <div className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-[#71717A]'}`}>

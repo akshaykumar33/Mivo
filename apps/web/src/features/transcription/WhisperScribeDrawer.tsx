@@ -507,8 +507,9 @@ export const WhisperScribeDrawer: React.FC<WhisperScribeDrawerProps> = ({
 
                       {t.translatedText && (
                         <div className="pt-2 border-t border-white/[0.05] flex items-start justify-between gap-2">
-                          <p className="text-xs text-[#30D158] leading-relaxed font-semibold">
-                            🌐 {t.translatedText}
+                          <p className="text-xs text-[#30D158] leading-relaxed font-semibold flex items-center gap-1.5">
+                            <Globe2 className="w-3.5 h-3.5 text-[#30D158] shrink-0" />
+                            <span>{t.translatedText}</span>
                           </p>
                           <button
                             onClick={() => translationManager.speakText(t.translatedText || t.text, targetLang)}

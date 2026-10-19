@@ -43,8 +43,9 @@ import {
   extractYouTubeUrls,
   FileViewerItem,
 } from '@/features/files';
+import { GraphicalReaction } from '@/features/reactions';
 
-const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀', '💯', '✨'];
+const EMOJI_OPTIONS = ['thumbs_up', 'heart', 'fire', 'laugh', 'party', 'rocket', 'hundred', 'sparkles'];
 
 function getDocTypeInfo(filename: string, mimeType?: string) {
   const ext = filename.split('.').pop()?.toLowerCase() || '';
@@ -685,18 +686,35 @@ export const ConversationView: React.FC = () => {
                   </div>
 
                   {/* Reaction Pill Hover Bar */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 bg-[var(--bg-surface-0)] px-2 py-0.5 rounded-xl border border-[var(--border-subtle)] shadow-sm">
                     {EMOJI_OPTIONS.map((emoji) => (
                       <button
                         key={emoji}
                         type="button"
                         onClick={() => addReaction(activeConv.id, msg.id, emoji)}
-                        className="p-1 rounded-md hover:bg-black/5 text-xs transition-colors"
+                        className="p-1 rounded-md hover:bg-black/5 hover:scale-125 transition-transform cursor-pointer"
+                        title={emoji}
                       >
-                        {emoji}
+                        <GraphicalReaction name={emoji} size="sm" />
                       </button>
                     ))}
                   </div>
+
+                  {/* Reaction Badges List if present on direct message */}
+                  {(msg as any).reactions && Object.keys((msg as any).reactions).length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      {Object.entries((msg as any).reactions as Record<string, number>).map(([emoji, count]) => (
+                        <button
+                          key={emoji}
+                          onClick={() => addReaction(activeConv.id, msg.id, emoji)}
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-[var(--border-subtle)] shadow-xs hover:border-red-400 hover:scale-105 transition-all cursor-pointer"
+                        >
+                          <GraphicalReaction name={emoji} size="xs" />
+                          <span className="text-[10px] font-mono text-[#71717A] font-bold">{count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -833,18 +851,19 @@ export const ConversationView: React.FC = () => {
               <Smile className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DC2626]" />
             </button>
             {showEmojiPicker && (
-              <div className="absolute bottom-12 left-0 sm:left-auto p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1 z-20 max-w-[90vw] overflow-x-auto">
+              <div className="absolute bottom-12 left-0 sm:left-auto p-2 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] shadow-xl flex gap-1.5 z-20 max-w-[90vw] overflow-x-auto">
                 {EMOJI_OPTIONS.map((e) => (
                   <button
                     key={e}
                     type="button"
                     onClick={() => {
-                      setInputContent((prev) => prev + e);
+                      setInputContent((prev) => `${prev}:${e}: `);
                       setShowEmojiPicker(false);
                     }}
-                    className="p-1.5 hover:bg-black/5 rounded-lg text-sm cursor-pointer"
+                    className="p-1.5 hover:bg-black/5 rounded-xl hover:scale-125 transition-all cursor-pointer flex items-center justify-center"
+                    title={e}
                   >
-                    {e}
+                    <GraphicalReaction name={e} size="sm" />
                   </button>
                 ))}
               </div>

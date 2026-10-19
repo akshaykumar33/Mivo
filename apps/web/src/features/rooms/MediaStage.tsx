@@ -477,7 +477,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                Meeting Participants ({participants.length}) • Drag or Use ◀ / ▶ to Reorder
+                Meeting Participants ({participants.length}) • Drag or Use Controls to Reorder
               </span>
             </div>
 

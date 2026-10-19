@@ -31,6 +31,7 @@ import { translationManager } from '@/lib/translation-manager';
 import { storageClient } from '@/lib/storage-client';
 import { LanguageSelectorPopover } from './LanguageSelectorPopover';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
+import { GraphicalReaction } from '@/features/reactions';
 import {
   UniversalFileViewerModal,
   YouTubeEmbedCard,
@@ -263,32 +264,32 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                   {/* Quick Action Bar */}
                   <div className="flex items-center gap-0.5 sm:gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-surface-0)] px-1.5 sm:px-2 py-0.5 rounded-[12px] border border-[var(--border-subtle)] shadow-lg backdrop-blur-xl flex-shrink-0">
                     <button
-                      onClick={() => handleAddReaction(msg.id, '❤️')}
-                      className="p-1 hover:scale-125 transition-transform text-xs cursor-pointer"
+                      onClick={() => handleAddReaction(msg.id, 'heart')}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer"
                       title="Heart"
                     >
-                      ❤️
+                      <GraphicalReaction name="heart" size="sm" />
                     </button>
                     <button
-                      onClick={() => handleAddReaction(msg.id, '👍')}
-                      className="p-1 hover:scale-125 transition-transform text-xs cursor-pointer"
+                      onClick={() => handleAddReaction(msg.id, 'thumbs_up')}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer"
                       title="Thumbs Up"
                     >
-                      👍
+                      <GraphicalReaction name="thumbs_up" size="sm" />
                     </button>
                     <button
-                      onClick={() => handleAddReaction(msg.id, '🔥')}
-                      className="p-1 hover:scale-125 transition-transform text-xs cursor-pointer"
+                      onClick={() => handleAddReaction(msg.id, 'fire')}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer"
                       title="Fire"
                     >
-                      🔥
+                      <GraphicalReaction name="fire" size="sm" />
                     </button>
                     <button
-                      onClick={() => handleAddReaction(msg.id, '🎉')}
-                      className="p-1 hover:scale-125 transition-transform text-xs cursor-pointer"
+                      onClick={() => handleAddReaction(msg.id, 'party')}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer"
                       title="Celebrate"
                     >
-                      🎉
+                      <GraphicalReaction name="party" size="sm" />
                     </button>
 
                     <div className="w-[1px] h-3.5 bg-white/[0.1] mx-0.5" />
@@ -498,7 +499,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                 {/* Translated Text Sub-Card with Native Badge */}
                 {translatedText && (
                   <div className="mt-2 p-2.5 rounded-[14px] bg-red-500/10 border border-red-500/25 text-xs text-red-700 font-semibold flex items-center justify-between gap-2 shadow-sm">
-                    <span className="leading-relaxed">🌐 {translatedText}</span>
+                    <span className="leading-relaxed flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                      <span>{translatedText}</span>
+                    </span>
                     <button
                       onClick={() => translationManager.speakText(translatedText, chatTargetLang)}
                       className="p-1 rounded-md text-red-600 hover:text-red-700 hover:bg-black/[0.05] flex-shrink-0 cursor-pointer"
@@ -516,10 +520,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       <button
                         key={emoji}
                         onClick={() => handleAddReaction(msg.id, emoji)}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-[var(--border-subtle)] text-xs shadow-sm hover:border-red-400 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[var(--border-subtle)] shadow-sm hover:border-red-400 hover:scale-105 transition-all cursor-pointer"
                       >
-                        <span>{emoji}</span>
-                        <span className="text-[10px] font-mono text-[#71717A] font-bold">{count}</span>
+                        <GraphicalReaction name={emoji} size="xs" />
+                        <span className="text-[11px] font-mono text-[#71717A] font-bold">{count}</span>
                       </button>
                     ))}
                   </div>

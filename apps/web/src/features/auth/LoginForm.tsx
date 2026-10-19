@@ -6,7 +6,7 @@ import { Button, Input } from '@mivo/ui';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import { AuthSessionResponse } from '@mivo/shared';
-import { Sparkles, ArrowRight, ShieldCheck, Palette, Cpu, Radio, Lock, Mail, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Palette, Cpu, Radio, Lock, Mail, CheckCircle2, AlertCircle, Crown } from 'lucide-react';
 import Link from 'next/link';
 
 export const LoginForm: React.FC = () => {
@@ -84,7 +84,7 @@ export const LoginForm: React.FC = () => {
 
       {error && (
         <div className="mb-6 p-3.5 rounded-2xl bg-rose-950/70 border border-rose-800/80 text-rose-300 text-xs font-semibold flex items-center gap-2.5 animate-shake">
-          <span>⚠️</span>
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -159,7 +159,10 @@ export const LoginForm: React.FC = () => {
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white truncate group-hover:text-rose-200">Dev Admin</div>
-                <div className="text-[10px] text-rose-400 font-semibold truncate">👑 Community Owner</div>
+                <div className="text-[10px] text-rose-400 font-semibold truncate flex items-center gap-1">
+                  <Crown className="w-3 h-3 text-amber-400 inline shrink-0" />
+                  <span>Community Owner</span>
+                </div>
               </div>
             </div>
           </button>
@@ -175,7 +178,10 @@ export const LoginForm: React.FC = () => {
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white truncate group-hover:text-violet-200">Alex Rivera</div>
-                <div className="text-[10px] text-violet-400 font-semibold truncate">🎨 Staff Designer</div>
+                <div className="text-[10px] text-violet-400 font-semibold truncate flex items-center gap-1">
+                  <Palette className="w-3 h-3 text-violet-400 inline shrink-0" />
+                  <span>Staff Designer</span>
+                </div>
               </div>
             </div>
           </button>
@@ -186,8 +192,8 @@ export const LoginForm: React.FC = () => {
             className="p-3 rounded-2xl bg-white/[0.03] hover:bg-amber-500/15 border border-white/[0.08] hover:border-amber-500/50 text-left transition-all duration-200 group cursor-pointer relative overflow-hidden"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-base flex-shrink-0">
-                🇪🇸
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xs font-mono font-bold text-amber-400 flex-shrink-0">
+                ES
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white truncate group-hover:text-amber-200">Carlos Mendoza</div>
@@ -202,8 +208,8 @@ export const LoginForm: React.FC = () => {
             className="p-3 rounded-2xl bg-white/[0.03] hover:bg-indigo-500/15 border border-white/[0.08] hover:border-indigo-500/50 text-left transition-all duration-200 group cursor-pointer relative overflow-hidden"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-base flex-shrink-0">
-                🇮🇳
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xs font-mono font-bold text-indigo-400 flex-shrink-0">
+                IN
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white truncate group-hover:text-indigo-200">Priya Sharma</div>

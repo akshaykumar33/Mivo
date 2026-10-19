@@ -167,7 +167,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               type="text"
               value={customStatus}
               onChange={(e) => setCustomStatus(e.target.value)}
-              placeholder="e.g. In a meeting 🎧"
+              placeholder="e.g. In an architecture sync"
               className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6]"
             />
           </div>

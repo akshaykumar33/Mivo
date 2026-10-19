@@ -115,7 +115,7 @@ export class RecorderManager {
       const file = new File([blob], filename, { type: 'video/webm' });
       const cloudUpload = await storageClient.uploadFile(file, 'recordings');
       meta.cloudUrl = cloudUpload.url;
-      console.log('✅ Meeting recording backed up to Supabase S3 Storage:', cloudUpload.url);
+      console.log('[Storage] Meeting recording backed up to Supabase S3 Storage:', cloudUpload.url);
     } catch (err) {
       console.warn('Could not back up recording to cloud storage:', err);
     }

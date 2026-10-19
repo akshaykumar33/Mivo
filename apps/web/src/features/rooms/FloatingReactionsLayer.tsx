@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { GraphicalReaction } from '@/features/reactions';
 
 export interface FloatingReaction {
   id: string;
@@ -56,9 +57,9 @@ export const FloatingReactionsLayer: React.FC = () => {
         <div
           key={r.id}
           style={{ left: `${r.leftPercent}%` }}
-          className="absolute bottom-20 text-3xl sm:text-4xl animate-float-up pointer-events-none filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]"
+          className="absolute bottom-20 animate-float-up pointer-events-none filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]"
         >
-          {r.emoji}
+          <GraphicalReaction name={r.emoji} size="3xl" />
         </div>
       ))}
     </div>

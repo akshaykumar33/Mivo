@@ -7,23 +7,23 @@ export interface LanguageOption {
   code: string;
   name: string;
   nativeName: string;
-  flag: string;
+  flag?: string;
   voiceLang: string;
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', voiceLang: 'es-ES' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', voiceLang: 'fr-FR' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', voiceLang: 'de-DE' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', voiceLang: 'hi-IN' },
-  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', voiceLang: 'ja-JP' },
-  { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳', voiceLang: 'zh-CN' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹', voiceLang: 'pt-PT' },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹', voiceLang: 'it-IT' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺', voiceLang: 'ru-RU' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', voiceLang: 'ar-SA' },
-  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷', voiceLang: 'ko-KR' },
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸', voiceLang: 'en-US' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '', voiceLang: 'es-ES' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '', voiceLang: 'fr-FR' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '', voiceLang: 'de-DE' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '', voiceLang: 'hi-IN' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '', voiceLang: 'ja-JP' },
+  { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '', voiceLang: 'zh-CN' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '', voiceLang: 'pt-PT' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '', voiceLang: 'it-IT' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '', voiceLang: 'ru-RU' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '', voiceLang: 'ar-SA' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '', voiceLang: 'ko-KR' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '', voiceLang: 'en-US' },
 ];
 
 const TRANSLATION_DICTIONARY: Record<string, Record<string, string>> = {
@@ -199,7 +199,7 @@ export class TranslationManager {
     });
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    return `# 📋 Minutes of Meeting (MOM): #${roomName}
+    return `# Minutes of Meeting (MOM): #${roomName}
 **Date:** ${dateStr} at ${timeStr}  
 **Platform:** Mivo Real-Time Stage  
 **Attendees:** ${attendees.length > 0 ? attendees.join(', ') : 'All room members'}  

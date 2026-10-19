@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 import { useThemeStore } from '@/stores/themeStore';
+import { GraphicalReaction } from '@/features/reactions';
 
 export interface FloatingCyberDockProps {
   activeMode: RoomCommunicationMode;
@@ -102,7 +103,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     { id: 'SCREEN_SHARE', label: 'Screen', icon: Monitor, color: 'from-[#5E5CE6] to-[#BF5AF2]', glow: 'shadow-[0_4px_16px_rgba(94,92,230,0.4)]' },
   ];
 
-  const reactionEmojis = ['❤️', '👏', '🔥', '🎉', '👍', '😂', '🚀', '💯'];
+  const reactionList = ['heart', 'thumbs_up', 'fire', 'party', 'laugh', 'rocket', 'hundred', 'sparkles', 'clap'];
 
   const handleSendReaction = (emoji: string) => {
     reactionBus.emit(emoji);
@@ -127,14 +128,22 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           ref={reactionsTrayRef}
           className="absolute bottom-16 left-1/2 -translate-x-1/2 mb-1 p-2 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-2xl flex items-center gap-1 z-50 animate-slide-up"
         >
-          {reactionEmojis.map((emoji) => (
-            <button key={emoji} onClick={() => handleSendReaction(emoji)} className="p-2 rounded-xl hover:bg-white/[0.1] hover:scale-125 active:scale-95 transition-all text-lg cursor-pointer">
-              {emoji}
+          {reactionList.map((rId) => (
+            <button
+              key={rId}
+              onClick={() => handleSendReaction(rId)}
+              className="p-1.5 sm:p-2 rounded-xl hover:bg-black/[0.06] hover:scale-125 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+            >
+              <GraphicalReaction name={rId} size="md" />
             </button>
           ))}
           <div className="w-px h-5 bg-[var(--border-subtle)] mx-0.5" />
-          <button onClick={() => handleSendReaction('✋')} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FFBD2E]/15 hover:bg-[#FFBD2E]/30 text-[#FFBD2E] text-xs font-bold transition-all cursor-pointer">
-            <Hand className="w-3.5 h-3.5" /> Raise
+          <button
+            onClick={() => handleSendReaction('raise_hand')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FFBD2E]/15 hover:bg-[#FFBD2E]/30 text-[#B45309] text-xs font-bold transition-all cursor-pointer"
+          >
+            <GraphicalReaction name="raise_hand" size="xs" />
+            <span>Raise</span>
           </button>
         </div>
       )}

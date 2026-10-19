@@ -22,6 +22,10 @@ import {
   Home,
   Palmtree,
   Calendar,
+  MessageSquare,
+  Laptop,
+  Target,
+  HeartPulse,
 } from 'lucide-react';
 
 export interface SlackStatusModalProps {
@@ -30,30 +34,28 @@ export interface SlackStatusModalProps {
 }
 
 interface StatusPreset {
-  emoji: string;
+  icon: React.ComponentType<{ className?: string }>;
   text: string;
   durationMinutes: number | null; // null = don't clear, -1 = today
   label: string;
+  color: string;
 }
 
 const STATUS_PRESETS: StatusPreset[] = [
-  { emoji: '💬', text: 'In a meeting', durationMinutes: 60, label: '1 hour' },
-  { emoji: '🚗', text: 'Commuting', durationMinutes: 30, label: '30 mins' },
-  { emoji: '🤒', text: 'Out sick', durationMinutes: -1, label: 'Today' },
-  { emoji: '🌴', text: 'Vacationing', durationMinutes: null, label: "Don't clear" },
-  { emoji: '💻', text: 'Working remotely', durationMinutes: -1, label: 'Today' },
-  { emoji: '🎯', text: 'Deep work & focus', durationMinutes: 120, label: '2 hours' },
-  { emoji: '🥪', text: 'Out to lunch', durationMinutes: 60, label: '1 hour' },
+  { icon: MessageSquare, text: 'In a meeting', durationMinutes: 60, label: '1 hour', color: 'text-indigo-600' },
+  { icon: Car, text: 'Commuting', durationMinutes: 30, label: '30 mins', color: 'text-amber-600' },
+  { icon: HeartPulse, text: 'Out sick', durationMinutes: -1, label: 'Today', color: 'text-rose-600' },
+  { icon: Palmtree, text: 'Vacationing', durationMinutes: null, label: "Don't clear", color: 'text-emerald-600' },
+  { icon: Laptop, text: 'Working remotely', durationMinutes: -1, label: 'Today', color: 'text-blue-600' },
+  { icon: Target, text: 'Deep work & focus', durationMinutes: 120, label: '2 hours', color: 'text-purple-600' },
+  { icon: Coffee, text: 'Out to lunch', durationMinutes: 60, label: '1 hour', color: 'text-orange-600' },
 ];
-
-const EMOJI_OPTIONS = ['💬', '📅', '🎯', '🚗', '☕', '🥪', '🌴', '🤒', '💻', '🎧', '🚀', '📚', '⚡', '✨'];
 
 export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuthStore();
   const { updateAvailabilityAndStatus } = usePresenceStore();
 
   const [selectedStatus, setSelectedStatus] = React.useState<UserStatus>(user?.status || 'ONLINE');
-  const [selectedEmoji, setSelectedEmoji] = React.useState<string>('💬');
   const [statusText, setStatusText] = React.useState<string>('');
   const [clearDuration, setClearDuration] = React.useState<string>('dont_clear');
   const [isSaving, setIsSaving] = React.useState(false);
@@ -63,14 +65,9 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
     if (user && isOpen) {
       setSelectedStatus(user.status || 'ONLINE');
       if (user.customStatus) {
-        // Try to parse leading emoji if present
-        const match = user.customStatus.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*(.*)$/u);
-        if (match) {
-          setSelectedEmoji(match[1]);
-          setStatusText(match[2]);
-        } else {
-          setStatusText(user.customStatus);
-        }
+        // Strip any legacy leading emoji if present
+        const cleanStatus = user.customStatus.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '');
+        setStatusText(cleanStatus);
       } else {
         setStatusText('');
       }
@@ -118,7 +115,6 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
   };
 
   const handleApplyPreset = (preset: StatusPreset) => {
-    setSelectedEmoji(preset.emoji);
     setStatusText(preset.text);
     if (preset.durationMinutes === null) {
       setClearDuration('dont_clear');
@@ -156,7 +152,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
 
     try {
       const trimmed = statusText.trim();
-      const combinedStatus = trimmed ? `${selectedEmoji} ${trimmed}` : null;
+      const combinedStatus = trimmed || null;
       const expiresAt = trimmed ? calculateExpiresAt(clearDuration) : null;
 
       await updateAvailabilityAndStatus(selectedStatus, combinedStatus, expiresAt);
@@ -292,15 +288,8 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
               Custom Status Message
             </label>
             <div className="flex items-center gap-2">
-              {/* Emoji Picker Pill */}
-              <div className="relative">
-                <button
-                  type="button"
-                  className="w-10 h-10 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center justify-center text-lg hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                  title="Choose status emoji"
-                >
-                  {selectedEmoji}
-                </button>
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-600 flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-[#DC2626]" />
               </div>
 
               {/* Status Text Input */}
@@ -308,54 +297,42 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                 type="text"
                 value={statusText}
                 onChange={(e) => setStatusText(e.target.value)}
-                placeholder="What's your status? (e.g. In a design review)"
+                placeholder="What's your status? (e.g. In an architecture sync)"
                 className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 maxLength={100}
               />
             </div>
-
-            {/* Quick Emoji Bar */}
-            <div className="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase mr-1">Quick:</span>
-              {EMOJI_OPTIONS.map((em) => (
-                <button
-                  key={em}
-                  type="button"
-                  onClick={() => setSelectedEmoji(em)}
-                  className={`w-7 h-7 rounded-lg text-sm flex items-center justify-center transition-transform hover:scale-125 cursor-pointer ${
-                    selectedEmoji === em ? 'bg-red-500/20 ring-1 ring-red-500/40 text-[#DC2626]' : 'hover:bg-black/5'
-                  }`}
-                >
-                  {em}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Quick Slack Status Presets */}
+          {/* Quick Status Presets */}
           <div>
             <span className="block text-[11px] font-semibold text-[var(--text-muted)] mb-1.5">
-              Or pick a standard Slack preset:
+              Or pick a standard status preset:
             </span>
-            <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
-              {STATUS_PRESETS.map((p) => (
-                <button
-                  key={p.text}
-                  type="button"
-                  onClick={() => handleApplyPreset(p)}
-                  className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-left transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="text-sm">{p.emoji}</span>
-                    <span className="text-xs text-[#111827] group-hover:text-[#DC2626] truncate font-medium">
-                      {p.text}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1 scrollbar-thin">
+              {STATUS_PRESETS.map((p) => {
+                const IconComponent = p.icon;
+                return (
+                  <button
+                    key={p.text}
+                    type="button"
+                    onClick={() => handleApplyPreset(p)}
+                    className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <div className={`w-6 h-6 rounded-lg bg-black/[0.04] flex items-center justify-center shrink-0 ${p.color}`}>
+                        <IconComponent className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs text-[#111827] group-hover:text-[#DC2626] truncate font-medium">
+                        {p.text}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono flex-shrink-0 ml-1">
+                      {p.label}
                     </span>
-                  </div>
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono flex-shrink-0 ml-1">
-                    {p.label}
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

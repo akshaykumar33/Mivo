@@ -54,17 +54,17 @@ export const DOC_ARTICLES: DocArticle[] = [
     readTime: '2 min read',
     icon: Sparkles,
     content: `
-# 🚀 Quick Access & Demo Profiles
+# Quick Access & Demo Profiles
 
 Welcome to **Mivo** — the next-generation unified real-time communication platform combining the best of Zoom, Google Meet, Discord, and Slack into an ultra-fluid, Apple-inspired experience.
 
-### 🔑 1-Click Demo Profiles (Password: \`Password123!\`):
-* **👑 Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner (English 🇺🇸)
-* **🎨 Alex Rivera** (\`alex@mivo.app\`): Staff Designer & Community Admin (English 🇺🇸)
-* **⚡ Sarah Connor** (\`sarah@mivo.app\`): Principal Backend Lead (English 🇬🇧)
-* **🌍 Carlos Mendoza** (\`carlos@mivo.app\`): Frontend Specialist (Spanish 🇪🇸)
-* **🌏 Priya Sharma** (\`priya@mivo.app\`): Cloud Architect (Hindi 🇮🇳)
-* **📻 Elena Rostova** (\`elena@mivo.app\`): Media SFU Infrastructure Specialist (Russian 🇷🇺)
+### 1-Click Demo Profiles (Password: \`Password123!\`):
+* **Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner (English [US])
+* **Alex Rivera** (\`alex@mivo.app\`): Staff Designer & Community Admin (English [US])
+* **Sarah Connor** (\`sarah@mivo.app\`): Principal Backend Lead (English [GB])
+* **Carlos Mendoza** (\`carlos@mivo.app\`): Frontend Specialist (Spanish [ES])
+* **Priya Sharma** (\`priya@mivo.app\`): Cloud Architect (Hindi [IN])
+* **Elena Rostova** (\`elena@mivo.app\`): Media SFU Infrastructure Specialist (Russian [RU])
 
 > [!TIP]
 > You can log in instantly by clicking any profile card on the login screen without typing credentials manually.
@@ -83,7 +83,7 @@ pnpm --filter @mivo/database seed`,
     readTime: '3 min read',
     icon: Layers,
     content: `
-# 🏢 Workspaces & Channel Architecture
+# Workspaces & Channel Architecture
 
 Mivo organizes real-time communication into three tiers:
 
@@ -93,10 +93,10 @@ The top-level organization or workspace (e.g. *Engineering Alpha*, *Design & UX 
 ### 2. Channels & Spaces (Sidebar)
 Categorized groups with specific communication intentions:
 * **\`#general\`** (Type: GENERAL): Asynchronous discussion, updates, and daily syncs.
-* **\`🔊 voice-lounge\`** (Type: VOICE): Drop-in spatial voice rooms with soundwave equalizers.
-* **\`📹 war-room\`** (Type: MEDIA): Live code reviews and high-framerate screen sharing.
+* **\`voice-lounge\`** (Type: VOICE): Drop-in spatial voice rooms with soundwave equalizers.
+* **\`war-room\`** (Type: MEDIA): Live code reviews and high-framerate screen sharing.
 
-### 🔒 Public vs. Private Channels
+### Public vs. Private Channels
 * **Public Channels (\`isPrivate: false\`)**: Open and visible to all community members.
 * **Private Channels (\`isPrivate: true\`)**: Restricted only to Owners, Admins, or members with explicit permission.
     `,
@@ -109,7 +109,7 @@ Categorized groups with specific communication intentions:
     readTime: '4 min read',
     icon: Video,
     content: `
-# 🎛️ Unified Stage Communication Modes
+# Unified Stage Communication Modes
 
 In Mivo, a room is a **single unified communication stage** that dynamically adapts its layout without dropping participants or switching channels:
 
@@ -140,22 +140,22 @@ socket.emit('room:change-mode', {
     readTime: '3 min read',
     icon: Monitor,
     content: `
-# 🔀 Interactive Stage Tiles & Layouts
+# Interactive Stage Tiles & Layouts
 
 Every video tile gives you rich interactive controls:
 
 ### 1. Drag & Drop & Instant Swap
 * **Drag Handle (GripVertical)**: Click and drag any tile onto another to swap positions instantly.
-* **1-Click Swap Arrows (◀ / ▶)**: Hover over any video tile or voice card and click the < and > arrow buttons to shift speakers left or right.
+* **1-Click Swap Arrows**: Hover over any video tile or voice card and click the < and > arrow buttons to shift speakers left or right.
 
-### 2. 📌 Spotlight Focus Mode
+### 2. Spotlight Focus Mode
 * Hover over any participant and click **Pin** to expand that speaker into the dominant **16:9 Hero Stage View**, with other attendees neatly organized in a bottom filmstrip.
 * Click **Unpin** to return to the equal grid.
 
-### 3. 🔊 Individual Peer Volume Sliders
+### 3. Individual Peer Volume Sliders
 * Hover over any remote speaker and click the **Volume icon** to adjust their volume independently from **0% to 200%**.
 
-### 4. 📊 Dynamic 3-Bar Audio Equalizer
+### 4. Dynamic 3-Bar Audio Equalizer
 * Live green animated equalizer waves pulse directly on the speaker's nameplate during active speech.
     `,
   },
@@ -167,15 +167,15 @@ Every video tile gives you rich interactive controls:
     readTime: '4 min read',
     icon: Zap,
     content: `
-# 🤖 Gemini 3.7 AI Copilot & Whisper Scribe
+# Gemini 3.7 AI Copilot & Whisper Scribe
 
 Mivo features a built-in AI assistant and automated meeting documentation pipeline:
 
-### 1. ✨ Gemini 3.7 AI Copilot
-* Click the **Purple Sparkle (\`✨\`)** in the CyberDock to trigger Gemini 3.7.
+### 1. Gemini 3.7 AI Copilot
+* Click the **Purple Sparkle** in the CyberDock to trigger Gemini 3.7.
 * Generates bulleted summaries, action items, and technical decisions based on real-time room conversations.
 
-### 2. 📋 Whisper Scribe & Automated MOM (Minutes of Meeting)
+### 2. Whisper Scribe & Automated MOM (Minutes of Meeting)
 * Click **\`AI Notes & MOM\`** in the top room header.
 * **Live Speech Dictation**: Uses Web Speech Synthesis & Whisper flow for real-time multilingual transcription.
 * **MOM Document Generation**: Automatically compiles:
@@ -205,15 +205,15 @@ Mivo features a built-in AI assistant and automated meeting documentation pipeli
     readTime: '3 min read',
     icon: Languages,
     content: `
-# 🌍 Real-Time Translation & Text-to-Speech
+# Real-Time Translation & Text-to-Speech
 
 Mivo bridges language barriers across global teams:
 
 ### 1. In-Chat Real-Time Message Translation
-* Select your target language in the chat header (Spanish 🇪🇸, French 🇫🇷, German 🇩🇪, Hindi 🇮🇳, Japanese 🇯🇵, Chinese 🇨🇳, etc.).
+* Select your target language in the chat header (Spanish, French, German, Hindi, Japanese, Chinese, etc.).
 * Click **\`Languages\` Translate** on any message to reveal the translated sub-card.
 
-### 2. 🔊 Native Speech Synthesis (TTS)
+### 2. Native Speech Synthesis (TTS)
 * Click the **Speaker icon (\`Volume2\`)** on any translated message to hear it read aloud in a native regional accent!
     `,
   },
@@ -225,7 +225,7 @@ Mivo bridges language barriers across global teams:
     readTime: '1 min read',
     icon: Keyboard,
     content: `
-# ⌨️ Keyboard Shortcuts Reference
+# Keyboard Shortcuts Reference
 
 | Shortcut | Action | Scope |
 | :--- | :--- | :--- |
