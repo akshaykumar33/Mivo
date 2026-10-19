@@ -1,12 +1,15 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MessagesController } from './messages.controller.js';
+import { MessageRetentionController } from './message-retention.controller.js';
 import { MessagesService } from './messages.service.js';
+import { MessageRetentionService } from './message-retention.service.js';
 import { RealtimeModule } from '../realtime/realtime.module.js';
 
 @Module({
   imports: [forwardRef(() => RealtimeModule)],
-  controllers: [MessagesController],
-  providers: [MessagesService],
-  exports: [MessagesService],
+  controllers: [MessagesController, MessageRetentionController],
+  providers: [MessagesService, MessageRetentionService],
+  exports: [MessagesService, MessageRetentionService],
 })
 export class MessagesModule {}
+

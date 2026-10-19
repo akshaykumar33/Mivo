@@ -103,8 +103,9 @@ export const LiveSubtitlesOverlay: React.FC<LiveSubtitlesOverlayProps> = ({
 
           {/* Translated Dual Subtitle */}
           {currentSubtitle.translatedText && (
-            <p className="text-xs text-[#30D158] font-semibold leading-relaxed pt-0.5 border-t border-white/[0.05]">
-              🌐 {currentSubtitle.translatedText}
+            <p className="text-xs text-[#30D158] font-semibold leading-relaxed pt-0.5 border-t border-white/[0.05] flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-[#30D158] shrink-0" />
+              <span>{currentSubtitle.translatedText}</span>
             </p>
           )}
         </div>

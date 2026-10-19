@@ -13,6 +13,7 @@ import {
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 import { MessagesService } from '../messages/messages.service.js';
 import { ConversationsService } from '../conversations/conversations.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -28,7 +29,9 @@ export class MeetingsService {
     @Inject(forwardRef(() => MessagesService))
     private messagesService: MessagesService,
     @Inject(forwardRef(() => ConversationsService))
-    private conversationsService: ConversationsService
+    private conversationsService: ConversationsService,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService
   ) {}
 
   private generateSlug(length: number): string {
@@ -125,7 +128,7 @@ export class MeetingsService {
     // If shareToChat is true and roomId is provided, post invite card into the room chat
     if (input.shareToChat && input.roomId) {
       await this.messagesService.createMessage(input.roomId, userId, {
-        content: `📅 Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
+        content: `Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
         attachments: [
           {
             type: 'external-meeting',
@@ -138,7 +141,7 @@ export class MeetingsService {
     // If shareToChat is true and conversationId is provided, post invite card into group conversation
     if (input.shareToChat && input.conversationId) {
       await this.conversationsService.createMessage(input.conversationId, userId, {
-        content: `📅 Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
+        content: `Created ${providerLabel} Session: **${meeting.title}**\nJoin URL: ${meeting.meetingUrl}`,
         attachments: [
           {
             type: 'external-meeting',
@@ -219,6 +222,27 @@ export class MeetingsService {
       activatedAt: bridge.activatedAt,
     };
     this.realtimeGateway.server.to(`room:${roomId}`).emit(REALTIME_EVENTS.MEETING_BRIDGE_ACTIVATED, payload);
+
+    // Notify room members asynchronously
+    prisma.roomMember
+      .findMany({
+        where: { roomId, userId: { not: userId } },
+      })
+      .then((members) => {
+        for (const m of members) {
+          this.notificationsService
+            ?.createNotification(
+              m.userId,
+              'MEETING',
+              `Meeting Started: ${meeting.title}`,
+              `${bridge.activatedBy.displayName || bridge.activatedBy.username} started a ${meeting.provider} meeting.`,
+              roomId,
+              { roomId, meetingId: meeting.id, provider: meeting.provider, meetingUrl: meeting.meetingUrl }
+            )
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     return bridge;
   }
@@ -307,6 +331,27 @@ export class MeetingsService {
       activatedAt: bridge.activatedAt,
     };
     this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_MEETING_BRIDGE_ACTIVATED, payload);
+
+    // Notify other conversation members asynchronously
+    prisma.conversationMember
+      .findMany({
+        where: { conversationId, userId: { not: userId } },
+      })
+      .then((members) => {
+        for (const m of members) {
+          this.notificationsService
+            ?.createNotification(
+              m.userId,
+              'MEETING',
+              `Meeting in conversation: ${meeting.title}`,
+              `${bridge.activatedBy.displayName || bridge.activatedBy.username} started a ${meeting.provider} meeting.`,
+              conversationId,
+              { conversationId, meetingId: meeting.id, provider: meeting.provider, meetingUrl: meeting.meetingUrl }
+            )
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     return bridge;
   }

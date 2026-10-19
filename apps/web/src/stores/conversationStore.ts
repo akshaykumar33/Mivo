@@ -48,7 +48,7 @@ interface ConversationState {
 
   // Core Actions
   loadConversations: () => Promise<void>;
-  selectConversation: (conversationId: string) => Promise<void>;
+  selectConversation: (conversationId: string | null) => Promise<void>;
   startDirectConversation: (recipientId: string) => Promise<ConversationDTO>;
   createGroupConversation: (name: string, memberIds: string[], iconUrl?: string) => Promise<ConversationDTO>;
   sendMessage: (conversationId: string, content: string, attachments?: any[]) => Promise<void>;
@@ -97,12 +97,17 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     }
   },
 
-  selectConversation: async (conversationId: string) => {
+  selectConversation: async (conversationId: string | null) => {
     const prev = get().activeConversationId;
     const socket = realtime.getSocket();
 
     if (prev && socket) {
       socket.emit(REALTIME_EVENTS.DM_LEAVE, { conversationId: prev });
+    }
+
+    if (!conversationId) {
+      set({ activeConversationId: null });
+      return;
     }
 
     set({

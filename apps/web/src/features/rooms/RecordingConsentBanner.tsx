@@ -31,7 +31,7 @@ export const RecordingConsentBanner: React.FC<RecordingConsentBannerProps> = ({
       <div className="flex items-center gap-2.5">
         <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping flex-shrink-0" />
         <span className="font-bold text-rose-200">
-          🔴 Meeting Recording Active:
+          Meeting Recording Active:
         </span>
         <span className="text-slate-200">
           <strong className="text-white">{hostName}</strong> has started recording this session. By staying in the room, you acknowledge and consent to being recorded.

@@ -29,6 +29,7 @@ model User {
   bannerUrl        String?           @db.VarChar(512)
   bio              String?           @db.VarChar(256)
   customStatus     String?           @db.VarChar(128)
+  customStatusExpiresAt DateTime?    @db.Timestamptz(6)
   status           UserStatus        @default(OFFLINE)
   isEmailVerified  Boolean           @default(false)
   lastSeenAt       DateTime?         @db.Timestamptz(6)
@@ -45,6 +46,9 @@ model User {
   conversationMemberships ConversationMember[]
   directMessages          DirectMessage[]
   auditLogs               AuditLog[]
+  notifications           Notification[]
+  createdTickets          Ticket[]             @relation("TicketCreator")
+  assignedTickets         Ticket[]             @relation("TicketAssignee")
 
   @@index([email])
   @@index([username])
@@ -99,6 +103,7 @@ model Community {
   roles       Role[]
   channels    Channel[]
   auditLogs   AuditLog[]
+  tickets     Ticket[]
 
   @@index([slug])
   @@index([ownerId])
@@ -362,4 +367,75 @@ model DirectMessage {
   @@index([senderId])
   @@map("direct_messages")
 }
+
+// -----------------------------------------------------------------------------
+// NOTIFICATIONS & TICKETING DOMAIN
+// -----------------------------------------------------------------------------
+
+enum NotificationType {
+  MESSAGE
+  CALL
+  MEETING
+  TICKET
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType @default(SYSTEM)
+  title     String           @db.VarChar(128)
+  body      String           @db.Text
+  entityId  String?          @db.VarChar(64)
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+  readAt    DateTime?        @db.Timestamptz(6)
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Ticket {
+  id          String         @id @default(uuid()) @db.Uuid
+  communityId String?        @db.Uuid
+  creatorId   String         @db.Uuid
+  assigneeId  String?        @db.Uuid
+  title       String         @db.VarChar(128)
+  description String         @db.Text
+  category    String         @default("Support") @db.VarChar(64)
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  createdAt   DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(6)
+  closedAt    DateTime?      @db.Timestamptz(6)
+
+  community   Community?     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  creator     User           @relation("TicketCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  assignee    User?          @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([communityId])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([status])
+  @@map("tickets")
+}
+
 

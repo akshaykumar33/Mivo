@@ -53,23 +53,23 @@ class SocketClient {
 
     this.socket.on('connect', () => {
       this.isConnecting = false;
-      console.log('⚡ Connected to Mivo Realtime Gateway (Socket.io ID:', this.socket?.id, ')');
+      console.log('[Realtime] Connected to Mivo Gateway (Socket.io ID:', this.socket?.id, ')');
 
       // Resilient Auto-Rejoin: restore room subscriptions after network drops/sleep
       this.joinedRooms.forEach((roomId) => {
-        console.log(`🔄 Re-joining room subscription after reconnection: ${roomId}`);
+        console.log(`[Realtime] Re-joining room subscription after reconnection: ${roomId}`);
         this.socket?.emit('room:join', { roomId });
       });
     });
 
     this.socket.on('disconnect', (reason) => {
       this.isConnecting = false;
-      console.log('⚡ Disconnected from Realtime Gateway:', reason);
+      console.log('[Realtime] Disconnected from Gateway:', reason);
     });
 
     this.socket.on('connect_error', (error) => {
       this.isConnecting = false;
-      console.warn('⚠️ Realtime Gateway connection error:', error.message);
+      console.warn('[Realtime] Gateway connection error:', error.message);
     });
 
     return this.socket;

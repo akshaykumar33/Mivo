@@ -33,7 +33,7 @@ export class RedisIoAdapter extends IoAdapter {
       await subClient.connect();
 
       this.adapterConstructor = createAdapter(pubClient, subClient);
-      this.logger.log('🚀 Redis Socket.io adapter successfully attached (Pub/Sub active).');
+      this.logger.log('Redis Socket.io adapter successfully attached (Pub/Sub active).');
     } catch (err: any) {
       this.logger.warn(`Redis connection failed (${err.message}). Falling back to in-memory Socket.io adapter.`);
       this.adapterConstructor = null;

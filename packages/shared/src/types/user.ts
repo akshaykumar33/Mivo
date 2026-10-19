@@ -9,6 +9,7 @@ export interface UserDTO {
   bannerUrl: string | null;
   bio: string | null;
   customStatus: string | null;
+  customStatusExpiresAt?: string | null;
   status: UserStatus;
   createdAt: string;
   lastSeenAt: string | null;
@@ -21,4 +22,6 @@ export interface UserSummaryDTO {
   avatarUrl: string | null;
   status: UserStatus;
   customStatus: string | null;
+  customStatusExpiresAt?: string | null;
 }
+

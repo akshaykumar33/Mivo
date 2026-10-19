@@ -8,7 +8,10 @@ export class PresenceService implements OnModuleInit {
   private readonly logger = new Logger(PresenceService.name);
   private redisClient: Redis | null = null;
   private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
-  private userStatus = new Map<string, { status: UserStatus; customStatus?: string | null; lastHeartbeat: number }>();
+  private userStatus = new Map<
+    string,
+    { status: UserStatus; customStatus?: string | null; customStatusExpiresAt?: string | null; lastHeartbeat: number }
+  >();
 
   async onModuleInit() {
     const redisUrl = process.env.REDIS_URL;
@@ -20,7 +23,7 @@ export class PresenceService implements OnModuleInit {
           lazyConnect: true,
         });
         await this.redisClient.connect();
-        this.logger.log('⚡ Redis presence registry connected');
+        this.logger.log('Redis presence registry connected');
       } catch (err: any) {
         this.logger.warn(`Redis presence fallback to memory: ${err.message}`);
         this.redisClient = null;
@@ -28,12 +31,34 @@ export class PresenceService implements OnModuleInit {
     }
   }
 
-  async setUserOnline(userId: string, socketId: string, status: UserStatus = 'ONLINE', customStatus?: string | null) {
+  private isStatusExpired(customStatusExpiresAt?: string | null): boolean {
+    if (!customStatusExpiresAt) return false;
+    const exp = new Date(customStatusExpiresAt).getTime();
+    return !isNaN(exp) && exp <= Date.now();
+  }
+
+  async setUserOnline(
+    userId: string,
+    socketId: string,
+    status: UserStatus = 'ONLINE',
+    customStatus?: string | null,
+    customStatusExpiresAt?: string | null
+  ) {
     if (!this.userSockets.has(userId)) {
       this.userSockets.set(userId, new Set());
     }
     this.userSockets.get(userId)!.add(socketId);
-    this.userStatus.set(userId, { status, customStatus, lastHeartbeat: Date.now() });
+
+    const expired = this.isStatusExpired(customStatusExpiresAt);
+    const activeCustomStatus = expired ? null : customStatus;
+    const activeExpiresAt = expired ? null : customStatusExpiresAt;
+
+    this.userStatus.set(userId, {
+      status,
+      customStatus: activeCustomStatus,
+      customStatusExpiresAt: activeExpiresAt,
+      lastHeartbeat: Date.now(),
+    });
 
     // Redis ephemeral presence state with 120s TTL
     if (this.redisClient) {
@@ -42,7 +67,12 @@ export class PresenceService implements OnModuleInit {
           this.redisClient.sadd(`presence:sockets:${userId}`, socketId),
           this.redisClient.set(
             `presence:user:${userId}`,
-            JSON.stringify({ status, customStatus, lastHeartbeat: Date.now() }),
+            JSON.stringify({
+              status,
+              customStatus: activeCustomStatus,
+              customStatusExpiresAt: activeExpiresAt,
+              lastHeartbeat: Date.now(),
+            }),
             'EX',
             120
           ),
@@ -56,7 +86,12 @@ export class PresenceService implements OnModuleInit {
     prisma.user
       .update({
         where: { id: userId },
-        data: { status, customStatus, lastSeenAt: new Date() },
+        data: {
+          status,
+          customStatus: activeCustomStatus,
+          customStatusExpiresAt: activeExpiresAt ? new Date(activeExpiresAt) : null,
+          lastSeenAt: new Date(),
+        },
       })
       .catch(() => {});
   }
@@ -69,7 +104,13 @@ export class PresenceService implements OnModuleInit {
       sockets.delete(socketId);
       if (sockets.size === 0) {
         this.userSockets.delete(userId);
-        this.userStatus.set(userId, { status: 'OFFLINE', lastHeartbeat: Date.now() });
+        const existing = this.userStatus.get(userId);
+        this.userStatus.set(userId, {
+          status: 'OFFLINE',
+          customStatus: existing?.customStatus,
+          customStatusExpiresAt: existing?.customStatusExpiresAt,
+          lastHeartbeat: Date.now(),
+        });
         isFullyOffline = true;
       }
     }
@@ -97,14 +138,98 @@ export class PresenceService implements OnModuleInit {
     return isFullyOffline;
   }
 
-  async heartbeat(userId: string, status: UserStatus = 'ONLINE', customStatus?: string | null) {
-    this.userStatus.set(userId, { status, customStatus, lastHeartbeat: Date.now() });
+  async updateUserPresence(
+    userId: string,
+    status?: UserStatus,
+    customStatus?: string | null,
+    customStatusExpiresAt?: string | null
+  ) {
+    const existing = this.userStatus.get(userId);
+    const newStatus = status || existing?.status || 'ONLINE';
+
+    let newCustomStatus = customStatus !== undefined ? customStatus : existing?.customStatus;
+    let newExpiresAt =
+      customStatusExpiresAt !== undefined ? customStatusExpiresAt : existing?.customStatusExpiresAt;
+
+    if (this.isStatusExpired(newExpiresAt)) {
+      newCustomStatus = null;
+      newExpiresAt = null;
+    }
+
+    this.userStatus.set(userId, {
+      status: newStatus,
+      customStatus: newCustomStatus,
+      customStatusExpiresAt: newExpiresAt,
+      lastHeartbeat: Date.now(),
+    });
 
     if (this.redisClient) {
       try {
         await this.redisClient.set(
           `presence:user:${userId}`,
-          JSON.stringify({ status, customStatus, lastHeartbeat: Date.now() }),
+          JSON.stringify({
+            status: newStatus,
+            customStatus: newCustomStatus,
+            customStatusExpiresAt: newExpiresAt,
+            lastHeartbeat: Date.now(),
+          }),
+          'EX',
+          120
+        );
+      } catch (err: any) {
+        this.logger.warn(`Redis presence update failed: ${err.message}`);
+      }
+    }
+
+    // Persist to database
+    await prisma.user
+      .update({
+        where: { id: userId },
+        data: {
+          status: newStatus,
+          customStatus: newCustomStatus,
+          customStatusExpiresAt: newExpiresAt ? new Date(newExpiresAt) : null,
+          lastSeenAt: new Date(),
+        },
+      })
+      .catch((err) => {
+        this.logger.warn(`DB presence update failed: ${err.message}`);
+      });
+
+    return {
+      status: newStatus,
+      customStatus: newCustomStatus,
+      customStatusExpiresAt: newExpiresAt,
+    };
+  }
+
+  async heartbeat(
+    userId: string,
+    status: UserStatus = 'ONLINE',
+    customStatus?: string | null,
+    customStatusExpiresAt?: string | null
+  ) {
+    const expired = this.isStatusExpired(customStatusExpiresAt);
+    const activeCustomStatus = expired ? null : customStatus;
+    const activeExpiresAt = expired ? null : customStatusExpiresAt;
+
+    this.userStatus.set(userId, {
+      status,
+      customStatus: activeCustomStatus,
+      customStatusExpiresAt: activeExpiresAt,
+      lastHeartbeat: Date.now(),
+    });
+
+    if (this.redisClient) {
+      try {
+        await this.redisClient.set(
+          `presence:user:${userId}`,
+          JSON.stringify({
+            status,
+            customStatus: activeCustomStatus,
+            customStatusExpiresAt: activeExpiresAt,
+            lastHeartbeat: Date.now(),
+          }),
           'EX',
           120
         );
@@ -114,8 +239,26 @@ export class PresenceService implements OnModuleInit {
     }
   }
 
-  getUserStatus(userId: string): { status: UserStatus; customStatus?: string | null } {
+  getUserStatus(userId: string): {
+    status: UserStatus;
+    customStatus?: string | null;
+    customStatusExpiresAt?: string | null;
+  } {
     const existing = this.userStatus.get(userId);
-    return existing ? { status: existing.status, customStatus: existing.customStatus } : { status: 'OFFLINE' };
+    if (!existing) {
+      return { status: 'OFFLINE' };
+    }
+
+    if (this.isStatusExpired(existing.customStatusExpiresAt)) {
+      existing.customStatus = null;
+      existing.customStatusExpiresAt = null;
+    }
+
+    return {
+      status: existing.status,
+      customStatus: existing.customStatus,
+      customStatusExpiresAt: existing.customStatusExpiresAt,
+    };
   }
 }
+

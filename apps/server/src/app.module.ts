@@ -12,6 +12,9 @@ import { StorageModule } from './storage/storage.module.js';
 import { ConversationsModule } from './conversations/conversations.module.js';
 import { MeetingsModule } from './meetings/meetings.module.js';
 
+import { NotificationsModule } from './notifications/notifications.module.js';
+import { TicketsModule } from './tickets/tickets.module.js';
+
 @Module({
   imports: [
     AuthModule,
@@ -24,6 +27,8 @@ import { MeetingsModule } from './meetings/meetings.module.js';
     MessagesModule,
     ConversationsModule,
     MeetingsModule,
+    NotificationsModule,
+    TicketsModule,
     AiModule,
     StorageModule,
   ],

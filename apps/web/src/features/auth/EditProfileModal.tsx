@@ -22,7 +22,46 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [isUploading, setIsUploading] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [isGeneratingStatus, setIsGeneratingStatus] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleGenerateStatus = async () => {
+    setIsGeneratingStatus(true);
+    try {
+      const savedKey = typeof window !== 'undefined' ? localStorage.getItem('mivo_gemini_api_key') : null;
+      const cleanTopic = customStatus.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '').trim();
+
+      const res = await api.post<{ statusText: string; engine: string }>('/api/v1/ai/generate-status', {
+        topic: cleanTopic || undefined,
+        availability: user?.status,
+        apiKey: savedKey || undefined,
+      });
+
+      if (res.success && res.data?.statusText) {
+        setCustomStatus(res.data.statusText);
+      } else {
+        const fallbacks = [
+          'Deep work on deliverables',
+          'In flow state — slow to reply',
+          'Quick coffee recharge & planning',
+          'Deploying updates & monitoring',
+          'Syncing in collaborative reviews',
+          'Squashing bugs & refactoring',
+        ];
+        setCustomStatus(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+      }
+    } catch {
+      const fallbacks = [
+        'Deep work on sprint items',
+        'In flow state — ping for urgent',
+        'Quick coffee recharge',
+        'Deploying updates',
+      ];
+      setCustomStatus(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+    } finally {
+      setIsGeneratingStatus(false);
+    }
+  };
 
   React.useEffect(() => {
     if (user) {
@@ -59,10 +98,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     setSaveSuccess(false);
 
     try {
+      const cleanCustomStatus = customStatus
+        .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u200E\u200B]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
       const payload: UpdateProfileInput = {
         displayName: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
-        customStatus: customStatus.trim() || undefined,
+        customStatus: cleanCustomStatus || null,
         avatarUrl: avatarUrl ? avatarUrl : null,
       };
 
@@ -83,8 +127,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in">
-      <div className="w-full max-w-md bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-2xl relative overflow-hidden ring-1 ring-white/10">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-4 sm:p-6 shadow-2xl relative ring-1 ring-white/10 custom-scrollbar">
         {/* Glow Accent */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#5E5CE6]/20 to-[#0A84FF]/20 blur-3xl pointer-events-none" />
 
@@ -163,13 +207,31 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
               Custom Status
             </label>
-            <input
-              type="text"
-              value={customStatus}
-              onChange={(e) => setCustomStatus(e.target.value)}
-              placeholder="e.g. In a meeting 🎧"
-              className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6]"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={customStatus}
+                onChange={(e) => setCustomStatus(e.target.value)}
+                placeholder="e.g. In an architecture sync"
+                className="flex-1 px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6]"
+              />
+              <button
+                type="button"
+                onClick={handleGenerateStatus}
+                disabled={isGeneratingStatus}
+                title="Generate status with AI"
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/15 via-red-500/20 to-amber-500/15 hover:from-red-500/25 hover:to-amber-500/25 border border-red-500/30 text-[#DC2626] flex items-center gap-1.5 flex-shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer group disabled:opacity-60 disabled:hover:scale-100 shadow-xs"
+              >
+                {isGeneratingStatus ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DC2626]" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-[#DC2626] group-hover:rotate-12 transition-transform" />
+                )}
+                <span className="text-xs font-bold hidden sm:inline">
+                  {isGeneratingStatus ? 'Generating...' : 'Generate'}
+                </span>
+              </button>
+            </div>
           </div>
 
           <div>

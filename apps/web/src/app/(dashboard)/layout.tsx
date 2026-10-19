@@ -9,8 +9,13 @@ import { useThemeStore, MivoThemeId } from '@/stores/themeStore';
 import { ThemeSwitcherModal } from '@/features/theme/ThemeSwitcherModal';
 import { IncomingCallModal } from '@/features/conversations/IncomingCallModal';
 import { ActiveCallOverlay } from '@/features/conversations/ActiveCallOverlay';
+import { NotificationCenterModal } from '@/features/notifications/NotificationCenterModal';
+import { NotificationToast } from '@/features/notifications/NotificationToast';
+import { TicketsModal } from '@/features/tickets/TicketsModal';
 import { useConversationStore } from '@/stores/conversationStore';
-import { useRouter } from 'next/navigation';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useTicketStore } from '@/stores/ticketStore';
+import { useRouter, usePathname } from 'next/navigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 export default function DashboardLayout({
@@ -19,25 +24,37 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { activeCommunity } = useCommunityStore();
   const { setTheme } = useThemeStore();
   const { isMobileSidebarOpen, closeMobileSidebar } = useNavigationStore();
   const { setupRealtimeListeners } = useConversationStore();
+  const { setupRealtimeListeners: setupNotificationListeners, fetchUnreadCount } = useNotificationStore();
+  const { setupRealtimeListeners: setupTicketListeners } = useTicketStore();
 
-  // Load saved visual theme on startup
+  // Load saved visual theme on startup, defaulting to the new Crimson & Cream palette
   React.useEffect(() => {
     const saved = localStorage.getItem('mivo_theme') as MivoThemeId;
-    if (saved && ['midnight', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
+    if (saved && saved !== 'midnight' && ['crimson-cream', 'titanium', 'cyber', 'light-frost', 'solar-warm'].includes(saved)) {
       setTheme(saved);
+    } else {
+      setTheme('crimson-cream');
     }
   }, [setTheme]);
 
   React.useEffect(() => {
     if (user?.id) {
       setupRealtimeListeners(user.id);
+      fetchUnreadCount();
+      const unsubNotifs = setupNotificationListeners();
+      const unsubTickets = setupTicketListeners();
+      return () => {
+        unsubNotifs();
+        unsubTickets();
+      };
     }
-  }, [user?.id, setupRealtimeListeners]);
+  }, [user?.id, setupRealtimeListeners, setupNotificationListeners, setupTicketListeners, fetchUnreadCount]);
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -79,7 +96,7 @@ export default function DashboardLayout({
           {/* Drawer container: Community Rail + Channels List */}
           <div className="relative z-50 flex h-full max-w-[92vw] shadow-2xl animate-slide-right overflow-hidden border-r border-[var(--border-subtle)]">
             <CommunitySidebar onNavigate={closeMobileSidebar} />
-            {activeCommunity && (
+            {activeCommunity && !pathname.startsWith('/conversations') && (
               <ChannelSidebar
                 communityId={activeCommunity.id}
                 className="flex w-[230px] sm:w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex-col justify-between select-none flex-shrink-0"
@@ -97,6 +114,11 @@ export default function DashboardLayout({
       {/* Global Realtime Audio Calling & Modals */}
       <IncomingCallModal />
       <ActiveCallOverlay />
+
+      {/* Global Notifications & Support Modals */}
+      <NotificationCenterModal />
+      <NotificationToast />
+      <TicketsModal />
 
       {/* Global Visual Theme Engine Modal */}
       <ThemeSwitcherModal />

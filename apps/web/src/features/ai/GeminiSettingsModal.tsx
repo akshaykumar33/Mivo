@@ -66,7 +66,7 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
       <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity" />
 
       {/* Apple Vision Pro Modal Card */}
-      <div className="relative w-full max-w-lg rounded-[28px] bg-[#0A0C14]/95 border border-white/[0.14] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 space-y-5 select-none animate-slide-up z-10">
+      <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-[28px] bg-[#0A0C14]/95 border border-white/[0.14] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-4 sm:p-6 space-y-5 select-none animate-slide-up z-10 custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">

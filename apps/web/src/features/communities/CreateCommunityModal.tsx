@@ -84,13 +84,13 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
         <div className="flex items-center gap-4 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)]">
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="w-14 h-14 rounded-2xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#64D2FF] cursor-pointer hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0 relative group"
-            title="Upload custom icon (Supabase S3)"
+            className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-600 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0 relative group shadow-sm"
+            title="Upload custom icon"
           >
             {iconUrl ? (
               <img src={iconUrl} alt="Community Icon" className="w-full h-full object-cover" />
             ) : (
-              <Camera className="w-6 h-6" />
+              <Camera className="w-6 h-6 text-red-600" />
             )}
             {isUploadingIcon && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -100,13 +100,13 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
           </div>
 
           <div className="min-w-0">
-            <p className="text-xs font-bold text-[var(--text-primary)] font-display">Community Icon</p>
-            <p className="text-[11px] text-[var(--text-muted)]">Upload an image to Supabase Storage</p>
+            <p className="text-xs font-bold text-[#111827] font-display">Community Icon</p>
+            <p className="text-[11px] text-[#71717A]">Upload an avatar for your space</p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingIcon}
-              className="text-[11px] font-semibold text-[#64D2FF] hover:underline cursor-pointer mt-0.5"
+              className="text-[11px] font-semibold text-red-600 hover:text-red-700 hover:underline cursor-pointer mt-0.5"
             >
               {isUploadingIcon ? 'Uploading...' : 'Choose file...'}
             </button>
@@ -146,7 +146,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
             placeholder="Tell members what this community is all about..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+            className="w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
           />
         </div>
 

@@ -37,19 +37,18 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] text-xs font-semibold text-white transition-all cursor-pointer shadow-sm hover:scale-102"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-semibold text-[#111827] transition-all cursor-pointer shadow-sm hover:scale-102"
       >
-        <span className="text-sm">{activeLang.flag}</span>
-        <span className="text-white/90">{activeLang.name}</span>
-        <span className="text-[10px] text-white/40 font-mono uppercase">({activeLang.code})</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform duration-200 ${isOpen ? 'rotate-180 text-white' : ''}`} />
+        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/10 text-red-600 border border-red-500/20">{activeLang.code.toUpperCase()}</span>
+        <span className="text-[#111827]">{activeLang.name}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#71717A] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#111827]' : ''}`} />
       </button>
 
       {/* Luxury Glass Dropdown Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-[18px] bg-[#0E111C]/95 border border-white/[0.12] backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.8)] py-1.5 z-50 animate-slide-up overflow-hidden ring-1 ring-white/[0.06]">
+        <div className="absolute right-0 mt-2 w-56 rounded-[18px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] py-1.5 z-50 animate-slide-up overflow-hidden ring-1 ring-black/[0.05]">
           {label && (
-            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/40 border-b border-white/[0.06] mb-1">
+            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#71717A] border-b border-[var(--border-subtle)] mb-1">
               {label}
             </div>
           )}
@@ -67,21 +66,23 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-[10px] text-xs transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-gradient-to-r from-[#5E5CE6] to-[#0A84FF] text-white font-bold shadow-sm'
-                      : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                      ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white font-bold shadow-sm'
+                      : 'text-[#4B5563] hover:text-[#111827] hover:bg-black/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-base flex-shrink-0">{lang.flag}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold flex-shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-black/5 text-[#71717A] border-black/10'}`}>
+                      {lang.code.toUpperCase()}
+                    </span>
                     <div className="text-left min-w-0">
                       <div className="font-semibold truncate">{lang.name}</div>
-                      <div className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-white/40'}`}>
+                      <div className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-[#71717A]'}`}>
                         {lang.nativeName}
                       </div>
                     </div>
                   </div>
 
-                  {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0 ml-2" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0 ml-2 text-white" />}
                 </button>
               );
             })}

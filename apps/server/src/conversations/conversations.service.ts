@@ -15,15 +15,19 @@ import {
   REALTIME_EVENTS,
 } from '@mivo/shared';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
 export class ConversationsService {
   constructor(
     @Inject(forwardRef(() => RealtimeGateway))
-    private realtimeGateway: RealtimeGateway
+    private realtimeGateway: RealtimeGateway,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService
   ) {}
 
   async listConversations(userId: string): Promise<ConversationDTO[]> {
+    const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const conversations = await prisma.conversation.findMany({
       where: {
         deletedAt: null,
@@ -38,7 +42,10 @@ export class ConversationsService {
           },
         },
         messages: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+            createdAt: { gte: retentionCutoff },
+          },
           orderBy: { createdAt: 'desc' },
           take: 1,
           include: {
@@ -64,6 +71,8 @@ export class ConversationsService {
       throw new NotFoundException({ code: 'RECIPIENT_NOT_FOUND', message: 'Recipient user not found' });
     }
 
+    const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
     // Look for an existing DIRECT conversation containing both users
     const existing = await prisma.conversation.findFirst({
       where: {
@@ -79,7 +88,10 @@ export class ConversationsService {
           include: { user: true },
         },
         messages: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+            createdAt: { gte: retentionCutoff },
+          },
           orderBy: { createdAt: 'desc' },
           take: 1,
           include: { sender: true },
@@ -158,6 +170,7 @@ export class ConversationsService {
   }
 
   async getConversation(conversationId: string, userId: string): Promise<ConversationDTO> {
+    const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
@@ -165,7 +178,10 @@ export class ConversationsService {
           include: { user: true },
         },
         messages: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+            createdAt: { gte: retentionCutoff },
+          },
           orderBy: { createdAt: 'desc' },
           take: 1,
           include: { sender: true },
@@ -188,10 +204,12 @@ export class ConversationsService {
   async listMessages(conversationId: string, userId: string, limit = 50): Promise<DirectMessageDTO[]> {
     await this.ensureMembership(conversationId, userId);
 
+    const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const messages = await prisma.directMessage.findMany({
       where: {
         conversationId,
         deletedAt: null,
+        createdAt: { gte: retentionCutoff },
       },
       take: limit,
       orderBy: { createdAt: 'asc' },
@@ -236,6 +254,27 @@ export class ConversationsService {
     // Broadcast to real-time conversation room
     this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
 
+    // Dispatch notification to other conversation members
+    const otherMembers = await prisma.conversationMember.findMany({
+      where: { conversationId, userId: { not: senderId } },
+      include: { conversation: true },
+    });
+
+    const senderName = message.sender.displayName || message.sender.username;
+    for (const m of otherMembers) {
+      const convTitle = m.conversation.type === 'GROUP' ? m.conversation.name || 'Group' : senderName;
+      this.notificationsService
+        .createNotification(
+          m.userId,
+          'MESSAGE',
+          `New message from ${senderName}`,
+          text ? (text.length > 80 ? `${text.slice(0, 80)}...` : text) : 'Sent an attachment',
+          conversationId,
+          { conversationId, senderId, senderName, conversationTitle: convTitle }
+        )
+        .catch(() => {});
+    }
+
     return dto;
   }
 
@@ -254,6 +293,12 @@ export class ConversationsService {
     }
   }
 
+  private isStatusExpired(expiresAt?: Date | string | null): boolean {
+    if (!expiresAt) return false;
+    const time = new Date(expiresAt).getTime();
+    return !isNaN(time) && time <= Date.now();
+  }
+
   private mapToDTO(conversation: any): ConversationDTO {
     const lastMsg = conversation.messages?.[0] ? this.mapMessageToDTO(conversation.messages[0]) : null;
 
@@ -263,21 +308,28 @@ export class ConversationsService {
       name: conversation.name,
       iconUrl: conversation.iconUrl,
       createdById: conversation.createdById,
-      members: conversation.members.map((m: any) => ({
-        id: m.id,
-        conversationId: m.conversationId,
-        userId: m.userId,
-        joinedAt: m.joinedAt.toISOString(),
-        lastReadAt: m.lastReadAt ? m.lastReadAt.toISOString() : null,
-        user: {
-          id: m.user.id,
-          username: m.user.username,
-          displayName: m.user.displayName,
-          avatarUrl: m.user.avatarUrl,
-          status: m.user.status,
-          customStatus: m.user.customStatus,
-        },
-      })),
+      members: conversation.members.map((m: any) => {
+        const expired = this.isStatusExpired(m.user?.customStatusExpiresAt);
+        return {
+          id: m.id,
+          conversationId: m.conversationId,
+          userId: m.userId,
+          joinedAt: m.joinedAt.toISOString(),
+          lastReadAt: m.lastReadAt ? m.lastReadAt.toISOString() : null,
+          user: {
+            id: m.user.id,
+            username: m.user.username,
+            displayName: m.user.displayName,
+            avatarUrl: m.user.avatarUrl,
+            status: m.user.status,
+            customStatus: expired ? null : m.user.customStatus,
+            customStatusExpiresAt:
+              expired || !m.user.customStatusExpiresAt
+                ? null
+                : new Date(m.user.customStatusExpiresAt).toISOString(),
+          },
+        };
+      }),
       lastMessage: lastMsg,
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString(),
@@ -285,6 +337,7 @@ export class ConversationsService {
   }
 
   private mapMessageToDTO(m: any): DirectMessageDTO {
+    const expired = this.isStatusExpired(m.sender?.customStatusExpiresAt);
     return {
       id: m.id,
       conversationId: m.conversationId,
@@ -299,7 +352,11 @@ export class ConversationsService {
         displayName: m.sender.displayName,
         avatarUrl: m.sender.avatarUrl,
         status: m.sender.status,
-        customStatus: m.sender.customStatus,
+        customStatus: expired ? null : m.sender.customStatus,
+        customStatusExpiresAt:
+          expired || !m.sender.customStatusExpiresAt
+            ? null
+            : new Date(m.sender.customStatusExpiresAt).toISOString(),
       },
     };
   }

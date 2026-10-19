@@ -9,14 +9,14 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading = false, children, disabled, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer';
+    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer';
 
     const variants = {
-      primary: 'bg-violet-600 hover:bg-violet-500 active:bg-violet-700 !text-white shadow-lg shadow-violet-600/25',
+      primary: 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] active:bg-[#991B1B] !text-white shadow-lg shadow-red-600/25',
       secondary: 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]',
-      ghost: 'hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+      ghost: 'hover:bg-black/[0.05] text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
       danger: 'bg-rose-600 hover:bg-rose-500 active:bg-rose-700 !text-white shadow-lg shadow-rose-600/25',
-      outline: 'border border-[var(--border-subtle)] hover:border-violet-500/50 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/[0.04]',
+      outline: 'border border-[var(--border-subtle)] hover:border-red-500/50 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/[0.03]',
     };
 
     const sizes = {

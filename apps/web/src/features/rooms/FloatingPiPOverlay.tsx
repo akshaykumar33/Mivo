@@ -96,8 +96,8 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
       const dx = dragStartRef.current.mouseX - e.clientX;
       const dy = dragStartRef.current.mouseY - e.clientY;
       setPosition({
-        x: Math.max(12, Math.min(window.innerWidth - 360, dragStartRef.current.posX + dx)),
-        y: Math.max(12, Math.min(window.innerHeight - 240, dragStartRef.current.posY + dy)),
+        x: Math.max(8, Math.min(window.innerWidth - 280, dragStartRef.current.posX + dx)),
+        y: Math.max(8, Math.min(window.innerHeight - 180, dragStartRef.current.posY + dy)),
       });
     };
 
@@ -123,9 +123,9 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
         bottom: `${position.y}px`,
         right: `${position.x}px`,
       }}
-      className="fixed z-50 select-none shadow-2xl transition-shadow duration-150 animate-slide-up"
+      className="fixed z-50 select-none shadow-2xl transition-shadow duration-150 animate-slide-up max-w-[calc(100vw-16px)]"
     >
-      <div className="w-84 sm:w-96 rounded-3xl bg-[var(--bg-surface-0)]/95 border border-[var(--border-subtle)] backdrop-blur-3xl overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.7)] flex flex-col">
+      <div className="w-[calc(100vw-32px)] sm:w-96 max-w-sm rounded-3xl bg-[var(--bg-surface-0)]/95 border border-[var(--border-subtle)] backdrop-blur-3xl overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.7)] flex flex-col">
         {/* Header / Drag Bar */}
         <div
           onMouseDown={handleMouseDown}

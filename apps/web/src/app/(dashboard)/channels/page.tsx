@@ -1,17 +1,29 @@
 'use client';
 
+import * as React from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCommunityStore } from '@/stores/communityStore';
+import { useUserPresence } from '@/stores/presenceStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { Avatar, Button } from '@mivo/ui';
 import { CommunityDTO } from '@mivo/shared';
-import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight, Menu } from 'lucide-react';
+import { Users, Compass, Plus, MessageSquare, Sparkles, Hash, Volume2, Video, ArrowRight, Menu, Smile } from 'lucide-react';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
+import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
+import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import Link from 'next/link';
 
 export default function ChannelsHomePage() {
   const { user } = useAuthStore();
+  const presence = useUserPresence(user?.id, user);
   const { communities } = useCommunityStore();
   const { toggleMobileSidebar } = useNavigationStore();
+  const { setIsThemeModalOpen } = useThemeStore();
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
 
   return (
     <div className="flex-1 flex flex-col md:flex-row bg-[var(--bg-canvas)] overflow-hidden select-none">
@@ -30,9 +42,9 @@ export default function ChannelsHomePage() {
       {/* Direct Messages Sub-Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] p-4 flex-col justify-between flex-shrink-0">
         <div className="space-y-5">
-          <div className="h-8 px-2 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+          <div className="h-8 px-2 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[#71717A]">
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+              <Sparkles className="w-3.5 h-3.5 text-red-600" />
               <span>Direct Messages</span>
             </span>
           </div>
@@ -40,15 +52,15 @@ export default function ChannelsHomePage() {
           <div className="space-y-1">
             <Link
               href="/conversations"
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-violet-600/20 to-indigo-600/20 hover:from-violet-600/30 hover:to-indigo-600/30 text-violet-200 font-bold text-xs border border-violet-500/30 shadow-sm transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600/10 to-rose-600/10 hover:from-red-600/20 hover:to-rose-600/20 text-red-700 font-bold text-xs border border-red-500/25 shadow-sm transition-all cursor-pointer"
             >
-              <MessageSquare className="w-4 h-4 text-violet-400" />
+              <MessageSquare className="w-4 h-4 text-red-600" />
               <span>Direct & Group Chats</span>
             </Link>
           </div>
 
           <div className="pt-2">
-            <div className="px-2 text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">
+            <div className="px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#71717A] mb-3">
               Joined Workspaces ({communities.length})
             </div>
             <div className="space-y-1">
@@ -56,31 +68,96 @@ export default function ChannelsHomePage() {
                 <Link
                   key={c.id}
                   href={`/communities/${c.id}`}
-                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)] transition-all"
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#4B5563] hover:bg-black/[0.04] hover:text-[#111827] transition-all"
                 >
-                  <span className="w-2 h-2 rounded-full bg-violet-500" />
+                  <span className="w-2 h-2 rounded-full bg-red-600" />
                   <span className="truncate">{c.name}</span>
                 </Link>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Slack-style Current User Footer */}
+        {user && (
+          <div className="p-2 -mx-2 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between shrink-0 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 rounded-xl transition-all cursor-pointer group flex-1"
+              title="Set availability & status (like Slack)"
+            >
+              <div className="relative shrink-0">
+                <Avatar
+                  size="sm"
+                  status={presence.status}
+                  fallbackText={user.displayName || user.username}
+                  src={user.avatarUrl}
+                  className="group-hover:scale-105 transition-transform"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-[#DC2626] transition-colors">
+                  {user.displayName || user.username}
+                </div>
+                <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
+                  {presence.customStatus ? (
+                    <span className="text-[#DC2626] font-semibold truncate">{presence.customStatus}</span>
+                  ) : (
+                    <span className="capitalize">{presence.status.toLowerCase()}</span>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsSlackStatusOpen(true)}
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-all cursor-pointer"
+              title="Set Availability & Status"
+            >
+              <Smile className="w-4 h-4 text-[#DC2626]" />
+            </button>
+          </div>
+        )}
       </aside>
+
+      {/* Slack User Menu Popover */}
+      <SlackUserMenuPopover
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenFullModal={() => setIsSlackStatusOpen(true)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        placement="bottom-bar"
+      />
+
+      {/* Slack Availability & Status Modal */}
+      <SlackStatusModal
+        isOpen={isSlackStatusOpen}
+        onClose={() => setIsSlackStatusOpen(false)}
+      />
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
 
       {/* Main Home Hub View */}
       <section className="flex-1 bg-[var(--bg-canvas)] flex flex-col items-center justify-center p-8 sm:p-12 text-center relative overflow-hidden">
         {/* Subtle Ambient Radial Highlight */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white font-extrabold text-3xl shadow-2xl shadow-violet-600/30 mb-6 border border-white/20 z-10">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center text-white font-extrabold text-3xl shadow-2xl shadow-red-600/30 mb-6 border border-white/20 z-10">
           M
         </div>
 
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] font-display tracking-tight mb-3 z-10">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111827] font-display tracking-tight mb-3 z-10">
           Welcome back, {user?.displayName || user?.username}!
         </h2>
 
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-lg mb-10 leading-relaxed z-10">
+        <p className="text-xs sm:text-sm text-[#4B5563] max-w-lg mb-10 leading-relaxed z-10">
           Your unified workspace is ready. Choose an active community below to jump directly into real-time voice, video, or chat rooms:
         </p>
 
@@ -89,11 +166,11 @@ export default function ChannelsHomePage() {
             <Link
               key={c.id}
               href={`/communities/${c.id}`}
-              className="p-5 rounded-3xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-violet-500/40 hover:bg-[var(--bg-surface-2)] transition-all duration-200 group shadow-xl"
+              className="p-5 rounded-3xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-red-500/40 hover:bg-[var(--bg-surface-2)] transition-all duration-200 group shadow-xl"
             >
-              <div className="font-bold text-sm text-[var(--text-primary)] group-hover:text-violet-300 mb-1.5 flex items-center justify-between">
+              <div className="font-bold text-sm text-[#111827] group-hover:text-red-600 mb-1.5 flex items-center justify-between">
                 <span>{c.name}</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-600/20 text-violet-300 border border-violet-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-500/25">
                   {c.memberCount} members
                 </span>
               </div>

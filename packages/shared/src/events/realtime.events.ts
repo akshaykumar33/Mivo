@@ -68,6 +68,15 @@ export const REALTIME_EVENTS = {
   SIGNALING_OFFER: 'signaling:offer',
   SIGNALING_ANSWER: 'signaling:answer',
   SIGNALING_ICE_CANDIDATE: 'signaling:ice_candidate',
+
+  // Notifications & Alerts
+  NOTIFICATION_NEW: 'notification:new',
+  NOTIFICATION_READ: 'notification:read',
+  NOTIFICATION_READ_ALL: 'notification:read_all',
+
+  // Ticketing System
+  TICKET_CREATED: 'ticket:created',
+  TICKET_UPDATED: 'ticket:updated',
 } as const;
 
 export interface ChatReactionPayload {
@@ -159,7 +168,22 @@ export type RealtimeEventName = (typeof REALTIME_EVENTS)[keyof typeof REALTIME_E
 export interface PresenceHeartbeatPayload {
   status: UserStatus;
   customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
 }
+
+export interface PresenceUpdatePayload {
+  status: UserStatus;
+  customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
+}
+
+export interface PresenceUserUpdatedBroadcast {
+  userId: string;
+  status: UserStatus;
+  customStatus?: string | null;
+  customStatusExpiresAt?: string | null;
+}
+
 
 export interface RoomJoinPayload {
   roomId: string;
