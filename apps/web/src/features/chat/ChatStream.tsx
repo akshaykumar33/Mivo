@@ -5,6 +5,7 @@ import { MessageDTO, RoomDTO, AttachmentMetaDTO, REALTIME_EVENTS } from '@mivo/s
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { usePresenceStore } from '@/stores/presenceStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Avatar, Badge } from '@mivo/ui';
 import { MessageComposer } from './MessageComposer';
 import {
@@ -61,6 +62,7 @@ export interface ChatStreamProps {
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
+  const { user: currentUser } = useAuthStore();
   const userStatuses = usePresenceStore((s) => s.userStatuses);
   const [messages, setMessages] = React.useState<MessageDTO[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -417,6 +419,37 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
                         {cleaned}
                       </div>
+
+                      {/* AI Twin Out of Office Indicator & Quick Callback Scheduler */}
+                      {((msg as any).isAiTwin || msg.content.includes('AI Twin')) && (
+                        <div className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-[#BF5AF2]/15 to-[#5E5CE6]/15 border border-[#BF5AF2]/30 flex items-center justify-between text-xs animate-fadeIn">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-[#BF5AF2]/20 text-[#BF5AF2] text-[10px] font-bold">
+                              🤖 AI Twin • Out of Office
+                            </span>
+                            <span className="text-[11px] text-[#71717A] hidden sm:inline">
+                              Auto-replied from indexed project notes
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              api.post('/api/v1/ai/twin/schedule-callback', {
+                                recipientUserId: msg.senderId,
+                                requesterUserId: currentUser?.id,
+                                slot: 'Tomorrow at 10:00 AM UTC',
+                                communityId: room.channelId,
+                              }).then((res) => {
+                                if (res.success) {
+                                  alert('Sync callback successfully registered in PostgreSQL sprint tickets!');
+                                }
+                              });
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-[#5E5CE6] hover:bg-[#5E5CE6]/90 text-white font-semibold text-[11px] transition-all shadow-sm cursor-pointer"
+                          >
+                            Schedule Callback
+                          </button>
+                        </div>
+                      )}
                       {/* Auto-detected YouTube Videos inline in stream */}
                       {extractYouTubeUrls(cleaned).map((yt) => (
                         <YouTubeEmbedCard

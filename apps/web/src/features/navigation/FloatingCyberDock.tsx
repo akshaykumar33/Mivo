@@ -19,6 +19,7 @@ import {
   BookOpen,
   Palette,
   PictureInPicture2,
+  Code2,
 } from 'lucide-react';
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 import { useThemeStore } from '@/stores/themeStore';
@@ -102,6 +103,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     { id: 'VIDEO', label: 'Video', icon: Video, color: 'from-[#64D2FF] to-[#0A84FF]', glow: 'shadow-[0_4px_16px_rgba(100,210,255,0.4)]' },
     { id: 'SCREEN_SHARE', label: 'Screen', icon: Monitor, color: 'from-[#5E5CE6] to-[#BF5AF2]', glow: 'shadow-[0_4px_16px_rgba(94,92,230,0.4)]' },
     { id: 'CANVAS', label: 'Canvas', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]', glow: 'shadow-[0_4px_16px_rgba(255,159,10,0.4)]' },
+    { id: 'CODE', label: 'Code', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]', glow: 'shadow-[0_4px_16px_rgba(48,209,88,0.4)]' },
   ];
 
   const reactionList = ['heart', 'thumbs_up', 'fire', 'party', 'laugh', 'rocket', 'hundred', 'sparkles', 'clap'];

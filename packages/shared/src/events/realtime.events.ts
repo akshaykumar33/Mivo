@@ -97,6 +97,47 @@ export const REALTIME_EVENTS = {
   // Spoken Voice-to-Ticket Automation
   ROOM_VOICE_TICKET_DETECTED: 'room:voice_ticket_detected',
   ROOM_VOICE_TICKET_CONFIRM: 'room:voice_ticket_confirm',
+
+  // 1. Media Plane: SFU Engine Upgrade
+  SFU_GET_ROUTER_RTP_CAPABILITIES: 'sfu:get_router_rtp_capabilities',
+  SFU_CREATE_TRANSPORT: 'sfu:create_transport',
+  SFU_CONNECT_TRANSPORT: 'sfu:connect_transport',
+  SFU_PRODUCE: 'sfu:produce',
+  SFU_CONSUME: 'sfu:consume',
+  SFU_SET_PREFERRED_LAYERS: 'sfu:set_preferred_layers',
+  SFU_STATS_UPDATE: 'sfu:stats_update',
+  SFU_MODE_SWITCH: 'sfu:mode_switch',
+
+  // 2. Media Plane: E2EE Zero-Trust Encryption
+  E2EE_KEY_EXCHANGE: 'e2ee:key_exchange',
+  E2EE_EPOCH_ROTATED: 'e2ee:epoch_rotated',
+  E2EE_VERIFY_SAFETY_CODE: 'e2ee:verify_safety_code',
+
+  // 3. Developer DX: CODE_STAGE Pair-Programming Sandbox
+  CODE_STAGE_CHANGE: 'code_stage:change',
+  CODE_STAGE_CURSOR: 'code_stage:cursor',
+  CODE_STAGE_EXECUTE: 'code_stage:execute',
+  CODE_STAGE_EXECUTION_RESULT: 'code_stage:execution_result',
+
+  // 4. Presence: AI Twin & Out of Office Persona
+  AI_TWIN_AUTO_REPLY: 'ai_twin:auto_reply',
+  AI_TWIN_SCHEDULE_CALLBACK: 'ai_twin:schedule_callback',
+
+  // 5. Vibe & Flow: Ambient Spatial Focus Rooms & Pomodoro
+  FOCUS_TIMER_SYNC: 'focus:timer_sync',
+  FOCUS_TIMER_ACTION: 'focus:timer_action',
+  FOCUS_TRACK_CHANGE: 'focus:track_change',
+
+  // 6. Extensibility: Mivo Mini-Apps / Activity Sandboxes
+  ACTIVITY_LAUNCH: 'activity:launch',
+  ACTIVITY_SYNC_STATE: 'activity:sync_state',
+  ACTIVITY_ACTION: 'activity:action',
+  ACTIVITY_CLOSE: 'activity:close',
+
+  // 7. Offline-First: CRDT Sync & Local-First Messaging
+  CRDT_SYNC_BATCH: 'crdt:sync_batch',
+  CRDT_SYNC_ACK: 'crdt:sync_ack',
+  CRDT_STATE_DELTA: 'crdt:state_delta',
 } as const;
 
 export interface ChatReactionPayload {

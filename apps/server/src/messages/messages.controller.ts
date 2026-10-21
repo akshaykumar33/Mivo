@@ -9,6 +9,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service.js';
+import { CrdtSyncService } from './crdt-sync.service.js';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
 import { CurrentUser } from '../common/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
@@ -18,12 +19,17 @@ import {
   ApiResponse,
   MessageDTO,
   JwtPayload,
+  CrdtSyncBatchPayload,
+  CrdtSyncBatchResponse,
 } from '@mivo/shared';
 
 @Controller('api/v1/rooms/:roomId/messages')
 @UseGuards(JwtAuthGuard)
 export class MessagesController {
-  constructor(private messagesService: MessagesService) {}
+  constructor(
+    private messagesService: MessagesService,
+    private crdtSyncService: CrdtSyncService,
+  ) {}
 
   @Get()
   async listMessages(
@@ -49,6 +55,19 @@ export class MessagesController {
     return {
       success: true,
       data: message,
+    };
+  }
+
+  @Post('crdt-sync')
+  async crdtSync(
+    @Param('roomId') roomId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() body: CrdtSyncBatchPayload
+  ): Promise<ApiResponse<CrdtSyncBatchResponse>> {
+    const result = await this.crdtSyncService.processSyncBatch(body);
+    return {
+      success: true,
+      data: result,
     };
   }
 }

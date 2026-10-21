@@ -30,6 +30,10 @@ model User {
   bio              String?           @db.VarChar(256)
   customStatus     String?           @db.VarChar(128)
   customStatusExpiresAt DateTime?    @db.Timestamptz(6)
+  aiTwinEnabled    Boolean           @default(false)
+  aiTwinPrompt     String?           @db.Text
+  aiTwinCallbackSlots Json?
+  aiTwinAutoCallback Boolean         @default(true)
   status           UserStatus        @default(OFFLINE)
   isEmailVerified  Boolean           @default(false)
   lastSeenAt       DateTime?         @db.Timestamptz(6)
@@ -221,6 +225,7 @@ enum RoomCommunicationMode {
   SCREEN_SHARE
   STREAM
   CANVAS
+  CODE
 }
 
 model Room {

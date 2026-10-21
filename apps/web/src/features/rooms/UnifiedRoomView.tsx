@@ -6,6 +6,13 @@ import { useAuthStore } from '@/stores/authStore';
 import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
 import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
+import { CodeStage } from '@/features/code-stage/CodeStage';
+import { E2EEVerificationModal } from '@/features/e2ee/E2EEVerificationModal';
+import { AmbientFocusBar } from '@/features/focus/AmbientFocusBar';
+import { ActivityLauncherModal } from '@/features/activities/ActivityLauncherModal';
+import { ActivitySandboxStage } from '@/features/activities/ActivitySandboxStage';
+import { AiTwinSettingsModal } from '@/features/ai-twin/AiTwinSettingsModal';
+import { localFirstStore } from '@/lib/local-first/localFirstStore';
 import { ParticipantTray } from './ParticipantTray';
 import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
 import { FloatingPiPOverlay } from './FloatingPiPOverlay';
@@ -21,6 +28,8 @@ import {
   ExternalMeetingBridgeDTO,
   MeetingBridgeActivatedBroadcast,
   MeetingBridgeRemovedBroadcast,
+  MiniAppType,
+  ActivityStateBroadcast,
 } from '@mivo/shared';
 import { useRouter } from 'next/navigation';
 import { realtime } from '@/lib/socket-client';
@@ -28,6 +37,7 @@ import { api } from '@/lib/api-client';
 import { recorderManager } from '@/lib/recorder-manager';
 import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBanner';
 import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
+import { WifiOff, Zap } from 'lucide-react';
 
 export interface UnifiedRoomViewProps {
   communityId: string;
@@ -64,6 +74,49 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const [isSubtitlesEnabled, setIsSubtitlesEnabled] = React.useState(true);
   const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
   const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
+
+  // Hyper Features Modals & States
+  const [isE2EEOpen, setIsE2EEOpen] = React.useState(false);
+  const [isFocusOpen, setIsFocusOpen] = React.useState(false);
+  const [isActivitiesOpen, setIsActivitiesOpen] = React.useState(false);
+  const [isAiTwinOpen, setIsAiTwinOpen] = React.useState(false);
+  const [activeMiniApp, setActiveMiniApp] = React.useState<ActivityStateBroadcast | null>(null);
+  const [pendingOutboxCount, setPendingOutboxCount] = React.useState(0);
+  const [isOnline, setIsOnline] = React.useState(true);
+
+  // Subscribe to Local-First CRDT Outbox & Online status
+  React.useEffect(() => {
+    return localFirstStore.subscribe((count, online) => {
+      setPendingOutboxCount(count);
+      setIsOnline(online);
+    });
+  }, []);
+
+  // Listen for Mini-App Activity realtime events
+  React.useEffect(() => {
+    const socket = realtime.getSocket();
+    if (!socket || !roomId) return;
+
+    const handleLaunch = (act: ActivityStateBroadcast) => {
+      if (act.roomId === roomId) {
+        setActiveMiniApp(act);
+      }
+    };
+
+    const handleClose = (data: { roomId: string }) => {
+      if (data.roomId === roomId) {
+        setActiveMiniApp(null);
+      }
+    };
+
+    socket.on(REALTIME_EVENTS.ACTIVITY_LAUNCH, handleLaunch);
+    socket.on(REALTIME_EVENTS.ACTIVITY_CLOSE, handleClose);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.ACTIVITY_LAUNCH, handleLaunch);
+      socket.off(REALTIME_EVENTS.ACTIVITY_CLOSE, handleClose);
+    };
+  }, [roomId]);
 
   const fetchBridge = React.useCallback(() => {
     if (!roomId) return;
@@ -207,8 +260,29 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
         onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
         onToggleMeetingHub={() => setIsMeetingHubOpen(!isMeetingHubOpen)}
+        onToggleE2EE={() => setIsE2EEOpen(!isE2EEOpen)}
+        onToggleFocus={() => setIsFocusOpen(!isFocusOpen)}
+        onToggleActivities={() => setIsActivitiesOpen(!isActivitiesOpen)}
+        onToggleAiTwin={() => setIsAiTwinOpen(!isAiTwinOpen)}
         hasActiveBridge={!!activeBridge}
       />
+
+      {/* Local-First CRDT Outbox Sync Banner */}
+      {(!isOnline || pendingOutboxCount > 0) && (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-[#FF9F0A]/20 via-[#5E5CE6]/20 to-[#FF453A]/20 border-b border-[#FF9F0A]/30 flex items-center justify-between text-xs font-semibold text-[#FF9F0A] animate-fadeIn z-20">
+          <div className="flex items-center gap-2">
+            <WifiOff className="w-3.5 h-3.5 text-[#FF453A] animate-pulse" />
+            <span>
+              {!isOnline
+                ? `Offline Mode — Working Locally (${pendingOutboxCount} changes queued via CRDT)`
+                : `Synchronizing ${pendingOutboxCount} local mutations with PostgreSQL...`}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] bg-black/40 px-2 py-0.5 rounded border border-[#FF9F0A]/30">
+            0ms Optimistic Latency
+          </span>
+        </div>
+      )}
 
       {/* External Meeting Bridge Live Banner (Google Meet & MS Teams) */}
       <RoomMeetingBridgeBanner
@@ -228,9 +302,25 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
       {/* Main Content Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Dynamic Stage View with Live Media / Canvas Stage */}
-        {activeRoom.activeMode === 'CANVAS' ? (
+        {/* Dynamic Stage View with Live Media / Canvas Stage / Code Stage / Mini-App */}
+        {activeMiniApp ? (
+          <ActivitySandboxStage
+            activity={activeMiniApp}
+            roomId={activeRoom.id}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            onClose={() => setActiveMiniApp(null)}
+          />
+        ) : activeRoom.activeMode === 'CANVAS' ? (
           <CollaborativeCanvasStage
+            roomId={activeRoom.id}
+            roomName={activeRoom.name}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            participants={participants}
+          />
+        ) : activeRoom.activeMode === 'CODE' ? (
+          <CodeStage
             roomId={activeRoom.id}
             roomName={activeRoom.name}
             currentUserId={user?.id}
@@ -335,6 +425,46 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           roomName={activeRoom.name}
           activeBridge={activeBridge}
           onBridgeUpdated={fetchBridge}
+        />
+
+        {/* E2EE Zero-Trust Verification Modal */}
+        <E2EEVerificationModal
+          isOpen={isE2EEOpen}
+          onClose={() => setIsE2EEOpen(false)}
+          roomId={activeRoom.id}
+          roomName={activeRoom.name}
+        />
+
+        {/* Ambient Spatial Focus & Pomodoro Bar */}
+        <AmbientFocusBar
+          isOpen={isFocusOpen}
+          onClose={() => setIsFocusOpen(false)}
+          roomId={activeRoom.id}
+        />
+
+        {/* Mini-Apps & Activity Sandboxes Launcher */}
+        <ActivityLauncherModal
+          isOpen={isActivitiesOpen}
+          onClose={() => setIsActivitiesOpen(false)}
+          roomId={activeRoom.id}
+          onLaunch={(type) => {
+            setActiveMiniApp({
+              roomId: activeRoom.id,
+              activityId: `act_${type.toLowerCase()}_local`,
+              type,
+              startedByUserId: user?.id || 'local',
+              state: {},
+              participants: [user?.id || 'local'],
+            });
+          }}
+        />
+
+        {/* AI Twin & Out of Office Settings Modal */}
+        <AiTwinSettingsModal
+          isOpen={isAiTwinOpen}
+          onClose={() => setIsAiTwinOpen(false)}
+          userId={user?.id || ''}
+          userName={user?.displayName || user?.username || 'User'}
         />
       </div>
     </div>

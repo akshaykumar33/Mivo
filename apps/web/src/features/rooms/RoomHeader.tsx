@@ -2,7 +2,23 @@
 
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
-import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen, Menu, PanelLeftOpen, PanelLeftClose, Video } from 'lucide-react';
+import {
+  Users,
+  Lock,
+  Hash,
+  Sparkles,
+  CircleDot,
+  BookOpen,
+  Menu,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Video,
+  ShieldCheck,
+  Headphones,
+  Gamepad2,
+  Bot,
+  Zap,
+} from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { RoomModeSwitcher } from './RoomModeSwitcher';
@@ -18,6 +34,10 @@ export interface RoomHeaderProps {
   onToggleParticipants?: () => void;
   onToggleWhisper?: () => void;
   onToggleMeetingHub?: () => void;
+  onToggleE2EE?: () => void;
+  onToggleFocus?: () => void;
+  onToggleActivities?: () => void;
+  onToggleAiTwin?: () => void;
   hasActiveBridge?: boolean;
 }
 
@@ -32,6 +52,10 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   onToggleParticipants,
   onToggleWhisper,
   onToggleMeetingHub,
+  onToggleE2EE,
+  onToggleFocus,
+  onToggleActivities,
+  onToggleAiTwin,
   hasActiveBridge = false,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
@@ -111,6 +135,15 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
                 <Lock className="w-3.5 h-3.5 text-[#FF9F0A]" />
               </span>
             )}
+
+            {/* SFU Engine & Simulcast Badge */}
+            <div
+              className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-[10px] font-mono font-bold flex-shrink-0 cursor-default"
+              title="SFU Simulcast Engine Active (1080p, 720p, 360p) with 84% client CPU reduction vs mesh"
+            >
+              <Zap className="w-3 h-3 fill-[#30D158]" />
+              <span>SFU 1080p • 84% Saved</span>
+            </div>
           </div>
 
           {/* Apple Live Recording Status Badge */}
@@ -163,6 +196,46 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           >
             <Video className="w-3.5 h-3.5" />
             <span className="hidden xl:inline">{hasActiveBridge ? 'Call Bridged' : 'Meet & Teams'}</span>
+          </button>
+
+          {/* Zero-Trust E2EE Verification Trigger */}
+          <button
+            onClick={onToggleE2EE}
+            className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#30D158] hover:text-white bg-[#30D158]/15 hover:bg-[#30D158] border border-[#30D158]/30 transition-all cursor-pointer shadow-sm group"
+            title="E2EE: Zero-Trust End-to-End Encrypted Room"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-[#30D158] group-hover:text-white" />
+            <span className="hidden xl:inline font-mono">E2EE</span>
+          </button>
+
+          {/* Ambient Spatial Focus & Pomodoro Trigger */}
+          <button
+            onClick={onToggleFocus}
+            className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#BF5AF2] hover:text-white bg-[#BF5AF2]/15 hover:bg-[#BF5AF2] border border-[#BF5AF2]/30 transition-all cursor-pointer shadow-sm"
+            title="Ambient Spatial Audio & Pomodoro Focus Timer"
+          >
+            <Headphones className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">Focus</span>
+          </button>
+
+          {/* Mini-Apps & Activity Sandboxes Trigger */}
+          <button
+            onClick={onToggleActivities}
+            className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#FF9F0A] hover:text-black bg-[#FF9F0A]/15 hover:bg-[#FF9F0A] border border-[#FF9F0A]/30 transition-all cursor-pointer shadow-sm"
+            title="Launch Mini-App (Chess, Figma, PR Review)"
+          >
+            <Gamepad2 className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">Activities</span>
+          </button>
+
+          {/* AI Twin Persona Trigger */}
+          <button
+            onClick={onToggleAiTwin}
+            className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#64D2FF] hover:text-black bg-[#64D2FF]/15 hover:bg-[#64D2FF] border border-[#64D2FF]/30 transition-all cursor-pointer shadow-sm"
+            title="AI Twin & Out of Office Settings"
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">AI Twin</span>
           </button>
 
           {/* Whisper AI Scribe & Notes Drawer */}

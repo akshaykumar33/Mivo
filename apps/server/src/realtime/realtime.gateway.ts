@@ -14,6 +14,11 @@ import { PresenceService } from './presence.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { AiService } from '../ai/ai.service.js';
 import { prisma } from '@mivo/database';
+import { SfuEngineService } from './sfu/sfu-engine.service.js';
+import { E2eeService } from './e2ee/e2ee.service.js';
+import { AmbientFocusService } from './focus/ambient-focus.service.js';
+import { MiniAppsService } from './activities/mini-apps.service.js';
+import { AiTwinService } from '../ai/ai-twin.service.js';
 import {
   REALTIME_EVENTS,
   PresenceHeartbeatPayload,
@@ -44,7 +49,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => AiService))
-    private aiService: AiService
+    private aiService: AiService,
+    @Inject(forwardRef(() => AiTwinService))
+    private aiTwinService: AiTwinService,
+    private sfuEngine: SfuEngineService,
+    private e2eeService: E2eeService,
+    private ambientFocusService: AmbientFocusService,
+    private miniAppsService: MiniAppsService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -1058,7 +1069,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   async handleVoiceTicketConfirm(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any
-  ) {
+  ): Promise<any> {
     const user = client.data.user;
     if (!user || !data?.roomId || !data?.ticketProposal) return;
 
@@ -1106,5 +1117,306 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { success: false, error: err.message };
     }
   }
+
+  // ===========================================================================
+  // 1. ⚡ MEDIA PLANE: SFU ENGINE (Mediasoup / LiveKit Architecture)
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_GET_ROUTER_RTP_CAPABILITIES)
+  handleSfuGetRtpCapabilities(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false, error: 'Missing roomId' };
+    const rtpCapabilities = this.sfuEngine.getRtpCapabilities(data.roomId);
+    return { success: true, data: rtpCapabilities };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CREATE_TRANSPORT)
+  handleSfuCreateTransport(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; direction: 'send' | 'recv' }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false, error: 'Unauthorized or missing roomId' };
+    const transportOptions = this.sfuEngine.createTransport(data.roomId, user.sub, data.direction || 'send');
+    return { success: true, data: transportOptions };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CONNECT_TRANSPORT)
+  handleSfuConnectTransport(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; transportId: string; dtlsParameters: any }
+  ) {
+    if (!data?.roomId || !data?.transportId) return { success: false, error: 'Invalid parameters' };
+    const connected = this.sfuEngine.connectTransport(data.roomId, data.transportId, data.dtlsParameters);
+    return { success: connected };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_PRODUCE)
+  handleSfuProduce(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; kind: 'audio' | 'video'; simulcast?: boolean; initialLayer?: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.kind) return { success: false, error: 'Invalid parameters' };
+    const producer = this.sfuEngine.produce(data.roomId, user.sub, data.kind, data.simulcast, data.initialLayer);
+    
+    // Broadcast producer to other room participants so they can consume it
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.SFU_PRODUCE, {
+      roomId: data.roomId,
+      producer,
+      userId: user.sub,
+    });
+
+    return { success: true, data: producer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CONSUME)
+  handleSfuConsume(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; producerId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.producerId) return { success: false, error: 'Invalid parameters' };
+    const consumer = this.sfuEngine.consume(data.roomId, user.sub, data.producerId);
+    return { success: !!consumer, data: consumer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_SET_PREFERRED_LAYERS)
+  handleSfuSetPreferredLayers(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; consumerId: string; spatialLayer: number }
+  ) {
+    if (!data?.roomId || !data?.consumerId) return { success: false };
+    const consumer = this.sfuEngine.setPreferredLayers(data.roomId, data.consumerId, data.spatialLayer);
+    return { success: !!consumer, data: consumer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_STATS_UPDATE)
+  handleSfuStats(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; participantCount?: number }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const stats = this.sfuEngine.getRoomStats(data.roomId, data.participantCount);
+    return { success: true, data: stats };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_MODE_SWITCH)
+  handleSfuModeSwitch(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; mode: 'SFU_ROUTER' | 'P2P_MESH' }
+  ) {
+    if (!data?.roomId || !data?.mode) return { success: false };
+    const newMode = this.sfuEngine.toggleEngineMode(data.roomId, data.mode);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.SFU_MODE_SWITCH, {
+      roomId: data.roomId,
+      mode: newMode,
+    });
+    return { success: true, mode: newMode };
+  }
+
+  // ===========================================================================
+  // 2. 🛡️ MEDIA PLANE: END-TO-END ENCRYPTION (E2EE)
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_KEY_EXCHANGE)
+  handleE2eeKeyExchange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return { success: false };
+    const relayed = this.e2eeService.relayKeyPackage(data);
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.E2EE_KEY_EXCHANGE, relayed);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_EPOCH_ROTATED)
+  handleE2eeEpochRotated(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false };
+    const rotated = this.e2eeService.rotateEpoch(data.roomId, user.sub);
+    const safetyCode = this.e2eeService.getSafetyCode(data.roomId, rotated.epoch);
+
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.E2EE_EPOCH_ROTATED, {
+      roomId: data.roomId,
+      rotated,
+      safetyCode,
+    });
+
+    return { success: true, data: { rotated, safetyCode } };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_VERIFY_SAFETY_CODE)
+  handleE2eeVerifySafetyCode(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; epoch?: number }
+  ) {
+    const user = client.data?.user;
+    if (!data?.roomId) return { success: false };
+    if (user?.sub) {
+      this.e2eeService.verifyParticipant(data.roomId, user.sub);
+    }
+    const safetyCode = this.e2eeService.getSafetyCode(data.roomId, data.epoch);
+    return { success: true, data: safetyCode };
+  }
+
+  // ===========================================================================
+  // 3. 💻 DEVELOPER DX: CODE_STAGE PAIR-PROGRAMMING SANDBOX
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_CHANGE)
+  handleCodeStageChange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_CHANGE, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_CURSOR)
+  handleCodeStageCursor(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_CURSOR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_EXECUTE)
+  handleCodeStageExecute(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_EXECUTE, data);
+  }
+
+  // ===========================================================================
+  // 4. 🤖 PRESENCE: AI TWIN & OUT OF OFFICE PERSONA
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.AI_TWIN_AUTO_REPLY)
+  async handleAiTwinAutoReply(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientUserId: string; message: string; channelId?: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.recipientUserId) return { success: false };
+    try {
+      const reply = await this.aiTwinService.generateAutoReply(data.recipientUserId, user.sub, data.message);
+      if (data.channelId) {
+        this.server.to(`channel:${data.channelId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, {
+          id: `msg_twin_${Date.now()}`,
+          channelId: data.channelId,
+          senderId: data.recipientUserId,
+          content: reply.replyContent,
+          isAiTwin: true,
+          proposedCallbackSlot: reply.proposedCallbackSlot,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      return { success: true, data: reply };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.AI_TWIN_SCHEDULE_CALLBACK)
+  async handleAiTwinScheduleCallback(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientUserId: string; slot: string; communityId?: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.recipientUserId || !data?.slot) return { success: false };
+    try {
+      const result = await this.aiTwinService.scheduleCallback(data.recipientUserId, user.sub, data.slot, data.communityId);
+      return { success: true, data: result };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ===========================================================================
+  // 5. 🎧 VIBE & FLOW: AMBIENT SPATIAL FOCUS ROOMS & POMODORO
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TIMER_SYNC)
+  handleFocusTimerSync(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const state = this.ambientFocusService.getOrCreateState(data.roomId);
+    return { success: true, data: state };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TIMER_ACTION)
+  handleFocusTimerAction(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; action: 'START' | 'PAUSE' | 'RESET' | 'START_BREAK'; durationMinutes?: number }
+  ) {
+    if (!data?.roomId || !data?.action) return { success: false };
+    const state = this.ambientFocusService.handleTimerAction(data.roomId, data.action, data.durationMinutes);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.FOCUS_TIMER_SYNC, state);
+    return { success: true, data: state };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TRACK_CHANGE)
+  handleFocusTrackChange(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; track: any; volume?: number; spatial?: number }
+  ) {
+    if (!data?.roomId || !data?.track) return { success: false };
+    const state = this.ambientFocusService.setAmbientTrack(data.roomId, data.track, data.volume, data.spatial);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.FOCUS_TIMER_SYNC, state);
+    return { success: true, data: state };
+  }
+
+  // ===========================================================================
+  // 6. 🧩 EXTENSIBILITY: MIVO MINI-APPS / ACTIVITY SANDBOXES
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_LAUNCH)
+  handleActivityLaunch(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; type: any; initialPayload?: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.type) return { success: false };
+    const activity = this.miniAppsService.launchActivity(data.roomId, data.type, user.sub, data.initialPayload);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, activity);
+    return { success: true, data: activity };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_ACTION)
+  handleActivityAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; actionType: string; payload: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.actionType) return { success: false };
+    const updated = this.miniAppsService.handleAction(data.roomId, user.sub, data.actionType, data.payload);
+    if (updated) {
+      client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_SYNC_STATE, updated);
+    }
+    return { success: true, data: updated };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_CLOSE)
+  handleActivityClose(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const closed = this.miniAppsService.closeActivity(data.roomId);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_CLOSE, { roomId: data.roomId });
+    return { success: closed };
+  }
 }
+
 

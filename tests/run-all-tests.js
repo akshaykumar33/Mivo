@@ -55,6 +55,9 @@ const MODULE_TESTS = [
 
   // 9. Hyper Stage Features: 6th Mode Canvas, 3D Spatial Audio, Spoken Voice Tickets
   { module: 'canvas-spatial-tickets', file: 'tests/modules/canvas-spatial-tickets/integration/canvas-spatial-tickets.integration.test.js' },
+
+  // 10. Futuristic & Architectural Hyper Features: SFU, E2EE, Code Stage, AI Twin, Ambient Focus, Mini-Apps, CRDT
+  { module: 'hyper-architectural-features', file: 'tests/modules/hyper-architectural-features/hyper-architectural-features.integration.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');
