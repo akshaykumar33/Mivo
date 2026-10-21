@@ -103,5 +103,77 @@ export class AiController {
       data: result,
     };
   }
+
+  @Post('extract-ticket')
+  async extractTicket(
+    @Body()
+    body: {
+      transcriptSnippet: string;
+      attendees: string[];
+      apiKey?: string;
+    },
+    @Headers('x-gemini-api-key') headerKey?: string
+  ): Promise<ApiResponse<any>> {
+    const effectiveKey = body.apiKey || headerKey;
+    const result = await this.aiService.extractTicketFromSpeech(
+      body.transcriptSnippet,
+      body.attendees || [],
+      effectiveKey
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('stage-agent')
+  async stageAgent(
+    @Body()
+    body: {
+      query: string;
+      roomName: string;
+      attendees: string[];
+      recentTranscript?: Array<{ speaker: string; text: string; time?: string }>;
+      communityId?: string;
+      apiKey?: string;
+    },
+    @Headers('x-gemini-api-key') headerKey?: string
+  ): Promise<ApiResponse<any>> {
+    const effectiveKey = body.apiKey || headerKey;
+    const result = await this.aiService.processStageAgentCommand(
+      body.query,
+      body.roomName,
+      body.attendees || [],
+      body.recentTranscript || [],
+      body.communityId,
+      effectiveKey
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('fact-check')
+  async factCheck(
+    @Body()
+    body: {
+      transcriptText: string;
+      speaker: string;
+      apiKey?: string;
+    },
+    @Headers('x-gemini-api-key') headerKey?: string
+  ): Promise<ApiResponse<any>> {
+    const effectiveKey = body.apiKey || headerKey;
+    const result = await this.aiService.auditLiveFactCheck(
+      body.transcriptText,
+      body.speaker,
+      effectiveKey
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
 }
 

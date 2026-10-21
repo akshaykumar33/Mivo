@@ -41,6 +41,7 @@ const MODULE_TESTS = [
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/unit/translation-dictionary.unit.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/unit/mom-markdown-generator.unit.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/integration/email-summary-dispatch.integration.test.js' },
+  { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/integration/stage-cohost-duplex.integration.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/e2e/live-whisper-mom-flow.e2e.test.js' },
 
   // 7. Recording & Compliance Module

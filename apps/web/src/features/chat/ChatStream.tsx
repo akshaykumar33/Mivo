@@ -139,18 +139,54 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
       }
     };
 
+    const handleAiAgentResponse = (data: any) => {
+      if (data.roomId === room.id && data.status === 'SPEAKING' && data.speechText) {
+        const botMsg: MessageDTO = {
+          id: `ai-msg-${Date.now()}`,
+          roomId: room.id,
+          senderId: 'mivo-ai-cohost',
+          content: `🤖 **Mivo AI Co-Host:** ${data.speechText}${
+            data.pinnedTile?.tickets?.length
+              ? `\n\n📌 **Live Sprint Stage Sync:**\n` +
+                data.pinnedTile.tickets
+                  .map(
+                    (t: any) =>
+                      `• **[${t.priority}]** ${t.title} (${t.status}) — *${t.assignee}*`
+                  )
+                  .join('\n')
+              : ''
+          }`,
+          attachments: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          sender: {
+            id: 'mivo-ai-cohost',
+            username: 'mivo_ai',
+            displayName: 'Mivo AI Co-Host',
+            avatarUrl: null,
+            status: 'ONLINE',
+            customStatus: 'Stage Co-Host & Real-Time Duplex Agent',
+          },
+        };
+
+        setMessages((prev) => [...prev, botMsg]);
+      }
+    };
+
     realtime.on(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
     realtime.on(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
     realtime.on(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
     realtime.on(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
+    realtime.on(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, handleAiAgentResponse);
 
     return () => {
       realtime.off(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
       realtime.off(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
       realtime.off(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
       realtime.off(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
+      realtime.off(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, handleAiAgentResponse);
     };
-  }, [room.id]);
+  }, [room.id, room.name, room.channelId]);
 
   // 3. Auto-scroll on new messages
   React.useEffect(() => {
@@ -162,6 +198,22 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
       if (prev.some((m) => m.id === sentMsg.id)) return prev;
       return [...prev, sentMsg];
     });
+
+    if (
+      sentMsg.content.toLowerCase().includes('@mivo') ||
+      sentMsg.content.toLowerCase().startsWith('mivo')
+    ) {
+      const socket = realtime.getSocket();
+      if (socket) {
+        socket.emit(REALTIME_EVENTS.ROOM_AI_AGENT_ACTION, {
+          roomId: room.id,
+          query: sentMsg.content,
+          roomName: room.name,
+          attendees: [sentMsg.sender?.displayName || 'Attendee'],
+          communityId: room.channelId,
+        });
+      }
+    }
   };
 
   const handleTranslateMessage = async (msgId: string, content: string) => {

@@ -77,6 +77,13 @@ export const REALTIME_EVENTS = {
   // Ticketing System
   TICKET_CREATED: 'ticket:created',
   TICKET_UPDATED: 'ticket:updated',
+
+  // Active AI Stage Co-Host & Real-Time Duplex Agent
+  ROOM_AI_AGENT_ACTION: 'room:ai_agent_action',
+  ROOM_AI_AGENT_RESPONSE: 'room:ai_agent_response',
+  ROOM_AI_FACT_CHECK: 'room:ai_fact_check',
+  ROOM_AI_PIN_TILE: 'room:ai_pin_tile',
+  ROOM_AI_DISMISS_TILE: 'room:ai_dismiss_tile',
 } as const;
 
 export interface ChatReactionPayload {

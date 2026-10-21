@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { PresenceService } from './presence.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { AiService } from '../ai/ai.service.js';
 import { prisma } from '@mivo/database';
 import {
   REALTIME_EVENTS,
@@ -41,7 +42,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private jwtService: JwtService,
     private presenceService: PresenceService,
     @Inject(forwardRef(() => NotificationsService))
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => AiService))
+    private aiService: AiService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -900,6 +903,85 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     });
 
     return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_AI_AGENT_ACTION)
+  async handleRoomAiAgentAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: {
+      roomId: string;
+      query: string;
+      roomName: string;
+      attendees: string[];
+      recentTranscript?: Array<{ speaker: string; text: string; time?: string }>;
+      communityId?: string;
+    }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false };
+
+    // Broadcast that AI Co-Host is actively thinking
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+      roomId: data.roomId,
+      status: 'THINKING',
+      query: data.query,
+    });
+
+    try {
+      const result = await this.aiService.processStageAgentCommand(
+        data.query,
+        data.roomName || 'Stage',
+        data.attendees || [],
+        data.recentTranscript || [],
+        data.communityId
+      );
+
+      // Broadcast the AI response, voice speech text, and pinned data tile to all room members
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'SPEAKING',
+        query: data.query,
+        speechText: result.speechText,
+        pinnedTile: result.pinnedTile,
+        factCheckAlert: result.factCheckAlert,
+        engine: result.engine,
+      });
+
+      if (result.shouldPinTile && result.pinnedTile) {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_PIN_TILE, {
+          roomId: data.roomId,
+          pinnedTile: result.pinnedTile,
+        });
+      }
+
+      if (result.factCheckAlert) {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_FACT_CHECK, {
+          roomId: data.roomId,
+          alert: result.factCheckAlert,
+        });
+      }
+
+      return { success: true, data: result };
+    } catch (err: any) {
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'IDLE',
+        error: err.message,
+      });
+      return { success: false, error: err.message };
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE)
+  handleDismissPinnedTile(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return;
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, {
+      roomId: data.roomId,
+    });
   }
 }
 
