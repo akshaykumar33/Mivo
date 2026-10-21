@@ -24,7 +24,7 @@ export class RoomsService {
         channelId,
         name: input.name,
         description: input.description,
-        activeMode: input.activeMode,
+        activeMode: input.activeMode as any,
         maxCapacity: input.maxCapacity,
         isLocked: input.isLocked,
       },
@@ -92,7 +92,7 @@ export class RoomsService {
   async updateRoomMode(roomId: string, mode: RoomCommunicationMode): Promise<RoomDTO> {
     const room = await prisma.room.update({
       where: { id: roomId },
-      data: { activeMode: mode },
+      data: { activeMode: mode as any },
       include: {
         members: { include: { user: true } },
       },

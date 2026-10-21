@@ -150,7 +150,7 @@ export class CommunitiesService {
 
   async createCommunity(userId: string, input: CreateCommunityInput): Promise<CommunityDTO> {
     // 0. Single Organization Policy: Check if user already belongs to any organization
-    const existingMembership = await prisma.communityMember.findUnique({
+    const existingMembership = await prisma.communityMember.findFirst({
       where: { userId },
       include: { community: true },
     });
@@ -277,7 +277,7 @@ export class CommunitiesService {
     }
 
     // 0. Single Organization Policy
-    const existingMembership = await prisma.communityMember.findUnique({
+    const existingMembership = await prisma.communityMember.findFirst({
       where: { userId },
       include: { community: true },
     });
@@ -393,7 +393,7 @@ export class CommunitiesService {
     }
 
     // Verify actor is owner or has admin/manage permission in this community
-    const actorMember = await prisma.communityMember.findUnique({
+    const actorMember = await prisma.communityMember.findFirst({
       where: { userId: actorUserId },
       include: { role: { include: { permissions: { include: { permission: true } } } } },
     });
@@ -434,7 +434,7 @@ export class CommunitiesService {
     }
 
     // Enforce Single-Org Policy: check if target user already belongs to ANY organization
-    const existingOrg = await prisma.communityMember.findUnique({
+    const existingOrg = await prisma.communityMember.findFirst({
       where: { userId: target.id },
       include: { community: true },
     });
@@ -528,7 +528,7 @@ export class CommunitiesService {
       });
     }
 
-    const actorMember = await prisma.communityMember.findUnique({
+    const actorMember = await prisma.communityMember.findFirst({
       where: { userId: actorUserId },
       include: { role: true },
     });
@@ -544,8 +544,8 @@ export class CommunitiesService {
       });
     }
 
-    await prisma.communityMember.delete({
-      where: { userId: targetUserId },
+    await prisma.communityMember.deleteMany({
+      where: { communityId, userId: targetUserId },
     });
 
     return { success: true, message: 'Member successfully removed from organization.' };
