@@ -16,6 +16,7 @@ const MODULE_TESTS = [
   // 2. Communities & RBAC Module
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/unit/permission-matrix.unit.test.js' },
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/integration/channel-privacy.integration.test.js' },
+  { module: 'communities-rbac', file: 'tests/modules/communities-rbac/integration/single-org-tenancy.integration.test.js' },
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/e2e/community-lifecycle.e2e.test.js' },
 
   // 3. Messaging & Chat Module

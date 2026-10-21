@@ -4,6 +4,7 @@ import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
 import {
   Users,
+  UserPlus,
   Lock,
   Hash,
   Sparkles,
@@ -32,6 +33,7 @@ export interface RoomHeaderProps {
   isHost?: boolean;
   onToggleRecording?: () => void;
   onToggleParticipants?: () => void;
+  onToggleInvite?: () => void;
   onToggleWhisper?: () => void;
   onToggleMeetingHub?: () => void;
   onToggleE2EE?: () => void;
@@ -50,6 +52,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   isHost = false,
   onToggleRecording,
   onToggleParticipants,
+  onToggleInvite,
   onToggleWhisper,
   onToggleMeetingHub,
   onToggleE2EE,
@@ -183,6 +186,16 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
               <span className="hidden xl:inline">{isRecording ? 'Recording...' : 'Record'}</span>
             </button>
           )}
+
+          {/* Add User to Room / Group Trigger */}
+          <button
+            onClick={onToggleInvite}
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#5E5CE6] hover:!text-white bg-[#5E5CE6]/15 hover:bg-[#5E5CE6] border border-[#5E5CE6]/30 transition-all cursor-pointer shadow-sm group"
+            title="Add Users to this Group/Room (Single-Org)"
+          >
+            <UserPlus className="w-3.5 h-3.5 text-[#5E5CE6] group-hover:text-white transition-colors" />
+            <span className="hidden xl:inline">Add User</span>
+          </button>
 
           {/* External Meeting Bridge Trigger */}
           <button

@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
+  Query,
   Body,
   Param,
   UseGuards,
@@ -14,6 +16,9 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import {
   CreateCommunitySchema,
   CreateCommunityInput,
+  AddCommunityMemberSchema,
+  AddCommunityMemberInput,
+  EligibleUserDTO,
   ApiResponse,
   CommunityDTO,
   CommunityDetailsDTO,
@@ -80,4 +85,44 @@ export class CommunitiesController {
       data: members,
     };
   }
+
+  @Post(':id/members')
+  @UsePipes(new ZodValidationPipe(AddCommunityMemberSchema))
+  async addMember(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: AddCommunityMemberInput,
+  ): Promise<ApiResponse<CommunityMemberDTO>> {
+    const member = await this.communitiesService.addMember(id, user.sub, body);
+    return {
+      success: true,
+      data: member,
+    };
+  }
+
+  @Delete(':id/members/:userId')
+  async removeMember(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('userId') targetUserId: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    const result = await this.communitiesService.removeMember(id, user.sub, targetUserId);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Get(':id/eligible-users')
+  async listEligibleUsers(
+    @Param('id') id: string,
+    @Query('q') query?: string,
+  ): Promise<ApiResponse<EligibleUserDTO[]>> {
+    const users = await this.communitiesService.listEligibleUsers(id, query);
+    return {
+      success: true,
+      data: users,
+    };
+  }
 }
+

@@ -7,7 +7,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Inject, forwardRef } from '@nestjs/common';
+import { Inject, forwardRef, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { PresenceService } from './presence.service.js';
@@ -40,6 +40,7 @@ import {
   namespace: '/',
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(RealtimeGateway.name);
   @WebSocketServer()
   server: Server;
 
@@ -209,83 +210,97 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!client.data.rooms) client.data.rooms = new Set<string>();
     client.data.rooms.add(roomId);
 
-    // Create or update room membership in DB
-    let member: any;
     try {
-      member = await prisma.roomMember.upsert({
+      // Create or update room membership in DB
+      let member = await prisma.roomMember.findUnique({
         where: { roomId_userId: { roomId, userId: user.sub } },
-        update: { joinedAt: new Date() },
-        create: { roomId, userId: user.sub },
         include: { user: true, room: true },
       });
-    } catch (err) {
-      member = await prisma.roomMember.findFirst({
-        where: { roomId, userId: user.sub },
-        include: { user: true, room: true },
+
+      if (member) {
+        await prisma.roomMember.update({
+          where: { id: member.id },
+          data: { joinedAt: new Date() },
+        });
+      } else {
+        try {
+          member = await prisma.roomMember.create({
+            data: { roomId, userId: user.sub },
+            include: { user: true, room: true },
+          });
+        } catch {
+          member = await prisma.roomMember.findUnique({
+            where: { roomId_userId: { roomId, userId: user.sub } },
+            include: { user: true, room: true },
+          });
+        }
+      }
+
+      if (!member) return;
+
+      const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
+
+      const participantDTO: RoomMemberDTO = {
+        id: member.id,
+        roomId: member.roomId,
+        userId: member.userId,
+        isMuted: member.isMuted,
+        isDeafened: member.isDeafened,
+        isCameraOn: member.isCameraOn,
+        isScreenOn: member.isScreenOn,
+        joinedAt: member.joinedAt.toISOString(),
+        user: {
+          id: member.user.id,
+          username: member.user.username,
+          displayName: member.user.displayName,
+          avatarUrl: member.user.avatarUrl,
+          status: member.user.status,
+          customStatus: isExpired(member.user.customStatusExpiresAt) ? null : member.user.customStatus,
+          customStatusExpiresAt: isExpired(member.user.customStatusExpiresAt) || !member.user.customStatusExpiresAt ? null : member.user.customStatusExpiresAt.toISOString(),
+        },
+      };
+
+      // Notify others in room
+      client.to(`room:${roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_JOINED, {
+        roomId,
+        participant: participantDTO,
       });
+
+      // Send full room state snapshot back to the joiner
+      const allRoomMembers = await prisma.roomMember.findMany({
+        where: { roomId },
+        include: { user: true },
+      });
+
+      client.emit(REALTIME_EVENTS.ROOM_JOINED, {
+        roomId,
+        activeMode: member.room.activeMode,
+        members: allRoomMembers.map((m) => {
+          const exp = isExpired(m.user.customStatusExpiresAt);
+          return {
+            id: m.id,
+            roomId: m.roomId,
+            userId: m.userId,
+            isMuted: m.isMuted,
+            isDeafened: m.isDeafened,
+            isCameraOn: m.isCameraOn,
+            isScreenOn: m.isScreenOn,
+            joinedAt: m.joinedAt.toISOString(),
+            user: {
+              id: m.user.id,
+              username: m.user.username,
+              displayName: m.user.displayName,
+              avatarUrl: m.user.avatarUrl,
+              status: m.user.status,
+              customStatus: exp ? null : m.user.customStatus,
+              customStatusExpiresAt: exp || !m.user.customStatusExpiresAt ? null : m.user.customStatusExpiresAt.toISOString(),
+            },
+          };
+        }),
+      });
+    } catch (err: any) {
+      this.logger.error(`Error in handleRoomJoin for user ${user?.sub} in room ${roomId}: ${err.message}`);
     }
-    if (!member) return;
-
-    const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
-
-    const participantDTO: RoomMemberDTO = {
-      id: member.id,
-      roomId: member.roomId,
-      userId: member.userId,
-      isMuted: member.isMuted,
-      isDeafened: member.isDeafened,
-      isCameraOn: member.isCameraOn,
-      isScreenOn: member.isScreenOn,
-      joinedAt: member.joinedAt.toISOString(),
-      user: {
-        id: member.user.id,
-        username: member.user.username,
-        displayName: member.user.displayName,
-        avatarUrl: member.user.avatarUrl,
-        status: member.user.status,
-        customStatus: isExpired(member.user.customStatusExpiresAt) ? null : member.user.customStatus,
-        customStatusExpiresAt: isExpired(member.user.customStatusExpiresAt) || !member.user.customStatusExpiresAt ? null : member.user.customStatusExpiresAt.toISOString(),
-      },
-    };
-
-    // Notify others in room
-    client.to(`room:${roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_JOINED, {
-      roomId,
-      participant: participantDTO,
-    });
-
-    // Send full room state snapshot back to the joiner
-    const allRoomMembers = await prisma.roomMember.findMany({
-      where: { roomId },
-      include: { user: true },
-    });
-
-    client.emit(REALTIME_EVENTS.ROOM_JOINED, {
-      roomId,
-      activeMode: member.room.activeMode,
-      members: allRoomMembers.map((m) => {
-        const exp = isExpired(m.user.customStatusExpiresAt);
-        return {
-          id: m.id,
-          roomId: m.roomId,
-          userId: m.userId,
-          isMuted: m.isMuted,
-          isDeafened: m.isDeafened,
-          isCameraOn: m.isCameraOn,
-          isScreenOn: m.isScreenOn,
-          joinedAt: m.joinedAt.toISOString(),
-          user: {
-            id: m.user.id,
-            username: m.user.username,
-            displayName: m.user.displayName,
-            avatarUrl: m.user.avatarUrl,
-            status: m.user.status,
-            customStatus: exp ? null : m.user.customStatus,
-            customStatusExpiresAt: exp || !m.user.customStatusExpiresAt ? null : m.user.customStatusExpiresAt.toISOString(),
-          },
-        };
-      }),
-    });
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_LEAVE)

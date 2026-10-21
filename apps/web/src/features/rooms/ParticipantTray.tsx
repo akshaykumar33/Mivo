@@ -14,6 +14,7 @@ export interface ParticipantTrayProps {
   onHostAction?: (action: 'MUTE' | 'KICK' | 'TRANSFER_HOST', targetUserId: string) => void;
   isOpen: boolean;
   onClose?: () => void;
+  onToggleInvite?: () => void;
 }
 
 export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
@@ -23,6 +24,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
   onHostAction,
   isOpen,
   onClose,
+  onToggleInvite,
 }) => {
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -70,6 +72,19 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
             )}
           </div>
         </div>
+
+        {/* Add User to Room Action Button */}
+        {onToggleInvite && (
+          <button
+            type="button"
+            onClick={onToggleInvite}
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#5E5CE6] hover:bg-[#4E4CD4] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer mb-3"
+            title="Add Organization Members to this Room"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>+ Add User to Group</span>
+          </button>
+        )}
 
         {/* Search Input & Simulation Buttons */}
         <div className="space-y-2 mb-3">

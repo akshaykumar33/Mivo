@@ -118,7 +118,7 @@ model Community {
 model CommunityMember {
   id          String       @id @default(uuid()) @db.Uuid
   communityId String       @db.Uuid
-  userId      String       @db.Uuid
+  userId      String       @unique @db.Uuid
   nickname    String?      @db.VarChar(64)
   roleId      String       @db.Uuid
   joinedAt    DateTime     @default(now()) @db.Timestamptz(6)

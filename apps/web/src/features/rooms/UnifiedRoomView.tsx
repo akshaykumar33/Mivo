@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useCommunityStore } from '@/stores/communityStore';
 import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
 import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
@@ -12,6 +13,7 @@ import { AmbientFocusBar } from '@/features/focus/AmbientFocusBar';
 import { ActivityLauncherModal } from '@/features/activities/ActivityLauncherModal';
 import { ActivitySandboxStage } from '@/features/activities/ActivitySandboxStage';
 import { AiTwinSettingsModal } from '@/features/ai-twin/AiTwinSettingsModal';
+import { InviteRoomMemberModal } from './InviteRoomMemberModal';
 import { localFirstStore } from '@/lib/local-first/localFirstStore';
 import { ParticipantTray } from './ParticipantTray';
 import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
@@ -64,7 +66,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     toggleCamera,
     toggleScreenShare,
   } = useRoomStore();
+  const { activeCommunity } = useCommunityStore();
 
+  const [isInviteOpen, setIsInviteOpen] = React.useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(false);
   const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
   const [isPiPOpen, setIsPiPOpen] = React.useState(false);
@@ -258,6 +262,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         isHost={isHost}
         onToggleRecording={handleToggleRecording}
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
+        onToggleInvite={() => setIsInviteOpen(!isInviteOpen)}
         onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
         onToggleMeetingHub={() => setIsMeetingHubOpen(!isMeetingHubOpen)}
         onToggleE2EE={() => setIsE2EEOpen(!isE2EEOpen)}
@@ -360,6 +365,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onHostAction={handleHostAction}
           isOpen={isParticipantsOpen}
           onClose={() => setIsParticipantsOpen(false)}
+          onToggleInvite={() => setIsInviteOpen(true)}
         />
 
         {/* Whisper AI Multilingual Translation, Notes & MOM Drawer */}
@@ -465,6 +471,15 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onClose={() => setIsAiTwinOpen(false)}
           userId={user?.id || ''}
           userName={user?.displayName || user?.username || 'User'}
+        />
+
+        {/* Group / Room Add User Modal (Single-Org Bound) */}
+        <InviteRoomMemberModal
+          isOpen={isInviteOpen}
+          onClose={() => setIsInviteOpen(false)}
+          room={activeRoom}
+          organizationName={activeCommunity?.name || 'Organization'}
+          onMemberUpdated={() => joinRoom(activeRoom.id)}
         />
       </div>
     </div>

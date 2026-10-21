@@ -19,6 +19,13 @@ export const UpdateMemberNicknameSchema = z.object({
   nickname: z.string().max(64).nullable(),
 });
 
+export const AddCommunityMemberSchema = z.object({
+  identifier: z.string().min(1, 'Email, username, or User ID is required'),
+  roleId: z.string().uuid().optional(),
+});
+
 export type CreateCommunityInput = z.infer<typeof CreateCommunitySchema>;
 export type UpdateCommunityInput = z.infer<typeof UpdateCommunitySchema>;
 export type UpdateMemberNicknameInput = z.infer<typeof UpdateMemberNicknameSchema>;
+export type AddCommunityMemberInput = z.infer<typeof AddCommunityMemberSchema>;
+

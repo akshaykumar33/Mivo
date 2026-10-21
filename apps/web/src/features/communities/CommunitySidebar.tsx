@@ -10,6 +10,7 @@ import { Plus, Compass, MessageSquare, BookOpen, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
+import { SingleOrgLimitModal } from './SingleOrgLimitModal';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
@@ -35,6 +36,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
   const { setIsThemeModalOpen } = useThemeStore();
   const { communities, fetchCommunities } = useCommunityStore();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isSingleOrgLimitOpen, setIsSingleOrgLimitOpen] = React.useState(false);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
@@ -149,7 +151,13 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
           {/* Add Community Action */}
           <div className="relative group flex items-center justify-center w-full pt-1">
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                if (uniqueCommunities.length >= 1) {
+                  setIsSingleOrgLimitOpen(true);
+                } else {
+                  setIsModalOpen(true);
+                }
+              }}
               className="flex items-center justify-center w-11 h-11 rounded-[16px] hover:rounded-[14px] bg-[var(--bg-surface-1)] text-[#DC2626] hover:bg-[#DC2626] hover:!text-white border border-[#DC2626]/30 hover:border-[#DC2626] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             >
               <Plus className="w-4 h-4 stroke-[2.5] transition-transform group-hover:rotate-90 duration-200" />
@@ -269,6 +277,11 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
       />
 
       <CreateCommunityModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <SingleOrgLimitModal
+        isOpen={isSingleOrgLimitOpen}
+        onClose={() => setIsSingleOrgLimitOpen(false)}
+        activeCommunity={uniqueCommunities[0] || null}
+      />
       <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
     </>
   );

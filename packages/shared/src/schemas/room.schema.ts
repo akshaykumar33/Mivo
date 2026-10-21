@@ -23,8 +23,14 @@ export const UpdateRoomParticipantStateSchema = z.object({
   isScreenOn: z.boolean().optional(),
 });
 
+export const AddRoomMemberSchema = z.object({
+  userId: z.string().uuid('Valid user ID is required'),
+});
+
 export type CreateRoomInput = z.infer<typeof CreateRoomSchema>;
 export type UpdateRoomInput = z.infer<typeof UpdateRoomSchema>;
 export type ChangeRoomModeInput = z.infer<typeof ChangeRoomModeSchema>;
 export type UpdateRoomModeInput = ChangeRoomModeInput;
 export type UpdateRoomParticipantStateInput = z.infer<typeof UpdateRoomParticipantStateSchema>;
+export type AddRoomMemberInput = z.infer<typeof AddRoomMemberSchema>;
+

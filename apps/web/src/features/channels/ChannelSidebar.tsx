@@ -22,6 +22,7 @@ import {
   Radio,
   Layers,
   Users,
+  UserPlus,
   Settings,
   Palette,
   PanelLeftClose,
@@ -34,6 +35,7 @@ import { useNavigationStore } from '@/stores/navigationStore';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateRoomModal } from './CreateRoomModal';
 import { RoleManagerModal } from '@/features/rbac/RoleManagerModal';
+import { AddOrgMemberModal } from '@/features/communities/AddOrgMemberModal';
 import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
@@ -59,6 +61,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
   const [isCreateChannelOpen, setIsCreateChannelOpen] = React.useState(false);
   const [selectedChannelForRoom, setSelectedChannelForRoom] = React.useState<string | null>(null);
   const [isRoleManagerOpen, setIsRoleManagerOpen] = React.useState(false);
+  const [isAddOrgMemberOpen, setIsAddOrgMemberOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [isSlackStatusOpen, setIsSlackStatusOpen] = React.useState(false);
@@ -148,13 +151,22 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
             </div>
             <div className="flex items-center gap-1">
               {isOwnerOrAdmin && (
-                <button
-                  onClick={() => setIsRoleManagerOpen(true)}
-                  className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-black/[0.04] transition-all cursor-pointer"
-                  title="Community Roles & Permissions"
-                >
-                  <Shield className="w-4 h-4 text-[#DC2626]" />
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsAddOrgMemberOpen(true)}
+                    className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-black/[0.04] transition-all cursor-pointer"
+                    title="Add Organization Members"
+                  >
+                    <UserPlus className="w-4 h-4 text-[#DC2626]" />
+                  </button>
+                  <button
+                    onClick={() => setIsRoleManagerOpen(true)}
+                    className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-black/[0.04] transition-all cursor-pointer"
+                    title="Community Roles & Permissions"
+                  >
+                    <Shield className="w-4 h-4 text-[#DC2626]" />
+                  </button>
+                </>
               )}
 
               {/* Closeable Tray Collapse Button */}
@@ -394,6 +406,14 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
         communityId={communityId}
         isOpen={isRoleManagerOpen}
         onClose={() => setIsRoleManagerOpen(false)}
+      />
+
+      <AddOrgMemberModal
+        communityId={communityId}
+        communityName={activeCommunity.name}
+        isOpen={isAddOrgMemberOpen}
+        onClose={() => setIsAddOrgMemberOpen(false)}
+        onMemberUpdated={() => selectCommunity(communityId)}
       />
 
       <SlackUserMenuPopover
