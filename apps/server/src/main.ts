@@ -45,4 +45,12 @@ async function bootstrap() {
   console.log(`[Server] Mivo Backend Server running on http://localhost:${port}`);
 }
 
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Process] Unhandled Rejection intercepted:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception intercepted:', err);
+});
+
 bootstrap();
