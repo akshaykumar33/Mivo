@@ -108,15 +108,18 @@ export class AiController {
   async extractTicket(
     @Body()
     body: {
-      transcriptSnippet: string;
-      attendees: string[];
+      transcriptSnippet?: string;
+      transcript?: string;
+      text?: string;
+      attendees?: string[];
       apiKey?: string;
     },
     @Headers('x-gemini-api-key') headerKey?: string
   ): Promise<ApiResponse<any>> {
+    const text = body.transcriptSnippet || body.transcript || body.text || '';
     const effectiveKey = body.apiKey || headerKey;
     const result = await this.aiService.extractTicketFromSpeech(
-      body.transcriptSnippet,
+      text,
       body.attendees || [],
       effectiveKey
     );
@@ -168,6 +171,26 @@ export class AiController {
     const result = await this.aiService.auditLiveFactCheck(
       body.transcriptText,
       body.speaker,
+      effectiveKey
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('canvas-generate')
+  async canvasGenerate(
+    @Body()
+    body: {
+      prompt: string;
+      apiKey?: string;
+    },
+    @Headers('x-gemini-api-key') headerKey?: string
+  ): Promise<ApiResponse<any>> {
+    const effectiveKey = body.apiKey || headerKey;
+    const result = await this.aiService.generateCanvasArchitecture(
+      body.prompt,
       effectiveKey
     );
     return {

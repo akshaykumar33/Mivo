@@ -24,12 +24,17 @@ import {
   EyeOff,
   Users,
   Bot,
+  Headphones,
+  Ticket,
+  CheckCircle2,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
 import { AiCoHostStageTile, AiCoHostStatus } from './AiCoHostStageTile';
 import { AiPinnedDataTile, PinnedDataTilePayload } from './AiPinnedDataTile';
 import { LiveFactCheckHUD, FactCheckAlertData } from './LiveFactCheckHUD';
+import { spatialAudio } from '../audio/SpatialAudioEngine';
+import { VoiceTicketConfirmationCard, VoiceTicketProposal } from '../tickets/VoiceTicketConfirmationCard';
 import { useTicketStore } from '@/stores/ticketStore';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
@@ -76,6 +81,14 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const [pinnedDataTile, setPinnedDataTile] = React.useState<PinnedDataTilePayload | null>(null);
   const [factCheckAlert, setFactCheckAlert] = React.useState<FactCheckAlertData | null>(null);
   const { setIsModalOpen: openTicketsModal } = useTicketStore();
+
+  // 🎧 3D Spatial Audio & Dynamic Physics Grid
+  const [isSpatialAudioActive, setIsSpatialAudioActive] = React.useState(true);
+  const [spatialPositions, setSpatialPositions] = React.useState<Record<string, { pan: number; distance: number }>>({});
+
+  // ⚡ Spoken Voice-to-Ticket Automation
+  const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
+  const [ticketToast, setTicketToast] = React.useState<string | null>(null);
 
   // Speech synthesis for AI Co-Host Duplex Voice
   const speakVerbalResponse = React.useCallback((text: string) => {
@@ -176,6 +189,46 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     [room?.id]
   );
 
+  // ⚡ Spoken Voice-to-Ticket Extraction
+  const handleExtractVoiceTicket = React.useCallback(
+    async (snippet: string) => {
+      const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
+      try {
+        const res = await api.post<any>('/api/v1/ai/extract-ticket', {
+          transcriptSnippet: snippet,
+          attendees: participants.map((p) => p.user.displayName || p.user.username),
+          apiKey: userKey,
+        });
+
+        if (res.success && res.data?.ticketProposal) {
+          const prop = res.data.ticketProposal;
+          setVoiceTicketProposal({
+            title: prop.title,
+            description: prop.description,
+            priority: prop.priority,
+            category: prop.category,
+            suggestedAssignee: prop.suggestedAssignee,
+            communityId: room?.channelId,
+            speakerName: 'Stage Attendee',
+          });
+        }
+      } catch (err) {
+        console.warn('Voice ticket extraction error:', err);
+      }
+    },
+    [participants, room]
+  );
+
+  const handleConfirmVoiceTicket = React.useCallback(
+    (ticket: any) => {
+      setVoiceTicketProposal(null);
+      setTicketToast(`Ticket created: "${ticket.title}" (${ticket.priority || 'HIGH'} priority)`);
+      speakVerbalResponse(`Created ticket for ${ticket.title}. Added to sprint board.`);
+      setTimeout(() => setTicketToast(null), 6000);
+    },
+    [speakVerbalResponse]
+  );
+
   // Real-time socket sync for Co-Host and Fact Check events
   React.useEffect(() => {
     const socket = realtime.getSocket();
@@ -238,8 +291,17 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       if (!text) return;
 
       const lower = text.toLowerCase();
-      // Duplex voice trigger: "Mivo, ..." or "@mivo" or "Hey Mivo"
-      if (lower.startsWith('mivo') || lower.includes('@mivo') || lower.includes('hey mivo')) {
+      // ⚡ Spoken Voice-to-Ticket trigger
+      if (
+        lower.includes('ticket') ||
+        lower.includes('file a ticket') ||
+        lower.includes('create a ticket') ||
+        lower.includes('action item') ||
+        lower.includes('fix the')
+      ) {
+        handleExtractVoiceTicket(text);
+      } else if (lower.startsWith('mivo') || lower.includes('@mivo') || lower.includes('hey mivo')) {
+        // Duplex voice trigger: "Mivo, ..." or "@mivo" or "Hey Mivo"
         handleTriggerCoHost(text);
       } else if (
         lower.includes('no bugs') ||
@@ -260,7 +322,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         recognition.stop();
       } catch {}
     };
-  }, [handleTriggerCoHost, handleFactCheckAudit]);
+  }, [handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
 
   // Sync participant list to ordered array
   React.useEffect(() => {
@@ -359,6 +421,30 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   const pinnedParticipant = participants.find((p) => p.userId === pinnedUserId);
 
+  // Connect incoming WebRTC remoteStreams to Spatial Audio Engine
+  React.useEffect(() => {
+    if (!isSpatialAudioActive) return;
+    Object.entries(remoteStreams).forEach(([userId, stream]) => {
+      if (stream) spatialAudio.attachStream(userId, stream);
+    });
+  }, [remoteStreams, isSpatialAudioActive]);
+
+  // Update spatial positions when sorted participants change
+  React.useEffect(() => {
+    const total = sortedParticipants.length;
+    if (total === 0) return;
+
+    const newPositions: Record<string, { pan: number; distance: number }> = {};
+    sortedParticipants.forEach((p, index) => {
+      // Normalized X from -1.0 (Left) to +1.0 (Right) based on position in grid
+      const normalizedX = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
+      const pos = spatialAudio.updatePosition(p.userId, normalizedX, 0);
+      newPositions[p.userId] = pos;
+    });
+
+    setSpatialPositions(newPositions);
+  }, [sortedParticipants, isSpatialAudioActive]);
+
   // TEXT MODE: Real-Time Chat Stream
   if (mode === 'TEXT') {
     if (!room) {
@@ -397,6 +483,22 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <span>Auto-Arrange</span>
             </button>
             <button
+              onClick={() => {
+                const next = !isSpatialAudioActive;
+                setIsSpatialAudioActive(next);
+                spatialAudio.setEnabled(next);
+              }}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                isSpatialAudioActive
+                  ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+              }`}
+              title="Toggle 3D Positional Stereo Spatial Audio"
+            >
+              <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+              <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+            </button>
+            <button
               onClick={() =>
                 handleTriggerCoHost(
                   'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
@@ -408,8 +510,40 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
               <span>@mivo Sprint Blockers</span>
             </button>
+            <button
+              onClick={() =>
+                handleExtractVoiceTicket(
+                  "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+              title="Simulate Voice-to-Ticket Detection"
+            >
+              <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Voice-to-Ticket Demo</span>
+            </button>
           </div>
         </div>
+
+        {/* Success Toast */}
+        {ticketToast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{ticketToast}</span>
+          </div>
+        )}
+
+        {/* Spoken Voice-to-Ticket Interactive Confirmation Card */}
+        {voiceTicketProposal && (
+          <div className="w-full max-w-xl mb-6 z-30">
+            <VoiceTicketConfirmationCard
+              proposal={voiceTicketProposal}
+              roomId={room?.id}
+              onConfirm={handleConfirmVoiceTicket}
+              onDismiss={() => setVoiceTicketProposal(null)}
+            />
+          </div>
+        )}
 
         {/* Pinned Sprint Data Tile (if triggered) */}
         {pinnedDataTile && (
@@ -529,6 +663,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   ) : (
                     <span className="text-[10px] text-[var(--text-muted)] font-semibold block mt-1">Muted</span>
                   )}
+
+                  {isSpatialAudioActive && spatialPositions[p.userId] && (
+                    <span
+                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-block mt-1.5"
+                      title="3D Spatial Audio Pan"
+                    >
+                      🎧 {spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -596,6 +739,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       onHostAction={handleHostAction}
                       mediaStream={isMe ? localStream : remoteStreams[p.userId]}
                       audioLevel={isMe ? audioLevel : 0}
+                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     />
                   </div>
                 );
@@ -617,6 +761,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 onHostAction={handleHostAction}
                 mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
                 audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
+                spatialPanLabel={isSpatialAudioActive && spatialPositions[pinnedParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[pinnedParticipant.userId].pan) : undefined}
               />
             </div>
 
@@ -648,6 +793,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                         onHostAction={handleHostAction}
                         mediaStream={isMe ? localStream : remoteStreams[p.userId]}
                         audioLevel={isMe ? audioLevel : 0}
+                        spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                       />
                     </div>
                   );
@@ -658,10 +804,26 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           // Standard Equal Auto-Adjusting Grid with Drag & Drop
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-3 px-1 flex-wrap gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
                   Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
                 </span>
+                <button
+                  onClick={() => {
+                    const next = !isSpatialAudioActive;
+                    setIsSpatialAudioActive(next);
+                    spatialAudio.setEnabled(next);
+                  }}
+                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                    isSpatialAudioActive
+                      ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+                  }`}
+                  title="Toggle 3D Positional Stereo Spatial Audio"
+                >
+                  <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+                </button>
                 <button
                   onClick={() =>
                     handleTriggerCoHost(
@@ -674,6 +836,18 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
                   <span>@mivo Sprint Blockers</span>
                 </button>
+                <button
+                  onClick={() =>
+                    handleExtractVoiceTicket(
+                      "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                    )
+                  }
+                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+                  title="Simulate Voice-to-Ticket Detection"
+                >
+                  <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span>Voice-to-Ticket Demo</span>
+                </button>
               </div>
 
               <button
@@ -685,6 +859,18 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 <span>Auto-Arrange Grid</span>
               </button>
             </div>
+
+            {/* Voice-to-Ticket Interactive Confirmation Card */}
+            {voiceTicketProposal && (
+              <div className="w-full max-w-xl mx-auto mb-4 z-30">
+                <VoiceTicketConfirmationCard
+                  proposal={voiceTicketProposal}
+                  roomId={room?.id}
+                  onConfirm={handleConfirmVoiceTicket}
+                  onDismiss={() => setVoiceTicketProposal(null)}
+                />
+              </div>
+            )}
 
             <div
               className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
@@ -721,6 +907,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     onHostAction={handleHostAction}
                     mediaStream={participantStream}
                     audioLevel={isMe ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop(p.userId)}
@@ -863,6 +1050,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     onHostAction={handleHostAction}
                     mediaStream={participantStream}
                     audioLevel={isMe ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop(p.userId)}

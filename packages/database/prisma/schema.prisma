@@ -220,6 +220,7 @@ enum RoomCommunicationMode {
   VIDEO
   SCREEN_SHARE
   STREAM
+  CANVAS
 }
 
 model Room {

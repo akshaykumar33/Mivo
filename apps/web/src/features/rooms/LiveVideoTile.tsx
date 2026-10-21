@@ -37,6 +37,7 @@ export interface LiveVideoTileProps {
   onDrop?: (e: React.DragEvent) => void;
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
+  spatialPanLabel?: string;
 }
 
 export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
@@ -55,6 +56,7 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   onDrop,
   onMoveLeft,
   onMoveRight,
+  spatialPanLabel,
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = React.useState(100);
@@ -300,6 +302,11 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {spatialPanLabel && (
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/60 text-emerald-400 border border-white/10 shadow-sm" title="3D Spatial Stereo Position">
+              🎧 {spatialPanLabel}
+            </span>
+          )}
           {isMuted ? (
             <MicOff className="w-3.5 h-3.5 text-rose-400" />
           ) : (

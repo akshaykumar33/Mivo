@@ -317,15 +317,21 @@ Provide a concise, helpful, and direct answer with markdown formatting where app
     } | null;
     engine: 'gemini-ai' | 'smart-heuristic';
   }> {
+    const safeSnippet = (transcriptSnippet || '').trim();
+    const safeAttendees = Array.isArray(attendees) ? attendees : [];
+    if (!safeSnippet) {
+      return { ticketProposal: null, engine: 'smart-heuristic' };
+    }
+
     const apiKey = this.getEffectiveApiKey(userApiKey);
 
-    if (apiKey && transcriptSnippet.trim()) {
+    if (apiKey) {
       const prompt = `You are an AI Ticket Assistant in the Mivo communication platform.
 Analyze the following speech conversation snippet and determine if any actionable task, bug, or ticket commitment was spoken by the attendees.
 
-Attendees present: ${attendees.join(', ')}
+Attendees present: ${safeAttendees.join(', ')}
 Transcript snippet:
-"${transcriptSnippet}"
+"${safeSnippet}"
 
 If an actionable task/ticket commitment exists, return a JSON object with this EXACT structure:
 {
@@ -374,28 +380,58 @@ Respond ONLY with valid JSON. No markdown backticks, no commentary.`;
       }
     }
 
-    const lower = transcriptSnippet.toLowerCase();
+    const lower = safeSnippet.toLowerCase();
     if (
       lower.includes('ticket') ||
       lower.includes('bug') ||
       lower.includes('fix') ||
       lower.includes('issue') ||
-      lower.includes('action item')
+      lower.includes('action item') ||
+      lower.includes('optimize')
     ) {
       const priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' =
         lower.includes('urgent') || lower.includes('critical')
           ? 'URGENT'
           : lower.includes('high')
             ? 'HIGH'
-            : 'MEDIUM';
-      const matchedAttendee = attendees.find((a) => lower.includes(a.toLowerCase().split(' ')[0]));
+            : lower.includes('low')
+              ? 'LOW'
+              : 'MEDIUM';
+
+      // Smart title extraction from patterns like "ticket to <action>" or "let's file a ticket to <action>"
+      let extractedTitle = safeSnippet;
+      const toMatch = safeSnippet.match(/(?:ticket\s+(?:to\s+|for\s+)|file\s+(?:a\s+)?(?:[\w-]+\s+)?ticket\s+to\s+)([^.,\n]+)/i);
+      if (toMatch && toMatch[1]) {
+        extractedTitle = toMatch[1].trim();
+        // Capitalize first letter
+        extractedTitle = extractedTitle.charAt(0).toUpperCase() + extractedTitle.slice(1);
+      } else if (safeSnippet.length > 60) {
+        extractedTitle = safeSnippet.slice(0, 57) + '...';
+      }
+
+      // Check attendees or direct vocative (e.g. "Sarah, let's...")
+      let matchedAssignee: string | undefined = undefined;
+      for (const a of safeAttendees) {
+        const first = a.toLowerCase().split(' ')[0];
+        if (first && lower.includes(first)) {
+          matchedAssignee = a;
+          break;
+        }
+      }
+      if (!matchedAssignee) {
+        const vocativeMatch = safeSnippet.match(/^([A-Z][a-z]+),\s+/);
+        if (vocativeMatch && vocativeMatch[1]) {
+          matchedAssignee = vocativeMatch[1];
+        }
+      }
+
       return {
         ticketProposal: {
-          title: transcriptSnippet.length > 60 ? transcriptSnippet.slice(0, 57) + '...' : transcriptSnippet,
-          description: transcriptSnippet,
+          title: extractedTitle,
+          description: safeSnippet,
           priority,
           category: 'Engineering',
-          suggestedAssignee: matchedAttendee || undefined,
+          suggestedAssignee: matchedAssignee || undefined,
         },
         engine: 'smart-heuristic',
       };
@@ -785,6 +821,201 @@ In collaborative reviews
 
     const randomIndex = Math.floor(Math.random() * smartStatuses.length);
     return { statusText: smartStatuses[randomIndex], engine: 'smart-generator' };
+  }
+
+  /**
+   * Voice-to-Canvas AI: converts spoken architectural prompts into structured canvas elements
+   */
+  async generateCanvasArchitecture(
+    promptText: string,
+    userApiKey?: string
+  ): Promise<{
+    elements: Array<any>;
+    summary: string;
+    engine: 'gemini-ai' | 'smart-architect';
+  }> {
+    const apiKey = this.getEffectiveApiKey(userApiKey);
+    if (apiKey && promptText.trim()) {
+      const prompt = `You are an AI Software Architect for Mivo Canvas.
+Analyze the user's architectural concept or request and generate a structured diagram with service boxes, databases, queues, gateways, and connectors.
+User spoken request: "${promptText}"
+
+Return JSON matching this EXACT structure:
+{
+  "summary": "Short 1-sentence architectural overview",
+  "elements": [
+    {
+      "id": "unique-slug",
+      "type": "GATEWAY",
+      "x": 120,
+      "y": 250,
+      "width": 220,
+      "height": 110,
+      "title": "Component Name",
+      "content": "Short description / tech stack",
+      "color": "#6366F1"
+    },
+    {
+      "id": "conn-slug",
+      "type": "CONNECTOR",
+      "fromId": "source-element-id",
+      "toId": "target-element-id",
+      "label": "Protocol / message label",
+      "color": "#94A3B8"
+    }
+  ]
+}
+Respond ONLY with valid JSON. No markdown ticks, no commentary.`;
+
+      const result = await this.callGemini(apiKey, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1200 },
+      });
+
+      if (result) {
+        try {
+          const clean = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(clean);
+          if (parsed && Array.isArray(parsed.elements) && parsed.elements.length > 0) {
+            return {
+              elements: parsed.elements,
+              summary: parsed.summary || 'Generated architecture blueprint',
+              engine: 'gemini-ai',
+            };
+          }
+        } catch (e) {
+          this.logger.warn(`Failed to parse Gemini canvas architecture: ${e}`);
+        }
+      }
+    }
+
+    // High-fidelity architectural heuristic generator
+    const elements: any[] = [];
+    const summary = 'Microservice Architecture with Auth Gateway and Redis Pub/Sub';
+
+    // 1. Gateway
+    elements.push({
+      id: 'gateway-1',
+      type: 'GATEWAY',
+      x: 120,
+      y: 260,
+      width: 220,
+      height: 120,
+      title: 'Auth & API Gateway',
+      content: 'Reverse Proxy • JWT Verification • Rate Limiter',
+      color: '#6366F1',
+    });
+
+    // 2. Auth Service
+    elements.push({
+      id: 'service-auth',
+      type: 'SERVICE',
+      x: 440,
+      y: 120,
+      width: 230,
+      height: 120,
+      title: 'Authentication Service',
+      content: 'Better Auth • Argon2 Hashing • Session Cache',
+      color: '#06B6D4',
+    });
+
+    // 3. Pub/Sub Broker
+    elements.push({
+      id: 'queue-redis',
+      type: 'QUEUE',
+      x: 440,
+      y: 400,
+      width: 230,
+      height: 120,
+      title: 'Redis Pub/Sub Bus',
+      content: 'Distributed Cluster • Stream Fanout • Realtime Events',
+      color: '#EF4444',
+    });
+
+    // 4. Worker Service
+    elements.push({
+      id: 'service-worker',
+      type: 'SERVICE',
+      x: 770,
+      y: 400,
+      width: 230,
+      height: 120,
+      title: 'Async Event Consumer',
+      content: 'BullMQ Workers • Webhook Dispatch • Background Jobs',
+      color: '#10B981',
+    });
+
+    // 5. Database
+    elements.push({
+      id: 'db-postgres',
+      type: 'DATABASE',
+      x: 770,
+      y: 120,
+      width: 230,
+      height: 120,
+      title: 'Neon Lakebase PostgreSQL',
+      content: 'Relational Data • Branching • Connection Pooling',
+      color: '#8B5CF6',
+    });
+
+    // 6. Connectors
+    elements.push(
+      {
+        id: 'conn-1',
+        type: 'CONNECTOR',
+        fromId: 'gateway-1',
+        toId: 'service-auth',
+        label: 'JWT Handshake (gRPC)',
+        color: '#38BDF8',
+      },
+      {
+        id: 'conn-2',
+        type: 'CONNECTOR',
+        fromId: 'gateway-1',
+        toId: 'queue-redis',
+        label: 'Publish Events',
+        color: '#F87171',
+      },
+      {
+        id: 'conn-3',
+        type: 'CONNECTOR',
+        fromId: 'queue-redis',
+        toId: 'service-worker',
+        label: 'Consume Streams',
+        color: '#34D399',
+      },
+      {
+        id: 'conn-4',
+        type: 'CONNECTOR',
+        fromId: 'service-auth',
+        toId: 'db-postgres',
+        label: 'SQL Read/Write',
+        color: '#A78BFA',
+      },
+      {
+        id: 'conn-5',
+        type: 'CONNECTOR',
+        fromId: 'service-worker',
+        toId: 'db-postgres',
+        label: 'Persist State',
+        color: '#A78BFA',
+      }
+    );
+
+    // 7. Context sticky note
+    elements.push({
+      id: 'sticky-note-1',
+      type: 'STICKY',
+      x: 120,
+      y: 450,
+      width: 220,
+      height: 110,
+      title: 'Architecture Note',
+      content: `Generated from prompt: "${promptText.length > 50 ? promptText.slice(0, 47) + '...' : promptText}"`,
+      color: '#FBBF24',
+    });
+
+    return { elements, summary, engine: 'smart-architect' };
   }
 }
 

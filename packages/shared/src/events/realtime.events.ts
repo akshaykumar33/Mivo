@@ -84,6 +84,19 @@ export const REALTIME_EVENTS = {
   ROOM_AI_FACT_CHECK: 'room:ai_fact_check',
   ROOM_AI_PIN_TILE: 'room:ai_pin_tile',
   ROOM_AI_DISMISS_TILE: 'room:ai_dismiss_tile',
+
+  // Collaborative Whiteboard & Flowchart Stage (CANVAS Mode)
+  ROOM_CANVAS_UPDATE: 'room:canvas_update',
+  ROOM_CANVAS_CURSOR: 'room:canvas_cursor',
+  ROOM_CANVAS_CLEAR: 'room:canvas_clear',
+  ROOM_CANVAS_AI_GENERATE: 'room:canvas_ai_generate',
+
+  // 3D Spatial Audio & Dynamic Physics Grid
+  ROOM_SPATIAL_AUDIO_UPDATE: 'room:spatial_audio_update',
+
+  // Spoken Voice-to-Ticket Automation
+  ROOM_VOICE_TICKET_DETECTED: 'room:voice_ticket_detected',
+  ROOM_VOICE_TICKET_CONFIRM: 'room:voice_ticket_confirm',
 } as const;
 
 export interface ChatReactionPayload {
@@ -258,4 +271,71 @@ export interface MeetingBridgeRemovedBroadcast {
   conversationId?: string;
   removedBy: import('../types/user.js').UserSummaryDTO;
   removedAt: string;
+}
+
+export interface CanvasElement {
+  id: string;
+  type: 'STICKY' | 'SHAPE' | 'SERVICE' | 'DATABASE' | 'QUEUE' | 'GATEWAY' | 'CONNECTOR' | 'TEXT';
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  title?: string;
+  content?: string;
+  color?: string;
+  fromId?: string;
+  toId?: string;
+  label?: string;
+  authorName?: string;
+  authorId?: string;
+}
+
+export interface CanvasCursorPayload {
+  roomId: string;
+  userId: string;
+  userName: string;
+  avatarUrl?: string | null;
+  x: number;
+  y: number;
+  color: string;
+}
+
+export interface CanvasUpdatePayload {
+  roomId: string;
+  elements: CanvasElement[];
+  action: 'UPSERT' | 'DELETE' | 'CLEAR' | 'SYNC';
+  updatedBy: string;
+}
+
+export interface SpatialAudioPayload {
+  roomId: string;
+  userId: string;
+  x: number;
+  y: number;
+  pan: number; // -1.0 (Left) to +1.0 (Right)
+  distance?: number;
+}
+
+export interface VoiceTicketDetectedPayload {
+  roomId: string;
+  ticketProposal: {
+    title: string;
+    description: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    category?: string;
+    suggestedAssignee?: string;
+  };
+  speakerName?: string;
+}
+
+export interface VoiceTicketConfirmPayload {
+  roomId: string;
+  ticketProposal: {
+    title: string;
+    description: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    category?: string;
+    suggestedAssignee?: string;
+    communityId?: string;
+  };
 }

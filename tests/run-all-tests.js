@@ -52,6 +52,9 @@ const MODULE_TESTS = [
   // 8. Universal File Viewer & Media Streamer Module
   { module: 'file-viewer', file: 'tests/modules/files/unit/file-viewer.unit.test.js' },
   { module: 'file-viewer', file: 'tests/modules/files/unit/video-optimizer.unit.test.js' },
+
+  // 9. Hyper Stage Features: 6th Mode Canvas, 3D Spatial Audio, Spoken Voice Tickets
+  { module: 'canvas-spatial-tickets', file: 'tests/modules/canvas-spatial-tickets/integration/canvas-spatial-tickets.integration.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');

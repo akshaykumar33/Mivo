@@ -5,6 +5,7 @@ import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
 import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
+import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
 import { ParticipantTray } from './ParticipantTray';
 import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
 import { FloatingPiPOverlay } from './FloatingPiPOverlay';
@@ -227,21 +228,31 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
       {/* Main Content Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Dynamic Stage View with Live Media */}
-        <MediaStage
-          mode={activeRoom.activeMode}
-          room={activeRoom}
-          participants={participants}
-          currentUserId={user?.id}
-          isHost={isHost}
-          isMuted={isMuted}
-          isCameraOn={isCameraOn}
-          isScreenOn={isScreenOn}
-          localStream={localStream}
-          screenStream={screenStream}
-          remoteStreams={remoteStreams}
-          audioLevel={audioLevel}
-        />
+        {/* Dynamic Stage View with Live Media / Canvas Stage */}
+        {activeRoom.activeMode === 'CANVAS' ? (
+          <CollaborativeCanvasStage
+            roomId={activeRoom.id}
+            roomName={activeRoom.name}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            participants={participants}
+          />
+        ) : (
+          <MediaStage
+            mode={activeRoom.activeMode}
+            room={activeRoom}
+            participants={participants}
+            currentUserId={user?.id}
+            isHost={isHost}
+            isMuted={isMuted}
+            isCameraOn={isCameraOn}
+            isScreenOn={isScreenOn}
+            localStream={localStream}
+            screenStream={screenStream}
+            remoteStreams={remoteStreams}
+            audioLevel={audioLevel}
+          />
+        )}
 
         {/* Live Closed Captions & Dual Subtitles Overlay (Google Meet / Zoom style) */}
         {activeRoom.activeMode !== 'TEXT' && (

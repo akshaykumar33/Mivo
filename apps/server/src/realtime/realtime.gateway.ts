@@ -983,5 +983,128 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       roomId: data.roomId,
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // 🎨 CANVAS / COLLABORATIVE WHITEBOARD & FLOWCHART STAGE
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_UPDATE)
+  handleCanvasUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    // Broadcast updates to other participants in the room
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_UPDATE, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_CURSOR)
+  handleCanvasCursor(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_CURSOR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_CLEAR)
+  handleCanvasClear(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return;
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_CLEAR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_AI_GENERATE)
+  async handleCanvasAiGenerate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; prompt: string }
+  ) {
+    if (!data?.roomId || !data?.prompt) return;
+    try {
+      const result = await this.aiService.generateCanvasArchitecture(data.prompt);
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_UPDATE, {
+        roomId: data.roomId,
+        elements: result.elements,
+        action: 'UPSERT',
+        summary: result.summary,
+        updatedBy: 'Mivo AI Architect',
+      });
+      return { success: true, data: result };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 🎧 3D SPATIAL AUDIO & DYNAMIC PHYSICS GRID
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_SPATIAL_AUDIO_UPDATE)
+  handleSpatialAudioUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_SPATIAL_AUDIO_UPDATE, data);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ⚡ SPOKEN VOICE-TO-TICKET AUTOMATION
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_VOICE_TICKET_CONFIRM)
+  async handleVoiceTicketConfirm(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    const user = client.data.user;
+    if (!user || !data?.roomId || !data?.ticketProposal) return;
+
+    try {
+      // Find assignee user if name was suggested
+      let assigneeId: string | undefined = undefined;
+      if (data.ticketProposal.suggestedAssignee) {
+        const matched = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { displayName: { contains: data.ticketProposal.suggestedAssignee, mode: 'insensitive' } },
+              { username: { contains: data.ticketProposal.suggestedAssignee, mode: 'insensitive' } },
+            ],
+          },
+        });
+        if (matched) assigneeId = matched.id;
+      }
+
+      // Create the ticket in PostgreSQL
+      const createdTicket = await prisma.ticket.create({
+        data: {
+          title: data.ticketProposal.title,
+          description: data.ticketProposal.description || data.ticketProposal.title,
+          priority: data.ticketProposal.priority,
+          category: data.ticketProposal.category || 'Engineering',
+          creatorId: user.sub,
+          assigneeId: assigneeId,
+          communityId: data.ticketProposal.communityId,
+          status: 'OPEN',
+        },
+        include: { assignee: true, creator: true },
+      });
+
+      // Broadcast ticket created announcement to the room
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'SPEAKING',
+        query: 'Confirm Ticket Creation',
+        speechText: `Ticket #${createdTicket.id.slice(0, 8)} "${createdTicket.title}" has been registered in the database with ${createdTicket.priority} priority.`,
+        createdTicket,
+      });
+
+      return { success: true, data: createdTicket };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
 }
 

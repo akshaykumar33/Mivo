@@ -5,6 +5,7 @@ import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
 import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen, Menu, PanelLeftOpen, PanelLeftClose, Video } from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { RoomModeSwitcher } from './RoomModeSwitcher';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
@@ -23,6 +24,7 @@ export interface RoomHeaderProps {
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
   room,
   activeMode,
+  onModeChange,
   participantCount,
   isRecording = false,
   isHost = false,
@@ -126,12 +128,9 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
         </div>
 
-        {/* Center Stage Status Badge (Only shown when ample width on xl+ screens) */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] flex-shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
-          <span className="font-semibold text-[var(--text-primary)] font-display">Active Stage</span>
-          <span className="text-[var(--text-muted)]">•</span>
-          <span className="text-[11px] font-mono text-[#64D2FF] font-bold uppercase">{activeMode}</span>
+        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Stream, Canvas) */}
+        <div className="hidden lg:flex items-center flex-shrink-0">
+          <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
         {/* Right Action Tray */}
