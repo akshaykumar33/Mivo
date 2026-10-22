@@ -36,6 +36,7 @@ import { LiveFactCheckHUD, FactCheckAlertData } from './LiveFactCheckHUD';
 import { spatialAudio } from '../audio/SpatialAudioEngine';
 import { VoiceTicketConfirmationCard, VoiceTicketProposal } from '../tickets/VoiceTicketConfirmationCard';
 import { useTicketStore } from '@/stores/ticketStore';
+import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 
@@ -81,6 +82,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const [pinnedDataTile, setPinnedDataTile] = React.useState<PinnedDataTilePayload | null>(null);
   const [factCheckAlert, setFactCheckAlert] = React.useState<FactCheckAlertData | null>(null);
   const { setIsModalOpen: openTicketsModal } = useTicketStore();
+  const { capabilities } = useAuthStore();
 
   // 🎧 3D Spatial Audio & Dynamic Physics Grid
   const [isSpatialAudioActive, setIsSpatialAudioActive] = React.useState(true);
@@ -192,6 +194,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // ⚡ Spoken Voice-to-Ticket Extraction
   const handleExtractVoiceTicket = React.useCallback(
     async (snippet: string) => {
+      if (!capabilities?.canUseVoiceToTask) {
+        setTicketToast('Voice-to-Task Commands: Exclusive to Enterprise Organization accounts.');
+        setTimeout(() => setTicketToast(null), 5000);
+        return;
+      }
+
       const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
       try {
         const res = await api.post<any>('/api/v1/ai/extract-ticket', {
@@ -216,7 +224,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         console.warn('Voice ticket extraction error:', err);
       }
     },
-    [participants, room]
+    [participants, room, capabilities?.canUseVoiceToTask]
   );
 
   const handleConfirmVoiceTicket = React.useCallback(
@@ -516,11 +524,24 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
                 )
               }
-              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
-              title="Simulate Voice-to-Ticket Detection"
+              className={`flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-xl border transition-all shadow-md cursor-pointer ${
+                capabilities?.canUseVoiceToTask
+                  ? 'text-amber-300 hover:text-amber-200 bg-amber-600/25 border-amber-500/40 hover:bg-amber-600/40'
+                  : 'text-zinc-400 bg-zinc-800/60 border-zinc-700/50 hover:bg-zinc-800/80'
+              }`}
+              title={
+                capabilities?.canUseVoiceToTask
+                  ? 'Simulate Voice-to-Ticket Detection'
+                  : 'Voice-to-task commands are exclusive to Enterprise Organization accounts'
+              }
             >
               <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span>Voice-to-Ticket Demo</span>
+              {!capabilities?.canUseVoiceToTask && (
+                <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold border border-purple-500/30">
+                  Org Only
+                </span>
+              )}
             </button>
           </div>
         </div>

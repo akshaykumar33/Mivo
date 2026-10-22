@@ -1,9 +1,11 @@
 import { UserDTO } from './user.js';
+import { UserTier, TierCapabilitiesDTO } from './tier.js';
 
 export interface AuthSessionResponse {
   user: UserDTO;
   accessToken: string;
   isGuest?: boolean;
+  capabilities?: TierCapabilitiesDTO;
 }
 
 export interface JwtPayload {
@@ -12,6 +14,7 @@ export interface JwtPayload {
   username: string;
   displayName?: string;
   isGuest?: boolean;
+  userTier?: UserTier;
   iat?: number;
   exp?: number;
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { X, Play, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
+import { X, Play, Sparkles, ExternalLink, ShieldCheck, Lock } from 'lucide-react';
 import { MiniAppManifest, MiniAppType, REALTIME_EVENTS } from '@mivo/shared';
 import { realtime } from '@/lib/socket-client';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface ActivityLauncherModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
   roomId,
   onLaunch,
 }) => {
+  const { isOrg } = useAuthStore();
   if (!isOpen) return null;
 
   const handleLaunchActivity = (type: MiniAppType) => {
@@ -109,13 +111,24 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={() => handleLaunchActivity(act.type)}
-                className="px-4 py-2 rounded-xl bg-[#5E5CE6] hover:bg-[#5E5CE6]/90 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
-              >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>Launch</span>
-              </button>
+              {act.type === 'CHESS' && isOrg ? (
+                <button
+                  disabled
+                  title="Games are disabled in Enterprise Organization workspaces."
+                  className="px-3.5 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/50 text-zinc-400 font-bold text-xs flex items-center gap-1.5 cursor-not-allowed flex-shrink-0"
+                >
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Disabled (Org)</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleLaunchActivity(act.type)}
+                  className="px-4 py-2 rounded-xl bg-[#5E5CE6] hover:bg-[#5E5CE6]/90 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Launch</span>
+                </button>
+              )}
             </div>
           ))}
         </div>

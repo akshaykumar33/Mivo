@@ -1143,6 +1143,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data.user;
     if (!user || !data?.roomId || !data?.ticketProposal) return;
 
+    if (user.isGuest || user.userTier !== 'ORG') {
+      client.emit('error', {
+        code: 'ORG_FEATURE_RESTRICTED',
+        message: 'Spoken voice-to-task commands are exclusively available for Enterprise Organization accounts.',
+      });
+      return { success: false, error: 'Voice-to-task commands are restricted to organization members.' };
+    }
+
     try {
       // Find assignee user if name was suggested
       let assigneeId: string | undefined = undefined;
@@ -1461,6 +1469,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const user = client.data?.user;
     if (!user || !data?.roomId || !data?.type) return { success: false };
+
+    if (user.userTier === 'ORG' && data.type === 'CHESS') {
+      client.emit('error', {
+        code: 'ORG_GAMES_DISABLED',
+        message: 'Games are disabled for organization enterprise accounts.',
+      });
+      return { success: false, error: 'Games are disabled in organization workspaces.' };
+    }
+
     const activity = this.miniAppsService.launchActivity(data.roomId, data.type, user.sub, data.initialPayload);
     this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, activity);
     return { success: true, data: activity };

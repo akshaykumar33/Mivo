@@ -16,6 +16,7 @@ export * from './types/meeting.js';
 export * from './types/notification.js';
 export * from './types/ticket.js';
 export * from './types/hyper-features.js';
+export * from './types/tier.js';
 
 // Schemas
 export * from './schemas/auth.schema.js';

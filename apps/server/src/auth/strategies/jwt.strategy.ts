@@ -24,6 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         displayName: true,
         status: true,
         isGuest: true,
+        userTier: true,
         deletedAt: true,
       } as any,
     });
@@ -41,6 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       username: user.username,
       displayName: user.displayName,
       isGuest: Boolean(user.isGuest),
+      userTier: user.userTier || (user.isGuest ? 'GUEST' : 'NON_ORG'),
     };
   }
 }

@@ -6,7 +6,8 @@ import { UserSummaryDTO } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useAuthStore } from '@/stores/authStore';
-import { Search, Users, MessageSquare, Check, Sparkles, Plus, Image as ImageIcon, Lock } from 'lucide-react';
+import { Search, Users, MessageSquare, Check, Sparkles, Plus, Image as ImageIcon, Lock, Eye, Shield, User } from 'lucide-react';
+import { UserProfileModal } from '@/features/users/UserProfileModal';
 
 interface CreateConversationModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
   const [searchQuery, setSearchQuery] = React.useState('');
   const [users, setUsers] = React.useState<UserSummaryDTO[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = React.useState(false);
+  const [selectedProfileUserId, setSelectedProfileUserId] = React.useState<string | null>(null);
 
   // Group creation state
   const [groupName, setGroupName] = React.useState('');
@@ -39,11 +41,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
       setGroupIconUrl('');
       setSelectedUserIds([]);
       setErrorMsg(null);
-      return;
-    }
-
-    if (isGuest) {
-      setUsers([]);
+      setSelectedProfileUserId(null);
       return;
     }
 
@@ -69,7 +67,8 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
 
   const handleStartDM = async (recipientId: string) => {
     if (isGuest) {
-      setErrorMsg('Guest accounts cannot message others. Please upgrade your account.');
+      setErrorMsg('Guest accounts cannot message others. You can view developer profiles, or upgrade to chat.');
+      setSelectedProfileUserId(recipientId);
       return;
     }
     try {
@@ -118,46 +117,42 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isGuest ? 'Messaging Restricted' : activeTab === 'direct' ? 'Start a Direct Message' : 'Create Custom Group'}
-      description={
-        isGuest
-          ? 'Guest accounts cannot message other users or start direct & group conversations.'
-          : 'Connect directly with friends or assemble custom group chats.'
-      }
-      maxWidth="md"
-    >
-      {isGuest ? (
-        <div className="py-8 px-4 text-center flex flex-col items-center">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-3 shadow-inner">
-            <Lock className="w-6 h-6" />
-          </div>
-          <h3 className="text-sm font-bold text-[#111827] mb-1">Guest Account Restriction</h3>
-          <p className="text-xs text-[var(--text-muted)] max-w-sm mb-4 leading-relaxed">
-            Guest accounts cannot message other users or participate in audio and video calls. Please create a permanent account or sign in to start chatting!
-          </p>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              size="sm"
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={isGuest ? 'Browse Non-Org Creator Profiles' : activeTab === 'direct' ? 'Start a Direct Message' : 'Create Custom Group'}
+        description={
+          isGuest
+            ? 'Explore independent developer profiles and published projects. Messaging is restricted for guest accounts.'
+            : 'Connect directly with friends or assemble custom group chats.'
+        }
+        maxWidth="md"
+      >
+        {isGuest && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <span>
+                <strong>Guest Mode:</strong> You can view creator profiles and projects (read-only). Messaging requires upgrading.
+              </span>
+            </div>
+            <button
               onClick={() => {
                 onClose();
                 setUpgradeModalOpen(true);
               }}
-              className="bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white"
+              className="font-bold underline text-amber-200 hover:text-white cursor-pointer ml-2 whitespace-nowrap"
             >
-              Upgrade to Permanent Account
-            </Button>
+              Upgrade
+            </button>
           </div>
-        </div>
-      ) : (
-      <div className="space-y-4">
-        {/* Navigation Tabs */}
-        <div className="flex rounded-xl bg-[var(--bg-surface-1)] p-1 border border-[var(--border-subtle)]">
+        )}
+
+        <div className="space-y-4">
+          {/* Navigation Tabs - Hidden for guests since they only browse profiles */}
+          {!isGuest && (
+            <div className="flex rounded-xl bg-[var(--bg-surface-1)] p-1 border border-[var(--border-subtle)]">
           <button
             type="button"
             onClick={() => {
@@ -189,6 +184,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             <span>Custom Group</span>
           </button>
         </div>
+      )}
 
         {errorMsg && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 font-medium">
@@ -221,11 +217,15 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                 </div>
               ) : (
                 users.map((u) => (
-                  <button
+                  <div
                     key={u.id}
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() => handleStartDM(u.id)}
+                    onClick={() => {
+                      if (isGuest) {
+                        setSelectedProfileUserId(u.id);
+                      } else {
+                        handleStartDM(u.id);
+                      }
+                    }}
                     className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-black/[0.04] transition-colors group text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
@@ -248,18 +248,32 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                         />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#111827] group-hover:text-[#DC2626] transition-colors">
-                          {u.displayName || u.username}
+                        <div className="text-xs font-semibold text-[#111827] group-hover:text-[#DC2626] transition-colors flex items-center gap-1.5">
+                          <span>{u.displayName || u.username}</span>
+                          <span className="px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-600 text-[9px] font-bold">
+                            Dev
+                          </span>
                         </div>
                         <div className="text-[11px] text-[var(--text-muted)]">
                           @{u.username}
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs font-semibold text-[#DC2626] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      <span>Message</span>
+
+                    <div className="flex items-center gap-2">
+                      {isGuest ? (
+                        <span className="text-xs font-bold text-cyan-600 flex items-center gap-1 bg-cyan-50 px-2 py-1 rounded-lg border border-cyan-200 shadow-xs">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Profile</span>
+                        </span>
+                      ) : (
+                        <div className="text-xs font-semibold text-[#DC2626] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          <span>Message</span>
+                        </div>
+                      )}
                     </div>
-                  </button>
+                  </div>
                 ))
               )}
             </div>
@@ -373,7 +387,13 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
           </form>
         )}
       </div>
-      )}
     </Modal>
+
+    <UserProfileModal
+      userId={selectedProfileUserId}
+      isOpen={Boolean(selectedProfileUserId)}
+      onClose={() => setSelectedProfileUserId(null)}
+    />
+  </>
   );
 };

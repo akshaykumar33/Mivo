@@ -55,7 +55,7 @@ const QUICK_ICEBREAKERS = [
 ];
 
 export const AnonymousConnectModal: React.FC = () => {
-  const { user, isGuest, anonConnectModalOpen, setAnonConnectModalOpen, setUpgradeModalOpen } =
+  const { user, isGuest, isOrg, anonConnectModalOpen, setAnonConnectModalOpen, setUpgradeModalOpen } =
     useAuthStore();
 
   const [mode, setMode] = React.useState<'TEXT' | 'VIDEO'>('TEXT');
@@ -67,8 +67,8 @@ export const AnonymousConnectModal: React.FC = () => {
   const [isTheaterMode, setIsTheaterMode] = React.useState(false);
   const [mobileTab, setMobileTab] = React.useState<'CHAT' | 'PLAYGROUND'>('PLAYGROUND');
 
-  // Matchmaking & 2nd Player Room Mode
-  const [matchTab, setMatchTab] = React.useState<'DISCOVERY' | 'PRIVATE' | 'SOLO'>('DISCOVERY');
+  // Matchmaking & 2nd Player Room Mode (Guests default to PRIVATE connection code)
+  const [matchTab, setMatchTab] = React.useState<'DISCOVERY' | 'PRIVATE' | 'SOLO'>(isGuest ? 'PRIVATE' : 'DISCOVERY');
   const [roomCodeInput, setRoomCodeInput] = React.useState('');
   const [activeRoomCode, setActiveRoomCode] = React.useState<string | null>(null);
   const [copiedInvite, setCopiedInvite] = React.useState(false);
@@ -505,6 +505,37 @@ export const AnonymousConnectModal: React.FC = () => {
   };
 
   if (!anonConnectModalOpen) return null;
+
+  if (isOrg) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+        <div className="w-full max-w-md bg-[var(--bg-surface-0)] border border-purple-500/30 rounded-3xl p-6 shadow-2xl text-center">
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto mb-4">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-[var(--text-primary)] font-display">
+            Games Disabled for Organization Workspaces
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)] mt-2 leading-relaxed">
+            Casual minigames and random anonymous matchmaking are disabled in Enterprise Organization accounts to maintain workplace focus and compliance.
+          </p>
+          <div className="mt-4 p-3 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)] text-left space-y-1">
+            <div className="font-semibold text-purple-400">Your Enterprise Features:</div>
+            <div>• Unlimited Cloud Storage</div>
+            <div>• Spoken Voice-to-Task Ticket AI Extraction</div>
+            <div>• Real-time Live Code Sharing stages</div>
+            <div>• Full HD Group Video & Audio Meetings</div>
+          </div>
+          <button
+            onClick={() => setAnonConnectModalOpen(false)}
+            className="mt-5 w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+          >
+            Return to Workspace
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">

@@ -155,6 +155,14 @@ export class AnonymousConnectService {
       joinedAt: Date.now(),
     };
 
+    if (user.userTier === 'ORG') {
+      client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
+        inQueue: false,
+        message: 'Games and casual matchmaking activities are disabled for Organization accounts.',
+      });
+      return;
+    }
+
     if (entry.isGuest && (payload.mode as string) !== 'TEXT') {
       client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
         inQueue: false,

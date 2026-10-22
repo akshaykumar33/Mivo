@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Patch, Body, Param, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, Headers, ForbiddenException } from '@nestjs/common';
 import { AiService } from './ai.service.js';
 import { AiTwinService } from './ai-twin.service.js';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
-import { ApiResponse } from '@mivo/shared';
+import { CurrentUser } from '../common/current-user.decorator.js';
+import { ApiResponse, JwtPayload } from '@mivo/shared';
 
 @Controller('api/v1/ai')
 @UseGuards(JwtAuthGuard)
@@ -110,6 +111,7 @@ export class AiController {
 
   @Post('extract-ticket')
   async extractTicket(
+    @CurrentUser() user: JwtPayload,
     @Body()
     body: {
       transcriptSnippet?: string;
@@ -120,6 +122,13 @@ export class AiController {
     },
     @Headers('x-gemini-api-key') headerKey?: string
   ): Promise<ApiResponse<any>> {
+    if (user.isGuest || user.userTier !== 'ORG') {
+      throw new ForbiddenException({
+        code: 'ORG_FEATURE_RESTRICTED',
+        message: 'Spoken voice-to-task commands are exclusively available for Enterprise Organization accounts. Upgrade to an Org workspace to unlock voice ticket extraction.',
+      });
+    }
+
     const text = body.transcriptSnippet || body.transcript || body.text || '';
     const effectiveKey = body.apiKey || headerKey;
     const result = await this.aiService.extractTicketFromSpeech(
