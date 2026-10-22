@@ -47,9 +47,8 @@ function sanitizeChatMessage(content: string, hasMeetingAttachment: boolean): st
   ) {
     return null;
   }
-  // Strip any raw unicode emojis from message text completely
-  const stripped = content.replace(/(\p{Extended_Pictographic}|\p{Emoji_Presentation})/gu, '').trim();
-  return stripped.length > 0 ? stripped : null;
+  const trimmed = content.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 export interface ChatStreamProps {

@@ -55,34 +55,44 @@ export default function LandingPage() {
           Create communities, organize channels, and enter unified rooms where you can effortlessly switch between text chat, crystal-clear voice huddles, HD video meetings, screen sharing, and live broadcast stages.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link href="/register">
-            <Button size="lg" className="gap-2 text-base px-8 py-4">
+            <Button size="lg" className="gap-2 text-base px-7 py-3.5 sm:px-8 sm:py-4">
               <span>Launch Mivo</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
           <Link href="/login">
-            <Button variant="secondary" size="lg" className="text-base px-8 py-4">
+            <Button variant="secondary" size="lg" className="text-base px-7 py-3.5 sm:px-8 sm:py-4">
               Sign in with Account
             </Button>
+          </Link>
+          <Link href="/login" className="w-full sm:w-auto">
+            <button
+              type="button"
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105"
+            >
+              <span>Instant Guest Mode ⚡</span>
+            </button>
           </Link>
         </div>
 
         {/* Feature Grid Pills */}
-        <div className="mt-16 grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-3xl w-full">
+        <div className="mt-14 sm:mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 max-w-4xl w-full">
           {[
             { label: 'Real-time Chat', icon: MessageSquare, desc: 'Instant messaging' },
             { label: 'Voice Huddles', icon: Mic, desc: 'Low-latency SFU' },
             { label: 'HD Video', icon: Video, desc: 'Simulcast grid' },
             { label: 'Screen Share', icon: Monitor, desc: 'Frictionless transport' },
             { label: 'Live Stages', icon: Radio, desc: 'Audience broadcast' },
-          ].map((feat) => {
+          ].map((feat, idx) => {
             const Icon = feat.icon;
             return (
               <div
                 key={feat.label}
-                className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex flex-col items-center text-center"
+                className={`p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex flex-col items-center text-center transition-all duration-200 hover:border-violet-500/40 hover:bg-slate-900/90 hover:scale-[1.02] ${
+                  idx === 4 ? 'col-span-2 sm:col-span-3 lg:col-span-1' : ''
+                }`}
               >
                 <Icon className="w-5 h-5 text-violet-400 mb-2" />
                 <span className="text-xs font-bold text-slate-200">{feat.label}</span>

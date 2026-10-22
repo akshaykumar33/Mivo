@@ -269,7 +269,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
                 currentTurn === 1 ? 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'
               }`}
             />
-            <span>
+            <span className="truncate max-w-[130px] inline-block align-bottom" title={winner ? 'Game Over' : isMyTurn ? 'Your Turn!' : `${partnerPseudonym}'s Turn...`}>
               {winner
                 ? 'Game Over'
                 : isMyTurn

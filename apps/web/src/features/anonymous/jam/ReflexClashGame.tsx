@@ -303,8 +303,8 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
                 </span>
               </div>
               <span className="text-gray-600 font-mono text-sm">VS</span>
-              <div className="text-center">
-                <span className="text-[10px] text-gray-400 block">{partnerPseudonym}'s Speed</span>
+              <div className="text-center min-w-0 max-w-[140px]">
+                <span className="text-[10px] text-gray-400 block truncate" title={partnerPseudonym}>{partnerPseudonym}&apos;s Speed</span>
                 <span className="text-2xl font-black text-cyan-400 font-mono">
                   {partnerMs === 'FAIL' ? 'FAULT' : `${partnerMs}ms`}
                 </span>

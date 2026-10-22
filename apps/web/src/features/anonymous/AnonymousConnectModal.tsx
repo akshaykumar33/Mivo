@@ -589,40 +589,40 @@ export const AnonymousConnectModal: React.FC = () => {
         {state === 'IDLE' && (
           <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
             {/* 3 Main Connection Modes */}
-            <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-100 p-1.5 rounded-2xl">
               <button
                 type="button"
                 onClick={() => setMatchTab('DISCOVERY')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
                   matchTab === 'DISCOVERY'
                     ? 'bg-white text-gray-900 shadow-xs'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <Radio className="w-3.5 h-3.5" />
-                <span>🎲 Match Strangers</span>
+                <Radio className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">🎲 Match Strangers</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setMatchTab('PRIVATE')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
                   matchTab === 'PRIVATE'
                     ? 'bg-rose-600 text-white shadow-xs'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <Users className="w-3.5 h-3.5" />
-                <span>🔑 Invite 2nd Player</span>
+                <Users className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">🔑 Invite 2nd Player</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleLaunchDemoJam}
-                className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
               >
-                <Gamepad2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>🤖 Solo / Practice</span>
+                <Gamepad2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span className="truncate">🤖 Solo / Practice</span>
               </button>
             </div>
 

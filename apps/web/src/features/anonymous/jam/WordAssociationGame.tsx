@@ -293,13 +293,14 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
         <div className="text-right">
           <span className="text-[10px] text-gray-400 block">Current Turn:</span>
           <span
-            className={`text-xs font-black uppercase px-2.5 py-1 rounded-lg ${
+            className={`text-xs font-black uppercase px-2.5 py-1 rounded-lg truncate max-w-[140px] inline-block align-bottom ${
               isMyTurn
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                 : 'bg-gray-800 text-gray-300'
             }`}
+            title={isMyTurn ? 'Your Turn' : `${partnerPseudonym}'s Turn`}
           >
-            {isMyTurn ? '👉 Your Turn' : `${partnerPseudonym}'s Turn`}
+            {isMyTurn ? '👉 Your Turn' : `${partnerPseudonym}&apos;s Turn`}
           </span>
         </div>
       </div>

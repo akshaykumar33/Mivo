@@ -244,7 +244,8 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
 
           <div className="relative group flex items-center justify-center w-full">
             <Link
-              href="/discover"
+              href="/channels"
+              onClick={() => onNavigate?.()}
               className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] text-[#DC2626] hover:bg-[#DC2626] hover:!text-white border border-[#DC2626]/20 hover:border-[#DC2626]/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
             >
               <Compass className="w-4 h-4 stroke-[2.2]" />

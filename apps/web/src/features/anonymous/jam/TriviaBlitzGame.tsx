@@ -298,7 +298,7 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
                   </span>
                 )}
                 {showAnswer && isSelectedByPartner && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 truncate max-w-[80px] inline-block align-bottom" title={partnerPseudonym}>
                     {partnerPseudonym}
                   </span>
                 )}
