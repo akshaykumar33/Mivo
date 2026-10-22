@@ -116,24 +116,27 @@ export const AnonymousConnectModal: React.FC = () => {
     return () => clearInterval(pulseInterval);
   }, [isMicMuted, state]);
 
-  // Resilient queue join emitter with strict debounce
+  // Resilient queue join emitter with room-aware debounce
   const lastEmitTimeRef = React.useRef<number>(0);
+  const lastEmitCodeRef = React.useRef<string | null>(null);
   const emitQueueJoin = React.useCallback(
     (code?: string) => {
+      const cleanCode = code ? code.trim().toUpperCase() : undefined;
       const now = Date.now();
-      if (now - lastEmitTimeRef.current < 1200) {
-        console.log('[Jam] Debouncing duplicate emitQueueJoin');
+      if (lastEmitCodeRef.current === cleanCode && now - lastEmitTimeRef.current < 1000) {
+        console.log('[Jam] Debouncing duplicate emitQueueJoin for same room');
         return;
       }
       lastEmitTimeRef.current = now;
+      lastEmitCodeRef.current = cleanCode || null;
 
       const payload: any = {
         mode,
         interests: selectedTags,
         pseudonym: pseudonym || (isGuest ? 'Guest Explorer' : 'Incognito User'),
       };
-      if (code) {
-        payload.roomCode = code.trim().toUpperCase();
+      if (cleanCode) {
+        payload.roomCode = cleanCode;
       }
 
       const doEmit = () => {
@@ -150,7 +153,7 @@ export const AnonymousConnectModal: React.FC = () => {
         } else {
           setTimeout(() => {
             if (realtime.isConnected()) doEmit();
-          }, 500);
+          }, 400);
         }
       }
     },
@@ -174,16 +177,10 @@ export const AnonymousConnectModal: React.FC = () => {
       const cleanCode = code.trim().toUpperCase();
       setActiveRoomCode(cleanCode);
       setRoomCodeInput(cleanCode);
-
-      // If already connected to a real partner in active session, do not break session
-      if (partner && partner.userId !== 'bot-companion' && state === 'CONNECTED') {
-        console.log('[Jam] Already connected to partner, skipping re-queue on room invite open');
-        return;
-      }
-
+      console.log('[Jam] Registering private room on server:', cleanCode);
       emitQueueJoin(cleanCode);
     },
-    [emitQueueJoin, partner, state]
+    [emitQueueJoin]
   );
 
   // Auto-join from URL parameter (e.g. ?jamCode=JAM410)

@@ -109,6 +109,14 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
     }
   }, [partnerPseudonym, inviteModalOpen]);
 
+  // Auto-register roomCode on server if in solo/practice so invite link is always live on server
+  React.useEffect(() => {
+    if (roomCode && onRegisterPrivateRoom && (partnerPseudonym.includes('Nova') || partnerPseudonym.includes('AI'))) {
+      console.log('[Jam] Registering roomCode on server from Playground:', roomCode);
+      onRegisterPrivateRoom(roomCode);
+    }
+  }, [roomCode, onRegisterPrivateRoom, partnerPseudonym]);
+
   // Incoming socket game action
   const [lastAction, setLastAction] = React.useState<{
     action: string;
@@ -521,6 +529,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
               <button
                 type="button"
                 onClick={() => {
+                  onRegisterPrivateRoom?.(roomCode);
                   window.open(inviteLink, '_blank');
                   setInviteModalOpen(false);
                 }}

@@ -118,19 +118,20 @@ export class AnonymousConnectService {
     this.logger.log(`joinQueue: client=${client.id}, roomCode=${payload.roomCode}, hasUser=${Boolean(user)}`);
     if (!user) return;
 
+    const roomCode = payload.roomCode?.trim().toUpperCase();
+
     // 1. Guard against duplicate rapid queue_join emissions from an already-matched socket
     const currentSessionId = this.socketToSession.get(client.id);
     if (currentSessionId) {
       const existingSession = this.sessions.get(currentSessionId);
-      // If this client was matched in an active session within the last 15 seconds, ignore duplicate joinQueue!
-      if (existingSession && Date.now() - existingSession.createdAt < 15000) {
+      // If this client was matched in an active session within the last 15 seconds and no roomCode is specified, ignore duplicate
+      if (existingSession && Date.now() - existingSession.createdAt < 15000 && !roomCode) {
         this.logger.log(`[SafeGuard] Ignoring duplicate joinQueue for client ${client.id} who was matched ${Date.now() - existingSession.createdAt}ms ago in session ${currentSessionId}`);
         return;
       }
     }
 
     // 2. If client is already waiting in THIS private room, don't leave and re-enter
-    const roomCode = payload.roomCode?.trim().toUpperCase();
     if (roomCode) {
       const existingWaiting = this.privateRooms.get(roomCode);
       if (existingWaiting && existingWaiting.socketId === client.id) {
