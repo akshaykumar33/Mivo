@@ -12,9 +12,6 @@ import {
   MessageSquare,
   Sparkles,
   Hash,
-  Languages,
-  Volume2,
-  Globe,
   CheckCheck,
   Smile,
   Heart,
@@ -29,9 +26,7 @@ import {
   X,
   Eye,
 } from 'lucide-react';
-import { translationManager } from '@/lib/translation-manager';
 import { storageClient } from '@/lib/storage-client';
-import { LanguageSelectorPopover } from './LanguageSelectorPopover';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
 import { GraphicalReaction } from '@/features/reactions';
 import {
@@ -66,8 +61,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   const userStatuses = usePresenceStore((s) => s.userStatuses);
   const [messages, setMessages] = React.useState<MessageDTO[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [chatTargetLang, setChatTargetLang] = React.useState('es');
-  const [translatedMessages, setTranslatedMessages] = React.useState<Record<string, string>>({});
+
   const [messageReactions, setMessageReactions] = React.useState<Record<string, Record<string, number>>>({});
   const [typingUsers, setTypingUsers] = React.useState<Record<string, string>>({});
   const [activeViewerFile, setActiveViewerFile] = React.useState<FileViewerItem | null>(null);
@@ -218,18 +212,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
     }
   };
 
-  const handleTranslateMessage = async (msgId: string, content: string) => {
-    if (translatedMessages[msgId]) {
-      setTranslatedMessages((prev) => {
-        const copy = { ...prev };
-        delete copy[msgId];
-        return copy;
-      });
-    } else {
-      const translated = await translationManager.translateText(content, chatTargetLang);
-      setTranslatedMessages((prev) => ({ ...prev, [msgId]: translated }));
-    }
-  };
 
   const handleAddReaction = (msgId: string, emoji: string) => {
     setMessageReactions((prev) => {
@@ -270,14 +252,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
             </span>
           )}
         </div>
-
-        {/* Global Translation Language Selector */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          <LanguageSelectorPopover
-            value={chatTargetLang}
-            onChange={setChatTargetLang}
-          />
-        </div>
       </div>
 
       {/* Message History Scroller */}
@@ -306,7 +280,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
             hour: '2-digit',
             minute: '2-digit',
           });
-          const translatedText = translatedMessages[msg.id];
           const reactions = messageReactions[msg.id] || {};
           const attachments = (msg.attachments as AttachmentMetaDTO[]) || [];
 
@@ -378,31 +351,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     >
                       <GraphicalReaction name="party" size="sm" />
                     </button>
-
-                    <div className="w-[1px] h-3.5 bg-white/[0.1] mx-0.5" />
-
-                    <button
-                      onClick={() => handleTranslateMessage(msg.id, msg.content)}
-                      className={`px-2 py-0.5 rounded-[8px] text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer ${
-                        translatedText
-                          ? 'bg-red-600 text-white'
-                          : 'text-[#71717A] hover:text-[#111827] hover:bg-black/[0.04]'
-                      }`}
-                      title="Translate message"
-                    >
-                      <Languages className="w-3 h-3 text-red-600" />
-                      <span>{translatedText ? 'Hide' : 'Translate'}</span>
-                    </button>
-
-                    {translatedText && (
-                      <button
-                        onClick={() => translationManager.speakText(translatedText, chatTargetLang)}
-                        className="p-1 rounded-md text-[#71717A] hover:text-red-600 transition-colors cursor-pointer"
-                        title="Listen to audio speech (TTS)"
-                      >
-                        <Volume2 className="w-3 h-3" />
-                      </button>
-                    )}
                   </div>
                 </div>
 
@@ -622,22 +570,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                   </div>
                 )}
 
-                {/* Translated Text Sub-Card with Native Badge */}
-                {translatedText && (
-                  <div className="mt-2 p-2.5 rounded-[14px] bg-red-500/10 border border-red-500/25 text-xs text-red-700 font-semibold flex items-center justify-between gap-2 shadow-sm">
-                    <span className="leading-relaxed flex items-center gap-1.5">
-                      <Globe className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                      <span>{translatedText}</span>
-                    </span>
-                    <button
-                      onClick={() => translationManager.speakText(translatedText, chatTargetLang)}
-                      className="p-1 rounded-md text-red-600 hover:text-red-700 hover:bg-black/[0.05] flex-shrink-0 cursor-pointer"
-                      title="Listen to Speech"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
 
                 {/* Reaction Badges List */}
                 {Object.keys(reactions).length > 0 && (
