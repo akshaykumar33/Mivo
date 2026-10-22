@@ -1529,6 +1529,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     this.anonymousConnectService.handleRevealRequest(this.server, client, data);
   }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_GAME_ACTION)
+  handleAnonGameAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; game: string; action: string; payload: any }
+  ) {
+    this.anonymousConnectService.handleGameAction(this.server, client, data);
+    return { success: true };
+  }
 }
 
 

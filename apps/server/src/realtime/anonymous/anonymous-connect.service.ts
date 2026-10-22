@@ -248,6 +248,29 @@ export class AnonymousConnectService {
   }
 
   /**
+   * Co-Op Canvas & Trivia Jam: Relays realtime game actions and state between paired peers
+   */
+  handleGameAction(
+    server: Server,
+    client: Socket,
+    data: { sessionId: string; game: string; action: string; payload: any }
+  ) {
+    if (!data?.sessionId) return;
+    const session = this.sessions.get(data.sessionId);
+    if (!session) return;
+
+    // Relay to partner in the anon session room
+    client.to(`anon:${data.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, {
+      sessionId: data.sessionId,
+      senderSocketId: client.id,
+      game: data.game,
+      action: data.action,
+      payload: data.payload,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
    * Creates an active session pairing two users
    */
   private createSession(server: Server, user1: QueueEntry, user2: QueueEntry) {

@@ -153,6 +153,7 @@ export const REALTIME_EVENTS = {
   ANON_REVEAL_REQUEST: 'anon:reveal_request',
   ANON_REVEAL_ACCEPTED: 'anon:reveal_accepted',
   ANON_MEDIA_SIGNAL: 'anon:media_signal',
+  ANON_GAME_ACTION: 'anon:game_action',
 } as const;
 
 export interface ChatReactionPayload {
@@ -436,4 +437,20 @@ export interface AnonRevealAcceptedBroadcast {
     displayName: string;
     avatarUrl: string | null;
   };
+}
+
+export interface AnonGameActionPayload {
+  sessionId: string;
+  game: string;
+  action: string;
+  payload: any;
+}
+
+export interface AnonGameActionBroadcast {
+  sessionId: string;
+  senderSocketId: string;
+  game: string;
+  action: string;
+  payload: any;
+  timestamp: number;
 }
