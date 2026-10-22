@@ -7,7 +7,6 @@ export const CreateChannelSchema = z.object({
     .max(64, 'Channel name cannot exceed 64 characters')
     .regex(/^[a-z0-9-]+$/, 'Channel name must be lowercase alphanumeric with hyphens'),
   topic: z.string().max(255).optional(),
-  type: z.enum(['TEXT', 'VOICE', 'MEDIA', 'GENERAL']).default('GENERAL'),
   isPrivate: z.boolean().default(false),
   position: z.number().int().nonnegative().optional(),
 });

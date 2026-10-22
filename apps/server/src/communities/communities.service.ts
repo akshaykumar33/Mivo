@@ -133,7 +133,6 @@ export class CommunitiesService {
         communityId: c.communityId,
         name: c.name,
         topic: c.topic,
-        type: c.type,
         position: c.position,
         isPrivate: c.isPrivate,
         createdAt: c.createdAt.toISOString(),
@@ -208,7 +207,6 @@ export class CommunitiesService {
         communityId: result.id,
         name: 'general',
         topic: 'General discussions and welcome area',
-        type: 'GENERAL',
         position: 0,
       },
     });
@@ -227,7 +225,6 @@ export class CommunitiesService {
         communityId: result.id,
         name: 'voice-lounge',
         topic: 'Voice huddles and group calls',
-        type: 'VOICE',
         position: 1,
       },
     });

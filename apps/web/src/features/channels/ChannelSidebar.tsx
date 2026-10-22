@@ -222,13 +222,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
                 {/* Channel Row Header */}
                 <div className="flex items-center justify-between group px-2 py-1 rounded-[10px] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.03] transition-colors">
                   <div className="flex items-center gap-2 truncate">
-                    {channel.type === 'VOICE' ? (
-                      <Volume2 className="w-3.5 h-3.5 text-[#059669] flex-shrink-0" />
-                    ) : channel.type === 'MEDIA' ? (
-                      <Video className="w-3.5 h-3.5 text-[#0284C7] flex-shrink-0" />
-                    ) : (
-                      <Hash className="w-3.5 h-3.5 text-[#DC2626] flex-shrink-0" />
-                    )}
+                    <Hash className="w-3.5 h-3.5 text-[#DC2626] flex-shrink-0" />
                     <span className="truncate text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-display text-[11px] uppercase tracking-wider font-bold">
                       {channel.name}
                     </span>

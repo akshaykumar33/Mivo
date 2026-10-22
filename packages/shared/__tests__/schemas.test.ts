@@ -69,7 +69,6 @@ describe('Shared Zod Schemas Validation Suite', () => {
     it('validates a valid channel creation input', () => {
       const valid = {
         name: 'voice-huddle',
-        type: 'VOICE',
         isPrivate: false,
       };
       const result = CreateChannelSchema.safeParse(valid);

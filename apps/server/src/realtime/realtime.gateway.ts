@@ -41,6 +41,7 @@ import {
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(RealtimeGateway.name);
+  private readonly roomJoinLocks = new Set<string>();
   @WebSocketServer()
   server: Server;
 
@@ -210,29 +211,32 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!client.data.rooms) client.data.rooms = new Set<string>();
     client.data.rooms.add(roomId);
 
-    try {
-      // Create or update room membership in DB
-      let member = await prisma.roomMember.findUnique({
-        where: { roomId_userId: { roomId, userId: user.sub } },
-        include: { user: true, room: true },
-      });
+    const lockKey = `${roomId}:${user.sub}`;
+    if (this.roomJoinLocks.has(lockKey)) {
+      return;
+    }
+    this.roomJoinLocks.add(lockKey);
 
-      if (member) {
-        await prisma.roomMember.update({
-          where: { id: member.id },
-          data: { joinedAt: new Date() },
+    try {
+      // Create or update room membership in DB atomically with race-resilience
+      let member: any;
+      try {
+        member = await prisma.roomMember.upsert({
+          where: { roomId_userId: { roomId, userId: user.sub } },
+          update: { joinedAt: new Date() },
+          create: { roomId, userId: user.sub },
+          include: { user: true, room: true },
         });
-      } else {
-        try {
-          member = await prisma.roomMember.create({
-            data: { roomId, userId: user.sub },
-            include: { user: true, room: true },
-          });
-        } catch {
-          member = await prisma.roomMember.findUnique({
-            where: { roomId_userId: { roomId, userId: user.sub } },
-            include: { user: true, room: true },
-          });
+      } catch {
+        member = await prisma.roomMember.findUnique({
+          where: { roomId_userId: { roomId, userId: user.sub } },
+          include: { user: true, room: true },
+        });
+        if (member) {
+          await prisma.roomMember.update({
+            where: { id: member.id },
+            data: { joinedAt: new Date() },
+          }).catch(() => {});
         }
       }
 
@@ -300,6 +304,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       });
     } catch (err: any) {
       this.logger.error(`Error in handleRoomJoin for user ${user?.sub} in room ${roomId}: ${err.message}`);
+    } finally {
+      this.roomJoinLocks.delete(lockKey);
     }
   }
 
