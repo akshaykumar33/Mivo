@@ -20,6 +20,7 @@ import { E2eeService } from './e2ee/e2ee.service.js';
 import { AmbientFocusService } from './focus/ambient-focus.service.js';
 import { MiniAppsService } from './activities/mini-apps.service.js';
 import { AiTwinService } from '../ai/ai-twin.service.js';
+import { AnonymousConnectService } from './anonymous/anonymous-connect.service.js';
 import {
   REALTIME_EVENTS,
   PresenceHeartbeatPayload,
@@ -31,6 +32,8 @@ import {
   RoomMemberDTO,
   MessageDTO,
   DirectMessageDTO,
+  AnonQueueJoinPayload,
+  AnonMessagePayload,
 } from '@mivo/shared';
 
 @WebSocketGateway({
@@ -43,6 +46,7 @@ import {
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(RealtimeGateway.name);
   private readonly roomJoinLocks = new Set<string>();
+  private readonly guestChatCooldowns = new Map<string, number>();
   @WebSocketServer()
   server: Server;
 
@@ -59,6 +63,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private e2eeService: E2eeService,
     private ambientFocusService: AmbientFocusService,
     private miniAppsService: MiniAppsService,
+    private anonymousConnectService: AnonymousConnectService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -127,6 +132,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   async handleDisconnect(client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    this.guestChatCooldowns.delete(client.id);
+
     const user = client.data?.user;
     if (user?.sub) {
       const isFullyOffline = await this.presenceService.setUserOffline(user.sub, client.id);
@@ -538,6 +546,29 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const trimmedContent = data.content?.trim() || '';
     if (!trimmedContent && (!data.attachments || data.attachments.length === 0)) {
       return { success: false, error: 'Message content or attachments required' };
+    }
+
+    // Guest restrictions enforcement
+    if (user.isGuest) {
+      const now = Date.now();
+      const last = this.guestChatCooldowns.get(client.id) || 0;
+      if (now - last < 3000) {
+        return {
+          success: false,
+          error: 'Guest account limit: 3-second cooldown between messages. Upgrade to chat without limits.',
+        };
+      }
+      this.guestChatCooldowns.set(client.id, now);
+
+      if (data.attachments && data.attachments.length > 0) {
+        const hasLarge = data.attachments.some((a: any) => (a.size || 0) > 2 * 1024 * 1024);
+        if (hasLarge) {
+          return {
+            success: false,
+            error: 'Guest accounts cannot send attachments larger than 2MB.',
+          };
+        }
+      }
     }
 
     try {
@@ -1431,6 +1462,74 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_CLOSE, { roomId: data.roomId });
     return { success: closed };
   }
+
+  // -------------------------------------------------------------
+  // 8. Anonymous & Guest Random Discovery & Speed Connect
+  // -------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_QUEUE_JOIN)
+  handleAnonQueueJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonQueueJoinPayload
+  ) {
+    this.anonymousConnectService.joinQueue(this.server, client, data || { mode: 'TEXT' });
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_QUEUE_LEAVE)
+  handleAnonQueueLeave(@ConnectedSocket() client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_NEXT)
+  handleAnonNext(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonQueueJoinPayload
+  ) {
+    this.anonymousConnectService.nextMatch(this.server, client, data || { mode: 'TEXT' });
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_END)
+  handleAnonEnd(@ConnectedSocket() client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_SEND_MESSAGE)
+  handleAnonSendMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonMessagePayload
+  ) {
+    this.anonymousConnectService.sendMessage(this.server, client, data);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_TYPING)
+  handleAnonTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; isTyping: boolean }
+  ) {
+    this.anonymousConnectService.handleTyping(this.server, client, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_MEDIA_SIGNAL)
+  handleAnonMediaSignal(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; signal: any }
+  ) {
+    this.anonymousConnectService.handleMediaSignal(this.server, client, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_REVEAL_REQUEST)
+  handleAnonRevealRequest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string }
+  ) {
+    this.anonymousConnectService.handleRevealRequest(this.server, client, data);
+  }
 }
+
 
 

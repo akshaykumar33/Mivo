@@ -5,6 +5,7 @@ import { SfuEngineService } from './sfu/sfu-engine.service.js';
 import { E2eeService } from './e2ee/e2ee.service.js';
 import { AmbientFocusService } from './focus/ambient-focus.service.js';
 import { MiniAppsService } from './activities/mini-apps.service.js';
+import { AnonymousConnectService } from './anonymous/anonymous-connect.service.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { AiModule } from '../ai/ai.module.js';
@@ -18,6 +19,7 @@ import { AiModule } from '../ai/ai.module.js';
     E2eeService,
     AmbientFocusService,
     MiniAppsService,
+    AnonymousConnectService,
   ],
   exports: [
     RealtimeGateway,
@@ -26,6 +28,7 @@ import { AiModule } from '../ai/ai.module.js';
     E2eeService,
     AmbientFocusService,
     MiniAppsService,
+    AnonymousConnectService,
   ],
 })
 export class RealtimeModule {}

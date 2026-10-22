@@ -307,6 +307,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     <span className="text-xs font-bold text-[#111827] hover:underline cursor-pointer truncate">
                       {msg.sender?.displayName || msg.sender?.username}
                     </span>
+                    {(msg.sender?.isGuest || msg.sender?.username?.startsWith('guest_')) && (
+                      <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30">
+                        Guest
+                      </span>
+                    )}
                     {senderCustomStatus && (
                       <span
                         className="text-[10px] text-[#DC2626] font-semibold bg-red-500/10 px-1.5 py-0.5 rounded-full border border-red-500/20 truncate max-w-[130px]"

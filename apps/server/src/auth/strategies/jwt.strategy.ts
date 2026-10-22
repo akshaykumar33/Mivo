@@ -14,10 +14,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
-    const user = await prisma.user.findUnique({
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    const user: any = await prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, username: true, displayName: true, status: true, deletedAt: true },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        displayName: true,
+        status: true,
+        isGuest: true,
+        deletedAt: true,
+      } as any,
     });
 
     if (!user || user.deletedAt) {
@@ -32,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       username: user.username,
       displayName: user.displayName,
+      isGuest: Boolean(user.isGuest),
     };
   }
 }

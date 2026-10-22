@@ -148,7 +148,19 @@ export class CommunitiesService {
   }
 
   async createCommunity(userId: string, input: CreateCommunityInput): Promise<CommunityDTO> {
-    // 0. Single Organization Policy: Check if user already belongs to any organization
+    // 0. Guest restriction check
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true } as any,
+    });
+    if ((user as any)?.isGuest) {
+      throw new ForbiddenException({
+        code: 'GUEST_RESTRICTED',
+        message: 'Guest accounts cannot create organizations. Please create or upgrade to a full account to unlock organization ownership.',
+      });
+    }
+
+    // Single Organization Policy: Check if user already belongs to any organization
     const existingMembership = await prisma.communityMember.findFirst({
       where: { userId },
       include: { community: true },

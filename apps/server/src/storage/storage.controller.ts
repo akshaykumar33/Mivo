@@ -12,6 +12,7 @@ import {
   Res,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
@@ -40,6 +41,13 @@ export class StorageController {
     @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(PresignedUrlRequestSchema)) body: PresignedUrlRequest
   ): Promise<ApiResponse<PresignedUrlResponseDTO>> {
+    if (user.isGuest && body.fileSize > 2 * 1024 * 1024) {
+      throw new ForbiddenException({
+        code: 'GUEST_FILE_LIMIT',
+        message: 'Guest accounts cannot upload files larger than 2MB. Please upgrade to a full account for high-capacity file sharing.',
+      });
+    }
+
     const result = await this.storageService.getPresignedUploadUrl(user.sub, body);
     return {
       success: true,
@@ -59,6 +67,13 @@ export class StorageController {
       throw new BadRequestException({
         code: 'FILE_REQUIRED',
         message: 'No file provided in form upload',
+      });
+    }
+
+    if (user.isGuest && file.size > 2 * 1024 * 1024) {
+      throw new ForbiddenException({
+        code: 'GUEST_FILE_LIMIT',
+        message: 'Guest accounts cannot upload files larger than 2MB. Please upgrade to a full account for high-capacity file sharing.',
       });
     }
 

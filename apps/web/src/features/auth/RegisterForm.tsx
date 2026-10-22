@@ -7,6 +7,7 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import { AuthSessionResponse } from '@mivo/shared';
 import Link from 'next/link';
+import { GuestLoginCard } from './GuestLoginCard';
 
 export const RegisterForm: React.FC = () => {
   const router = useRouter();
@@ -98,6 +99,11 @@ export const RegisterForm: React.FC = () => {
           Create Account
         </Button>
       </form>
+
+      {/* Or Join Instantly as Guest */}
+      <div className="mt-5 pt-4 border-t border-[var(--border-subtle)]">
+        <GuestLoginCard />
+      </div>
 
       <div className="mt-6 text-center text-xs text-[#71717A]">
         Already have an account?{' '}

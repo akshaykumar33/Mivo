@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { useAuthStore } from '@/stores/authStore';
 import { RoomModeSwitcher } from './RoomModeSwitcher';
 
 export interface RoomHeaderProps {
@@ -51,6 +52,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
   const { toggleMobileSidebar, isSidebarCollapsed, toggleSidebarCollapse } = useNavigationStore();
+  const setAnonConnectModalOpen = useAuthStore((s) => s.setAnonConnectModalOpen);
 
   // Keyboard shortcut Ctrl+\ or Cmd+\ to collapse/expand sidebar tray
   React.useEffect(() => {
@@ -198,6 +200,16 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2] group-hover:text-white transition-colors" />
             <span className="hidden xl:inline">AI Notes & MOM</span>
+          </button>
+
+          {/* Anonymous Speed Connect Trigger */}
+          <button
+            onClick={() => setAnonConnectModalOpen(true)}
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-rose-600 hover:!text-white bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-600 transition-all cursor-pointer shadow-sm group"
+            title="Connect with Anonymous Users & Guests"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-colors" />
+            <span className="hidden xl:inline">Anon Connect</span>
           </button>
 
           {/* System User Documentation */}

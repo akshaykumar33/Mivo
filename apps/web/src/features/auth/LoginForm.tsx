@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { AuthSessionResponse } from '@mivo/shared';
 import { Sparkles, ArrowRight, ShieldCheck, Palette, Cpu, Radio, Lock, Mail, CheckCircle2, AlertCircle, Crown } from 'lucide-react';
 import Link from 'next/link';
+import { GuestLoginCard } from './GuestLoginCard';
 
 export const LoginForm: React.FC = () => {
   const router = useRouter();
@@ -137,8 +138,13 @@ export const LoginForm: React.FC = () => {
         </button>
       </form>
 
+      {/* Instant Guest Access Card */}
+      <div className="mt-5 relative z-10">
+        <GuestLoginCard />
+      </div>
+
       {/* 1-Click Demo Profiles */}
-      <div className="mt-8 pt-6 border-t border-[var(--border-subtle)] relative z-10">
+      <div className="mt-6 pt-5 border-t border-[var(--border-subtle)] relative z-10">
         <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[#71717A] mb-3.5">
           <span className="flex items-center gap-1.5 text-red-600 font-semibold">
             <Sparkles className="w-3.5 h-3.5" />

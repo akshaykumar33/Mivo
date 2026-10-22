@@ -138,6 +138,21 @@ export const REALTIME_EVENTS = {
   CRDT_SYNC_BATCH: 'crdt:sync_batch',
   CRDT_SYNC_ACK: 'crdt:sync_ack',
   CRDT_STATE_DELTA: 'crdt:state_delta',
+
+  // 8. Anonymous & Guest Random Discovery & Speed Connect
+  ANON_QUEUE_JOIN: 'anon:queue_join',
+  ANON_QUEUE_LEAVE: 'anon:queue_leave',
+  ANON_QUEUE_STATUS: 'anon:queue_status',
+  ANON_MATCHED: 'anon:matched',
+  ANON_NEXT: 'anon:next',
+  ANON_END: 'anon:end',
+  ANON_PARTNER_LEFT: 'anon:partner_left',
+  ANON_SEND_MESSAGE: 'anon:send_message',
+  ANON_MESSAGE_RECEIVED: 'anon:message_received',
+  ANON_TYPING: 'anon:typing',
+  ANON_REVEAL_REQUEST: 'anon:reveal_request',
+  ANON_REVEAL_ACCEPTED: 'anon:reveal_accepted',
+  ANON_MEDIA_SIGNAL: 'anon:media_signal',
 } as const;
 
 export interface ChatReactionPayload {
@@ -378,5 +393,47 @@ export interface VoiceTicketConfirmPayload {
     category?: string;
     suggestedAssignee?: string;
     communityId?: string;
+  };
+}
+
+export interface AnonQueueJoinPayload {
+  mode: 'TEXT' | 'VIDEO';
+  interests?: string[];
+  pseudonym?: string;
+}
+
+export interface AnonMatchedPayload {
+  sessionId: string;
+  roomId?: string;
+  partner: {
+    userId: string;
+    pseudonym: string;
+    avatarUrl?: string;
+    isGuest: boolean;
+    interests?: string[];
+  };
+  mode: 'TEXT' | 'VIDEO';
+}
+
+export interface AnonMessagePayload {
+  sessionId: string;
+  content: string;
+}
+
+export interface AnonMessageBroadcast {
+  sessionId: string;
+  senderId: string;
+  senderPseudonym: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface AnonRevealAcceptedBroadcast {
+  sessionId: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
   };
 }

@@ -17,6 +17,8 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useTicketStore } from '@/stores/ticketStore';
 import { useRouter, usePathname } from 'next/navigation';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { GuestModeBanner, UpgradeGuestModal } from '@/features/auth';
+import { AnonymousConnectModal } from '@/features/anonymous';
 
 export default function DashboardLayout({
   children,
@@ -78,38 +80,43 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-screen w-screen bg-[var(--bg-canvas)] flex overflow-hidden select-none relative">
-      {/* Desktop Leftmost Community Icon Rail */}
-      <div className="hidden md:flex h-full flex-shrink-0">
-        <CommunitySidebar />
-      </div>
+    <div className="h-screen w-screen bg-[var(--bg-canvas)] flex flex-col overflow-hidden select-none relative">
+      {/* Sticky Guest Mode Restrictions Banner */}
+      <GuestModeBanner />
 
-      {/* Mobile Slide-Over Overlay Drawer */}
-      {isMobileSidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex pointer-events-auto animate-fade-in">
-          {/* Glass Backdrop */}
-          <div
-            onClick={closeMobileSidebar}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
-          />
-
-          {/* Drawer container: Community Rail + Channels List */}
-          <div className="relative z-50 flex h-full max-w-[92vw] shadow-2xl animate-slide-right overflow-hidden border-r border-[var(--border-subtle)]">
-            <CommunitySidebar onNavigate={closeMobileSidebar} />
-            {activeCommunity && !pathname.startsWith('/conversations') && (
-              <ChannelSidebar
-                communityId={activeCommunity.id}
-                className="flex w-[230px] sm:w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex-col justify-between select-none flex-shrink-0"
-              />
-            )}
-          </div>
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Desktop Leftmost Community Icon Rail */}
+        <div className="hidden md:flex h-full flex-shrink-0">
+          <CommunitySidebar />
         </div>
-      )}
 
-      {/* Main Dynamic Workspace Area */}
-      <main className="flex-1 flex overflow-hidden relative bg-[var(--bg-canvas)]">
-        {children}
-      </main>
+        {/* Mobile Slide-Over Overlay Drawer */}
+        {isMobileSidebarOpen && (
+          <div className="md:hidden fixed inset-0 z-50 flex pointer-events-auto animate-fade-in">
+            {/* Glass Backdrop */}
+            <div
+              onClick={closeMobileSidebar}
+              className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+            />
+
+            {/* Drawer container: Community Rail + Channels List */}
+            <div className="relative z-50 flex h-full max-w-[92vw] shadow-2xl animate-slide-right overflow-hidden border-r border-[var(--border-subtle)]">
+              <CommunitySidebar onNavigate={closeMobileSidebar} />
+              {activeCommunity && !pathname.startsWith('/conversations') && (
+                <ChannelSidebar
+                  communityId={activeCommunity.id}
+                  className="flex w-[230px] sm:w-[270px] h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex-col justify-between select-none flex-shrink-0"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Main Dynamic Workspace Area */}
+        <main className="flex-1 flex overflow-hidden relative bg-[var(--bg-canvas)]">
+          {children}
+        </main>
+      </div>
 
       {/* Global Realtime Audio Calling & Modals */}
       <IncomingCallModal />
@@ -122,6 +129,10 @@ export default function DashboardLayout({
 
       {/* Global Visual Theme Engine Modal */}
       <ThemeSwitcherModal />
+
+      {/* Global Guest & Anonymous Modals */}
+      <UpgradeGuestModal />
+      <AnonymousConnectModal />
     </div>
   );
 }
