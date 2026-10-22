@@ -132,6 +132,16 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
     if (next) sounds.playPop();
   };
 
+  // Set of fast-path action listeners to bypass React state batching for continuous real-time movements
+  const actionListenersRef = React.useRef<Set<(action: string, payload: any) => void>>(new Set());
+
+  const subscribeToActions = React.useCallback((listener: (action: string, payload: any) => void) => {
+    actionListenersRef.current.add(listener);
+    return () => {
+      actionListenersRef.current.delete(listener);
+    };
+  }, []);
+
   // Socket listener for real-time game events
   React.useEffect(() => {
     const socket = realtime.getSocket();
@@ -142,6 +152,11 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
         return;
       }
 
+      // Ignore echoes of our own socket actions
+      if (broadcast.senderSocketId && socket.id && broadcast.senderSocketId === socket.id) {
+        return;
+      }
+
       // If partner changed the game tab
       if (broadcast.action === 'SWITCH_GAME') {
         setActiveGame(broadcast.payload.gameId);
@@ -149,6 +164,15 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
         onGameEventNotice?.(`${partnerPseudonym} switched to ${broadcast.payload.gameId}!`);
         return;
       }
+
+      // Immediate fast-path dispatch to active game component (zero state batching lag)
+      actionListenersRef.current.forEach((listener) => {
+        try {
+          listener(broadcast.action, broadcast.payload);
+        } catch (err) {
+          console.error('[Jam] Error in game action listener:', err);
+        }
+      });
 
       setLastAction({
         action: broadcast.action,
@@ -353,6 +377,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -366,6 +391,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -379,6 +405,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -392,6 +419,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -404,6 +432,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -416,6 +445,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -428,6 +458,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}
@@ -440,6 +471,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onScoreUpdate={handleScoreUpdate}
             sendAction={sendAction}
             lastAction={lastAction}
+            subscribeToActions={subscribeToActions}
             botMode={partnerPseudonym.includes('AI') || playMode === 'BOT'}
           />
         )}

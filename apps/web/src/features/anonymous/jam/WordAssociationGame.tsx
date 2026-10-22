@@ -12,6 +12,7 @@ interface WordAssociationGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -31,6 +32,7 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [chain, setChain] = React.useState<ChainItem[]>([
@@ -85,33 +87,49 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
   }, [timeLeft, gameOver, isMyTurn, myPseudonym, partnerPseudonym, onScoreUpdate]);
 
   // Remote actions sync
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
-    if (action === 'WORD_SUBMIT') {
-      setChain((prev) => [...prev, payload.item]);
-      setIsMyTurn(payload.nextPlayer === myPseudonym);
+  const resetGame = React.useCallback(
+    (starterWord?: string) => {
+      const starter = starterWord || STARTER_WORDS[Math.floor(Math.random() * STARTER_WORDS.length)];
+      setChain([{ word: starter, author: 'System', points: 0 }]);
+      setIsMyTurn(isFirstPlayer);
       setTimeLeft(12);
-      setStreak((s) => s + 1);
+      setGameOver(false);
+      setLoserName(null);
       setFeedback(null);
-      sounds.playPop();
-    } else if (action === 'WORD_RESET') {
-      resetGame(payload.starter);
-    }
-  }, [lastAction, myPseudonym]);
+      setStreak(0);
+      setInputWord('');
+    },
+    [isFirstPlayer]
+  );
 
-  const resetGame = (starterWord?: string) => {
-    const starter = starterWord || STARTER_WORDS[Math.floor(Math.random() * STARTER_WORDS.length)];
-    setChain([{ word: starter, author: 'System', points: 0 }]);
-    setIsMyTurn(isFirstPlayer);
-    setTimeLeft(12);
-    setGameOver(false);
-    setLoserName(null);
-    setFeedback(null);
-    setStreak(0);
-    setInputWord('');
-  };
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'WORD_SUBMIT') {
+        setChain((prev) => [...prev, payload.item]);
+        setIsMyTurn(payload.nextPlayer === myPseudonym);
+        setTimeLeft(12);
+        setStreak((s) => s + 1);
+        setFeedback(null);
+        sounds.playPop();
+      } else if (action === 'WORD_RESET') {
+        resetGame(payload.starter);
+      }
+    },
+    [myPseudonym, resetGame]
+  );
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   const handleSubmitWord = (e: React.FormEvent) => {
     e.preventDefault();

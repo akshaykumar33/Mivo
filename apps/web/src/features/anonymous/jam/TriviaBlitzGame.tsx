@@ -11,6 +11,7 @@ interface TriviaBlitzGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -81,6 +82,7 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [qIndex, setQIndex] = React.useState(0);
@@ -115,11 +117,8 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
     }
   }, [timeLeft, showAnswer]);
 
-  // Sync remote actions
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback((action: string, payload: any) => {
     if (action === 'TRIVIA_ANSWER') {
       setPartnerAnswer(payload.choiceIndex);
       sounds.playPop();
@@ -131,7 +130,19 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
       setTimeLeft(12);
       sounds.playPop();
     }
-  }, [lastAction]);
+  }, []);
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // When both answer, reveal
   React.useEffect(() => {

@@ -31,6 +31,7 @@ interface SpeedDoodlingGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -71,6 +72,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -161,29 +163,8 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     }
   }, [timeLeft, timerActive, roundSolved, targetWord]);
 
-  // Sync actions from partner
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
-    if (action === 'DOODLE_DRAW') {
-      drawRemotePoint(payload);
-    } else if (action === 'DOODLE_CLEAR') {
-      clearCanvas(false);
-    } else if (action === 'DOODLE_SOLVED') {
-      setRoundSolved(true);
-      setTimerActive(false);
-      setWinnerName(payload.winnerName);
-      setFeedback(`🎉 ${payload.winnerName} got it! The word was "${payload.word}"`);
-      sounds.playCorrect();
-      onScoreUpdate(100, payload.winnerName === myPseudonym);
-    } else if (action === 'DOODLE_NEW_ROUND') {
-      resetRound(payload.wordIndex, payload.nextDrawer === myPseudonym);
-    }
-  }, [lastAction]);
-
   // Draw remote stroke
-  const drawRemotePoint = (pt: StrokePoint) => {
+  const drawRemotePoint = React.useCallback((pt: StrokePoint) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -203,7 +184,40 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     } else if (pt.type === 'end') {
       ctx.closePath();
     }
-  };
+  }, []);
+
+  // Sync actions from partner (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'DOODLE_DRAW') {
+        drawRemotePoint(payload);
+      } else if (action === 'DOODLE_CLEAR') {
+        clearCanvas(false);
+      } else if (action === 'DOODLE_SOLVED') {
+        setRoundSolved(true);
+        setTimerActive(false);
+        setWinnerName(payload.winnerName);
+        setFeedback(`🎉 ${payload.winnerName} got it! The word was "${payload.word}"`);
+        sounds.playCorrect();
+        onScoreUpdate(100, payload.winnerName === myPseudonym);
+      } else if (action === 'DOODLE_NEW_ROUND') {
+        resetRound(payload.wordIndex, payload.nextDrawer === myPseudonym);
+      }
+    },
+    [drawRemotePoint, myPseudonym, onScoreUpdate]
+  );
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // Local drawing handlers
   const getCanvasPos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -220,6 +234,8 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     };
   };
 
+  const lastDrawEmitRef = React.useRef({ x: 0, y: 0, time: 0 });
+
   const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawer || roundSolved) return;
     setIsDrawing(true);
@@ -227,7 +243,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
 
-    const strokeColor = isEraser ? '#0A0B10' : color;
+    const strokeColor = isEraser ? '#0D0F18' : color;
     const width = isEraser ? brushWidth * 3 : brushWidth;
 
     ctx.strokeStyle = strokeColor;
@@ -237,6 +253,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     ctx.beginPath();
     ctx.moveTo(x, y);
 
+    lastDrawEmitRef.current = { x, y, time: Date.now() };
     sendAction('DOODLE_DRAW', { x, y, type: 'start', color: strokeColor, width });
   };
 
@@ -246,12 +263,21 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
 
+    // Local canvas draws immediately for instant local responsiveness
     ctx.lineTo(x, y);
     ctx.stroke();
 
-    const strokeColor = isEraser ? '#0A0B10' : color;
+    const strokeColor = isEraser ? '#0D0F18' : color;
     const width = isEraser ? brushWidth * 3 : brushWidth;
-    sendAction('DOODLE_DRAW', { x, y, type: 'draw', color: strokeColor, width });
+
+    const dx = x - lastDrawEmitRef.current.x;
+    const dy = y - lastDrawEmitRef.current.y;
+    const now = Date.now();
+    // Emit if moved at least 2px or after 18ms
+    if (dx * dx + dy * dy >= 4 || now - lastDrawEmitRef.current.time >= 18) {
+      lastDrawEmitRef.current = { x, y, time: now };
+      sendAction('DOODLE_DRAW', { x, y, type: 'draw', color: strokeColor, width });
+    }
   };
 
   const handlePointerUp = () => {

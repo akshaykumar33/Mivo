@@ -11,6 +11,7 @@ interface ReflexClashGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -30,6 +31,7 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [state, setState] = React.useState<RoundState>('READY');
@@ -41,20 +43,57 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
   const startTimeRef = React.useRef<number>(0);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Sync remote actions
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
+  // Begin Waiting Phase
+  const beginWaitingPhase = React.useCallback((delayMs?: number) => {
+    setState('WAITING');
+    setMyMs(null);
+    setPartnerMs(null);
 
-    if (action === 'REFLEX_TAP') {
-      setPartnerMs(payload.ms);
+    const delay = delayMs || 2000 + Math.random() * 3000;
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      startTimeRef.current = Date.now();
+      setState('CLICK_NOW');
       sounds.playPop();
-    } else if (action === 'REFLEX_START_WAITING') {
-      beginWaitingPhase(payload.delay);
-    } else if (action === 'REFLEX_RESET') {
-      resetMatch();
+    }, delay);
+  }, []);
+
+  const resetMatch = React.useCallback(() => {
+    setState('READY');
+    setRoundNumber(1);
+    setRoundResults([]);
+    setMyMs(null);
+    setPartnerMs(null);
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'REFLEX_TAP') {
+        setPartnerMs(payload.ms);
+        sounds.playPop();
+      } else if (action === 'REFLEX_START_WAITING') {
+        beginWaitingPhase(payload.delay);
+      } else if (action === 'REFLEX_RESET') {
+        resetMatch();
+      }
+    },
+    [beginWaitingPhase, resetMatch]
+  );
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
     }
-  }, [lastAction]);
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // When both tap or fail, compute winner of round
   React.useEffect(() => {
@@ -95,22 +134,6 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
     }
   }, [myMs, partnerMs, state, myPseudonym, partnerPseudonym, roundNumber]);
 
-  // Begin Waiting Phase
-  const beginWaitingPhase = (delayMs?: number) => {
-    setState('WAITING');
-    setMyMs(null);
-    setPartnerMs(null);
-
-    const delay = delayMs || 2000 + Math.random() * 3000;
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      startTimeRef.current = Date.now();
-      setState('CLICK_NOW');
-      sounds.playPop();
-    }, delay);
-  };
-
   const handleStartRound = () => {
     const delay = 2000 + Math.random() * 3000;
     beginWaitingPhase(delay);
@@ -140,15 +163,6 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
     setState('READY');
     setMyMs(null);
     setPartnerMs(null);
-  };
-
-  const resetMatch = () => {
-    setRoundNumber(1);
-    setRoundResults([]);
-    setState('READY');
-    setMyMs(null);
-    setPartnerMs(null);
-    if (timerRef.current) clearTimeout(timerRef.current);
   };
 
   // Bot simulation

@@ -377,17 +377,10 @@ export class AnonymousConnectService {
       timestamp: Date.now(),
     };
 
-    // 1. Direct delivery to partner socket
+    // Deliver action ONLY to partner (exclude sender)
     if (partner?.socketId) {
       server.to(partner.socketId).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
-      const partnerSocket = this.getSocket(server, partner.socketId);
-      if (partnerSocket) {
-        partnerSocket.emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
-      }
     }
-
-    // 2. Room broadcasts (covers Redis adapter and root namespace)
-    server.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
     client.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
   }
 

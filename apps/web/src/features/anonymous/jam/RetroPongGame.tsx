@@ -12,6 +12,7 @@ interface RetroPongGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -23,6 +24,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -41,7 +43,12 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
   const [gameOver, setGameOver] = React.useState(false);
   const [winner, setWinner] = React.useState<string | null>(null);
 
-  // Physics refs
+  // Realtime physics and state refs to avoid closure stalls
+  const p1ScoreRef = React.useRef(0);
+  const p2ScoreRef = React.useRef(0);
+  const gameOverRef = React.useRef(false);
+  const winnerRef = React.useRef<string | null>(null);
+
   const p1YRef = React.useRef(COURT_H / 2 - PADDLE_H / 2);
   const p2YRef = React.useRef(COURT_H / 2 - PADDLE_H / 2);
   const ballRef = React.useRef({
@@ -52,34 +59,15 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
     speed: 5.5,
   });
   const syncFrameRef = React.useRef(0);
+  const lastMoveEmitRef = React.useRef(0);
 
-  const isHost = isHostPlayer; // Player 1 is Host, controls the ball loop if live
-
-  // Remote actions
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
-    if (action === 'PONG_MOVE') {
-      if (isHost) {
-        p2YRef.current = payload.y;
-      } else {
-        p1YRef.current = payload.y;
-      }
-    } else if (action === 'PONG_BALL_SYNC' && !isHost) {
-      ballRef.current = payload.ball;
-      setP1Score(payload.p1Score);
-      setP2Score(payload.p2Score);
-      if (payload.gameOver) {
-        setGameOver(true);
-        setWinner(payload.winner);
-      }
-    } else if (action === 'PONG_RESET') {
-      resetGame();
-    }
-  }, [lastAction, isHost]);
+  const isHost = isHostPlayer; // Player 1 is Host, authoritative physics
 
   const resetGame = () => {
+    p1ScoreRef.current = 0;
+    p2ScoreRef.current = 0;
+    gameOverRef.current = false;
+    winnerRef.current = null;
     setP1Score(0);
     setP2Score(0);
     setGameOver(false);
@@ -95,6 +83,64 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
     };
   };
 
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'PONG_MOVE') {
+        if (isHost) {
+          p2YRef.current = payload.y;
+        } else {
+          p1YRef.current = payload.y;
+        }
+      } else if (action === 'PONG_BALL_SYNC' && !isHost) {
+        ballRef.current = payload.ball;
+        p1ScoreRef.current = payload.p1Score;
+        p2ScoreRef.current = payload.p2Score;
+        setP1Score(payload.p1Score);
+        setP2Score(payload.p2Score);
+        if (payload.gameOver) {
+          gameOverRef.current = true;
+          winnerRef.current = payload.winner;
+          setGameOver(true);
+          setWinner(payload.winner);
+        }
+      } else if (action === 'PONG_RESET') {
+        resetGame();
+      }
+    },
+    [isHost]
+  );
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
+
+  // Paddle movement dispatcher with ~25ms throttle
+  const updatePaddlePosition = React.useCallback(
+    (clampedY: number) => {
+      if (isHost) {
+        p1YRef.current = clampedY;
+      } else {
+        p2YRef.current = clampedY;
+      }
+
+      const now = Date.now();
+      if (now - lastMoveEmitRef.current >= 25) {
+        lastMoveEmitRef.current = now;
+        sendAction('PONG_MOVE', { y: clampedY });
+      }
+    },
+    [isHost, sendAction]
+  );
+
   // Mouse / Touch controller for local paddle
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -103,14 +149,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
     const scaleY = COURT_H / rect.height;
     const clientY = (e.clientY - rect.top) * scaleY;
     const clampedY = Math.max(0, Math.min(COURT_H - PADDLE_H, clientY - PADDLE_H / 2));
-
-    if (isHost) {
-      p1YRef.current = clampedY;
-      sendAction('PONG_MOVE', { y: clampedY });
-    } else {
-      p2YRef.current = clampedY;
-      sendAction('PONG_MOVE', { y: clampedY });
-    }
+    updatePaddlePosition(clampedY);
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -120,17 +159,29 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
     const scaleY = COURT_H / rect.height;
     const clientY = (e.touches[0].clientY - rect.top) * scaleY;
     const clampedY = Math.max(0, Math.min(COURT_H - PADDLE_H, clientY - PADDLE_H / 2));
-
-    if (isHost) {
-      p1YRef.current = clampedY;
-      sendAction('PONG_MOVE', { y: clampedY });
-    } else {
-      p2YRef.current = clampedY;
-      sendAction('PONG_MOVE', { y: clampedY });
-    }
+    updatePaddlePosition(clampedY);
   };
 
-  // Game Loop
+  // Keyboard controls (Arrow keys or W/S)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameOverRef.current) return;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        const currentY = isHost ? p1YRef.current : p2YRef.current;
+        const newY = Math.max(0, currentY - 24);
+        updatePaddlePosition(newY);
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        const currentY = isHost ? p1YRef.current : p2YRef.current;
+        const newY = Math.min(COURT_H - PADDLE_H, currentY + 24);
+        updatePaddlePosition(newY);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isHost, updatePaddlePosition]);
+
+  // Main 60 FPS Game Loop
   React.useEffect(() => {
     let animId: number;
 
@@ -168,8 +219,8 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
       ctx.fillRect(COURT_W - 20 - PADDLE_W, p2YRef.current, PADDLE_W, PADDLE_H);
       ctx.shadowBlur = 0;
 
-      // Host controls ball physics
-      if (isHost && !gameOver) {
+      // Host controls authoritative ball physics
+      if (isHost && !gameOverRef.current) {
         const ball = ballRef.current;
         ball.x += ball.vx;
         ball.y += ball.vy;
@@ -223,12 +274,16 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
         // Scoring
         if (ball.x < 0) {
           // P2 scores
-          const nextP2 = p2Score + 1;
+          const nextP2 = p2ScoreRef.current + 1;
+          p2ScoreRef.current = nextP2;
           setP2Score(nextP2);
           sounds.playBounce();
           if (nextP2 >= WINNING_SCORE) {
+            gameOverRef.current = true;
+            const wName = isHost ? partnerPseudonym : myPseudonym;
+            winnerRef.current = wName;
             setGameOver(true);
-            setWinner(isHost ? partnerPseudonym : myPseudonym);
+            setWinner(wName);
             sounds.playFanfare();
             onScoreUpdate(100, !isHost);
           }
@@ -238,12 +293,16 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
           ball.vy = 2.5 * (Math.random() > 0.5 ? 1 : -1);
         } else if (ball.x > COURT_W) {
           // P1 scores
-          const nextP1 = p1Score + 1;
+          const nextP1 = p1ScoreRef.current + 1;
+          p1ScoreRef.current = nextP1;
           setP1Score(nextP1);
           sounds.playBounce();
           if (nextP1 >= WINNING_SCORE) {
+            gameOverRef.current = true;
+            const wName = isHost ? myPseudonym : partnerPseudonym;
+            winnerRef.current = wName;
             setGameOver(true);
-            setWinner(isHost ? myPseudonym : partnerPseudonym);
+            setWinner(wName);
             sounds.playFanfare();
             onScoreUpdate(100, isHost);
           }
@@ -253,16 +312,29 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
           ball.vy = 2.5 * (Math.random() > 0.5 ? 1 : -1);
         }
 
-        // Sync ball state to peer (throttled to ~20-30 fps to keep websocket connection smooth)
+        // Sync ball state to peer (throttled to ~20 fps to avoid saturation)
         syncFrameRef.current++;
-        if (syncFrameRef.current % 3 === 0 || gameOver) {
+        if (syncFrameRef.current % 3 === 0 || gameOverRef.current) {
           sendAction('PONG_BALL_SYNC', {
             ball,
-            p1Score,
-            p2Score,
-            gameOver,
-            winner,
+            p1Score: p1ScoreRef.current,
+            p2Score: p2ScoreRef.current,
+            gameOver: gameOverRef.current,
+            winner: winnerRef.current,
           });
+        }
+      } else if (!isHost && !gameOverRef.current) {
+        // Guest client dead reckoning interpolation between sync frames
+        const ball = ballRef.current;
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        if (ball.y <= BALL_SIZE / 2) {
+          ball.y = BALL_SIZE / 2;
+          ball.vy = Math.abs(ball.vy);
+        } else if (ball.y >= COURT_H - BALL_SIZE / 2) {
+          ball.y = COURT_H - BALL_SIZE / 2;
+          ball.vy = -Math.abs(ball.vy);
         }
       }
 
@@ -281,7 +353,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isHost, gameOver, p1Score, p2Score, botMode, partnerPseudonym]);
+  }, [isHost, botMode, partnerPseudonym, myPseudonym, onScoreUpdate, sendAction]);
 
   return (
     <div className="flex flex-col h-full bg-[#070913] text-white p-3 sm:p-4 select-none">

@@ -11,6 +11,7 @@ interface DilemmaDeckGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -100,6 +101,7 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [deckIndex, setDeckIndex] = React.useState(0);
@@ -126,11 +128,8 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
     }
   }, [deckIndex, currentDilemma]);
 
-  // Sync remote actions
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback((action: string, payload: any) => {
     if (action === 'DILEMMA_VOTE_WYR') {
       setPartnerWyrChoice(payload.choice);
       sounds.playPop();
@@ -141,7 +140,19 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
       setDeckIndex(payload.nextIndex);
       sounds.playPop();
     }
-  }, [lastAction]);
+  }, []);
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // Handle local WYR vote
   const handleVoteWyr = (choice: 'A' | 'B') => {

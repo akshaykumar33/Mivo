@@ -12,6 +12,7 @@ interface ConnectFourGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -28,6 +29,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [board, setBoard] = React.useState<CellValue[][]>(() =>
@@ -131,61 +133,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
     return { winner: null, cells: [] };
   };
 
-  // Drop disc into column
-  const dropDisc = (col: number, player: 1 | 2, notify = true) => {
-    if (winner) return;
-
-    // Find lowest available row in column
-    let targetRow = -1;
-    for (let r = ROWS - 1; r >= 0; r--) {
-      if (!board[r][col]) {
-        targetRow = r;
-        break;
-      }
-    }
-
-    if (targetRow === -1) return; // Column full
-
-    const newBoard = board.map((row) => [...row]);
-    newBoard[targetRow][col] = player;
-    setBoard(newBoard);
-    sounds.playBounce();
-
-    // Check Win
-    const winResult = checkWin(newBoard);
-    if (winResult.winner) {
-      setWinner(winResult.winner);
-      setWinningCells(winResult.cells);
-      sounds.playCorrect();
-      onScoreUpdate(100, winResult.winner === myPlayerNum);
-    } else {
-      // Check full board draw
-      const isDraw = newBoard.every((row) => row.every((c) => c !== null));
-      if (isDraw) {
-        setWinner('DRAW');
-      } else {
-        setCurrentTurn(player === 1 ? 2 : 1);
-      }
-    }
-
-    if (notify) {
-      sendAction('CONNECT4_MOVE', { col, player });
-    }
-  };
-
-  // Remote sync
-  React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
-    if (action === 'CONNECT4_MOVE') {
-      dropDisc(payload.col, payload.player, false);
-    } else if (action === 'CONNECT4_RESET') {
-      resetGame(false);
-    }
-  }, [lastAction]);
-
-  const resetGame = (notify = true) => {
+  const resetGame = React.useCallback((notify = true) => {
     setBoard(
       Array(ROWS)
         .fill(null)
@@ -198,7 +146,77 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
       sendAction('CONNECT4_RESET', {});
       sounds.playPop();
     }
-  };
+  }, [sendAction]);
+
+  // Drop disc into column
+  const dropDisc = React.useCallback(
+    (col: number, player: 1 | 2, notify = true) => {
+      setBoard((prevBoard) => {
+        // Find lowest available row in column
+        let targetRow = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (!prevBoard[r][col]) {
+            targetRow = r;
+            break;
+          }
+        }
+
+        if (targetRow === -1) return prevBoard; // Column full
+
+        const newBoard = prevBoard.map((row) => [...row]);
+        newBoard[targetRow][col] = player;
+        sounds.playBounce();
+
+        // Check Win
+        const winResult = checkWin(newBoard);
+        if (winResult.winner) {
+          setWinner(winResult.winner);
+          setWinningCells(winResult.cells);
+          sounds.playCorrect();
+          onScoreUpdate(100, winResult.winner === myPlayerNum);
+        } else {
+          // Check full board draw
+          const isDraw = newBoard.every((row) => row.every((c) => c !== null));
+          if (isDraw) {
+            setWinner('DRAW');
+          } else {
+            setCurrentTurn(player === 1 ? 2 : 1);
+          }
+        }
+
+        return newBoard;
+      });
+
+      if (notify) {
+        sendAction('CONNECT4_MOVE', { col, player });
+      }
+    },
+    [myPlayerNum, onScoreUpdate, sendAction]
+  );
+
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'CONNECT4_MOVE') {
+        dropDisc(payload.col, payload.player, false);
+      } else if (action === 'CONNECT4_RESET') {
+        resetGame(false);
+      }
+    },
+    [dropDisc, resetGame]
+  );
+
+  React.useEffect(() => {
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
+    }
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // Bot move simulation
   React.useEffect(() => {

@@ -11,6 +11,7 @@ interface EmojiDecoderGameProps {
   onScoreUpdate: (points: number, isSelf: boolean) => void;
   sendAction: (action: string, payload: any) => void;
   lastAction: { action: string; payload: any; timestamp: number } | null;
+  subscribeToActions?: (listener: (action: string, payload: any) => void) => () => void;
   botMode: boolean;
 }
 
@@ -88,6 +89,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
   onScoreUpdate,
   sendAction,
   lastAction,
+  subscribeToActions,
   botMode,
 }) => {
   const [riddleIndex, setRiddleIndex] = React.useState(0);
@@ -101,32 +103,47 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
   const target = currentRiddle.answer.toUpperCase();
 
   // Reset riddle
-  const resetRiddle = (nextIdx?: number) => {
-    const idx = nextIdx !== undefined ? nextIdx : (riddleIndex + 1) % EMOJI_RIDDLES.length;
-    setRiddleIndex(idx);
-    setGuess('');
-    setSolved(false);
-    setWinnerName(null);
-    setFeedback(null);
-    setShowHint(false);
-  };
+  const resetRiddle = React.useCallback(
+    (nextIdx?: number) => {
+      const idx = nextIdx !== undefined ? nextIdx : (riddleIndex + 1) % EMOJI_RIDDLES.length;
+      setRiddleIndex(idx);
+      setGuess('');
+      setSolved(false);
+      setWinnerName(null);
+      setFeedback(null);
+      setShowHint(false);
+    },
+    [riddleIndex]
+  );
 
-  // Sync remote actions
+  // Action handler (direct subscription or lastAction fallback)
+  const handleAction = React.useCallback(
+    (action: string, payload: any) => {
+      if (action === 'EMOJI_SOLVED') {
+        setSolved(true);
+        setWinnerName(payload.winnerName);
+        setFeedback(`🎉 ${payload.winnerName} solved it! "${currentRiddle.answer}"`);
+        sounds.playCorrect();
+        onScoreUpdate(100, payload.winnerName === myPseudonym);
+      } else if (action === 'EMOJI_NEXT') {
+        resetRiddle(payload.nextIndex);
+        sounds.playPop();
+      }
+    },
+    [currentRiddle.answer, myPseudonym, onScoreUpdate, resetRiddle]
+  );
+
   React.useEffect(() => {
-    if (!lastAction) return;
-    const { action, payload } = lastAction;
-
-    if (action === 'EMOJI_SOLVED') {
-      setSolved(true);
-      setWinnerName(payload.winnerName);
-      setFeedback(`🎉 ${payload.winnerName} solved it! "${currentRiddle.answer}"`);
-      sounds.playCorrect();
-      onScoreUpdate(100, payload.winnerName === myPseudonym);
-    } else if (action === 'EMOJI_NEXT') {
-      resetRiddle(payload.nextIndex);
-      sounds.playPop();
+    if (subscribeToActions) {
+      return subscribeToActions(handleAction);
     }
-  }, [lastAction, myPseudonym, currentRiddle.answer]);
+  }, [subscribeToActions, handleAction]);
+
+  React.useEffect(() => {
+    if (!subscribeToActions && lastAction) {
+      handleAction(lastAction.action, lastAction.payload);
+    }
+  }, [subscribeToActions, lastAction, handleAction]);
 
   // Submit guess
   const handleGuessSubmit = (e: React.FormEvent) => {
