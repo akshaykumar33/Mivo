@@ -118,6 +118,27 @@ export class AnonymousConnectService {
     this.logger.log(`joinQueue: client=${client.id}, roomCode=${payload.roomCode}, hasUser=${Boolean(user)}`);
     if (!user) return;
 
+    // 1. Guard against duplicate rapid queue_join emissions from an already-matched socket
+    const currentSessionId = this.socketToSession.get(client.id);
+    if (currentSessionId) {
+      const existingSession = this.sessions.get(currentSessionId);
+      // If this client was matched in an active session within the last 15 seconds, ignore duplicate joinQueue!
+      if (existingSession && Date.now() - existingSession.createdAt < 15000) {
+        this.logger.log(`[SafeGuard] Ignoring duplicate joinQueue for client ${client.id} who was matched ${Date.now() - existingSession.createdAt}ms ago in session ${currentSessionId}`);
+        return;
+      }
+    }
+
+    // 2. If client is already waiting in THIS private room, don't leave and re-enter
+    const roomCode = payload.roomCode?.trim().toUpperCase();
+    if (roomCode) {
+      const existingWaiting = this.privateRooms.get(roomCode);
+      if (existingWaiting && existingWaiting.socketId === client.id) {
+        this.logger.log(`Client ${client.id} is already registered in private room ${roomCode}`);
+        return;
+      }
+    }
+
     // Leave any existing session or queue first
     this.leaveSessionOrQueue(server, client);
 
@@ -134,7 +155,6 @@ export class AnonymousConnectService {
     };
 
     // Private Jam Room Matching by Room Code
-    const roomCode = payload.roomCode?.trim().toUpperCase();
     if (roomCode) {
       const existing = this.privateRooms.get(roomCode);
       this.logger.log(`privateRooms lookup for ${roomCode}: existing=${existing ? existing.socketId : 'none'}, current=${client.id}`);
@@ -258,29 +278,43 @@ export class AnonymousConnectService {
    * Relays typing event
    */
   handleTyping(server: Server, client: Socket, data: { sessionId: string; isTyping: boolean }) {
-    const session = this.sessions.get(data.sessionId);
+    const sessionId = data?.sessionId || this.socketToSession.get(client.id);
+    if (!sessionId) return;
+    const session = this.sessions.get(sessionId);
     if (!session) return;
 
     const sender = session.user1.socketId === client.id ? session.user1 : session.user2;
-    client.to(`anon:${data.sessionId}`).emit(REALTIME_EVENTS.ANON_TYPING, {
-      sessionId: data.sessionId,
+    const partner = session.user1.socketId === client.id ? session.user2 : session.user1;
+    const typingPayload = {
+      sessionId: session.sessionId,
       senderPseudonym: sender.pseudonym,
       isTyping: data.isTyping,
-    });
+    };
+    if (partner?.socketId) {
+      server.to(partner.socketId).emit(REALTIME_EVENTS.ANON_TYPING, typingPayload);
+    }
+    client.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_TYPING, typingPayload);
   }
 
   /**
    * WebRTC signaling for anonymous video/voice calls
    */
   handleMediaSignal(server: Server, client: Socket, data: { sessionId: string; signal: any }) {
-    const session = this.sessions.get(data.sessionId);
+    const sessionId = data?.sessionId || this.socketToSession.get(client.id);
+    if (!sessionId) return;
+    const session = this.sessions.get(sessionId);
     if (!session) return;
 
-    client.to(`anon:${data.sessionId}`).emit(REALTIME_EVENTS.ANON_MEDIA_SIGNAL, {
-      sessionId: data.sessionId,
+    const partner = session.user1.socketId === client.id ? session.user2 : session.user1;
+    const signalPayload = {
+      sessionId: session.sessionId,
       signal: data.signal,
       fromSocketId: client.id,
-    });
+    };
+    if (partner?.socketId) {
+      server.to(partner.socketId).emit(REALTIME_EVENTS.ANON_MEDIA_SIGNAL, signalPayload);
+    }
+    client.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_MEDIA_SIGNAL, signalPayload);
   }
 
   /**
@@ -326,19 +360,34 @@ export class AnonymousConnectService {
     client: Socket,
     data: { sessionId: string; game: string; action: string; payload: any }
   ) {
-    if (!data?.sessionId) return;
-    const session = this.sessions.get(data.sessionId);
+    if (!data) return;
+    const sessionId = data.sessionId || this.socketToSession.get(client.id);
+    if (!sessionId) return;
+    const session = this.sessions.get(sessionId);
     if (!session) return;
 
-    // Relay to partner in the anon session room
-    client.to(`anon:${data.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, {
-      sessionId: data.sessionId,
+    const partner = session.user1.socketId === client.id ? session.user2 : session.user1;
+    const actionPayload = {
+      sessionId: session.sessionId,
       senderSocketId: client.id,
       game: data.game,
       action: data.action,
       payload: data.payload,
       timestamp: Date.now(),
-    });
+    };
+
+    // 1. Direct delivery to partner socket
+    if (partner?.socketId) {
+      server.to(partner.socketId).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
+      const partnerSocket = this.getSocket(server, partner.socketId);
+      if (partnerSocket) {
+        partnerSocket.emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
+      }
+    }
+
+    // 2. Room broadcasts (covers Redis adapter and root namespace)
+    server.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
+    client.to(`anon:${session.sessionId}`).emit(REALTIME_EVENTS.ANON_GAME_ACTION, actionPayload);
   }
 
   /**

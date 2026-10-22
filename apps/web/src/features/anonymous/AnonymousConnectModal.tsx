@@ -116,9 +116,17 @@ export const AnonymousConnectModal: React.FC = () => {
     return () => clearInterval(pulseInterval);
   }, [isMicMuted, state]);
 
-  // Resilient queue join emitter
+  // Resilient queue join emitter with strict debounce
+  const lastEmitTimeRef = React.useRef<number>(0);
   const emitQueueJoin = React.useCallback(
     (code?: string) => {
+      const now = Date.now();
+      if (now - lastEmitTimeRef.current < 1200) {
+        console.log('[Jam] Debouncing duplicate emitQueueJoin');
+        return;
+      }
+      lastEmitTimeRef.current = now;
+
       const payload: any = {
         mode,
         interests: selectedTags,
@@ -139,13 +147,11 @@ export const AnonymousConnectModal: React.FC = () => {
         const socket = realtime.getSocket();
         if (socket) {
           socket.once('connect', doEmit);
+        } else {
+          setTimeout(() => {
+            if (realtime.isConnected()) doEmit();
+          }, 500);
         }
-        setTimeout(() => {
-          if (realtime.isConnected()) doEmit();
-        }, 500);
-        setTimeout(() => {
-          if (realtime.isConnected()) doEmit();
-        }, 1500);
       }
     },
     [mode, selectedTags, pseudonym, isGuest]
@@ -168,9 +174,16 @@ export const AnonymousConnectModal: React.FC = () => {
       const cleanCode = code.trim().toUpperCase();
       setActiveRoomCode(cleanCode);
       setRoomCodeInput(cleanCode);
+
+      // If already connected to a real partner in active session, do not break session
+      if (partner && partner.userId !== 'bot-companion' && state === 'CONNECTED') {
+        console.log('[Jam] Already connected to partner, skipping re-queue on room invite open');
+        return;
+      }
+
       emitQueueJoin(cleanCode);
     },
-    [emitQueueJoin]
+    [emitQueueJoin, partner, state]
   );
 
   // Auto-join from URL parameter (e.g. ?jamCode=JAM410)
@@ -179,24 +192,32 @@ export const AnonymousConnectModal: React.FC = () => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const code = params.get('jamCode') || params.get('jam');
-    if (code) {
-      const cleanCode = code.trim().toUpperCase();
-      setAnonConnectModalOpen(true);
-      setMatchTab('PRIVATE');
-      setRoomCodeInput(cleanCode);
-      setActiveRoomCode(cleanCode);
+    if (!code) return;
 
-      if (autoJoinAttemptedRef.current !== cleanCode || state === 'IDLE') {
-        autoJoinAttemptedRef.current = cleanCode;
-        handleJoinPrivateJam(cleanCode);
-      }
-    }
-  }, [setAnonConnectModalOpen, handleJoinPrivateJam, state]);
+    const cleanCode = code.trim().toUpperCase();
+    if (autoJoinAttemptedRef.current === cleanCode) return;
+    autoJoinAttemptedRef.current = cleanCode;
 
-  // Socket Event Listeners
+    console.log('[Jam] Auto-joining private room from URL:', cleanCode);
+    setAnonConnectModalOpen(true);
+    setMatchTab('PRIVATE');
+    setRoomCodeInput(cleanCode);
+    setActiveRoomCode(cleanCode);
+    setState('SEARCHING');
+
+    // Clean up address bar query so browser navigation doesn't loop
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('jamCode');
+      url.searchParams.delete('jam');
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+
+    emitQueueJoin(cleanCode);
+  }, [setAnonConnectModalOpen, emitQueueJoin]);
+
+  // Socket Event Listeners - Always active to never miss match events
   React.useEffect(() => {
-    if (!anonConnectModalOpen) return;
-
     const handleQueueStatus = (data: { inQueue?: boolean; queueLength?: number; roomCode?: string }) => {
       if (typeof data.queueLength === 'number') {
         setQueueCount(data.queueLength);
@@ -207,6 +228,8 @@ export const AnonymousConnectModal: React.FC = () => {
     };
 
     const handleMatched = (data: AnonMatchedPayload) => {
+      console.log('[Jam] handleMatched received:', data);
+      setAnonConnectModalOpen(true);
       setCurrentSessionId(data.sessionId);
       setPartner(data.partner);
       if (typeof data.isHost === 'boolean') {
@@ -316,7 +339,7 @@ export const AnonymousConnectModal: React.FC = () => {
       realtime.off(REALTIME_EVENTS.ANON_REVEAL_ACCEPTED, handleRevealAccepted);
       realtime.off('error', handleError);
     };
-  }, [anonConnectModalOpen, user?.id]);
+  }, [user?.id]);
 
   // Scroll chat to bottom
   React.useEffect(() => {

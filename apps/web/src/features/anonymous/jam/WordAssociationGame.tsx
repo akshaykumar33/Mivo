@@ -43,6 +43,9 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
 
   const [inputWord, setInputWord] = React.useState('');
   const [isMyTurn, setIsMyTurn] = React.useState(isFirstPlayer);
+  React.useEffect(() => {
+    setIsMyTurn(isFirstPlayer);
+  }, [isFirstPlayer]);
   const [timeLeft, setTimeLeft] = React.useState(12);
   const [gameOver, setGameOver] = React.useState(false);
   const [loserName, setLoserName] = React.useState<string | null>(null);

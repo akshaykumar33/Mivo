@@ -51,6 +51,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
     vy: 3 * (Math.random() > 0.5 ? 1 : -1),
     speed: 5.5,
   });
+  const syncFrameRef = React.useRef(0);
 
   const isHost = isHostPlayer; // Player 1 is Host, controls the ball loop if live
 
@@ -252,14 +253,17 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
           ball.vy = 2.5 * (Math.random() > 0.5 ? 1 : -1);
         }
 
-        // Sync ball state to peer
-        sendAction('PONG_BALL_SYNC', {
-          ball,
-          p1Score,
-          p2Score,
-          gameOver,
-          winner,
-        });
+        // Sync ball state to peer (throttled to ~20-30 fps to keep websocket connection smooth)
+        syncFrameRef.current++;
+        if (syncFrameRef.current % 3 === 0 || gameOver) {
+          sendAction('PONG_BALL_SYNC', {
+            ball,
+            p1Score,
+            p2Score,
+            gameOver,
+            winner,
+          });
+        }
       }
 
       // Draw Ball

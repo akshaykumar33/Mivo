@@ -130,10 +130,12 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
     if (!socket || !sessionId) return;
 
     const handleGameAction = (broadcast: AnonGameActionBroadcast) => {
-      if (broadcast.sessionId !== sessionId) return;
+      if (sessionId && sessionId !== 'default_jam' && broadcast.sessionId && broadcast.sessionId !== sessionId) {
+        return;
+      }
 
       // If partner changed the game tab
-      if (broadcast.game && broadcast.action === 'SWITCH_GAME') {
+      if (broadcast.action === 'SWITCH_GAME') {
         setActiveGame(broadcast.payload.gameId);
         sounds.playPop();
         onGameEventNotice?.(`${partnerPseudonym} switched to ${broadcast.payload.gameId}!`);

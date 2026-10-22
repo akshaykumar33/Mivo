@@ -84,6 +84,9 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
   const [timeLeft, setTimeLeft] = React.useState(60);
   const [timerActive, setTimerActive] = React.useState(true);
   const [isDrawer, setIsDrawer] = React.useState(isMyTurnDrawer);
+  React.useEffect(() => {
+    setIsDrawer(isMyTurnDrawer);
+  }, [isMyTurnDrawer]);
   const [guessInput, setGuessInput] = React.useState('');
   const [feedback, setFeedback] = React.useState<string | null>(null);
   const [roundSolved, setRoundSolved] = React.useState(false);
