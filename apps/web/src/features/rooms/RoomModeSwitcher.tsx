@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { RoomCommunicationMode } from '@mivo/shared';
-import { MessageSquare, Mic, Video, Monitor, Radio } from 'lucide-react';
+import { MessageSquare, Mic, Video, Monitor, Radio, Palette, Code2 } from 'lucide-react';
 
 export interface RoomModeSwitcherProps {
   activeMode: RoomCommunicationMode;
@@ -19,6 +19,8 @@ export const RoomModeSwitcher: React.FC<RoomModeSwitcherProps> = ({
     { id: 'VIDEO', label: 'Video Meeting', icon: Video, color: 'from-[#64D2FF] to-[#0A84FF]' },
     { id: 'SCREEN_SHARE', label: 'Screen Share', icon: Monitor, color: 'from-[#5E5CE6] to-[#BF5AF2]' },
     { id: 'STREAM', label: 'Live Stage', icon: Radio, color: 'from-[#FF375F] to-[#FF453A]' },
+    { id: 'CANVAS', label: 'Canvas Stage', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]' },
+    { id: 'CODE', label: 'Code Stage', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]' },
   ];
 
   return (

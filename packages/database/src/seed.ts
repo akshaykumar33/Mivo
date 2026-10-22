@@ -270,7 +270,6 @@ export async function seed() {
       communityId: comm1.id,
       name: 'general',
       topic: 'Team updates and daily engineering discussions',
-      type: 'GENERAL',
       position: 0,
     },
   });
@@ -307,7 +306,6 @@ export async function seed() {
       communityId: comm1.id,
       name: 'voice-lounge',
       topic: 'Drop-in voice calls and open collaboration',
-      type: 'VOICE',
       position: 1,
     },
   });
@@ -332,7 +330,6 @@ export async function seed() {
       communityId: comm1.id,
       name: 'pair-programming',
       topic: 'Live code reviews and screen sharing sessions',
-      type: 'MEDIA',
       position: 2,
     },
   });
@@ -365,7 +362,6 @@ export async function seed() {
       communityId: comm2.id,
       name: 'critique',
       topic: 'Live design critiques and Figma walkthroughs',
-      type: 'GENERAL',
       position: 0,
     },
   });

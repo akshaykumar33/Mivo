@@ -15,11 +15,16 @@ import { AuthService } from './auth.service.js';
 import {
   RegisterRequestSchema,
   LoginRequestSchema,
+  GuestLoginSchema,
+  UpgradeGuestSchema,
   RegisterInput,
   LoginInput,
+  GuestLoginInput,
+  UpgradeGuestInput,
   ApiResponse,
   AuthSessionResponse,
   JwtPayload,
+  GuestLimitsDTO,
 } from '@mivo/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
@@ -118,6 +123,65 @@ export class AuthController {
     return {
       success: true,
       data: user,
+    };
+  }
+
+  @Post('guest')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(GuestLoginSchema))
+  async guestLogin(
+    @Body() body: GuestLoginInput,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<ApiResponse<AuthSessionResponse>> {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = req.ip;
+
+    const { session, refreshToken } = await this.authService.guestLogin(body, userAgent, ipAddress);
+
+    this.setRefreshTokenCookie(res, refreshToken);
+
+    return {
+      success: true,
+      data: session,
+    };
+  }
+
+  @Post('upgrade')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(UpgradeGuestSchema))
+  async upgradeGuest(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: UpgradeGuestInput,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<ApiResponse<AuthSessionResponse>> {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = req.ip;
+
+    const { session, refreshToken } = await this.authService.upgradeGuest(
+      user.sub,
+      body,
+      userAgent,
+      ipAddress
+    );
+
+    this.setRefreshTokenCookie(res, refreshToken);
+
+    return {
+      success: true,
+      data: session,
+    };
+  }
+
+  @Get('limits')
+  @UseGuards(JwtAuthGuard)
+  async getLimits(@CurrentUser() user: JwtPayload): Promise<ApiResponse<GuestLimitsDTO>> {
+    const limits = await this.authService.getGuestLimits(user.sub);
+    return {
+      success: true,
+      data: limits,
     };
   }
 

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -7,12 +8,19 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Inject, forwardRef } from '@nestjs/common';
+import { Inject, forwardRef, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { PresenceService } from './presence.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { AiService } from '../ai/ai.service.js';
 import { prisma } from '@mivo/database';
+import { SfuEngineService } from './sfu/sfu-engine.service.js';
+import { E2eeService } from './e2ee/e2ee.service.js';
+import { AmbientFocusService } from './focus/ambient-focus.service.js';
+import { MiniAppsService } from './activities/mini-apps.service.js';
+import { AiTwinService } from '../ai/ai-twin.service.js';
+import { AnonymousConnectService } from './anonymous/anonymous-connect.service.js';
 import {
   REALTIME_EVENTS,
   PresenceHeartbeatPayload,
@@ -24,6 +32,8 @@ import {
   RoomMemberDTO,
   MessageDTO,
   DirectMessageDTO,
+  AnonQueueJoinPayload,
+  AnonMessagePayload,
 } from '@mivo/shared';
 
 @WebSocketGateway({
@@ -34,6 +44,9 @@ import {
   namespace: '/',
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(RealtimeGateway.name);
+  private readonly roomJoinLocks = new Set<string>();
+  private readonly guestChatCooldowns = new Map<string, number>();
   @WebSocketServer()
   server: Server;
 
@@ -41,7 +54,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private jwtService: JwtService,
     private presenceService: PresenceService,
     @Inject(forwardRef(() => NotificationsService))
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => AiService))
+    private aiService: AiService,
+    @Inject(forwardRef(() => AiTwinService))
+    private aiTwinService: AiTwinService,
+    private sfuEngine: SfuEngineService,
+    private e2eeService: E2eeService,
+    private ambientFocusService: AmbientFocusService,
+    private miniAppsService: MiniAppsService,
+    private anonymousConnectService: AnonymousConnectService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -110,6 +132,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   async handleDisconnect(client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    this.guestChatCooldowns.delete(client.id);
+
     const user = client.data?.user;
     if (user?.sub) {
       const isFullyOffline = await this.presenceService.setUserOffline(user.sub, client.id);
@@ -195,83 +220,94 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!client.data.rooms) client.data.rooms = new Set<string>();
     client.data.rooms.add(roomId);
 
-    // Create or update room membership in DB
-    let member: any;
-    try {
-      member = await prisma.roomMember.upsert({
-        where: { roomId_userId: { roomId, userId: user.sub } },
-        update: { joinedAt: new Date() },
-        create: { roomId, userId: user.sub },
-        include: { user: true, room: true },
-      });
-    } catch (err) {
-      member = await prisma.roomMember.findFirst({
-        where: { roomId, userId: user.sub },
-        include: { user: true, room: true },
-      });
+    const lockKey = `${roomId}:${user.sub}`;
+    if (this.roomJoinLocks.has(lockKey)) {
+      return;
     }
-    if (!member) return;
+    this.roomJoinLocks.add(lockKey);
 
-    const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
+    try {
+      // Atomic upsert at PostgreSQL level to guarantee 0 race conditions on (roomId, userId)
+      const newMemberId = randomUUID();
+      await prisma.$executeRaw`
+        INSERT INTO "room_members" ("id", "roomId", "userId", "joinedAt", "isMuted", "isDeafened", "isCameraOn", "isScreenOn")
+        VALUES (${newMemberId}::uuid, ${roomId}::uuid, ${user.sub}::uuid, NOW(), false, false, false, false)
+        ON CONFLICT ("roomId", "userId")
+        DO UPDATE SET "joinedAt" = NOW()
+      `;
 
-    const participantDTO: RoomMemberDTO = {
-      id: member.id,
-      roomId: member.roomId,
-      userId: member.userId,
-      isMuted: member.isMuted,
-      isDeafened: member.isDeafened,
-      isCameraOn: member.isCameraOn,
-      isScreenOn: member.isScreenOn,
-      joinedAt: member.joinedAt.toISOString(),
-      user: {
-        id: member.user.id,
-        username: member.user.username,
-        displayName: member.user.displayName,
-        avatarUrl: member.user.avatarUrl,
-        status: member.user.status,
-        customStatus: isExpired(member.user.customStatusExpiresAt) ? null : member.user.customStatus,
-        customStatusExpiresAt: isExpired(member.user.customStatusExpiresAt) || !member.user.customStatusExpiresAt ? null : member.user.customStatusExpiresAt.toISOString(),
-      },
-    };
+      const member = await prisma.roomMember.findUnique({
+        where: { roomId_userId: { roomId, userId: user.sub } },
+        include: { user: true, room: true },
+      });
 
-    // Notify others in room
-    client.to(`room:${roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_JOINED, {
-      roomId,
-      participant: participantDTO,
-    });
+      if (!member) return;
 
-    // Send full room state snapshot back to the joiner
-    const allRoomMembers = await prisma.roomMember.findMany({
-      where: { roomId },
-      include: { user: true },
-    });
+      const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
 
-    client.emit(REALTIME_EVENTS.ROOM_JOINED, {
-      roomId,
-      activeMode: member.room.activeMode,
-      members: allRoomMembers.map((m) => {
-        const exp = isExpired(m.user.customStatusExpiresAt);
-        return {
-          id: m.id,
-          roomId: m.roomId,
-          userId: m.userId,
-          isMuted: m.isMuted,
-          isDeafened: m.isDeafened,
-          isCameraOn: m.isCameraOn,
-          isScreenOn: m.isScreenOn,
-          joinedAt: m.joinedAt.toISOString(),
-          user: {
-            id: m.user.id,
-            username: m.user.username,
-            displayName: m.user.displayName,
-            avatarUrl: m.user.avatarUrl,
-            status: m.user.status,
-            customStatus: exp ? null : m.user.customStatus,
-            customStatusExpiresAt: exp || !m.user.customStatusExpiresAt ? null : m.user.customStatusExpiresAt.toISOString(),
-          },
-        };
-      }),
-    });
+      const participantDTO: RoomMemberDTO = {
+        id: member.id,
+        roomId: member.roomId,
+        userId: member.userId,
+        isMuted: member.isMuted,
+        isDeafened: member.isDeafened,
+        isCameraOn: member.isCameraOn,
+        isScreenOn: member.isScreenOn,
+        joinedAt: member.joinedAt.toISOString(),
+        user: {
+          id: member.user.id,
+          username: member.user.username,
+          displayName: member.user.displayName,
+          avatarUrl: member.user.avatarUrl,
+          status: member.user.status,
+          customStatus: isExpired(member.user.customStatusExpiresAt) ? null : member.user.customStatus,
+          customStatusExpiresAt: isExpired(member.user.customStatusExpiresAt) || !member.user.customStatusExpiresAt ? null : member.user.customStatusExpiresAt.toISOString(),
+        },
+      };
+
+      // Notify others in room
+      client.to(`room:${roomId}`).emit(REALTIME_EVENTS.ROOM_PARTICIPANT_JOINED, {
+        roomId,
+        participant: participantDTO,
+      });
+
+      // Send full room state snapshot back to the joiner
+      const allRoomMembers = await prisma.roomMember.findMany({
+        where: { roomId },
+        include: { user: true },
+      });
+
+      client.emit(REALTIME_EVENTS.ROOM_JOINED, {
+        roomId,
+        activeMode: member.room.activeMode,
+        members: allRoomMembers.map((m) => {
+          const exp = isExpired(m.user.customStatusExpiresAt);
+          return {
+            id: m.id,
+            roomId: m.roomId,
+            userId: m.userId,
+            isMuted: m.isMuted,
+            isDeafened: m.isDeafened,
+            isCameraOn: m.isCameraOn,
+            isScreenOn: m.isScreenOn,
+            joinedAt: m.joinedAt.toISOString(),
+            user: {
+              id: m.user.id,
+              username: m.user.username,
+              displayName: m.user.displayName,
+              avatarUrl: m.user.avatarUrl,
+              status: m.user.status,
+              customStatus: exp ? null : m.user.customStatus,
+              customStatusExpiresAt: exp || !m.user.customStatusExpiresAt ? null : m.user.customStatusExpiresAt.toISOString(),
+            },
+          };
+        }),
+      });
+    } catch (err: any) {
+      this.logger.error(`Error in handleRoomJoin for user ${user?.sub} in room ${roomId}: ${err.message}`);
+    } finally {
+      this.roomJoinLocks.delete(lockKey);
+    }
   }
 
   @SubscribeMessage(REALTIME_EVENTS.ROOM_LEAVE)
@@ -510,6 +546,29 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const trimmedContent = data.content?.trim() || '';
     if (!trimmedContent && (!data.attachments || data.attachments.length === 0)) {
       return { success: false, error: 'Message content or attachments required' };
+    }
+
+    // Guest restrictions enforcement
+    if (user.isGuest) {
+      const now = Date.now();
+      const last = this.guestChatCooldowns.get(client.id) || 0;
+      if (now - last < 3000) {
+        return {
+          success: false,
+          error: 'Guest account limit: 3-second cooldown between messages. Upgrade to chat without limits.',
+        };
+      }
+      this.guestChatCooldowns.set(client.id, now);
+
+      if (data.attachments && data.attachments.length > 0) {
+        const hasLarge = data.attachments.some((a: any) => (a.size || 0) > 2 * 1024 * 1024);
+        if (hasLarge) {
+          return {
+            success: false,
+            error: 'Guest accounts cannot send attachments larger than 2MB.',
+          };
+        }
+      }
     }
 
     try {
@@ -901,5 +960,585 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     return { success: true };
   }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_AI_AGENT_ACTION)
+  async handleRoomAiAgentAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: {
+      roomId: string;
+      query: string;
+      roomName: string;
+      attendees: string[];
+      recentTranscript?: Array<{ speaker: string; text: string; time?: string }>;
+      communityId?: string;
+    }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false };
+
+    // Broadcast that AI Co-Host is actively thinking
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+      roomId: data.roomId,
+      status: 'THINKING',
+      query: data.query,
+    });
+
+    try {
+      const result = await this.aiService.processStageAgentCommand(
+        data.query,
+        data.roomName || 'Stage',
+        data.attendees || [],
+        data.recentTranscript || [],
+        data.communityId
+      );
+
+      // Broadcast the AI response, voice speech text, and pinned data tile to all room members
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'SPEAKING',
+        query: data.query,
+        speechText: result.speechText,
+        pinnedTile: result.pinnedTile,
+        factCheckAlert: result.factCheckAlert,
+        engine: result.engine,
+      });
+
+      if (result.shouldPinTile && result.pinnedTile) {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_PIN_TILE, {
+          roomId: data.roomId,
+          pinnedTile: result.pinnedTile,
+        });
+      }
+
+      if (result.factCheckAlert) {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_FACT_CHECK, {
+          roomId: data.roomId,
+          alert: result.factCheckAlert,
+        });
+      }
+
+      return { success: true, data: result };
+    } catch (err: any) {
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'IDLE',
+        error: err.message,
+      });
+      return { success: false, error: err.message };
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE)
+  handleDismissPinnedTile(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return;
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, {
+      roomId: data.roomId,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // 🎨 CANVAS / COLLABORATIVE WHITEBOARD & FLOWCHART STAGE
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_UPDATE)
+  handleCanvasUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    // Broadcast updates to other participants in the room
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_UPDATE, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_CURSOR)
+  handleCanvasCursor(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_CURSOR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_CLEAR)
+  handleCanvasClear(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return;
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_CLEAR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_CANVAS_AI_GENERATE)
+  async handleCanvasAiGenerate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; prompt: string }
+  ) {
+    if (!data?.roomId || !data?.prompt) return;
+    try {
+      const result = await this.aiService.generateCanvasArchitecture(data.prompt);
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_CANVAS_UPDATE, {
+        roomId: data.roomId,
+        elements: result.elements,
+        action: 'UPSERT',
+        summary: result.summary,
+        updatedBy: 'Mivo AI Architect',
+      });
+      return { success: true, data: result };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 🎧 3D SPATIAL AUDIO & DYNAMIC PHYSICS GRID
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_SPATIAL_AUDIO_UPDATE)
+  handleSpatialAudioUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_SPATIAL_AUDIO_UPDATE, data);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ⚡ SPOKEN VOICE-TO-TICKET AUTOMATION
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ROOM_VOICE_TICKET_CONFIRM)
+  async handleVoiceTicketConfirm(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ): Promise<any> {
+    const user = client.data.user;
+    if (!user || !data?.roomId || !data?.ticketProposal) return;
+
+    try {
+      // Find assignee user if name was suggested
+      let assigneeId: string | undefined = undefined;
+      if (data.ticketProposal.suggestedAssignee) {
+        const matched = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { displayName: { contains: data.ticketProposal.suggestedAssignee, mode: 'insensitive' } },
+              { username: { contains: data.ticketProposal.suggestedAssignee, mode: 'insensitive' } },
+            ],
+          },
+        });
+        if (matched) assigneeId = matched.id;
+      }
+
+      // Create the ticket in PostgreSQL
+      const createdTicket = await prisma.ticket.create({
+        data: {
+          title: data.ticketProposal.title,
+          description: data.ticketProposal.description || data.ticketProposal.title,
+          priority: data.ticketProposal.priority,
+          category: data.ticketProposal.category || 'Engineering',
+          creatorId: user.sub,
+          assigneeId: assigneeId,
+          communityId: data.ticketProposal.communityId,
+          status: 'OPEN',
+        },
+        include: { assignee: true, creator: true },
+      });
+
+      // Broadcast ticket created announcement to the room
+      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, {
+        roomId: data.roomId,
+        status: 'SPEAKING',
+        query: 'Confirm Ticket Creation',
+        speechText: `Ticket #${createdTicket.id.slice(0, 8)} "${createdTicket.title}" has been registered in the database with ${createdTicket.priority} priority.`,
+        createdTicket,
+      });
+
+      return { success: true, data: createdTicket };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  // ===========================================================================
+  // 1. ⚡ MEDIA PLANE: SFU ENGINE (Mediasoup / LiveKit Architecture)
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_GET_ROUTER_RTP_CAPABILITIES)
+  handleSfuGetRtpCapabilities(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false, error: 'Missing roomId' };
+    const rtpCapabilities = this.sfuEngine.getRtpCapabilities(data.roomId);
+    return { success: true, data: rtpCapabilities };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CREATE_TRANSPORT)
+  handleSfuCreateTransport(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; direction: 'send' | 'recv' }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false, error: 'Unauthorized or missing roomId' };
+    const transportOptions = this.sfuEngine.createTransport(data.roomId, user.sub, data.direction || 'send');
+    return { success: true, data: transportOptions };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CONNECT_TRANSPORT)
+  handleSfuConnectTransport(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; transportId: string; dtlsParameters: any }
+  ) {
+    if (!data?.roomId || !data?.transportId) return { success: false, error: 'Invalid parameters' };
+    const connected = this.sfuEngine.connectTransport(data.roomId, data.transportId, data.dtlsParameters);
+    return { success: connected };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_PRODUCE)
+  handleSfuProduce(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; kind: 'audio' | 'video'; simulcast?: boolean; initialLayer?: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.kind) return { success: false, error: 'Invalid parameters' };
+    const producer = this.sfuEngine.produce(data.roomId, user.sub, data.kind, data.simulcast, data.initialLayer);
+    
+    // Broadcast producer to other room participants so they can consume it
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.SFU_PRODUCE, {
+      roomId: data.roomId,
+      producer,
+      userId: user.sub,
+    });
+
+    return { success: true, data: producer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_CONSUME)
+  handleSfuConsume(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; producerId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.producerId) return { success: false, error: 'Invalid parameters' };
+    const consumer = this.sfuEngine.consume(data.roomId, user.sub, data.producerId);
+    return { success: !!consumer, data: consumer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_SET_PREFERRED_LAYERS)
+  handleSfuSetPreferredLayers(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; consumerId: string; spatialLayer: number }
+  ) {
+    if (!data?.roomId || !data?.consumerId) return { success: false };
+    const consumer = this.sfuEngine.setPreferredLayers(data.roomId, data.consumerId, data.spatialLayer);
+    return { success: !!consumer, data: consumer };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_STATS_UPDATE)
+  handleSfuStats(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; participantCount?: number }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const stats = this.sfuEngine.getRoomStats(data.roomId, data.participantCount);
+    return { success: true, data: stats };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.SFU_MODE_SWITCH)
+  handleSfuModeSwitch(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; mode: 'SFU_ROUTER' | 'P2P_MESH' }
+  ) {
+    if (!data?.roomId || !data?.mode) return { success: false };
+    const newMode = this.sfuEngine.toggleEngineMode(data.roomId, data.mode);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.SFU_MODE_SWITCH, {
+      roomId: data.roomId,
+      mode: newMode,
+    });
+    return { success: true, mode: newMode };
+  }
+
+  // ===========================================================================
+  // 2. 🛡️ MEDIA PLANE: END-TO-END ENCRYPTION (E2EE)
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_KEY_EXCHANGE)
+  handleE2eeKeyExchange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return { success: false };
+    const relayed = this.e2eeService.relayKeyPackage(data);
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.E2EE_KEY_EXCHANGE, relayed);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_EPOCH_ROTATED)
+  handleE2eeEpochRotated(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId) return { success: false };
+    const rotated = this.e2eeService.rotateEpoch(data.roomId, user.sub);
+    const safetyCode = this.e2eeService.getSafetyCode(data.roomId, rotated.epoch);
+
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.E2EE_EPOCH_ROTATED, {
+      roomId: data.roomId,
+      rotated,
+      safetyCode,
+    });
+
+    return { success: true, data: { rotated, safetyCode } };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.E2EE_VERIFY_SAFETY_CODE)
+  handleE2eeVerifySafetyCode(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; epoch?: number }
+  ) {
+    const user = client.data?.user;
+    if (!data?.roomId) return { success: false };
+    if (user?.sub) {
+      this.e2eeService.verifyParticipant(data.roomId, user.sub);
+    }
+    const safetyCode = this.e2eeService.getSafetyCode(data.roomId, data.epoch);
+    return { success: true, data: safetyCode };
+  }
+
+  // ===========================================================================
+  // 3. 💻 DEVELOPER DX: CODE_STAGE PAIR-PROGRAMMING SANDBOX
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_CHANGE)
+  handleCodeStageChange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_CHANGE, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_CURSOR)
+  handleCodeStageCursor(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_CURSOR, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.CODE_STAGE_EXECUTE)
+  handleCodeStageExecute(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
+  ) {
+    if (!data?.roomId) return;
+    client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CODE_STAGE_EXECUTE, data);
+  }
+
+  // ===========================================================================
+  // 4. 🤖 PRESENCE: AI TWIN & OUT OF OFFICE PERSONA
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.AI_TWIN_AUTO_REPLY)
+  async handleAiTwinAutoReply(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientUserId: string; message: string; channelId?: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.recipientUserId) return { success: false };
+    try {
+      const reply = await this.aiTwinService.generateAutoReply(data.recipientUserId, user.sub, data.message);
+      if (data.channelId) {
+        this.server.to(`channel:${data.channelId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, {
+          id: `msg_twin_${Date.now()}`,
+          channelId: data.channelId,
+          senderId: data.recipientUserId,
+          content: reply.replyContent,
+          isAiTwin: true,
+          proposedCallbackSlot: reply.proposedCallbackSlot,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      return { success: true, data: reply };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.AI_TWIN_SCHEDULE_CALLBACK)
+  async handleAiTwinScheduleCallback(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientUserId: string; slot: string; communityId?: string }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.recipientUserId || !data?.slot) return { success: false };
+    try {
+      const result = await this.aiTwinService.scheduleCallback(data.recipientUserId, user.sub, data.slot, data.communityId);
+      return { success: true, data: result };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ===========================================================================
+  // 5. 🎧 VIBE & FLOW: AMBIENT SPATIAL FOCUS ROOMS & POMODORO
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TIMER_SYNC)
+  handleFocusTimerSync(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const state = this.ambientFocusService.getOrCreateState(data.roomId);
+    return { success: true, data: state };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TIMER_ACTION)
+  handleFocusTimerAction(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; action: 'START' | 'PAUSE' | 'RESET' | 'START_BREAK'; durationMinutes?: number }
+  ) {
+    if (!data?.roomId || !data?.action) return { success: false };
+    const state = this.ambientFocusService.handleTimerAction(data.roomId, data.action, data.durationMinutes);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.FOCUS_TIMER_SYNC, state);
+    return { success: true, data: state };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.FOCUS_TRACK_CHANGE)
+  handleFocusTrackChange(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string; track: any; volume?: number; spatial?: number }
+  ) {
+    if (!data?.roomId || !data?.track) return { success: false };
+    const state = this.ambientFocusService.setAmbientTrack(data.roomId, data.track, data.volume, data.spatial);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.FOCUS_TIMER_SYNC, state);
+    return { success: true, data: state };
+  }
+
+  // ===========================================================================
+  // 6. 🧩 EXTENSIBILITY: MIVO MINI-APPS / ACTIVITY SANDBOXES
+  // ===========================================================================
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_LAUNCH)
+  handleActivityLaunch(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; type: any; initialPayload?: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.type) return { success: false };
+    const activity = this.miniAppsService.launchActivity(data.roomId, data.type, user.sub, data.initialPayload);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, activity);
+    return { success: true, data: activity };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_ACTION)
+  handleActivityAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; actionType: string; payload: any }
+  ) {
+    const user = client.data?.user;
+    if (!user || !data?.roomId || !data?.actionType) return { success: false };
+    const updated = this.miniAppsService.handleAction(data.roomId, user.sub, data.actionType, data.payload);
+    if (updated) {
+      client.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_SYNC_STATE, updated);
+    }
+    return { success: true, data: updated };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ACTIVITY_CLOSE)
+  handleActivityClose(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { roomId: string }
+  ) {
+    if (!data?.roomId) return { success: false };
+    const closed = this.miniAppsService.closeActivity(data.roomId);
+    this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_CLOSE, { roomId: data.roomId });
+    return { success: closed };
+  }
+
+  // -------------------------------------------------------------
+  // 8. Anonymous & Guest Random Discovery & Speed Connect
+  // -------------------------------------------------------------
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_QUEUE_JOIN)
+  handleAnonQueueJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonQueueJoinPayload
+  ) {
+    this.anonymousConnectService.joinQueue(this.server, client, data || { mode: 'TEXT' });
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_QUEUE_LEAVE)
+  handleAnonQueueLeave(@ConnectedSocket() client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_NEXT)
+  handleAnonNext(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonQueueJoinPayload
+  ) {
+    this.anonymousConnectService.nextMatch(this.server, client, data || { mode: 'TEXT' });
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_END)
+  handleAnonEnd(@ConnectedSocket() client: Socket) {
+    this.anonymousConnectService.leaveSessionOrQueue(this.server, client);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_SEND_MESSAGE)
+  handleAnonSendMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AnonMessagePayload
+  ) {
+    this.anonymousConnectService.sendMessage(this.server, client, data);
+    return { success: true };
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_TYPING)
+  handleAnonTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; isTyping: boolean }
+  ) {
+    this.anonymousConnectService.handleTyping(this.server, client, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_MEDIA_SIGNAL)
+  handleAnonMediaSignal(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; signal: any }
+  ) {
+    this.anonymousConnectService.handleMediaSignal(this.server, client, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_REVEAL_REQUEST)
+  handleAnonRevealRequest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string }
+  ) {
+    this.anonymousConnectService.handleRevealRequest(this.server, client, data);
+  }
+
+  @SubscribeMessage(REALTIME_EVENTS.ANON_GAME_ACTION)
+  handleAnonGameAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { sessionId: string; game: string; action: string; payload: any }
+  ) {
+    this.anonymousConnectService.handleGameAction(this.server, client, data);
+    return { success: true };
+  }
 }
+
+
 

@@ -22,7 +22,7 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
       if (savedKey) {
         setStatus('VALID');
         setStatusMessage('Custom Gemini API Key active');
-        setDetectedModel('gemini-2.5-flash / gemini-3.7-pro');
+        setDetectedModel('gemini-3.8-flash / gemini-flash-latest');
       }
     }
   }, [isOpen]);
@@ -47,7 +47,7 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
         localStorage.setItem('mivo_gemini_api_key', apiKey.trim());
         setStatus('VALID');
         setStatusMessage(res.data.message || 'Key connected and saved successfully!');
-        setDetectedModel(res.data.model || 'gemini-2.5-flash');
+        setDetectedModel(res.data.model || 'gemini-3.8-flash');
       } else {
         setStatus('INVALID');
         setStatusMessage(res.data?.message || 'Invalid Gemini API key. Please check key permissions.');

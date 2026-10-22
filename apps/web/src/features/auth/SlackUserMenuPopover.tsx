@@ -43,7 +43,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
   onOpenThemeModal,
   placement = 'bottom-bar',
 }) => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, setUpgradeModalOpen, setAnonConnectModalOpen } = useAuthStore();
   const { updateAvailabilityAndStatus } = usePresenceStore();
   const presence = useUserPresence(user?.id, user);
   const popoverRef = React.useRef<HTMLDivElement>(null);
@@ -143,8 +143,13 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-[#111827] truncate">
-            {user.displayName || user.username}
+          <div className="text-xs font-bold text-[#111827] truncate flex items-center gap-1.5">
+            <span>{user.displayName || user.username}</span>
+            {user.isGuest && (
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30">
+                Guest
+              </span>
+            )}
           </div>
           <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
             <span>@{user.username}</span>
@@ -332,6 +337,30 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
         >
           <User className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           <span>Edit Profile & Avatar</span>
+        </button>
+
+        {user.isGuest && (
+          <button
+            onClick={() => {
+              onClose();
+              setUpgradeModalOpen(true);
+            }}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 transition-colors cursor-pointer text-xs font-bold border border-amber-500/25"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Upgrade to Full Account</span>
+          </button>
+        )}
+
+        <button
+          onClick={() => {
+            onClose();
+            setAnonConnectModalOpen(true);
+          }}
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[#111827]"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+          <span>Anonymous Speed Connect</span>
         </button>
 
         {onOpenThemeModal && (

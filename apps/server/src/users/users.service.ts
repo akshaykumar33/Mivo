@@ -66,6 +66,7 @@ export class UsersService {
       customStatus,
       customStatusExpiresAt: customStatusExpiresAt ? customStatusExpiresAt.toISOString() : null,
       status: user.status,
+      isGuest: Boolean((user as any).isGuest),
       createdAt: user.createdAt.toISOString(),
       lastSeenAt: user.lastSeenAt ? user.lastSeenAt.toISOString() : null,
     };
@@ -126,6 +127,7 @@ export class UsersService {
       customStatus: updated.customStatus,
       customStatusExpiresAt: expiresIso,
       status: updated.status,
+      isGuest: Boolean((updated as any).isGuest),
       createdAt: updated.createdAt.toISOString(),
       lastSeenAt: updated.lastSeenAt ? updated.lastSeenAt.toISOString() : null,
     };
@@ -191,6 +193,7 @@ export class UsersService {
       customStatus: updated.customStatus,
       customStatusExpiresAt: expiresIso,
       status: updated.status,
+      isGuest: Boolean((updated as any).isGuest),
       createdAt: updated.createdAt.toISOString(),
       lastSeenAt: updated.lastSeenAt ? updated.lastSeenAt.toISOString() : null,
     };
@@ -198,7 +201,7 @@ export class UsersService {
 
   async searchUsers(query?: string, currentUserId?: string): Promise<UserSummaryDTO[]> {
     const trimmed = query?.trim().toLowerCase();
-    const users = await prisma.user.findMany({
+    const users: any[] = await prisma.user.findMany({
       where: {
         deletedAt: null,
         ...(currentUserId && { id: { not: currentUserId } }),
@@ -219,9 +222,10 @@ export class UsersService {
         displayName: true,
         avatarUrl: true,
         status: true,
+        isGuest: true,
         customStatus: true,
         customStatusExpiresAt: true,
-      },
+      } as any,
     });
 
     return users.map((u) => {
@@ -232,6 +236,7 @@ export class UsersService {
         displayName: u.displayName,
         avatarUrl: u.avatarUrl,
         status: u.status,
+        isGuest: Boolean((u as any).isGuest),
         customStatus: expired ? null : u.customStatus,
         customStatusExpiresAt: expired || !u.customStatusExpiresAt ? null : u.customStatusExpiresAt.toISOString(),
       };

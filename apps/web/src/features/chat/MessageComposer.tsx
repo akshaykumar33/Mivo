@@ -10,6 +10,7 @@ import { GoogleMeetIcon, MicrosoftTeamsIcon } from '../meetings/ExternalMeetingI
 import { ExternalMeetingHubModal } from '../meetings/ExternalMeetingHubModal';
 import { UniversalFileViewerModal, FileViewerItem } from '@/features/files';
 import { GraphicalReaction, GRAPHICAL_REACTIONS } from '@/features/reactions';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface MessageComposerProps {
   roomId: string;
@@ -22,6 +23,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   roomName,
   onMessageSent,
 }) => {
+  const isGuest = useAuthStore((s) => s.isGuest);
   const [content, setContent] = React.useState('');
   const [stagedAttachments, setStagedAttachments] = React.useState<AttachmentMetaDTO[]>([]);
   const [previewFile, setPreviewFile] = React.useState<FileViewerItem | null>(null);
@@ -32,7 +34,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const [isMeetingModalOpen, setIsMeetingModalOpen] = React.useState(false);
   const [isCreatingQuickMeeting, setIsCreatingQuickMeeting] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [cooldownWarning, setCooldownWarning] = React.useState<string | null>(null);
 
+  const lastSentTimeRef = React.useRef<number>(0);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
   const meetingMenuRef = React.useRef<HTMLDivElement>(null);
@@ -87,6 +91,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    if (isGuest) {
+      const hasLarge = Array.from(files).some((f) => f.size > 2 * 1024 * 1024);
+      if (hasLarge) {
+        setCooldownWarning('Guest Limit: Files over 2MB are restricted. Upgrade to unlock 100MB uploads.');
+        setTimeout(() => setCooldownWarning(null), 4000);
+        return;
+      }
+    }
+
     setIsUploading(true);
 
     try {
@@ -112,6 +126,15 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const handleSend = async () => {
     const text = content.trim();
     if ((!text && stagedAttachments.length === 0) || isSending || isUploading) return;
+
+    // Guest rate-limiting cooldown enforcement
+    if (isGuest && lastSentTimeRef.current && Date.now() - lastSentTimeRef.current < 3000) {
+      const remaining = Math.ceil((3000 - (Date.now() - lastSentTimeRef.current)) / 1000);
+      setCooldownWarning(`Guest rate limit: please wait ${remaining}s before sending another message.`);
+      setTimeout(() => setCooldownWarning(null), 2500);
+      return;
+    }
+    lastSentTimeRef.current = Date.now();
 
     setIsSending(true);
     const textToSend = text || (stagedAttachments.length > 0 ? 'Sent attachments' : '');
@@ -228,6 +251,19 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       )}
 
       <div className="max-w-5xl mx-auto space-y-2">
+        {cooldownWarning && (
+          <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 text-[11px] font-medium flex items-center justify-between gap-2 px-3 animate-fade-in">
+            <span>{cooldownWarning}</span>
+            <button
+              type="button"
+              onClick={() => setCooldownWarning(null)}
+              className="text-amber-800/60 hover:text-amber-800"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Staged Attachments Preview Bar */}
         {(stagedAttachments.length > 0 || isUploading) && (
           <div className="flex items-center gap-2 overflow-x-auto py-1 px-1">

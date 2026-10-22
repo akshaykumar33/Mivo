@@ -11,6 +11,7 @@ export interface UserDTO {
   customStatus: string | null;
   customStatusExpiresAt?: string | null;
   status: UserStatus;
+  isGuest?: boolean;
   createdAt: string;
   lastSeenAt: string | null;
 }
@@ -21,6 +22,7 @@ export interface UserSummaryDTO {
   displayName: string;
   avatarUrl: string | null;
   status: UserStatus;
+  isGuest?: boolean;
   customStatus: string | null;
   customStatusExpiresAt?: string | null;
 }

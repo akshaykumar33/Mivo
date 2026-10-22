@@ -32,3 +32,13 @@ export interface CommunityDetailsDTO extends CommunityDTO {
   roles: RoleDTO[];
   currentUserRole?: RoleDTO;
 }
+
+export interface EligibleUserDTO {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  status: string;
+}
+

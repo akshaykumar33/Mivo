@@ -225,7 +225,6 @@ export const CreateCommunitySchema = z.object({
 export const CreateChannelSchema = z.object({
   name: z.string().min(2).max(64).regex(/^[a-z0-9-]+$/),
   topic: z.string().max(255).optional(),
-  type: z.enum(['TEXT', 'VOICE', 'MEDIA', 'GENERAL']).default('GENERAL'),
   isPrivate: z.boolean().default(false),
 });
 

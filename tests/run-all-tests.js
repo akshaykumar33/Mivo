@@ -16,6 +16,7 @@ const MODULE_TESTS = [
   // 2. Communities & RBAC Module
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/unit/permission-matrix.unit.test.js' },
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/integration/channel-privacy.integration.test.js' },
+  { module: 'communities-rbac', file: 'tests/modules/communities-rbac/integration/single-org-tenancy.integration.test.js' },
   { module: 'communities-rbac', file: 'tests/modules/communities-rbac/e2e/community-lifecycle.e2e.test.js' },
 
   // 3. Messaging & Chat Module
@@ -41,6 +42,7 @@ const MODULE_TESTS = [
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/unit/translation-dictionary.unit.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/unit/mom-markdown-generator.unit.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/integration/email-summary-dispatch.integration.test.js' },
+  { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/integration/stage-cohost-duplex.integration.test.js' },
   { module: 'ai-scribe-mom', file: 'tests/modules/ai-scribe-mom/e2e/live-whisper-mom-flow.e2e.test.js' },
 
   // 7. Recording & Compliance Module
@@ -51,6 +53,12 @@ const MODULE_TESTS = [
   // 8. Universal File Viewer & Media Streamer Module
   { module: 'file-viewer', file: 'tests/modules/files/unit/file-viewer.unit.test.js' },
   { module: 'file-viewer', file: 'tests/modules/files/unit/video-optimizer.unit.test.js' },
+
+  // 9. Hyper Stage Features: 6th Mode Canvas, 3D Spatial Audio, Spoken Voice Tickets
+  { module: 'canvas-spatial-tickets', file: 'tests/modules/canvas-spatial-tickets/integration/canvas-spatial-tickets.integration.test.js' },
+
+  // 10. Futuristic & Architectural Hyper Features: SFU, E2EE, Code Stage, AI Twin, Ambient Focus, Mini-Apps, CRDT
+  { module: 'hyper-architectural-features', file: 'tests/modules/hyper-architectural-features/hyper-architectural-features.integration.test.js' },
 ];
 
 console.log('═══════════════════════════════════════════════════════════════');

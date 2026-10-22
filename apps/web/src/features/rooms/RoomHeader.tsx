@@ -2,9 +2,23 @@
 
 import * as React from 'react';
 import { RoomDTO, RoomCommunicationMode } from '@mivo/shared';
-import { Users, Lock, Hash, Sparkles, CircleDot, BookOpen, Menu, PanelLeftOpen, PanelLeftClose, Video } from 'lucide-react';
+import {
+  Users,
+  UserPlus,
+  Lock,
+  Hash,
+  Sparkles,
+  CircleDot,
+  BookOpen,
+  Menu,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Video,
+} from 'lucide-react';
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { useAuthStore } from '@/stores/authStore';
+import { RoomModeSwitcher } from './RoomModeSwitcher';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
@@ -15,6 +29,7 @@ export interface RoomHeaderProps {
   isHost?: boolean;
   onToggleRecording?: () => void;
   onToggleParticipants?: () => void;
+  onToggleInvite?: () => void;
   onToggleWhisper?: () => void;
   onToggleMeetingHub?: () => void;
   hasActiveBridge?: boolean;
@@ -23,11 +38,13 @@ export interface RoomHeaderProps {
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
   room,
   activeMode,
+  onModeChange,
   participantCount,
   isRecording = false,
   isHost = false,
   onToggleRecording,
   onToggleParticipants,
+  onToggleInvite,
   onToggleWhisper,
   onToggleMeetingHub,
   hasActiveBridge = false,
@@ -35,6 +52,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
   const [isDocsOpen, setIsDocsOpen] = React.useState(false);
   const { toggleMobileSidebar, isSidebarCollapsed, toggleSidebarCollapse } = useNavigationStore();
+  const setAnonConnectModalOpen = useAuthStore((s) => s.setAnonConnectModalOpen);
 
   // Keyboard shortcut Ctrl+\ or Cmd+\ to collapse/expand sidebar tray
   React.useEffect(() => {
@@ -109,6 +127,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
                 <Lock className="w-3.5 h-3.5 text-[#FF9F0A]" />
               </span>
             )}
+
           </div>
 
           {/* Apple Live Recording Status Badge */}
@@ -126,12 +145,9 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
         </div>
 
-        {/* Center Stage Status Badge (Only shown when ample width on xl+ screens) */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] flex-shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
-          <span className="font-semibold text-[var(--text-primary)] font-display">Active Stage</span>
-          <span className="text-[var(--text-muted)]">•</span>
-          <span className="text-[11px] font-mono text-[#64D2FF] font-bold uppercase">{activeMode}</span>
+        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Stream, Canvas) */}
+        <div className="hidden lg:flex items-center flex-shrink-0">
+          <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
         {/* Right Action Tray */}
@@ -151,6 +167,16 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
               <span className="hidden xl:inline">{isRecording ? 'Recording...' : 'Record'}</span>
             </button>
           )}
+
+          {/* Add User to Room / Group Trigger */}
+          <button
+            onClick={onToggleInvite}
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#5E5CE6] hover:!text-white bg-[#5E5CE6]/15 hover:bg-[#5E5CE6] border border-[#5E5CE6]/30 transition-all cursor-pointer shadow-sm group"
+            title="Add Users to this Group/Room (Single-Org)"
+          >
+            <UserPlus className="w-3.5 h-3.5 text-[#5E5CE6] group-hover:text-white transition-colors" />
+            <span className="hidden xl:inline">Add User</span>
+          </button>
 
           {/* External Meeting Bridge Trigger */}
           <button
@@ -174,6 +200,16 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2] group-hover:text-white transition-colors" />
             <span className="hidden xl:inline">AI Notes & MOM</span>
+          </button>
+
+          {/* Anonymous Speed Connect Trigger */}
+          <button
+            onClick={() => setAnonConnectModalOpen(true)}
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-rose-600 hover:!text-white bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-600 transition-all cursor-pointer shadow-sm group"
+            title="Connect with Anonymous Users & Guests"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-colors" />
+            <span className="hidden xl:inline">Anon Connect</span>
           </button>
 
           {/* System User Documentation */}

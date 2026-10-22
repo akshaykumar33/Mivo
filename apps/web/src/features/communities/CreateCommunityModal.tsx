@@ -7,7 +7,8 @@ import { useCommunityStore } from '@/stores/communityStore';
 import { CommunityDTO } from '@mivo/shared';
 import { useRouter } from 'next/navigation';
 import { storageClient } from '@/lib/storage-client';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, Sparkles } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface CreateCommunityModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export interface CreateCommunityModalProps {
 export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
   const fetchCommunities = useCommunityStore((s) => s.fetchCommunities);
+  const { isGuest, setUpgradeModalOpen } = useAuthStore();
 
   const [name, setName] = React.useState('');
   const [slug, setSlug] = React.useState('');
@@ -73,13 +75,37 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create a Community" description="Your community is where you and your friends or team communicate.">
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
-          {error}
+      {isGuest ? (
+        <div className="py-6 px-4 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center mx-auto border border-amber-500/30">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[#111827]">Full Account Required</h3>
+            <p className="text-xs text-[#71717A] mt-1 max-w-sm mx-auto">
+              Guest users have restricted privileges and cannot create organizations. Upgrade your guest account to a permanent account to create communities.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              setUpgradeModalOpen(true);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+          >
+            Claim Full Account
+          </button>
         </div>
-      )}
+      ) : (
+        <>
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+              {error}
+            </div>
+          )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
         {/* Community Icon Upload */}
         <div className="flex items-center gap-4 p-3 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)]">
           <div
@@ -159,6 +185,8 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
           </Button>
         </div>
       </form>
+      </>
+      )}
     </Modal>
   );
 };

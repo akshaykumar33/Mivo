@@ -14,6 +14,7 @@ import { MeetingsModule } from './meetings/meetings.module.js';
 
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { TicketsModule } from './tickets/tickets.module.js';
+import { SandboxModule } from './sandbox/sandbox.module.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TicketsModule } from './tickets/tickets.module.js';
     TicketsModule,
     AiModule,
     StorageModule,
+    SandboxModule,
   ],
 })
 export class AppModule {}

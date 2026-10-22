@@ -1,6 +1,6 @@
 import { UserSummaryDTO } from './user.js';
 
-export type RoomCommunicationMode = 'TEXT' | 'VOICE' | 'VIDEO' | 'SCREEN_SHARE' | 'STREAM';
+export type RoomCommunicationMode = 'TEXT' | 'VOICE' | 'VIDEO' | 'SCREEN_SHARE' | 'STREAM' | 'CANVAS' | 'CODE';
 
 export interface RoomDTO {
   id: string;

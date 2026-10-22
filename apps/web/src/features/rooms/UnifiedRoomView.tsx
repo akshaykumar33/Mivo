@@ -3,8 +3,14 @@
 import * as React from 'react';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useCommunityStore } from '@/stores/communityStore';
 import { RoomHeader } from './RoomHeader';
 import { MediaStage } from './MediaStage';
+import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
+import { CodeStage } from '@/features/code-stage/CodeStage';
+import { ActivitySandboxStage } from '@/features/activities/ActivitySandboxStage';
+import { InviteRoomMemberModal } from './InviteRoomMemberModal';
+import { localFirstStore } from '@/lib/local-first/localFirstStore';
 import { ParticipantTray } from './ParticipantTray';
 import { WhisperScribeDrawer } from '@/features/transcription/WhisperScribeDrawer';
 import { FloatingPiPOverlay } from './FloatingPiPOverlay';
@@ -20,6 +26,8 @@ import {
   ExternalMeetingBridgeDTO,
   MeetingBridgeActivatedBroadcast,
   MeetingBridgeRemovedBroadcast,
+  MiniAppType,
+  ActivityStateBroadcast,
 } from '@mivo/shared';
 import { useRouter } from 'next/navigation';
 import { realtime } from '@/lib/socket-client';
@@ -27,6 +35,7 @@ import { api } from '@/lib/api-client';
 import { recorderManager } from '@/lib/recorder-manager';
 import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBanner';
 import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
+import { WifiOff, Zap } from 'lucide-react';
 
 export interface UnifiedRoomViewProps {
   communityId: string;
@@ -53,7 +62,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     toggleCamera,
     toggleScreenShare,
   } = useRoomStore();
+  const { activeCommunity } = useCommunityStore();
 
+  const [isInviteOpen, setIsInviteOpen] = React.useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(false);
   const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
   const [isPiPOpen, setIsPiPOpen] = React.useState(false);
@@ -63,6 +74,43 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const [isSubtitlesEnabled, setIsSubtitlesEnabled] = React.useState(true);
   const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
   const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
+  const [activeMiniApp, setActiveMiniApp] = React.useState<ActivityStateBroadcast | null>(null);
+  const [pendingOutboxCount, setPendingOutboxCount] = React.useState(0);
+  const [isOnline, setIsOnline] = React.useState(true);
+
+  // Subscribe to Local-First CRDT Outbox & Online status
+  React.useEffect(() => {
+    return localFirstStore.subscribe((count, online) => {
+      setPendingOutboxCount(count);
+      setIsOnline(online);
+    });
+  }, []);
+
+  // Listen for Mini-App Activity realtime events
+  React.useEffect(() => {
+    const socket = realtime.getSocket();
+    if (!socket || !roomId) return;
+
+    const handleLaunch = (act: ActivityStateBroadcast) => {
+      if (act.roomId === roomId) {
+        setActiveMiniApp(act);
+      }
+    };
+
+    const handleClose = (data: { roomId: string }) => {
+      if (data.roomId === roomId) {
+        setActiveMiniApp(null);
+      }
+    };
+
+    socket.on(REALTIME_EVENTS.ACTIVITY_LAUNCH, handleLaunch);
+    socket.on(REALTIME_EVENTS.ACTIVITY_CLOSE, handleClose);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.ACTIVITY_LAUNCH, handleLaunch);
+      socket.off(REALTIME_EVENTS.ACTIVITY_CLOSE, handleClose);
+    };
+  }, [roomId]);
 
   const fetchBridge = React.useCallback(() => {
     if (!roomId) return;
@@ -204,10 +252,28 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
         isHost={isHost}
         onToggleRecording={handleToggleRecording}
         onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
+        onToggleInvite={() => setIsInviteOpen(!isInviteOpen)}
         onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
         onToggleMeetingHub={() => setIsMeetingHubOpen(!isMeetingHubOpen)}
         hasActiveBridge={!!activeBridge}
       />
+
+      {/* Local-First CRDT Outbox Sync Banner */}
+      {(!isOnline || pendingOutboxCount > 0) && (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-[#FF9F0A]/20 via-[#5E5CE6]/20 to-[#FF453A]/20 border-b border-[#FF9F0A]/30 flex items-center justify-between text-xs font-semibold text-[#FF9F0A] animate-fadeIn z-20">
+          <div className="flex items-center gap-2">
+            <WifiOff className="w-3.5 h-3.5 text-[#FF453A] animate-pulse" />
+            <span>
+              {!isOnline
+                ? `Offline Mode — Working Locally (${pendingOutboxCount} changes queued via CRDT)`
+                : `Synchronizing ${pendingOutboxCount} local mutations with PostgreSQL...`}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] bg-black/40 px-2 py-0.5 rounded border border-[#FF9F0A]/30">
+            0ms Optimistic Latency
+          </span>
+        </div>
+      )}
 
       {/* External Meeting Bridge Live Banner (Google Meet & MS Teams) */}
       <RoomMeetingBridgeBanner
@@ -227,21 +293,47 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
       {/* Main Content Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Dynamic Stage View with Live Media */}
-        <MediaStage
-          mode={activeRoom.activeMode}
-          room={activeRoom}
-          participants={participants}
-          currentUserId={user?.id}
-          isHost={isHost}
-          isMuted={isMuted}
-          isCameraOn={isCameraOn}
-          isScreenOn={isScreenOn}
-          localStream={localStream}
-          screenStream={screenStream}
-          remoteStreams={remoteStreams}
-          audioLevel={audioLevel}
-        />
+        {/* Dynamic Stage View with Live Media / Canvas Stage / Code Stage / Mini-App */}
+        {activeMiniApp ? (
+          <ActivitySandboxStage
+            activity={activeMiniApp}
+            roomId={activeRoom.id}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            onClose={() => setActiveMiniApp(null)}
+          />
+        ) : activeRoom.activeMode === 'CANVAS' ? (
+          <CollaborativeCanvasStage
+            roomId={activeRoom.id}
+            roomName={activeRoom.name}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            participants={participants}
+          />
+        ) : activeRoom.activeMode === 'CODE' ? (
+          <CodeStage
+            roomId={activeRoom.id}
+            roomName={activeRoom.name}
+            currentUserId={user?.id}
+            currentUserName={user?.displayName || user?.username}
+            participants={participants}
+          />
+        ) : (
+          <MediaStage
+            mode={activeRoom.activeMode}
+            room={activeRoom}
+            participants={participants}
+            currentUserId={user?.id}
+            isHost={isHost}
+            isMuted={isMuted}
+            isCameraOn={isCameraOn}
+            isScreenOn={isScreenOn}
+            localStream={localStream}
+            screenStream={screenStream}
+            remoteStreams={remoteStreams}
+            audioLevel={audioLevel}
+          />
+        )}
 
         {/* Live Closed Captions & Dual Subtitles Overlay (Google Meet / Zoom style) */}
         {activeRoom.activeMode !== 'TEXT' && (
@@ -259,6 +351,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onHostAction={handleHostAction}
           isOpen={isParticipantsOpen}
           onClose={() => setIsParticipantsOpen(false)}
+          onToggleInvite={() => setIsInviteOpen(true)}
         />
 
         {/* Whisper AI Multilingual Translation, Notes & MOM Drawer */}
@@ -324,6 +417,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           roomName={activeRoom.name}
           activeBridge={activeBridge}
           onBridgeUpdated={fetchBridge}
+        />
+
+
+        {/* Group / Room Add User Modal (Single-Org Bound) */}
+        <InviteRoomMemberModal
+          isOpen={isInviteOpen}
+          onClose={() => setIsInviteOpen(false)}
+          room={activeRoom}
+          organizationName={activeCommunity?.name || 'Organization'}
+          onMemberUpdated={() => joinRoom(activeRoom.id)}
         />
       </div>
     </div>

@@ -222,19 +222,11 @@ model RolePermission {
 // CHANNELS & UNIFIED ROOMS
 // -----------------------------------------------------------------------------
 
-enum ChannelType {
-  TEXT
-  VOICE
-  MEDIA
-  GENERAL
-}
-
 model Channel {
   id          String         @id @default(uuid()) @db.Uuid
   communityId String         @db.Uuid
   name        String         @db.VarChar(64)
   topic       String?        @db.VarChar(255)
-  type        ChannelType    @default(GENERAL)
   position    Int            @default(0)
   isPrivate   Boolean        @default(false)
   createdAt   DateTime       @default(now()) @db.Timestamptz(6)

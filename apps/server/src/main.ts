@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
@@ -43,5 +44,13 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`[Server] Mivo Backend Server running on http://localhost:${port}`);
 }
+
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Process] Unhandled Rejection intercepted:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception intercepted:', err);
+});
 
 bootstrap();

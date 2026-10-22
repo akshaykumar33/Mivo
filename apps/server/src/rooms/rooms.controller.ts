@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   UseGuards,
@@ -10,14 +11,19 @@ import {
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service.js';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
+import { CurrentUser } from '../common/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import {
   CreateRoomSchema,
   ChangeRoomModeSchema,
+  AddRoomMemberSchema,
   CreateRoomInput,
   ChangeRoomModeInput,
+  AddRoomMemberInput,
   ApiResponse,
   RoomDTO,
+  RoomMemberDTO,
+  JwtPayload,
 } from '@mivo/shared';
 
 @Controller('api/v1/rooms')
@@ -77,6 +83,44 @@ export class RoomsController {
     return {
       success: true,
       data: result,
+    };
+  }
+
+  @Post(':id/members')
+  @UsePipes(new ZodValidationPipe(AddRoomMemberSchema))
+  async addMember(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: AddRoomMemberInput
+  ): Promise<ApiResponse<RoomMemberDTO>> {
+    const member = await this.roomsService.addRoomMember(id, user.sub, body.userId);
+    return {
+      success: true,
+      data: member,
+    };
+  }
+
+  @Delete(':id/members/:userId')
+  async removeMember(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('userId') targetUserId: string
+  ): Promise<ApiResponse<{ message: string }>> {
+    const result = await this.roomsService.removeRoomMember(id, user.sub, targetUserId);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Get(':id/eligible-members')
+  async listEligibleMembers(
+    @Param('id') id: string
+  ): Promise<ApiResponse<any[]>> {
+    const members = await this.roomsService.listEligibleRoomMembers(id);
+    return {
+      success: true,
+      data: members,
     };
   }
 }

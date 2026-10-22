@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@mivo/database';
 import {
   CreateRoomInput,
@@ -24,7 +24,7 @@ export class RoomsService {
         channelId,
         name: input.name,
         description: input.description,
-        activeMode: input.activeMode,
+        activeMode: input.activeMode as any,
         maxCapacity: input.maxCapacity,
         isLocked: input.isLocked,
       },
@@ -92,7 +92,7 @@ export class RoomsService {
   async updateRoomMode(roomId: string, mode: RoomCommunicationMode): Promise<RoomDTO> {
     const room = await prisma.room.update({
       where: { id: roomId },
-      data: { activeMode: mode },
+      data: { activeMode: mode as any },
       include: {
         members: { include: { user: true } },
       },
@@ -132,5 +132,165 @@ export class RoomsService {
 
     console.log(`[Whisper Scribe] Meeting summary emailed to ${userEmail} for room "${room.name}"`);
     return summary;
+  }
+
+  async addRoomMember(roomId: string, actorUserId: string, targetUserId: string): Promise<RoomMemberDTO> {
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        channel: {
+          include: {
+            community: true,
+          },
+        },
+      },
+    });
+
+    if (!room || room.deletedAt) {
+      throw new NotFoundException({ code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+    }
+
+    // Verify actor belongs to the room's community
+    const actorMembership = await prisma.communityMember.findFirst({
+      where: {
+        communityId: room.channel.communityId,
+        userId: actorUserId,
+      },
+    });
+
+    if (!actorMembership) {
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'You are not a member of this organization',
+      });
+    }
+
+    // Verify target user is a member of this community (single-org enforcement)
+    const targetMembership = await prisma.communityMember.findFirst({
+      where: {
+        communityId: room.channel.communityId,
+        userId: targetUserId,
+      },
+      include: { user: true },
+    });
+
+    if (!targetMembership) {
+      throw new ForbiddenException({
+        code: 'USER_NOT_IN_ORG',
+        message: 'User must belong to this organization before being added to a room or group',
+      });
+    }
+
+    const member = await prisma.roomMember.upsert({
+      where: {
+        roomId_userId: {
+          roomId,
+          userId: targetUserId,
+        },
+      },
+      update: {},
+      create: {
+        roomId,
+        userId: targetUserId,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    return {
+      id: member.id,
+      roomId: member.roomId,
+      userId: member.userId,
+      isMuted: member.isMuted,
+      isDeafened: member.isDeafened,
+      isCameraOn: member.isCameraOn,
+      isScreenOn: member.isScreenOn,
+      joinedAt: member.joinedAt.toISOString(),
+      user: {
+        id: member.user.id,
+        username: member.user.username,
+        displayName: member.user.displayName,
+        avatarUrl: member.user.avatarUrl,
+        status: member.user.status,
+        customStatus: member.user.customStatus,
+      },
+    };
+  }
+
+  async removeRoomMember(roomId: string, actorUserId: string, targetUserId: string): Promise<{ message: string }> {
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        channel: true,
+      },
+    });
+
+    if (!room || room.deletedAt) {
+      throw new NotFoundException({ code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+    }
+
+    const actorMembership = await prisma.communityMember.findFirst({
+      where: {
+        communityId: room.channel.communityId,
+        userId: actorUserId,
+      },
+    });
+
+    if (!actorMembership) {
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'You are not a member of this organization',
+      });
+    }
+
+    await prisma.roomMember.deleteMany({
+      where: {
+        roomId,
+        userId: targetUserId,
+      },
+    });
+
+    return { message: 'Member successfully removed from room' };
+  }
+
+  async listEligibleRoomMembers(roomId: string) {
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        channel: true,
+        members: { select: { userId: true } },
+      },
+    });
+
+    if (!room || room.deletedAt) {
+      throw new NotFoundException({ code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+    }
+
+    const currentMemberIds = new Set(room.members.map((m) => m.userId));
+
+    const orgMembers = await prisma.communityMember.findMany({
+      where: {
+        communityId: room.channel.communityId,
+      },
+      include: {
+        user: true,
+        role: true,
+      },
+      orderBy: {
+        user: { displayName: 'asc' },
+      },
+    });
+
+    return orgMembers
+      .filter((m) => !currentMemberIds.has(m.userId))
+      .map((m) => ({
+        id: m.user.id,
+        username: m.user.username,
+        displayName: m.user.displayName,
+        avatarUrl: m.user.avatarUrl,
+        email: m.user.email,
+        roleName: m.role.name,
+      }));
   }
 }

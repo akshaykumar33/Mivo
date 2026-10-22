@@ -77,6 +77,83 @@ export const REALTIME_EVENTS = {
   // Ticketing System
   TICKET_CREATED: 'ticket:created',
   TICKET_UPDATED: 'ticket:updated',
+
+  // Active AI Stage Co-Host & Real-Time Duplex Agent
+  ROOM_AI_AGENT_ACTION: 'room:ai_agent_action',
+  ROOM_AI_AGENT_RESPONSE: 'room:ai_agent_response',
+  ROOM_AI_FACT_CHECK: 'room:ai_fact_check',
+  ROOM_AI_PIN_TILE: 'room:ai_pin_tile',
+  ROOM_AI_DISMISS_TILE: 'room:ai_dismiss_tile',
+
+  // Collaborative Whiteboard & Flowchart Stage (CANVAS Mode)
+  ROOM_CANVAS_UPDATE: 'room:canvas_update',
+  ROOM_CANVAS_CURSOR: 'room:canvas_cursor',
+  ROOM_CANVAS_CLEAR: 'room:canvas_clear',
+  ROOM_CANVAS_AI_GENERATE: 'room:canvas_ai_generate',
+
+  // 3D Spatial Audio & Dynamic Physics Grid
+  ROOM_SPATIAL_AUDIO_UPDATE: 'room:spatial_audio_update',
+
+  // Spoken Voice-to-Ticket Automation
+  ROOM_VOICE_TICKET_DETECTED: 'room:voice_ticket_detected',
+  ROOM_VOICE_TICKET_CONFIRM: 'room:voice_ticket_confirm',
+
+  // 1. Media Plane: SFU Engine Upgrade
+  SFU_GET_ROUTER_RTP_CAPABILITIES: 'sfu:get_router_rtp_capabilities',
+  SFU_CREATE_TRANSPORT: 'sfu:create_transport',
+  SFU_CONNECT_TRANSPORT: 'sfu:connect_transport',
+  SFU_PRODUCE: 'sfu:produce',
+  SFU_CONSUME: 'sfu:consume',
+  SFU_SET_PREFERRED_LAYERS: 'sfu:set_preferred_layers',
+  SFU_STATS_UPDATE: 'sfu:stats_update',
+  SFU_MODE_SWITCH: 'sfu:mode_switch',
+
+  // 2. Media Plane: E2EE Zero-Trust Encryption
+  E2EE_KEY_EXCHANGE: 'e2ee:key_exchange',
+  E2EE_EPOCH_ROTATED: 'e2ee:epoch_rotated',
+  E2EE_VERIFY_SAFETY_CODE: 'e2ee:verify_safety_code',
+
+  // 3. Developer DX: CODE_STAGE Pair-Programming Sandbox
+  CODE_STAGE_CHANGE: 'code_stage:change',
+  CODE_STAGE_CURSOR: 'code_stage:cursor',
+  CODE_STAGE_EXECUTE: 'code_stage:execute',
+  CODE_STAGE_EXECUTION_RESULT: 'code_stage:execution_result',
+
+  // 4. Presence: AI Twin & Out of Office Persona
+  AI_TWIN_AUTO_REPLY: 'ai_twin:auto_reply',
+  AI_TWIN_SCHEDULE_CALLBACK: 'ai_twin:schedule_callback',
+
+  // 5. Vibe & Flow: Ambient Spatial Focus Rooms & Pomodoro
+  FOCUS_TIMER_SYNC: 'focus:timer_sync',
+  FOCUS_TIMER_ACTION: 'focus:timer_action',
+  FOCUS_TRACK_CHANGE: 'focus:track_change',
+
+  // 6. Extensibility: Mivo Mini-Apps / Activity Sandboxes
+  ACTIVITY_LAUNCH: 'activity:launch',
+  ACTIVITY_SYNC_STATE: 'activity:sync_state',
+  ACTIVITY_ACTION: 'activity:action',
+  ACTIVITY_CLOSE: 'activity:close',
+
+  // 7. Offline-First: CRDT Sync & Local-First Messaging
+  CRDT_SYNC_BATCH: 'crdt:sync_batch',
+  CRDT_SYNC_ACK: 'crdt:sync_ack',
+  CRDT_STATE_DELTA: 'crdt:state_delta',
+
+  // 8. Anonymous & Guest Random Discovery & Speed Connect
+  ANON_QUEUE_JOIN: 'anon:queue_join',
+  ANON_QUEUE_LEAVE: 'anon:queue_leave',
+  ANON_QUEUE_STATUS: 'anon:queue_status',
+  ANON_MATCHED: 'anon:matched',
+  ANON_NEXT: 'anon:next',
+  ANON_END: 'anon:end',
+  ANON_PARTNER_LEFT: 'anon:partner_left',
+  ANON_SEND_MESSAGE: 'anon:send_message',
+  ANON_MESSAGE_RECEIVED: 'anon:message_received',
+  ANON_TYPING: 'anon:typing',
+  ANON_REVEAL_REQUEST: 'anon:reveal_request',
+  ANON_REVEAL_ACCEPTED: 'anon:reveal_accepted',
+  ANON_MEDIA_SIGNAL: 'anon:media_signal',
+  ANON_GAME_ACTION: 'anon:game_action',
 } as const;
 
 export interface ChatReactionPayload {
@@ -251,4 +328,131 @@ export interface MeetingBridgeRemovedBroadcast {
   conversationId?: string;
   removedBy: import('../types/user.js').UserSummaryDTO;
   removedAt: string;
+}
+
+export interface CanvasElement {
+  id: string;
+  type: 'STICKY' | 'SHAPE' | 'SERVICE' | 'DATABASE' | 'QUEUE' | 'GATEWAY' | 'CONNECTOR' | 'TEXT';
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  title?: string;
+  content?: string;
+  color?: string;
+  fromId?: string;
+  toId?: string;
+  label?: string;
+  authorName?: string;
+  authorId?: string;
+}
+
+export interface CanvasCursorPayload {
+  roomId: string;
+  userId: string;
+  userName: string;
+  avatarUrl?: string | null;
+  x: number;
+  y: number;
+  color: string;
+}
+
+export interface CanvasUpdatePayload {
+  roomId: string;
+  elements: CanvasElement[];
+  action: 'UPSERT' | 'DELETE' | 'CLEAR' | 'SYNC';
+  updatedBy: string;
+}
+
+export interface SpatialAudioPayload {
+  roomId: string;
+  userId: string;
+  x: number;
+  y: number;
+  pan: number; // -1.0 (Left) to +1.0 (Right)
+  distance?: number;
+}
+
+export interface VoiceTicketDetectedPayload {
+  roomId: string;
+  ticketProposal: {
+    title: string;
+    description: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    category?: string;
+    suggestedAssignee?: string;
+  };
+  speakerName?: string;
+}
+
+export interface VoiceTicketConfirmPayload {
+  roomId: string;
+  ticketProposal: {
+    title: string;
+    description: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    category?: string;
+    suggestedAssignee?: string;
+    communityId?: string;
+  };
+}
+
+export interface AnonQueueJoinPayload {
+  mode: 'TEXT' | 'VIDEO';
+  interests?: string[];
+  pseudonym?: string;
+  roomCode?: string;
+}
+
+export interface AnonMatchedPayload {
+  sessionId: string;
+  roomId?: string;
+  isHost?: boolean;
+  partner: {
+    userId: string;
+    pseudonym: string;
+    avatarUrl?: string;
+    isGuest: boolean;
+    interests?: string[];
+  };
+  mode: 'TEXT' | 'VIDEO';
+}
+
+export interface AnonMessagePayload {
+  sessionId: string;
+  content: string;
+}
+
+export interface AnonMessageBroadcast {
+  sessionId: string;
+  senderId: string;
+  senderPseudonym: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface AnonRevealAcceptedBroadcast {
+  sessionId: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+  };
+}
+
+export interface AnonGameActionPayload {
+  sessionId: string;
+  game: string;
+  action: string;
+  payload: any;
+}
+
+export interface AnonGameActionBroadcast {
+  sessionId: string;
+  senderSocketId: string;
+  game: string;
+  action: string;
+  payload: any;
+  timestamp: number;
 }

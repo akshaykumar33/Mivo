@@ -30,8 +30,13 @@ model User {
   bio              String?           @db.VarChar(256)
   customStatus     String?           @db.VarChar(128)
   customStatusExpiresAt DateTime?    @db.Timestamptz(6)
+  aiTwinEnabled    Boolean           @default(false)
+  aiTwinPrompt     String?           @db.Text
+  aiTwinCallbackSlots Json?
+  aiTwinAutoCallback Boolean         @default(true)
   status           UserStatus        @default(OFFLINE)
   isEmailVerified  Boolean           @default(false)
+  isGuest          Boolean           @default(false)
   lastSeenAt       DateTime?         @db.Timestamptz(6)
   createdAt        DateTime          @default(now()) @db.Timestamptz(6)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(6)
@@ -114,7 +119,7 @@ model Community {
 model CommunityMember {
   id          String       @id @default(uuid()) @db.Uuid
   communityId String       @db.Uuid
-  userId      String       @db.Uuid
+  userId      String       @unique @db.Uuid
   nickname    String?      @db.VarChar(64)
   roleId      String       @db.Uuid
   joinedAt    DateTime     @default(now()) @db.Timestamptz(6)
@@ -188,19 +193,11 @@ model RolePermission {
 // CHANNELS & UNIFIED ROOMS
 // -----------------------------------------------------------------------------
 
-enum ChannelType {
-  TEXT
-  VOICE
-  MEDIA
-  GENERAL
-}
-
 model Channel {
   id          String         @id @default(uuid()) @db.Uuid
   communityId String         @db.Uuid
   name        String         @db.VarChar(64)
   topic       String?        @db.VarChar(255)
-  type        ChannelType    @default(GENERAL)
   position    Int            @default(0)
   isPrivate   Boolean        @default(false)
   createdAt   DateTime       @default(now()) @db.Timestamptz(6)
@@ -220,6 +217,8 @@ enum RoomCommunicationMode {
   VIDEO
   SCREEN_SHARE
   STREAM
+  CANVAS
+  CODE
 }
 
 model Room {

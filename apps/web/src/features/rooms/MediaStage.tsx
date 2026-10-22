@@ -23,9 +23,20 @@ import {
   Eye,
   EyeOff,
   Users,
+  Bot,
+  Headphones,
+  Ticket,
+  CheckCircle2,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
+import { AiCoHostStageTile, AiCoHostStatus } from './AiCoHostStageTile';
+import { AiPinnedDataTile, PinnedDataTilePayload } from './AiPinnedDataTile';
+import { LiveFactCheckHUD, FactCheckAlertData } from './LiveFactCheckHUD';
+import { spatialAudio } from '../audio/SpatialAudioEngine';
+import { VoiceTicketConfirmationCard, VoiceTicketProposal } from '../tickets/VoiceTicketConfirmationCard';
+import { useTicketStore } from '@/stores/ticketStore';
+import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 
 export interface MediaStageProps {
@@ -62,6 +73,256 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
   const [isAttendeeDrawerOpen, setIsAttendeeDrawerOpen] = React.useState(true);
+
+  // Active AI Stage Co-Host & Real-Time Duplex Voice Agent
+  const [isCoHostEnabled, setIsCoHostEnabled] = React.useState(true);
+  const [coHostStatus, setCoHostStatus] = React.useState<AiCoHostStatus>('LISTENING');
+  const [lastSpeechText, setLastSpeechText] = React.useState('');
+  const [pinnedDataTile, setPinnedDataTile] = React.useState<PinnedDataTilePayload | null>(null);
+  const [factCheckAlert, setFactCheckAlert] = React.useState<FactCheckAlertData | null>(null);
+  const { setIsModalOpen: openTicketsModal } = useTicketStore();
+
+  // 🎧 3D Spatial Audio & Dynamic Physics Grid
+  const [isSpatialAudioActive, setIsSpatialAudioActive] = React.useState(true);
+  const [spatialPositions, setSpatialPositions] = React.useState<Record<string, { pan: number; distance: number }>>({});
+
+  // ⚡ Spoken Voice-to-Ticket Automation
+  const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
+  const [ticketToast, setTicketToast] = React.useState<string | null>(null);
+
+  // Speech synthesis for AI Co-Host Duplex Voice
+  const speakVerbalResponse = React.useCallback((text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const naturalVoice = voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') ||
+            v.name.includes('Google') ||
+            v.name.includes('Neural') ||
+            v.name.includes('Samantha') ||
+            v.name.includes('David'))
+      );
+      if (naturalVoice) utterance.voice = naturalVoice;
+
+      utterance.onstart = () => setCoHostStatus('SPEAKING');
+      utterance.onend = () => setCoHostStatus('LISTENING');
+      utterance.onerror = () => setCoHostStatus('LISTENING');
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis error:', e);
+      setCoHostStatus('LISTENING');
+    }
+  }, []);
+
+  // Trigger Co-Host command via Socket.io with fallback to REST
+  const handleTriggerCoHost = React.useCallback(
+    async (query: string) => {
+      setCoHostStatus('THINKING');
+      const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
+
+      const socket = realtime.getSocket();
+      if (socket && room?.id) {
+        socket.emit(REALTIME_EVENTS.ROOM_AI_AGENT_ACTION, {
+          roomId: room.id,
+          query,
+          roomName: room.name,
+          attendees: participants.map((p) => p.user.displayName || p.user.username),
+          communityId: room.channelId,
+        });
+      } else {
+        try {
+          const res = await api.post<any>('/api/v1/ai/stage-agent', {
+            query,
+            roomName: room?.name || 'Stage',
+            attendees: participants.map((p) => p.user.displayName || p.user.username),
+            apiKey: userKey,
+          });
+
+          if (res.success && res.data) {
+            setLastSpeechText(res.data.speechText);
+            if (res.data.speechText) speakVerbalResponse(res.data.speechText);
+            if (res.data.shouldPinTile && res.data.pinnedTile) {
+              setPinnedDataTile(res.data.pinnedTile);
+            }
+            if (res.data.factCheckAlert) {
+              setFactCheckAlert(res.data.factCheckAlert);
+            }
+          }
+        } catch (e) {
+          console.error('Co-Host API call failed:', e);
+          setCoHostStatus('LISTENING');
+        }
+      }
+    },
+    [room, participants, speakVerbalResponse]
+  );
+
+  // Background fact-check audit trigger
+  const handleFactCheckAudit = React.useCallback(
+    async (statement: string, speakerName?: string) => {
+      const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
+      try {
+        const res = await api.post<any>('/api/v1/ai/fact-check', {
+          transcriptText: statement,
+          speaker: speakerName || 'Speaker',
+          apiKey: userKey,
+        });
+        if (res.success && res.data && res.data.hasConflict) {
+          setFactCheckAlert(res.data);
+          const socket = realtime.getSocket();
+          if (socket && room?.id) {
+            socket.emit(REALTIME_EVENTS.ROOM_AI_FACT_CHECK, {
+              roomId: room.id,
+              alert: res.data,
+            });
+          }
+        }
+      } catch {}
+    },
+    [room?.id]
+  );
+
+  // ⚡ Spoken Voice-to-Ticket Extraction
+  const handleExtractVoiceTicket = React.useCallback(
+    async (snippet: string) => {
+      const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
+      try {
+        const res = await api.post<any>('/api/v1/ai/extract-ticket', {
+          transcriptSnippet: snippet,
+          attendees: participants.map((p) => p.user.displayName || p.user.username),
+          apiKey: userKey,
+        });
+
+        if (res.success && res.data?.ticketProposal) {
+          const prop = res.data.ticketProposal;
+          setVoiceTicketProposal({
+            title: prop.title,
+            description: prop.description,
+            priority: prop.priority,
+            category: prop.category,
+            suggestedAssignee: prop.suggestedAssignee,
+            communityId: room?.channelId,
+            speakerName: 'Stage Attendee',
+          });
+        }
+      } catch (err) {
+        console.warn('Voice ticket extraction error:', err);
+      }
+    },
+    [participants, room]
+  );
+
+  const handleConfirmVoiceTicket = React.useCallback(
+    (ticket: any) => {
+      setVoiceTicketProposal(null);
+      setTicketToast(`Ticket created: "${ticket.title}" (${ticket.priority || 'HIGH'} priority)`);
+      speakVerbalResponse(`Created ticket for ${ticket.title}. Added to sprint board.`);
+      setTimeout(() => setTicketToast(null), 6000);
+    },
+    [speakVerbalResponse]
+  );
+
+  // Real-time socket sync for Co-Host and Fact Check events
+  React.useEffect(() => {
+    const socket = realtime.getSocket();
+    if (!socket || !room?.id) return;
+
+    const handleAgentResponse = (data: any) => {
+      if (data.roomId !== room.id) return;
+      if (data.status) setCoHostStatus(data.status);
+      if (data.speechText) {
+        setLastSpeechText(data.speechText);
+        speakVerbalResponse(data.speechText);
+      }
+      if (data.pinnedTile) setPinnedDataTile(data.pinnedTile);
+      if (data.factCheckAlert) setFactCheckAlert(data.factCheckAlert);
+    };
+
+    const handlePinTile = (data: any) => {
+      if (data.roomId !== room.id) return;
+      setPinnedDataTile(data.pinnedTile);
+    };
+
+    const handleDismissTile = (data: any) => {
+      if (data.roomId !== room.id) return;
+      setPinnedDataTile(null);
+    };
+
+    const handleFactCheck = (data: any) => {
+      if (data.roomId !== room.id) return;
+      setFactCheckAlert(data.alert);
+    };
+
+    socket.on(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, handleAgentResponse);
+    socket.on(REALTIME_EVENTS.ROOM_AI_PIN_TILE, handlePinTile);
+    socket.on(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, handleDismissTile);
+    socket.on(REALTIME_EVENTS.ROOM_AI_FACT_CHECK, handleFactCheck);
+
+    return () => {
+      socket.off(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, handleAgentResponse);
+      socket.off(REALTIME_EVENTS.ROOM_AI_PIN_TILE, handlePinTile);
+      socket.off(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, handleDismissTile);
+      socket.off(REALTIME_EVENTS.ROOM_AI_FACT_CHECK, handleFactCheck);
+    };
+  }, [room?.id, speakVerbalResponse]);
+
+  // Ambient speech recognition for "@mivo" or "Mivo, ..." voice commands
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      const current = event.resultIndex;
+      const text = event.results[current][0]?.transcript?.trim();
+      if (!text) return;
+
+      const lower = text.toLowerCase();
+      // ⚡ Spoken Voice-to-Ticket trigger
+      if (
+        lower.includes('ticket') ||
+        lower.includes('file a ticket') ||
+        lower.includes('create a ticket') ||
+        lower.includes('action item') ||
+        lower.includes('fix the')
+      ) {
+        handleExtractVoiceTicket(text);
+      } else if (lower.startsWith('mivo') || lower.includes('@mivo') || lower.includes('hey mivo')) {
+        // Duplex voice trigger: "Mivo, ..." or "@mivo" or "Hey Mivo"
+        handleTriggerCoHost(text);
+      } else if (
+        lower.includes('no bugs') ||
+        lower.includes('no blockers') ||
+        lower.includes('we are done') ||
+        lower.includes('redis leak')
+      ) {
+        handleFactCheckAudit(text, 'Attendee');
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch {}
+
+    return () => {
+      try {
+        recognition.stop();
+      } catch {}
+    };
+  }, [handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
 
   // Sync participant list to ordered array
   React.useEffect(() => {
@@ -160,6 +421,30 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   const pinnedParticipant = participants.find((p) => p.userId === pinnedUserId);
 
+  // Connect incoming WebRTC remoteStreams to Spatial Audio Engine
+  React.useEffect(() => {
+    if (!isSpatialAudioActive) return;
+    Object.entries(remoteStreams).forEach(([userId, stream]) => {
+      if (stream) spatialAudio.attachStream(userId, stream);
+    });
+  }, [remoteStreams, isSpatialAudioActive]);
+
+  // Update spatial positions when sorted participants change
+  React.useEffect(() => {
+    const total = sortedParticipants.length;
+    if (total === 0) return;
+
+    const newPositions: Record<string, { pan: number; distance: number }> = {};
+    sortedParticipants.forEach((p, index) => {
+      // Normalized X from -1.0 (Left) to +1.0 (Right) based on position in grid
+      const normalizedX = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
+      const pos = spatialAudio.updatePosition(p.userId, normalizedX, 0);
+      newPositions[p.userId] = pos;
+    });
+
+    setSpatialPositions(newPositions);
+  }, [sortedParticipants, isSpatialAudioActive]);
+
   // TEXT MODE: Real-Time Chat Stream
   if (mode === 'TEXT') {
     if (!room) {
@@ -185,7 +470,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>Spatial Voice Huddle Active</span>
           </div>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <h3 className="text-xl font-bold text-[var(--text-primary)] font-display">
               {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
             </h3>
@@ -197,10 +482,97 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <LayoutGrid className="w-3 h-3" />
               <span>Auto-Arrange</span>
             </button>
+            <button
+              onClick={() => {
+                const next = !isSpatialAudioActive;
+                setIsSpatialAudioActive(next);
+                spatialAudio.setEnabled(next);
+              }}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                isSpatialAudioActive
+                  ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+              }`}
+              title="Toggle 3D Positional Stereo Spatial Audio"
+            >
+              <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+              <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+            </button>
+            <button
+              onClick={() =>
+                handleTriggerCoHost(
+                  'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
+              title="Trigger Mivo AI Stage Co-Host"
+            >
+              <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>@mivo Sprint Blockers</span>
+            </button>
+            <button
+              onClick={() =>
+                handleExtractVoiceTicket(
+                  "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+              title="Simulate Voice-to-Ticket Detection"
+            >
+              <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Voice-to-Ticket Demo</span>
+            </button>
           </div>
         </div>
 
+        {/* Success Toast */}
+        {ticketToast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{ticketToast}</span>
+          </div>
+        )}
+
+        {/* Spoken Voice-to-Ticket Interactive Confirmation Card */}
+        {voiceTicketProposal && (
+          <div className="w-full max-w-xl mb-6 z-30">
+            <VoiceTicketConfirmationCard
+              proposal={voiceTicketProposal}
+              roomId={room?.id}
+              onConfirm={handleConfirmVoiceTicket}
+              onDismiss={() => setVoiceTicketProposal(null)}
+            />
+          </div>
+        )}
+
+        {/* Pinned Sprint Data Tile (if triggered) */}
+        {pinnedDataTile && (
+          <div className="w-full max-w-4xl mb-6 z-20">
+            <AiPinnedDataTile
+              payload={pinnedDataTile}
+              onDismiss={() => {
+                setPinnedDataTile(null);
+                const socket = realtime.getSocket();
+                if (socket && room?.id) {
+                  socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
+                }
+              }}
+              onOpenTicketsModal={() => openTicketsModal(true)}
+            />
+          </div>
+        )}
+
         <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 place-items-center z-10">
+          {/* Active AI Stage Co-Host */}
+          {isCoHostEnabled && (
+            <div className="w-40 sm:w-44 aspect-video flex-shrink-0">
+              <AiCoHostStageTile
+                status={coHostStatus}
+                lastSpeechText={lastSpeechText}
+                onTriggerCommand={handleTriggerCoHost}
+              />
+            </div>
+          )}
           {sortedParticipants.map((p) => {
             const isMe = p.userId === currentUserId;
             const participantMuted = isMe ? isMuted : p.isMuted;
@@ -291,6 +663,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   ) : (
                     <span className="text-[10px] text-[var(--text-muted)] font-semibold block mt-1">Muted</span>
                   )}
+
+                  {isSpatialAudioActive && spatialPositions[p.userId] && (
+                    <span
+                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-block mt-1.5"
+                      title="3D Spatial Audio Pan"
+                    >
+                      🎧 {spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -303,8 +684,69 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   if (mode === 'VIDEO') {
     return (
-      <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden">
-        {pinnedParticipant ? (
+      <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
+        <LiveFactCheckHUD
+          alert={factCheckAlert}
+          onDismiss={() => setFactCheckAlert(null)}
+          onClarifyOnStage={(stmt, truth) => {
+            handleTriggerCoHost(
+              `Mivo, please clarify this statement on stage: "${stmt}" - what does our database show?`
+            );
+            setFactCheckAlert(null);
+          }}
+        />
+
+        {pinnedDataTile ? (
+          // Spotlight Mode: Dominant Pinned AI Data Tile + Attendee Strip
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
+              <AiPinnedDataTile
+                payload={pinnedDataTile}
+                onDismiss={() => {
+                  setPinnedDataTile(null);
+                  const socket = realtime.getSocket();
+                  if (socket && room?.id) {
+                    socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
+                  }
+                }}
+                onOpenTicketsModal={() => openTicketsModal(true)}
+              />
+            </div>
+
+            {/* Bottom attendee filmstrip with Co-Host */}
+            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
+              {isCoHostEnabled && (
+                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
+                  />
+                </div>
+              )}
+              {sortedParticipants.map((p) => {
+                const isMe = p.userId === currentUserId;
+                return (
+                  <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
+                    <LiveVideoTile
+                      user={p.user}
+                      isMe={isMe}
+                      isMuted={isMe ? isMuted : p.isMuted}
+                      isCameraOn={isMe ? isCameraOn : p.isCameraOn}
+                      isPinned={false}
+                      onTogglePin={() => setPinnedUserId(p.userId)}
+                      isHost={isHost}
+                      onHostAction={handleHostAction}
+                      mediaStream={isMe ? localStream : remoteStreams[p.userId]}
+                      audioLevel={isMe ? audioLevel : 0}
+                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : pinnedParticipant ? (
           // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
             <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
@@ -319,11 +761,21 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 onHostAction={handleHostAction}
                 mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
                 audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
+                spatialPanLabel={isSpatialAudioActive && spatialPositions[pinnedParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[pinnedParticipant.userId].pan) : undefined}
               />
             </div>
 
             {/* Bottom attendee filmstrip */}
             <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
+              {isCoHostEnabled && (
+                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
+                  />
+                </div>
+              )}
               {sortedParticipants
                 .filter((p) => p.userId !== pinnedUserId)
                 .map((p) => {
@@ -341,6 +793,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                         onHostAction={handleHostAction}
                         mediaStream={isMe ? localStream : remoteStreams[p.userId]}
                         audioLevel={isMe ? audioLevel : 0}
+                        spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                       />
                     </div>
                   );
@@ -350,10 +803,53 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         ) : (
           // Standard Equal Auto-Adjusting Grid with Drag & Drop
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                Live Video Stage ({participants.length} Active)
-              </span>
+            <div className="flex items-center justify-between mb-3 px-1 flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
+                </span>
+                <button
+                  onClick={() => {
+                    const next = !isSpatialAudioActive;
+                    setIsSpatialAudioActive(next);
+                    spatialAudio.setEnabled(next);
+                  }}
+                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                    isSpatialAudioActive
+                      ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+                  }`}
+                  title="Toggle 3D Positional Stereo Spatial Audio"
+                >
+                  <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleTriggerCoHost(
+                      'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
+                    )
+                  }
+                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
+                  title="Trigger Mivo AI Stage Co-Host"
+                >
+                  <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                  <span>@mivo Sprint Blockers</span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleExtractVoiceTicket(
+                      "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                    )
+                  }
+                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+                  title="Simulate Voice-to-Ticket Detection"
+                >
+                  <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span>Voice-to-Ticket Demo</span>
+                </button>
+              </div>
+
               <button
                 onClick={handleAutoArrange}
                 className="flex items-center gap-1.5 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-3 py-1 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors"
@@ -364,15 +860,34 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               </button>
             </div>
 
+            {/* Voice-to-Ticket Interactive Confirmation Card */}
+            {voiceTicketProposal && (
+              <div className="w-full max-w-xl mx-auto mb-4 z-30">
+                <VoiceTicketConfirmationCard
+                  proposal={voiceTicketProposal}
+                  roomId={room?.id}
+                  onConfirm={handleConfirmVoiceTicket}
+                  onDismiss={() => setVoiceTicketProposal(null)}
+                />
+              </div>
+            )}
+
             <div
               className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
-                sortedParticipants.length === 1
+                sortedParticipants.length === 1 && !isCoHostEnabled
                   ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
-                  : sortedParticipants.length === 2
-                  ? 'grid-cols-1 sm:grid-cols-2 max-w-5xl mx-auto w-full my-auto'
                   : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
               }`}
             >
+              {/* Co-Host Stage Tile */}
+              {isCoHostEnabled && (
+                <AiCoHostStageTile
+                  status={coHostStatus}
+                  lastSpeechText={lastSpeechText}
+                  onTriggerCommand={handleTriggerCoHost}
+                />
+              )}
+
               {sortedParticipants.map((p) => {
                 const isMe = p.userId === currentUserId;
                 const camOn = isMe ? isCameraOn : p.isCameraOn;
@@ -392,6 +907,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     onHostAction={handleHostAction}
                     mediaStream={participantStream}
                     audioLevel={isMe ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop(p.userId)}
@@ -506,6 +1022,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
           >
+            {isCoHostEnabled && (
+              <div className="w-56 sm:w-64 aspect-video flex-shrink-0">
+                <AiCoHostStageTile
+                  status={coHostStatus}
+                  lastSpeechText={lastSpeechText}
+                  onTriggerCommand={handleTriggerCoHost}
+                />
+              </div>
+            )}
             {sortedParticipants.map((p) => {
               const isMe = p.userId === currentUserId;
               const camOn = isMe ? isCameraOn : p.isCameraOn;
@@ -525,6 +1050,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     onHostAction={handleHostAction}
                     mediaStream={participantStream}
                     audioLevel={isMe ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop(p.userId)}
@@ -549,6 +1075,18 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           </button>
         </div>
       )}
+
+      {/* Floating Live Fact-Check HUD Alert */}
+      <LiveFactCheckHUD
+        alert={factCheckAlert}
+        onDismiss={() => setFactCheckAlert(null)}
+        onClarifyOnStage={(stmt, truth) => {
+          handleTriggerCoHost(
+            `Mivo, please clarify this statement on stage: "${stmt}" - what does our database show?`
+          );
+          setFactCheckAlert(null);
+        }}
+      />
     </div>
   );
 };
