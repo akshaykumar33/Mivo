@@ -8,3 +8,4 @@ export * from './TriviaBlitzGame';
 export * from './EmojiDecoderGame';
 export * from './ReflexClashGame';
 export * from './soundEffects';
+export * from './GameRulesModal';

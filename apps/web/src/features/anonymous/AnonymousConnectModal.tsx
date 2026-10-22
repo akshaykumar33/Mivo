@@ -33,9 +33,16 @@ import {
   Gamepad2,
   HelpCircle,
   Volume2,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
+  KeyRound,
+  BookOpen,
 } from 'lucide-react';
 
 import { CanvasTriviaJamPlayground } from './jam/CanvasTriviaJamPlayground';
+import { GameRulesModal } from './jam/GameRulesModal';
 
 const SUGGESTED_TAGS = ['Tech', 'Gaming', 'AI', 'Music', 'Casual', 'Coding', 'Movies', 'Crypto'];
 
@@ -59,6 +66,13 @@ export const AnonymousConnectModal: React.FC = () => {
   const [queueCount, setQueueCount] = React.useState<number>(8);
   const [isTheaterMode, setIsTheaterMode] = React.useState(false);
   const [mobileTab, setMobileTab] = React.useState<'CHAT' | 'PLAYGROUND'>('PLAYGROUND');
+
+  // Matchmaking & 2nd Player Room Mode
+  const [matchTab, setMatchTab] = React.useState<'DISCOVERY' | 'PRIVATE' | 'SOLO'>('DISCOVERY');
+  const [roomCodeInput, setRoomCodeInput] = React.useState('');
+  const [activeRoomCode, setActiveRoomCode] = React.useState<string | null>(null);
+  const [copiedInvite, setCopiedInvite] = React.useState(false);
+  const [rulesModalOpen, setRulesModalOpen] = React.useState(false);
 
   // Active Session State
   const [currentSessionId, setCurrentSessionId] = React.useState<string | null>(null);
@@ -101,13 +115,28 @@ export const AnonymousConnectModal: React.FC = () => {
     return () => clearInterval(pulseInterval);
   }, [isMicMuted, state]);
 
+  // Auto-join from URL parameter (e.g. ?jamCode=JAM48)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('jamCode') || params.get('jam');
+    if (code) {
+      setAnonConnectModalOpen(true);
+      setMatchTab('PRIVATE');
+      setRoomCodeInput(code.toUpperCase());
+    }
+  }, [setAnonConnectModalOpen]);
+
   // Socket Event Listeners
   React.useEffect(() => {
     if (!anonConnectModalOpen) return;
 
-    const handleQueueStatus = (data: { inQueue?: boolean; queueLength?: number }) => {
+    const handleQueueStatus = (data: { inQueue?: boolean; queueLength?: number; roomCode?: string }) => {
       if (typeof data.queueLength === 'number') {
         setQueueCount(data.queueLength);
+      }
+      if (data.roomCode) {
+        setActiveRoomCode(data.roomCode);
       }
     };
 
@@ -218,6 +247,7 @@ export const AnonymousConnectModal: React.FC = () => {
   }, [messages, partnerTyping]);
 
   const handleStartSearch = () => {
+    setActiveRoomCode(null);
     setState('SEARCHING');
     realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
       mode,
@@ -226,8 +256,34 @@ export const AnonymousConnectModal: React.FC = () => {
     });
   };
 
+  const handleCreatePrivateJam = () => {
+    const code = `JAM${Math.floor(100 + Math.random() * 900)}`;
+    setActiveRoomCode(code);
+    setState('SEARCHING');
+    realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
+      mode,
+      interests: selectedTags,
+      pseudonym,
+      roomCode: code,
+    });
+  };
+
+  const handleJoinPrivateJam = (codeToJoin?: string) => {
+    const code = (codeToJoin || roomCodeInput).trim().toUpperCase();
+    if (!code) return;
+    setActiveRoomCode(code);
+    setState('SEARCHING');
+    realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
+      mode,
+      interests: selectedTags,
+      pseudonym,
+      roomCode: code,
+    });
+  };
+
   const handleCancelSearch = () => {
     setState('IDLE');
+    setActiveRoomCode(null);
     realtime.emit(REALTIME_EVENTS.ANON_QUEUE_LEAVE, {});
   };
 
@@ -240,6 +296,7 @@ export const AnonymousConnectModal: React.FC = () => {
       mode,
       interests: selectedTags,
       pseudonym,
+      roomCode: activeRoomCode || undefined,
     });
   };
 
@@ -258,7 +315,7 @@ export const AnonymousConnectModal: React.FC = () => {
       {
         id: 'msg-welcome-demo',
         sender: 'Nova ✨ (AI Partner)',
-        content: "Welcome to Canvas & Trivia Jam! 🎨 Select any game on the right — we can doodle, play Pong, solve emoji riddles, or test our reaction speeds!",
+        content: "Welcome to Canvas & Trivia Jam! 🎨 Select any game on the right — we can doodle, play Pong, solve emoji riddles, or test our reaction speeds! You can also invite a real 2nd player anytime.",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isSelf: false,
       },
@@ -274,6 +331,7 @@ export const AnonymousConnectModal: React.FC = () => {
     setState('IDLE');
     setCurrentSessionId(null);
     setPartner(null);
+    setActiveRoomCode(null);
     setMessages([]);
     setRevealedUsers(null);
   };
@@ -350,6 +408,18 @@ export const AnonymousConnectModal: React.FC = () => {
   // Determine host assignment deterministically
   const isHost = !partner || partner.userId === 'bot-companion' || (user?.id || pseudonym) < partner.userId;
 
+  // Direct share link for active room
+  const directShareLink = activeRoomCode && typeof window !== 'undefined'
+    ? `${window.location.origin}${window.location.pathname}?jamCode=${activeRoomCode}`
+    : '';
+
+  const handleCopyLink = () => {
+    if (!directShareLink) return;
+    navigator.clipboard?.writeText(directShareLink);
+    setCopiedInvite(true);
+    setTimeout(() => setCopiedInvite(false), 2500);
+  };
+
   if (!anonConnectModalOpen) return null;
 
   return (
@@ -360,7 +430,7 @@ export const AnonymousConnectModal: React.FC = () => {
             ? isTheaterMode
               ? 'fixed inset-2 z-50 max-w-none h-[98vh]'
               : 'max-w-6xl xl:max-w-7xl h-[88vh]'
-            : 'max-w-2xl max-h-[90vh]'
+            : 'max-w-2xl max-h-[92vh]'
         } bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-[#111827] relative transition-all duration-200`}
       >
         {/* Ambient Top Glow Bar */}
@@ -391,12 +461,23 @@ export const AnonymousConnectModal: React.FC = () => {
               <p className="text-xs text-[#71717A]">
                 {state === 'CONNECTED'
                   ? 'Real-time collaborative playground: Live chat on the left, interactive minigames on the right.'
-                  : 'Speed connect with strangers for 60s speed doodling, retro Pong & dilemma trivia!'}
+                  : 'Speed connect with strangers or invite a 2nd player for 60s speed doodling, retro Pong & dilemma trivia!'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Rules Button in Header */}
+            <button
+              type="button"
+              onClick={() => setRulesModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              title="Read Game Rules & Guide"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden sm:inline">How to Play</span>
+            </button>
+
             {state === 'CONNECTED' && (
               <button
                 type="button"
@@ -422,186 +503,275 @@ export const AnonymousConnectModal: React.FC = () => {
 
         {/* ================= STATE 1: IDLE / LOBBY ================= */}
         {state === 'IDLE' && (
-          <div className="p-5 sm:p-6 space-y-5 overflow-y-auto">
-            {/* Featured Jam Banner with Instant Launch */}
-            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-950/90 via-purple-950/90 to-indigo-950/90 border border-rose-500/30 text-white relative overflow-hidden shadow-xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-sm">
-                      Interactive Jam
-                    </span>
-                    <span className="text-xs text-rose-300 font-mono">8 Real-Time Games Included</span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-black font-display tracking-tight text-white">
-                    Speed Doodling, Neon Pong &amp; Dilemma Deck
-                  </h3>
-                  <p className="text-xs text-gray-300 max-w-md">
-                    Skip awkward small talk! Match with a peer and immediately play 60s draw &amp; guess, Connect-4, trivia duels, or test your reflexes!
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleLaunchDemoJam}
-                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-500 hover:to-rose-600 text-white font-extrabold text-xs shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer shrink-0 flex items-center gap-1.5"
-                >
-                  <Gamepad2 className="w-4 h-4" />
-                  <span>Launch Jam Demo Now</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Guest Limitations Pill Notice */}
-            {isGuest && (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-amber-800">
-                  <UserCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>
-                    Connecting as a <strong>Guest User</strong> (3s chat rate limit applies).
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setUpgradeModalOpen(true)}
-                  className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs cursor-pointer shrink-0"
-                >
-                  Upgrade
-                </button>
-              </div>
-            )}
-
-            {/* Mode Selection */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2">
-                Choose Connection Mode
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setMode('TEXT')}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                    mode === 'TEXT'
-                      ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                      mode === 'TEXT' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900">Text &amp; Canvas Jam</div>
-                    <div className="text-[11px] text-gray-500">Live chat + interactive playground</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setMode('VIDEO')}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                    mode === 'VIDEO'
-                      ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                      mode === 'VIDEO' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    <Video className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900">Video + Audio Jam</div>
-                    <div className="text-[11px] text-gray-500">WebRTC camera + interactive playground</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Pseudonym Field */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-gray-700">Your Incognito Alias</label>
-                <button
-                  type="button"
-                  onClick={rerollPseudonym}
-                  className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-                >
-                  <Dice5 className="w-3.5 h-3.5" />
-                  <span>Reroll Alias</span>
-                </button>
-              </div>
-              <input
-                type="text"
-                value={pseudonym}
-                onChange={(e) => setPseudonym(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-xs font-semibold text-gray-900 bg-white"
-              />
-            </div>
-
-            {/* Shared Interests Tags */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2">
-                Pairing Interests &amp; Tags
-              </label>
-              <div className="flex flex-wrap gap-1.5 mb-2.5">
-                {SUGGESTED_TAGS.map((tag) => {
-                  const isSelected = selectedTags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-rose-600 text-white shadow-xs'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      #{tag}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <input
-                type="text"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={handleAddCustomTag}
-                placeholder="Type a custom interest and press Enter (e.g. Anime, Science)..."
-                className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-gray-50 text-gray-900"
-              />
-            </div>
-
-            {/* Queue Counter & Join Button */}
-            <div className="pt-2 space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 px-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{queueCount} active peers waiting in match pool</span>
-                </span>
-                <span>Fast 1-on-1 discovery</span>
-              </div>
+          <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+            {/* 3 Main Connection Modes */}
+            <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setMatchTab('DISCOVERY')}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  matchTab === 'DISCOVERY'
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>🎲 Match Strangers</span>
+              </button>
 
               <button
                 type="button"
-                onClick={handleStartSearch}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                onClick={() => setMatchTab('PRIVATE')}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  matchTab === 'PRIVATE'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
-                <Radio className="w-4 h-4 animate-pulse" />
-                <span>Find Anonymous Match</span>
+                <Users className="w-3.5 h-3.5" />
+                <span>🔑 Invite 2nd Player</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLaunchDemoJam}
+                className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Gamepad2 className="w-3.5 h-3.5 text-indigo-600" />
+                <span>🤖 Solo / Practice</span>
               </button>
             </div>
+
+            {/* TAB 1: PRIVATE ROOM / INVITE 2ND PLAYER DIRECTLY */}
+            {matchTab === 'PRIVATE' && (
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-950/90 via-purple-950/90 to-indigo-950/90 border border-rose-500/30 text-white space-y-4 shadow-xl">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-sm">
+                      2-Player Direct Room
+                    </span>
+                    <span className="text-xs text-rose-300 font-mono">No Queue Waiting</span>
+                  </div>
+                  <h3 className="text-base font-black font-display tracking-tight text-white mt-1">
+                    Invite a Friend or Open in a 2nd Browser Tab
+                  </h3>
+                  <p className="text-xs text-gray-300">
+                    Create a private room to get a shareable link/code, or enter your friend's code to connect immediately!
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {/* Option A: Create Private Room */}
+                  <div className="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-3 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 font-bold text-xs text-white">
+                        <KeyRound className="w-4 h-4 text-amber-400" />
+                        <span>Create New Room</span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 mt-1">
+                        Generates a 5-letter Room Code and direct invite URL for your friend.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleCreatePrivateJam}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-500 hover:to-rose-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Create Private Room Code</span>
+                    </button>
+                  </div>
+
+                  {/* Option B: Join with Code */}
+                  <div className="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-3 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 font-bold text-xs text-white">
+                        <Users className="w-4 h-4 text-cyan-400" />
+                        <span>Join Friend's Room</span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 mt-1">
+                        Have a code from a friend? Enter it below to join their split screen.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={roomCodeInput}
+                        onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
+                        placeholder="e.g. JAM88"
+                        className="flex-1 px-3 py-2 text-xs rounded-xl bg-black/50 border border-white/20 text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50 uppercase"
+                      />
+                      <button
+                        type="button"
+                        disabled={!roomCodeInput.trim()}
+                        onClick={() => handleJoinPrivateJam()}
+                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-40 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer shrink-0"
+                      >
+                        Join!
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DISCOVERY / STRANGER QUEUE */}
+            {matchTab === 'DISCOVERY' && (
+              <div className="space-y-4">
+                {/* Guest Limitations Pill Notice */}
+                {isGuest && (
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs text-amber-800">
+                      <UserCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>
+                        Connecting as a <strong>Guest User</strong> (3s chat rate limit applies).
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setUpgradeModalOpen(true)}
+                      className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs cursor-pointer shrink-0"
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                )}
+
+                {/* Mode Selection */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">
+                    Choose Connection Mode
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setMode('TEXT')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                        mode === 'TEXT'
+                          ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                          mode === 'TEXT' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-gray-900">Text &amp; Canvas Jam</div>
+                        <div className="text-[11px] text-gray-500">Live chat + interactive playground</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setMode('VIDEO')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                        mode === 'VIDEO'
+                          ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                          mode === 'VIDEO' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        <Video className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-gray-900">Video + Audio Jam</div>
+                        <div className="text-[11px] text-gray-500">WebRTC camera + interactive playground</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pseudonym Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-gray-700">Your Incognito Alias</label>
+                    <button
+                      type="button"
+                      onClick={rerollPseudonym}
+                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Dice5 className="w-3.5 h-3.5" />
+                      <span>Reroll Alias</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={pseudonym}
+                    onChange={(e) => setPseudonym(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-xs font-semibold text-gray-900 bg-white"
+                  />
+                </div>
+
+                {/* Shared Interests Tags */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">
+                    Pairing Interests &amp; Tags
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {SUGGESTED_TAGS.map((tag) => {
+                      const isSelected = selectedTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-rose-600 text-white shadow-xs'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={customTagInput}
+                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    onKeyDown={handleAddCustomTag}
+                    placeholder="Type a custom interest and press Enter (e.g. Anime, Science)..."
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-gray-50 text-gray-900"
+                  />
+                </div>
+
+                {/* Queue Counter & Join Button */}
+                <div className="pt-2 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{queueCount} active peers waiting in match pool</span>
+                    </span>
+                    <span>Fast 1-on-1 discovery</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleStartSearch}
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <Radio className="w-4 h-4 animate-pulse" />
+                    <span>Find Anonymous Match</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* ================= STATE 2: SEARCHING RADAR ================= */}
+        {/* ================= STATE 2: SEARCHING / PRIVATE RADAR ================= */}
         {state === 'SEARCHING' && (
           <div className="p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-6">
             <div className="relative w-28 h-28 flex items-center justify-center">
@@ -612,15 +782,59 @@ export const AnonymousConnectModal: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 font-display">
-                Matching with an Anonymous Peer...
-              </h3>
-              <p className="text-xs text-gray-500 mt-1 max-w-sm">
-                Pairing you with another guest or anonymous user interested in{' '}
-                {selectedTags.length ? selectedTags.map((t) => `#${t}`).join(', ') : 'anything'}.
-              </p>
-            </div>
+            {/* If Waiting in Private Room */}
+            {activeRoomCode ? (
+              <div className="space-y-4 max-w-md w-full">
+                <div>
+                  <h3 className="text-lg font-black text-gray-900 font-display">
+                    Private Room Created: <span className="text-rose-600 font-mono">{activeRoomCode}</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Waiting for your 2nd player to enter this code or click the invite link.
+                  </p>
+                </div>
+
+                {/* Direct Share Link & 2nd Tab Button */}
+                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-left space-y-2">
+                  <label className="text-[11px] font-bold text-gray-700 block">Share Invite Link:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={directShareLink}
+                      className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-white border border-gray-300 font-mono text-gray-700 select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
+                    >
+                      {copiedInvite ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedInvite ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => window.open(directShareLink, '_blank')}
+                    className="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open in 2nd Browser Tab (Test Live Multiplayer)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 font-display">
+                  Matching with an Anonymous Peer...
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                  Pairing you with another guest or anonymous user interested in{' '}
+                  {selectedTags.length ? selectedTags.map((t) => `#${t}`).join(', ') : 'anything'}.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <button
@@ -636,7 +850,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 onClick={handleCancelSearch}
                 className="py-2 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition-colors cursor-pointer"
               >
-                Cancel Search
+                Cancel
               </button>
             </div>
           </div>
@@ -916,6 +1130,7 @@ export const AnonymousConnectModal: React.FC = () => {
                   myPseudonym={pseudonym}
                   partnerPseudonym={partner.pseudonym}
                   isHost={isHost}
+                  sessionRoomCode={activeRoomCode || undefined}
                   onGameEventNotice={(notice) => {
                     setMessages((prev) => [
                       ...prev,
@@ -934,6 +1149,12 @@ export const AnonymousConnectModal: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Global Game Rules Modal */}
+        <GameRulesModal
+          isOpen={rulesModalOpen}
+          onClose={() => setRulesModalOpen(false)}
+        />
       </div>
     </div>
   );

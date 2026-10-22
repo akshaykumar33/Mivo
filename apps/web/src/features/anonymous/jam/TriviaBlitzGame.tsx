@@ -92,25 +92,28 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
 
   const currentQ = TRIVIA_QUESTIONS[qIndex % TRIVIA_QUESTIONS.length];
 
-  // Timer countdown
+  // Timer countdown tick
   React.useEffect(() => {
-    if (showAnswer) return;
+    if (showAnswer || timeLeft <= 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setShowAnswer(true);
-          sounds.playBounce();
-          return 0;
-        }
-        if (prev <= 3) sounds.playTick();
-        return prev - 1;
+        const next = Math.max(0, prev - 1);
+        if (next <= 3 && next > 0) sounds.playTick();
+        return next;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [showAnswer, qIndex]);
+  }, [showAnswer, timeLeft]);
+
+  // Handle timeout outside render
+  React.useEffect(() => {
+    if (timeLeft === 0 && !showAnswer) {
+      setShowAnswer(true);
+      sounds.playBounce();
+    }
+  }, [timeLeft, showAnswer]);
 
   // Sync remote actions
   React.useEffect(() => {

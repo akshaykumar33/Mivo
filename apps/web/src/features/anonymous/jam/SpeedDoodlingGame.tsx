@@ -120,39 +120,43 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     }
   };
 
-  // Timer Countdown
+  // Timer Countdown tick
   React.useEffect(() => {
-    if (!timerActive || roundSolved) return;
+    if (!timerActive || roundSolved || timeLeft <= 0) return;
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTimerActive(false);
-          setRoundSolved(true);
-          setFeedback(`⏰ Time's up! The word was "${targetWord}"`);
-          return 0;
-        }
-        if (prev === 40 || prev === 20) {
-          // reveal random unrevealed letter
-          setRevealedLetters((existing) => {
-            const unrevealed = targetWord
-              .split('')
-              .map((_, i) => i)
-              .filter((i) => !existing.includes(i));
-            if (unrevealed.length > 0) {
-              const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
-              return [...existing, pick];
-            }
-            return existing;
-          });
-          sounds.playTick();
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerActive, roundSolved, targetWord]);
+  }, [timerActive, roundSolved, timeLeft]);
+
+  // Handle side-effects of timeLeft (hints at 40s/20s, timeup at 0s) outside render
+  React.useEffect(() => {
+    if (!timerActive || roundSolved) return;
+
+    if (timeLeft === 0) {
+      setTimerActive(false);
+      setRoundSolved(true);
+      setFeedback(`⏰ Time's up! The word was "${targetWord}"`);
+      sounds.playBounce();
+      return;
+    }
+
+    if (timeLeft === 40 || timeLeft === 20) {
+      setRevealedLetters((existing) => {
+        const unrevealed = targetWord
+          .split('')
+          .map((_, i) => i)
+          .filter((i) => !existing.includes(i));
+        if (unrevealed.length > 0) {
+          const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+          return [...existing, pick];
+        }
+        return existing;
+      });
+      sounds.playTick();
+    }
+  }, [timeLeft, timerActive, roundSolved, targetWord]);
 
   // Sync actions from partner
   React.useEffect(() => {

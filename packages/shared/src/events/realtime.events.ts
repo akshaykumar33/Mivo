@@ -401,6 +401,7 @@ export interface AnonQueueJoinPayload {
   mode: 'TEXT' | 'VIDEO';
   interests?: string[];
   pseudonym?: string;
+  roomCode?: string;
 }
 
 export interface AnonMatchedPayload {

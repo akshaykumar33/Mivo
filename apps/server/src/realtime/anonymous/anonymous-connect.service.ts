@@ -68,6 +68,9 @@ export class AnonymousConnectService {
   // Rate limiting for guest messages: socketId -> lastMessageTimestamp
   private guestMessageCooldowns = new Map<string, number>();
 
+  // Private Jam rooms: roomCode -> QueueEntry
+  private privateRooms = new Map<string, QueueEntry>();
+
   /**
    * Generates a fun anonymous pseudonym
    */
@@ -82,7 +85,7 @@ export class AnonymousConnectService {
   }
 
   /**
-   * Adds a user to the anonymous matchmaking queue
+   * Adds a user to the anonymous matchmaking queue or matches private room code
    */
   joinQueue(server: Server, client: Socket, payload: AnonQueueJoinPayload) {
     const user = client.data?.user;
@@ -103,7 +106,26 @@ export class AnonymousConnectService {
       joinedAt: Date.now(),
     };
 
-    // Try to find a match in the queue
+    // Private Jam Room Matching by Room Code
+    const roomCode = payload.roomCode?.trim().toUpperCase();
+    if (roomCode) {
+      const existing = this.privateRooms.get(roomCode);
+      if (existing && existing.socketId !== client.id) {
+        this.privateRooms.delete(roomCode);
+        this.createSession(server, existing, entry);
+        return;
+      } else {
+        this.privateRooms.set(roomCode, entry);
+        client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
+          inQueue: true,
+          roomCode,
+          message: `Private Jam room created! Waiting for Player 2 to join with code: ${roomCode}`,
+        });
+        return;
+      }
+    }
+
+    // Standard matchmaking queue
     const matchIndex = this.findMatchIndex(entry);
 
     if (matchIndex !== -1) {
@@ -124,6 +146,13 @@ export class AnonymousConnectService {
    * Removes client from queue or active session
    */
   leaveSessionOrQueue(server: Server, client: Socket) {
+    // 0. Remove from private rooms if present
+    for (const [code, rEntry] of this.privateRooms.entries()) {
+      if (rEntry.socketId === client.id) {
+        this.privateRooms.delete(code);
+      }
+    }
+
     // 1. Remove from queue if present
     const qIdx = this.queue.findIndex((e) => e.socketId === client.id);
     if (qIdx !== -1) {

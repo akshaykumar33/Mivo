@@ -52,31 +52,34 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
   const lastWord = chain[chain.length - 1].word;
   const requiredChar = lastWord.slice(-1).toUpperCase();
 
-  // Turn timer countdown
+  // Turn timer countdown tick
   React.useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || timeLeft <= 0) return;
 
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setGameOver(true);
-          const loser = isMyTurn ? myPseudonym : partnerPseudonym;
-          setLoserName(loser);
-          setFeedback(`💣 Boom! ${loser} ran out of time!`);
-          sounds.playBounce();
-          onScoreUpdate(100, !isMyTurn);
-          return 0;
-        }
-        if (prev <= 4) {
+        const next = Math.max(0, prev - 1);
+        if (next <= 3 && next > 0) {
           sounds.playTick();
         }
-        return prev - 1;
+        return next;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isMyTurn, gameOver, myPseudonym, partnerPseudonym]);
+  }, [gameOver, timeLeft]);
+
+  // Handle timeout game over outside render
+  React.useEffect(() => {
+    if (timeLeft === 0 && !gameOver) {
+      setGameOver(true);
+      const loser = isMyTurn ? myPseudonym : partnerPseudonym;
+      setLoserName(loser);
+      setFeedback(`💣 Boom! ${loser} ran out of time!`);
+      sounds.playBounce();
+      onScoreUpdate(100, !isMyTurn);
+    }
+  }, [timeLeft, gameOver, isMyTurn, myPseudonym, partnerPseudonym, onScoreUpdate]);
 
   // Remote actions sync
   React.useEffect(() => {
