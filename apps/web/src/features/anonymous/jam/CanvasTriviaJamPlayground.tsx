@@ -55,6 +55,7 @@ interface CanvasTriviaJamPlaygroundProps {
   partnerPseudonym: string;
   isHost: boolean;
   sessionRoomCode?: string;
+  onRegisterPrivateRoom?: (roomCode: string) => void;
   onGameEventNotice?: (notice: string) => void;
 }
 
@@ -75,6 +76,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
   partnerPseudonym,
   isHost,
   sessionRoomCode,
+  onRegisterPrivateRoom,
   onGameEventNotice,
 }) => {
   const [activeGame, setActiveGame] = React.useState<JamGameType>('DOODLE');
@@ -86,6 +88,26 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
   const [rulesModalOpen, setRulesModalOpen] = React.useState(false);
   const [inviteModalOpen, setInviteModalOpen] = React.useState(false);
   const [copiedLink, setCopiedLink] = React.useState(false);
+
+  // Stable Room code for sharing
+  const [internalRoomCode] = React.useState(() => {
+    return sessionRoomCode || `JAM${Math.floor(100 + Math.random() * 900)}`;
+  });
+  const roomCode = sessionRoomCode || internalRoomCode;
+
+  // Auto-close invite modal if partner joins while invite popup is open
+  const prevPartnerRef = React.useRef(partnerPseudonym);
+  React.useEffect(() => {
+    if (prevPartnerRef.current !== partnerPseudonym) {
+      if (inviteModalOpen) {
+        setInviteModalOpen(false);
+      }
+      setShowConfetti(true);
+      sounds.playFanfare();
+      setTimeout(() => setShowConfetti(false), 3000);
+      prevPartnerRef.current = partnerPseudonym;
+    }
+  }, [partnerPseudonym, inviteModalOpen]);
 
   // Incoming socket game action
   const [lastAction, setLastAction] = React.useState<{
@@ -165,8 +187,6 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
     setTimeout(() => setShowConfetti(false), 2500);
   }, []);
 
-  // Room code for sharing
-  const roomCode = sessionRoomCode || sessionId.replace(/[^A-Za-z0-9]/g, '').slice(-5).toUpperCase();
   const inviteLink = typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}?jamCode=${roomCode}`
     : `http://localhost:3000/channels?jamCode=${roomCode}`;
@@ -253,6 +273,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             onClick={() => {
               setInviteModalOpen(true);
               sounds.playPop();
+              onRegisterPrivateRoom?.(roomCode);
             }}
             className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-extrabold text-xs flex items-center gap-1 shadow-md transition-all cursor-pointer"
             title="Invite 2nd Player (Room Code & Link)"
@@ -450,15 +471,19 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
             </div>
 
             {/* Room Code Callout */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-1">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
               <span className="text-[10px] uppercase font-mono tracking-widest text-indigo-400 font-extrabold block">
                 Jam Room Code
               </span>
               <div className="text-3xl font-black font-mono tracking-widest text-white">
                 {roomCode}
               </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>Room Active on Server • Waiting for Player 2</span>
+              </div>
               <p className="text-[11px] text-gray-400">
-                Your friend can enter this code in the Jam lobby to join immediately.
+                Your friend can enter this code in the Jam lobby or click the invite link to connect immediately.
               </p>
             </div>
 

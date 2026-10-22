@@ -60,9 +60,10 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      router.push(`/login${search ? `?redirect=${encodeURIComponent(pathname + search)}` : ''}`);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   if (isLoading) {
     return (

@@ -37,7 +37,9 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
         if (onSuccess) {
           onSuccess();
         } else {
-          router.push('/channels');
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect') || '/channels';
+          router.push(redirect);
         }
       } else {
         setError(res.error?.message || 'Failed to enter as guest. Please try again.');

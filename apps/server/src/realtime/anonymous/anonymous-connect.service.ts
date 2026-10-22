@@ -85,10 +85,37 @@ export class AnonymousConnectService {
   }
 
   /**
+   * Safe helper to resolve a socket instance from the server namespace
+   */
+  private getSocket(server: any, socketId: string): Socket | undefined {
+    if (!server || !socketId) return undefined;
+    if (server.sockets instanceof Map) {
+      return server.sockets.get(socketId);
+    }
+    if (server.sockets?.sockets instanceof Map) {
+      return server.sockets.sockets.get(socketId);
+    }
+    if (typeof server.sockets?.get === 'function') {
+      return server.sockets.get(socketId);
+    }
+    if (typeof server.of === 'function') {
+      const rootNs = server.of('/');
+      if (rootNs?.sockets instanceof Map) {
+        return rootNs.sockets.get(socketId);
+      }
+      if (typeof rootNs?.sockets?.get === 'function') {
+        return rootNs.sockets.get(socketId);
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Adds a user to the anonymous matchmaking queue or matches private room code
    */
   joinQueue(server: Server, client: Socket, payload: AnonQueueJoinPayload) {
     const user = client.data?.user;
+    this.logger.log(`joinQueue: client=${client.id}, roomCode=${payload.roomCode}, hasUser=${Boolean(user)}`);
     if (!user) return;
 
     // Leave any existing session or queue first
@@ -110,11 +137,26 @@ export class AnonymousConnectService {
     const roomCode = payload.roomCode?.trim().toUpperCase();
     if (roomCode) {
       const existing = this.privateRooms.get(roomCode);
+      this.logger.log(`privateRooms lookup for ${roomCode}: existing=${existing ? existing.socketId : 'none'}, current=${client.id}`);
       if (existing && existing.socketId !== client.id) {
+        const existingSocket = this.getSocket(server, existing.socketId);
+        if (existingSocket && !existingSocket.connected) {
+          this.logger.warn(`Private room ${roomCode} host socket ${existing.socketId} disconnected. Replacing with new client ${client.id}.`);
+          this.privateRooms.set(roomCode, entry);
+          client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
+            inQueue: true,
+            roomCode,
+            message: `Private Jam room created! Waiting for Player 2 to join with code: ${roomCode}`,
+          });
+          return;
+        }
+
+        this.logger.log(`Matching private Jam room ${roomCode} between ${existing.pseudonym} (Host: ${existing.socketId}) and ${entry.pseudonym} (Player 2: ${client.id})`);
         this.privateRooms.delete(roomCode);
         this.createSession(server, existing, entry);
         return;
       } else {
+        this.logger.log(`Client ${client.id} (${entry.pseudonym}) registered waiting in private room ${roomCode}`);
         this.privateRooms.set(roomCode, entry);
         client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
           inQueue: true,
@@ -318,15 +360,24 @@ export class AnonymousConnectService {
     this.socketToSession.set(user2.socketId, sessionId);
 
     // Join sockets to session room
-    const s1 = server.sockets.sockets.get(user1.socketId);
-    const s2 = server.sockets.sockets.get(user2.socketId);
+    const s1 = this.getSocket(server, user1.socketId);
+    const s2 = this.getSocket(server, user2.socketId);
 
     if (s1) s1.join(`anon:${sessionId}`);
     if (s2) s2.join(`anon:${sessionId}`);
 
-    // Emit matched to User 1
+    // Try multi-process / Redis adapter room join
+    if (typeof (server as any).in === 'function') {
+      try {
+        (server as any).in(user1.socketId).socketsJoin(`anon:${sessionId}`);
+        (server as any).in(user2.socketId).socketsJoin(`anon:${sessionId}`);
+      } catch {}
+    }
+
+    // Emit matched to User 1 (Host)
     const match1: AnonMatchedPayload = {
       sessionId,
+      isHost: true,
       partner: {
         userId: user2.userId,
         pseudonym: user2.pseudonym,
@@ -337,10 +388,12 @@ export class AnonymousConnectService {
       mode: session.mode,
     };
     if (s1) s1.emit(REALTIME_EVENTS.ANON_MATCHED, match1);
+    server.to(user1.socketId).emit(REALTIME_EVENTS.ANON_MATCHED, match1);
 
-    // Emit matched to User 2
+    // Emit matched to User 2 (Guest / Player 2)
     const match2: AnonMatchedPayload = {
       sessionId,
+      isHost: false,
       partner: {
         userId: user1.userId,
         pseudonym: user1.pseudonym,
@@ -351,7 +404,9 @@ export class AnonymousConnectService {
       mode: session.mode,
     };
     if (s2) s2.emit(REALTIME_EVENTS.ANON_MATCHED, match2);
+    server.to(user2.socketId).emit(REALTIME_EVENTS.ANON_MATCHED, match2);
 
+    this.logger.log(`Session ${sessionId} successfully created between ${user1.socketId} and ${user2.socketId}`);
     this.broadcastQueueStatus(server);
   }
 
@@ -376,8 +431,8 @@ export class AnonymousConnectService {
       message: 'Your partner has disconnected or skipped to the next match.',
     });
 
-    const s1 = server.sockets.sockets.get(session.user1.socketId);
-    const s2 = server.sockets.sockets.get(session.user2.socketId);
+    const s1 = this.getSocket(server, session.user1.socketId);
+    const s2 = this.getSocket(server, session.user2.socketId);
     if (s1) s1.leave(`anon:${sessionId}`);
     if (s2) s2.leave(`anon:${sessionId}`);
   }

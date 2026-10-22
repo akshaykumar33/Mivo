@@ -407,6 +407,7 @@ export interface AnonQueueJoinPayload {
 export interface AnonMatchedPayload {
   sessionId: string;
   roomId?: string;
+  isHost?: boolean;
   partner: {
     userId: string;
     pseudonym: string;

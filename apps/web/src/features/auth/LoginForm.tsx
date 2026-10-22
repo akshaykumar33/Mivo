@@ -34,7 +34,9 @@ export const LoginForm: React.FC = () => {
 
     if (res.success && res.data) {
       setAuth(res.data.user, res.data.accessToken);
-      router.push('/channels');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect') || '/channels';
+      router.push(redirect);
     } else {
       setError(res.error?.message || 'Login failed. Please check your credentials.');
     }
@@ -56,7 +58,9 @@ export const LoginForm: React.FC = () => {
 
     if (res.success && res.data) {
       setAuth(res.data.user, res.data.accessToken);
-      router.push('/channels');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect') || '/channels';
+      router.push(redirect);
     } else {
       setError(res.error?.message || 'Login failed.');
       setActiveProfile(null);

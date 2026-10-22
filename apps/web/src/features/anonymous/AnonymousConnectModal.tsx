@@ -77,6 +77,7 @@ export const AnonymousConnectModal: React.FC = () => {
   // Active Session State
   const [currentSessionId, setCurrentSessionId] = React.useState<string | null>(null);
   const [partner, setPartner] = React.useState<AnonMatchedPayload['partner'] | null>(null);
+  const [isHost, setIsHost] = React.useState(true);
   const [messages, setMessages] = React.useState<
     Array<{ id: string; sender: string; content: string; time: string; isSelf: boolean; isSystem?: boolean }>
   >([]);
@@ -115,17 +116,82 @@ export const AnonymousConnectModal: React.FC = () => {
     return () => clearInterval(pulseInterval);
   }, [isMicMuted, state]);
 
-  // Auto-join from URL parameter (e.g. ?jamCode=JAM48)
+  // Resilient queue join emitter
+  const emitQueueJoin = React.useCallback(
+    (code?: string) => {
+      const payload: any = {
+        mode,
+        interests: selectedTags,
+        pseudonym: pseudonym || (isGuest ? 'Guest Explorer' : 'Incognito User'),
+      };
+      if (code) {
+        payload.roomCode = code.trim().toUpperCase();
+      }
+
+      const doEmit = () => {
+        console.log('[Jam] Emitting ANON_QUEUE_JOIN:', payload);
+        realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, payload);
+      };
+
+      if (realtime.isConnected()) {
+        doEmit();
+      } else {
+        const socket = realtime.getSocket();
+        if (socket) {
+          socket.once('connect', doEmit);
+        }
+        setTimeout(() => {
+          if (realtime.isConnected()) doEmit();
+        }, 500);
+        setTimeout(() => {
+          if (realtime.isConnected()) doEmit();
+        }, 1500);
+      }
+    },
+    [mode, selectedTags, pseudonym, isGuest]
+  );
+
+  const handleJoinPrivateJam = React.useCallback(
+    (codeToJoin?: string) => {
+      const code = (codeToJoin || roomCodeInput).trim().toUpperCase();
+      if (!code) return;
+      setActiveRoomCode(code);
+      setRoomCodeInput(code);
+      setState('SEARCHING');
+      emitQueueJoin(code);
+    },
+    [roomCodeInput, emitQueueJoin]
+  );
+
+  const handleRegisterPrivateRoom = React.useCallback(
+    (code: string) => {
+      const cleanCode = code.trim().toUpperCase();
+      setActiveRoomCode(cleanCode);
+      setRoomCodeInput(cleanCode);
+      emitQueueJoin(cleanCode);
+    },
+    [emitQueueJoin]
+  );
+
+  // Auto-join from URL parameter (e.g. ?jamCode=JAM410)
+  const autoJoinAttemptedRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const code = params.get('jamCode') || params.get('jam');
     if (code) {
+      const cleanCode = code.trim().toUpperCase();
       setAnonConnectModalOpen(true);
       setMatchTab('PRIVATE');
-      setRoomCodeInput(code.toUpperCase());
+      setRoomCodeInput(cleanCode);
+      setActiveRoomCode(cleanCode);
+
+      if (autoJoinAttemptedRef.current !== cleanCode || state === 'IDLE') {
+        autoJoinAttemptedRef.current = cleanCode;
+        handleJoinPrivateJam(cleanCode);
+      }
     }
-  }, [setAnonConnectModalOpen]);
+  }, [setAnonConnectModalOpen, handleJoinPrivateJam, state]);
 
   // Socket Event Listeners
   React.useEffect(() => {
@@ -143,6 +209,11 @@ export const AnonymousConnectModal: React.FC = () => {
     const handleMatched = (data: AnonMatchedPayload) => {
       setCurrentSessionId(data.sessionId);
       setPartner(data.partner);
+      if (typeof data.isHost === 'boolean') {
+        setIsHost(data.isHost);
+      } else {
+        setIsHost(!data.partner || data.partner.userId === 'bot-companion' || (user?.id || pseudonym) <= data.partner.userId);
+      }
       setState('CONNECTED');
       setMessages([
         {
@@ -195,13 +266,19 @@ export const AnonymousConnectModal: React.FC = () => {
         {
           id: Math.random().toString(),
           sender: 'System',
-          content: data.message || 'Your partner has disconnected or skipped.',
+          content: data.message || 'Your partner has disconnected or skipped. Switched to Solo Practice with Nova ✨!',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isSelf: false,
           isSystem: true,
         },
       ]);
-      setPartner(null);
+      setPartner({
+        userId: 'bot-companion',
+        pseudonym: 'Nova ✨ (AI Partner)',
+        isGuest: false,
+        interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
+      });
+      setIsHost(true);
     };
 
     const handleRevealRequest = () => {
@@ -249,39 +326,20 @@ export const AnonymousConnectModal: React.FC = () => {
   const handleStartSearch = () => {
     setActiveRoomCode(null);
     setState('SEARCHING');
-    realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
-      mode,
-      interests: selectedTags,
-      pseudonym,
-    });
+    emitQueueJoin();
   };
 
   const handleCreatePrivateJam = () => {
     const code = `JAM${Math.floor(100 + Math.random() * 900)}`;
     setActiveRoomCode(code);
+    setRoomCodeInput(code);
+    setIsHost(true);
     setState('SEARCHING');
-    realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
-      mode,
-      interests: selectedTags,
-      pseudonym,
-      roomCode: code,
-    });
-  };
-
-  const handleJoinPrivateJam = (codeToJoin?: string) => {
-    const code = (codeToJoin || roomCodeInput).trim().toUpperCase();
-    if (!code) return;
-    setActiveRoomCode(code);
-    setState('SEARCHING');
-    realtime.emit(REALTIME_EVENTS.ANON_QUEUE_JOIN, {
-      mode,
-      interests: selectedTags,
-      pseudonym,
-      roomCode: code,
-    });
+    emitQueueJoin(code);
   };
 
   const handleCancelSearch = () => {
+    autoJoinAttemptedRef.current = null;
     setState('IDLE');
     setActiveRoomCode(null);
     realtime.emit(REALTIME_EVENTS.ANON_QUEUE_LEAVE, {});
@@ -310,6 +368,7 @@ export const AnonymousConnectModal: React.FC = () => {
       isGuest: false,
       interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
     });
+    setIsHost(true);
     setState('CONNECTED');
     setMessages([
       {
@@ -323,6 +382,7 @@ export const AnonymousConnectModal: React.FC = () => {
   };
 
   const handleEndChat = () => {
+    autoJoinAttemptedRef.current = null;
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
@@ -405,9 +465,6 @@ export const AnonymousConnectModal: React.FC = () => {
     setPseudonym(isGuest ? `Guest ${chosen} #${num}` : `Anon ${chosen} #${num}`);
   };
 
-  // Determine host assignment deterministically
-  const isHost = !partner || partner.userId === 'bot-companion' || (user?.id || pseudonym) < partner.userId;
-
   // Direct share link for active room
   const directShareLink = activeRoomCode && typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}?jamCode=${activeRoomCode}`
@@ -418,6 +475,13 @@ export const AnonymousConnectModal: React.FC = () => {
     navigator.clipboard?.writeText(directShareLink);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2500);
+  };
+
+  const activePartner = partner || {
+    userId: 'bot-companion',
+    pseudonym: 'Nova ✨ (AI Partner)',
+    isGuest: false,
+    interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
   };
 
   if (!anonConnectModalOpen) return null;
@@ -786,17 +850,21 @@ export const AnonymousConnectModal: React.FC = () => {
             {activeRoomCode ? (
               <div className="space-y-4 max-w-md w-full">
                 <div>
-                  <h3 className="text-lg font-black text-gray-900 font-display">
-                    Private Room Created: <span className="text-rose-600 font-mono">{activeRoomCode}</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 text-rose-600 border border-rose-500/25 text-xs font-bold mb-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                    <span>Connecting to Private Jam Room</span>
+                  </div>
+                  <h3 className="text-xl font-black text-gray-900 font-display">
+                    Room Code: <span className="text-rose-600 font-mono tracking-wider">{activeRoomCode}</span>
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    Waiting for your 2nd player to enter this code or click the invite link.
+                    Connecting to your partner or waiting for 2nd player to enter the room...
                   </p>
                 </div>
 
                 {/* Direct Share Link & 2nd Tab Button */}
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-left space-y-2">
-                  <label className="text-[11px] font-bold text-gray-700 block">Share Invite Link:</label>
+                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-left space-y-2.5">
+                  <label className="text-[11px] font-bold text-gray-700 block">Share Invite Link with Friend:</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -807,21 +875,32 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
                     >
                       {copiedInvite ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedInvite ? 'Copied!' : 'Copy'}</span>
                     </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => window.open(directShareLink, '_blank')}
-                    className="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Open in 2nd Browser Tab (Test Live Multiplayer)</span>
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleJoinPrivateJam(activeRoomCode)}
+                      className="w-full py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Re-sync / Connect Now</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => window.open(directShareLink, '_blank')}
+                      className="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open 2nd Browser Tab</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -857,7 +936,7 @@ export const AnonymousConnectModal: React.FC = () => {
         )}
 
         {/* ================= STATE 3: CONNECTED SPLIT-SCREEN ================= */}
-        {state === 'CONNECTED' && partner && (
+        {state === 'CONNECTED' && (
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
             {/* Mobile View Toggle Bar */}
             <div className="lg:hidden flex items-center justify-around border-b border-[var(--border-subtle)] bg-[var(--bg-surface-1)] p-1.5 shrink-0">
@@ -901,7 +980,7 @@ export const AnonymousConnectModal: React.FC = () => {
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="relative">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                        {partner.pseudonym.charAt(0)}
+                        {activePartner.pseudonym.charAt(0)}
                       </div>
                       <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
                     </div>
@@ -909,9 +988,9 @@ export const AnonymousConnectModal: React.FC = () => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-gray-900 truncate">
-                          {partner.pseudonym}
+                          {activePartner.pseudonym}
                         </span>
-                        {partner.isGuest ? (
+                        {activePartner.isGuest ? (
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-700 border border-amber-300">
                             Guest
                           </span>
@@ -987,7 +1066,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <div className="relative rounded-2xl overflow-hidden bg-gray-800 flex items-center justify-center border border-white/10">
                       <div className="text-center p-2 text-white/70">
                         <Video className="w-6 h-6 mx-auto mb-1 opacity-50" />
-                        <div className="text-[11px] font-semibold">{partner.pseudonym}</div>
+                        <div className="text-[11px] font-semibold">{activePartner.pseudonym}</div>
                       </div>
                       <div className="absolute bottom-1.5 left-1.5 text-[9px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded-md">
                         Peer
@@ -1075,7 +1154,7 @@ export const AnonymousConnectModal: React.FC = () => {
 
                   {partnerTyping && (
                     <div className="text-[11px] text-gray-400 italic">
-                      {partner.pseudonym} is typing...
+                      {activePartner.pseudonym} is typing...
                     </div>
                   )}
 
@@ -1106,7 +1185,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     type="text"
                     value={inputMessage}
                     onChange={handleInputChange}
-                    placeholder={`Message ${partner.pseudonym}...`}
+                    placeholder={`Message ${activePartner.pseudonym}...`}
                     className="flex-1 px-3 py-2 text-xs rounded-xl bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-gray-900 shadow-2xs"
                   />
                   <button
@@ -1128,9 +1207,10 @@ export const AnonymousConnectModal: React.FC = () => {
                 <CanvasTriviaJamPlayground
                   sessionId={currentSessionId || 'default_jam'}
                   myPseudonym={pseudonym}
-                  partnerPseudonym={partner.pseudonym}
+                  partnerPseudonym={activePartner.pseudonym}
                   isHost={isHost}
                   sessionRoomCode={activeRoomCode || undefined}
+                  onRegisterPrivateRoom={handleRegisterPrivateRoom}
                   onGameEventNotice={(notice) => {
                     setMessages((prev) => [
                       ...prev,
