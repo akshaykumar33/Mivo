@@ -59,6 +59,18 @@ export class MessagesService {
   }
 
   async createMessage(roomId: string, userId: string, input: SendMessageInput): Promise<MessageDTO> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true },
+    });
+
+    if (user?.isGuest) {
+      throw new ForbiddenException({
+        code: 'GUEST_CANNOT_MESSAGE',
+        message: 'Guest accounts cannot send messages to others. Please create an account or sign in.',
+      });
+    }
+
     const room = await prisma.room.findUnique({
       where: { id: roomId },
     });

@@ -10,6 +10,7 @@ import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { webrtcMesh } from '@/lib/webrtc-mesh';
 import { getEnhancedAudioStream } from '@/lib/media-manager';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface ActiveCallState {
   conversationId: string;
@@ -84,6 +85,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   remoteAudioStreams: {},
 
   loadConversations: async () => {
+    if (useAuthStore.getState().isGuest) {
+      set({ conversations: [], isLoading: false });
+      return;
+    }
     set({ isLoading: true });
     try {
       const res = await api.get<ConversationDTO[]>('/api/v1/conversations');
@@ -98,6 +103,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   selectConversation: async (conversationId: string | null) => {
+    if (useAuthStore.getState().isGuest) {
+      set({ activeConversationId: null });
+      return;
+    }
+
     const prev = get().activeConversationId;
     const socket = realtime.getSocket();
 
@@ -137,6 +147,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   startDirectConversation: async (recipientId: string) => {
+    if (useAuthStore.getState().isGuest) {
+      useAuthStore.getState().setUpgradeModalOpen(true);
+      throw new Error('Guest accounts cannot initiate direct messaging. Please upgrade to a full account.');
+    }
     const res = await api.post<ConversationDTO>('/api/v1/conversations/direct', { recipientId });
     if (res.success && res.data) {
       const conv = res.data;
@@ -153,6 +167,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   createGroupConversation: async (name: string, memberIds: string[], iconUrl?: string) => {
+    if (useAuthStore.getState().isGuest) {
+      useAuthStore.getState().setUpgradeModalOpen(true);
+      throw new Error('Guest accounts cannot create groups. Please upgrade to a full account.');
+    }
     const res = await api.post<ConversationDTO>('/api/v1/conversations/group', {
       name,
       memberIds,
@@ -170,6 +188,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   sendMessage: async (conversationId: string, content: string, attachments?: any[]) => {
+    if (useAuthStore.getState().isGuest) {
+      useAuthStore.getState().setUpgradeModalOpen(true);
+      return;
+    }
     const socket = realtime.getSocket();
     if (socket && socket.connected) {
       socket.emit(REALTIME_EVENTS.DM_SEND_MESSAGE, {
@@ -199,6 +221,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   sendTyping: (conversationId: string) => {
+    if (useAuthStore.getState().isGuest) return;
     const socket = realtime.getSocket();
     if (socket) {
       socket.emit(REALTIME_EVENTS.DM_TYPING, { conversationId });
@@ -206,6 +229,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   sendStopTyping: (conversationId: string) => {
+    if (useAuthStore.getState().isGuest) return;
     const socket = realtime.getSocket();
     if (socket) {
       socket.emit(REALTIME_EVENTS.DM_STOP_TYPING, { conversationId });
@@ -213,6 +237,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   addReaction: (conversationId: string, messageId: string, emoji: string) => {
+    if (useAuthStore.getState().isGuest) return;
     const socket = realtime.getSocket();
     if (socket) {
       socket.emit(REALTIME_EVENTS.DM_REACTION_ADD, {
@@ -228,6 +253,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   // -------------------------------------------------------------
 
   initiateCall: async (conversation: ConversationDTO, currentUserId: string) => {
+    if (useAuthStore.getState().isGuest) {
+      useAuthStore.getState().setUpgradeModalOpen(true);
+      return;
+    }
     try {
       // 1. Acquire studio HD microphone
       let stream: MediaStream | null = null;
@@ -290,6 +319,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   acceptCall: async (currentUserId: string) => {
+    if (useAuthStore.getState().isGuest) {
+      useAuthStore.getState().setUpgradeModalOpen(true);
+      return;
+    }
     const incoming = get().incomingCall;
     if (!incoming) return;
 
@@ -442,6 +475,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     // 1. New DM Message
     socket.on(REALTIME_EVENTS.DM_NEW_MESSAGE, (msg: DirectMessageDTO) => {
+      if (useAuthStore.getState().isGuest) return;
       set((state) => {
         const conversationId = msg.conversationId;
         const list = state.messages[conversationId] || [];
@@ -480,6 +514,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     // 2. Typing Indicators
     socket.on(REALTIME_EVENTS.DM_TYPING, (data: { conversationId: string; userId: string; username: string }) => {
+      if (useAuthStore.getState().isGuest) return;
       if (data.userId === currentUserId) return;
       set((state) => {
         const current = state.typingUsers[data.conversationId] || [];
@@ -496,6 +531,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     });
 
     socket.on(REALTIME_EVENTS.DM_STOP_TYPING, (data: { conversationId: string; userId: string; username?: string }) => {
+      if (useAuthStore.getState().isGuest) return;
       set((state) => {
         const current = state.typingUsers[data.conversationId] || [];
         return {
@@ -510,6 +546,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     // 3. Incoming Call Signaling
     socket.on(REALTIME_EVENTS.CALL_INCOMING, (payload: CallIncomingBroadcast) => {
       if (payload.callerId === currentUserId) return;
+      if (useAuthStore.getState().isGuest) return; // Guests cannot receive calls
       // Trigger incoming call modal / ring
       set({
         incomingCall: payload,
@@ -573,6 +610,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     // 8. New Conversation Created (e.g., added to group or direct message)
     socket.on('conversation:created', (conv: ConversationDTO) => {
+      if (useAuthStore.getState().isGuest) return;
       set((state) => {
         const exists = state.conversations.some((c) => c.id === conv.id);
         if (exists) return state;

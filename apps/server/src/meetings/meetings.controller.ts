@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   UsePipes,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/jwt-auth.guard.js';
 import { CurrentUser } from '../common/current-user.decorator.js';
@@ -37,6 +38,9 @@ export class MeetingsController {
     @CurrentUser() user: JwtPayload,
     @Body() body: CreateExternalMeetingInput
   ): Promise<ApiResponse<{ meeting: ExternalMeetingDTO; bridge?: ExternalMeetingBridgeDTO }>> {
+    if (user.isGuest) {
+      throw new ForbiddenException('Guest accounts cannot generate external meetings. Please upgrade your account.');
+    }
     const result = await this.meetingsService.generateMeeting(user.sub, body);
     return {
       success: true,
@@ -62,6 +66,9 @@ export class MeetingsController {
     @Param('roomId') roomId: string,
     @Body() body: SetRoomBridgeInput
   ): Promise<ApiResponse<ExternalMeetingBridgeDTO>> {
+    if (user.isGuest) {
+      throw new ForbiddenException('Guest accounts cannot bridge meetings.');
+    }
     const bridge = await this.meetingsService.setRoomBridge(roomId, body.meetingId, user.sub);
     return {
       success: true,
@@ -99,6 +106,9 @@ export class MeetingsController {
     @Param('conversationId') conversationId: string,
     @Body() body: SetConversationBridgeInput
   ): Promise<ApiResponse<ExternalMeetingBridgeDTO>> {
+    if (user.isGuest) {
+      throw new ForbiddenException('Guest accounts cannot bridge meetings.');
+    }
     const bridge = await this.meetingsService.setConversationBridge(conversationId, body.meetingId, user.sub);
     return {
       success: true,

@@ -27,6 +27,14 @@ export class ConversationsService {
   ) {}
 
   async listConversations(userId: string): Promise<ConversationDTO[]> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true },
+    });
+    if (user?.isGuest) {
+      return [];
+    }
+
     const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const conversations = await prisma.conversation.findMany({
       where: {
@@ -64,11 +72,27 @@ export class ConversationsService {
       throw new BadRequestException({ code: 'CANNOT_DM_SELF', message: 'Cannot start a direct conversation with yourself' });
     }
 
-    const recipient = await prisma.user.findUnique({
-      where: { id: recipientId },
-    });
+    const [sender, recipient] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { isGuest: true } }),
+      prisma.user.findUnique({ where: { id: recipientId }, select: { isGuest: true, deletedAt: true } }),
+    ]);
+
+    if (sender?.isGuest) {
+      throw new ForbiddenException({
+        code: 'GUEST_CANNOT_MESSAGE',
+        message: 'Guest accounts cannot message other users or start direct conversations. Please sign up or log in.',
+      });
+    }
+
     if (!recipient || recipient.deletedAt) {
       throw new NotFoundException({ code: 'RECIPIENT_NOT_FOUND', message: 'Recipient user not found' });
+    }
+
+    if (recipient.isGuest) {
+      throw new BadRequestException({
+        code: 'CANNOT_MESSAGE_GUEST',
+        message: 'Cannot start conversations with guest accounts.',
+      });
     }
 
     const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
@@ -129,14 +153,34 @@ export class ConversationsService {
   }
 
   async createGroupConversation(creatorId: string, input: CreateGroupConversationInput): Promise<ConversationDTO> {
+    const creator = await prisma.user.findUnique({
+      where: { id: creatorId },
+      select: { isGuest: true },
+    });
+    if (creator?.isGuest) {
+      throw new ForbiddenException({
+        code: 'GUEST_CANNOT_CREATE_GROUP',
+        message: 'Guest accounts cannot create group conversations. Please sign up or log in.',
+      });
+    }
+
     const uniqueMemberIds = Array.from(new Set([creatorId, ...input.memberIds]));
 
     const users = await prisma.user.findMany({
       where: { id: { in: uniqueMemberIds }, deletedAt: null },
+      select: { id: true, isGuest: true },
     });
 
     if (users.length !== uniqueMemberIds.length) {
       throw new BadRequestException({ code: 'INVALID_MEMBERS', message: 'One or more members could not be found' });
+    }
+
+    const guestMembers = users.filter((u) => u.isGuest);
+    if (guestMembers.length > 0) {
+      throw new BadRequestException({
+        code: 'CANNOT_ADD_GUEST_TO_GROUP',
+        message: 'Guest accounts cannot participate in group conversations.',
+      });
     }
 
     const conversation = await prisma.conversation.create({
@@ -170,6 +214,14 @@ export class ConversationsService {
   }
 
   async getConversation(conversationId: string, userId: string): Promise<ConversationDTO> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true },
+    });
+    if (user?.isGuest) {
+      throw new ForbiddenException({ code: 'GUEST_RESTRICTED', message: 'Guest accounts cannot access conversations.' });
+    }
+
     const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -202,6 +254,14 @@ export class ConversationsService {
   }
 
   async listMessages(conversationId: string, userId: string, limit = 50): Promise<DirectMessageDTO[]> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true },
+    });
+    if (user?.isGuest) {
+      throw new ForbiddenException({ code: 'GUEST_RESTRICTED', message: 'Guest accounts cannot access conversations.' });
+    }
+
     await this.ensureMembership(conversationId, userId);
 
     const retentionCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
@@ -226,6 +286,17 @@ export class ConversationsService {
     senderId: string,
     input: SendDirectMessageInput
   ): Promise<DirectMessageDTO> {
+    const sender = await prisma.user.findUnique({
+      where: { id: senderId },
+      select: { isGuest: true },
+    });
+    if (sender?.isGuest) {
+      throw new ForbiddenException({
+        code: 'GUEST_CANNOT_MESSAGE',
+        message: 'Guest accounts cannot send messages. Please sign up or log in.',
+      });
+    }
+
     await this.ensureMembership(conversationId, senderId);
 
     const text = input.content?.trim() || '';

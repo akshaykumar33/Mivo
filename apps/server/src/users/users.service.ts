@@ -200,10 +200,24 @@ export class UsersService {
   }
 
   async searchUsers(query?: string, currentUserId?: string): Promise<UserSummaryDTO[]> {
+    if (currentUserId) {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { isGuest: true },
+      });
+      if (currentUser?.isGuest) {
+        return [];
+      }
+    }
+
     const trimmed = query?.trim().toLowerCase();
     const users: any[] = await prisma.user.findMany({
       where: {
         deletedAt: null,
+        isGuest: false,
+        NOT: [
+          { username: { startsWith: 'guest_' } },
+        ],
         ...(currentUserId && { id: { not: currentUserId } }),
         ...(trimmed
           ? {

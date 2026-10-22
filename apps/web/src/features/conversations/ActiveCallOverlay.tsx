@@ -2,9 +2,11 @@
 
 import * as React from 'react';
 import { useConversationStore } from '@/stores/conversationStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Users, Radio } from 'lucide-react';
 
 export const ActiveCallOverlay: React.FC = () => {
+  const { isGuest } = useAuthStore();
   const {
     activeCall,
     endCall,
@@ -30,7 +32,7 @@ export const ActiveCallOverlay: React.FC = () => {
     return () => clearInterval(timer);
   }, [activeCall]);
 
-  if (!activeCall) return null;
+  if (!activeCall || isGuest) return null;
 
   const formatTimer = (sec: number) => {
     const mins = Math.floor(sec / 60);

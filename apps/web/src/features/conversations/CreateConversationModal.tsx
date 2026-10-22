@@ -5,7 +5,8 @@ import { Modal, Button, Input, Avatar } from '@mivo/ui';
 import { UserSummaryDTO } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { useConversationStore } from '@/stores/conversationStore';
-import { Search, Users, MessageSquare, Check, Sparkles, Plus, Image as ImageIcon } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { Search, Users, MessageSquare, Check, Sparkles, Plus, Image as ImageIcon, Lock } from 'lucide-react';
 
 interface CreateConversationModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
   isOpen,
   onClose,
 }) => {
+  const { isGuest, setUpgradeModalOpen } = useAuthStore();
   const [activeTab, setActiveTab] = React.useState<'direct' | 'group'>('direct');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [users, setUsers] = React.useState<UserSummaryDTO[]>([]);
@@ -40,13 +42,19 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
       return;
     }
 
+    if (isGuest) {
+      setUsers([]);
+      return;
+    }
+
     const fetchUsers = async () => {
       setIsLoadingUsers(true);
       try {
         const queryParam = searchQuery.trim() ? `?q=${encodeURIComponent(searchQuery.trim())}` : '';
         const res = await api.get<UserSummaryDTO[]>(`/api/v1/users${queryParam}`);
         if (res.success && res.data) {
-          setUsers(res.data);
+          // Extra safeguard: exclude any guest accounts
+          setUsers(res.data.filter((u) => !u.isGuest && !u.username.startsWith('guest_')));
         }
       } catch (err) {
         console.error('Failed to search users:', err);
@@ -57,9 +65,13 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
 
     const timer = setTimeout(fetchUsers, 200);
     return () => clearTimeout(timer);
-  }, [isOpen, searchQuery]);
+  }, [isOpen, searchQuery, isGuest]);
 
   const handleStartDM = async (recipientId: string) => {
+    if (isGuest) {
+      setErrorMsg('Guest accounts cannot message others. Please upgrade your account.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setErrorMsg(null);
@@ -74,6 +86,10 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isGuest) {
+      setErrorMsg('Guest accounts cannot create groups. Please upgrade your account.');
+      return;
+    }
     if (!groupName.trim()) {
       setErrorMsg('Please provide a group name');
       return;
@@ -105,10 +121,40 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={activeTab === 'direct' ? 'Start a Direct Message' : 'Create Custom Group'}
-      description="Connect directly with friends or assemble custom group chats."
+      title={isGuest ? 'Messaging Restricted' : activeTab === 'direct' ? 'Start a Direct Message' : 'Create Custom Group'}
+      description={
+        isGuest
+          ? 'Guest accounts cannot message other users or start direct & group conversations.'
+          : 'Connect directly with friends or assemble custom group chats.'
+      }
       maxWidth="md"
     >
+      {isGuest ? (
+        <div className="py-8 px-4 text-center flex flex-col items-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-3 shadow-inner">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-bold text-[#111827] mb-1">Guest Account Restriction</h3>
+          <p className="text-xs text-[var(--text-muted)] max-w-sm mb-4 leading-relaxed">
+            Guest accounts cannot message other users or participate in audio and video calls. Please create a permanent account or sign in to start chatting!
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onClose();
+                setUpgradeModalOpen(true);
+              }}
+              className="bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white"
+            >
+              Upgrade to Permanent Account
+            </Button>
+          </div>
+        </div>
+      ) : (
       <div className="space-y-4">
         {/* Navigation Tabs */}
         <div className="flex rounded-xl bg-[var(--bg-surface-1)] p-1 border border-[var(--border-subtle)]">
@@ -327,6 +373,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
           </form>
         )}
       </div>
+      )}
     </Modal>
   );
 };

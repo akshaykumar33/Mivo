@@ -29,6 +29,7 @@ import {
   Eye,
   ChevronLeft,
   Menu,
+  Lock,
 } from 'lucide-react';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { storageClient } from '@/lib/storage-client';
@@ -122,7 +123,7 @@ function sanitizeChatMessage(content: string, hasMeetingAttachment: boolean): st
 }
 
 export const ConversationView: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, isGuest, setUpgradeModalOpen } = useAuthStore();
   const {
     conversations,
     activeConversationId,
@@ -247,6 +248,10 @@ export const ConversationView: React.FC = () => {
 
   const handleFilesSelected = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
+    if (isGuest) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     const files = Array.from(fileList);
 
     try {
@@ -292,6 +297,10 @@ export const ConversationView: React.FC = () => {
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    if (isGuest) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     if (!activeConversationId) return;
     const trimmed = inputContent.trim();
     if (!trimmed && pendingAttachments.length === 0) return;
@@ -305,6 +314,10 @@ export const ConversationView: React.FC = () => {
   };
 
   const handleStartCall = () => {
+    if (isGuest) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     if (!activeConv || !user) return;
     initiateCall(activeConv, user.id);
   };
@@ -424,13 +437,13 @@ export const ConversationView: React.FC = () => {
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => setIsMeetingHubOpen(true)}
+            onClick={isGuest ? () => setUpgradeModalOpen(true) : () => setIsMeetingHubOpen(true)}
             className={`gap-1.5 sm:gap-2 transition-all duration-200 text-xs px-2.5 sm:px-3 ${
               activeBridge
                 ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
                 : 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border-[var(--border-subtle)]'
             }`}
-            title="Start or manage Google Meet / Microsoft Teams meeting"
+            title={isGuest ? 'Guest accounts cannot launch meetings. Upgrade account.' : 'Start or manage Google Meet / Microsoft Teams meeting'}
           >
             <div className="flex items-center -space-x-1">
               <GoogleMeetIcon className="w-3.5 h-3.5" />
@@ -448,12 +461,13 @@ export const ConversationView: React.FC = () => {
             size="sm"
             variant="secondary"
             onClick={handleStartCall}
-            disabled={activeCall?.conversationId === activeConv.id}
+            disabled={!isGuest && activeCall?.conversationId === activeConv.id}
+            title={isGuest ? 'Guest accounts cannot make audio or video calls. Upgrade to call.' : undefined}
             className="gap-1.5 sm:gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 border-emerald-500/30 text-xs px-2.5 sm:px-3"
           >
             <Phone className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             <span className="hidden sm:inline">
-              {activeCall?.conversationId === activeConv.id ? 'Call Active' : 'HD Audio Call'}
+              {isGuest ? 'Call (Upgrade)' : activeCall?.conversationId === activeConv.id ? 'Call Active' : 'HD Audio Call'}
             </span>
           </Button>
         </div>
@@ -813,6 +827,28 @@ export const ConversationView: React.FC = () => {
 
       {/* Input Box Footer */}
       <footer className="p-2 sm:p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]/90 backdrop-blur-md">
+        {isGuest ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-amber-800 font-medium">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-bold text-[#111827]">Guest Account Restriction</div>
+                <div className="text-[11px] text-[var(--text-muted)]">
+                  Guest accounts cannot message others or make calls. Create a free account to unlock full messaging.
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setUpgradeModalOpen(true)}
+              className="bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shrink-0 text-xs px-3.5 shadow-md"
+            >
+              Upgrade Account
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2">
           {/* Document Upload Hidden Input & Button */}
           <input
@@ -913,6 +949,7 @@ export const ConversationView: React.FC = () => {
             <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         </form>
+        )}
       </footer>
 
       {/* Universal Read-Only File Viewer Modal */}
