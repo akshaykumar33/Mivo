@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -218,27 +219,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.roomJoinLocks.add(lockKey);
 
     try {
-      // Create or update room membership in DB atomically with race-resilience
-      let member: any;
-      try {
-        member = await prisma.roomMember.upsert({
-          where: { roomId_userId: { roomId, userId: user.sub } },
-          update: { joinedAt: new Date() },
-          create: { roomId, userId: user.sub },
-          include: { user: true, room: true },
-        });
-      } catch {
-        member = await prisma.roomMember.findUnique({
-          where: { roomId_userId: { roomId, userId: user.sub } },
-          include: { user: true, room: true },
-        });
-        if (member) {
-          await prisma.roomMember.update({
-            where: { id: member.id },
-            data: { joinedAt: new Date() },
-          }).catch(() => {});
-        }
-      }
+      // Atomic upsert at PostgreSQL level to guarantee 0 race conditions on (roomId, userId)
+      const newMemberId = randomUUID();
+      await prisma.$executeRaw`
+        INSERT INTO "room_members" ("id", "roomId", "userId", "joinedAt", "isMuted", "isDeafened", "isCameraOn", "isScreenOn")
+        VALUES (${newMemberId}::uuid, ${roomId}::uuid, ${user.sub}::uuid, NOW(), false, false, false, false)
+        ON CONFLICT ("roomId", "userId")
+        DO UPDATE SET "joinedAt" = NOW()
+      `;
+
+      const member = await prisma.roomMember.findUnique({
+        where: { roomId_userId: { roomId, userId: user.sub } },
+        include: { user: true, room: true },
+      });
 
       if (!member) return;
 
