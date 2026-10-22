@@ -24,6 +24,8 @@ import {
   Users,
   ExternalLink,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { realtime } from '@/lib/socket-client';
 import { REALTIME_EVENTS, AnonGameActionBroadcast } from '@mivo/shared';
@@ -131,6 +133,22 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
     sounds.enabled = next;
     if (next) sounds.playPop();
   };
+
+  // Horizontal scroll tabs ref and wheel handler
+  const tabsRef = React.useRef<HTMLDivElement>(null);
+  const handleWheelTabs = React.useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.deltaY !== 0) {
+      e.currentTarget.scrollLeft += e.deltaY;
+    }
+  }, []);
+
+  // Auto-scroll active game tab into view when activeGame changes
+  React.useEffect(() => {
+    const activeBtn = tabsRef.current?.querySelector(`[data-game-id="${activeGame}"]`) as HTMLElement | null;
+    if (activeBtn && tabsRef.current) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }, [activeGame]);
 
   // Set of fast-path action listeners to bypass React state batching for continuous real-time movements
   const actionListenersRef = React.useRef<Set<(action: string, payload: any) => void>>(new Set());
@@ -259,7 +277,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
         </div>
 
         {/* Score & Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Live Score Counter */}
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-black/40 border border-white/10 font-mono text-xs">
             <div className="flex items-center gap-1">
@@ -267,8 +285,10 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
               <span className="text-white font-black">{myScore}</span>
             </div>
             <span className="text-gray-600">:</span>
-            <div className="flex items-center gap-1">
-              <span className="text-rose-400 font-bold">{partnerPseudonym}:</span>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-rose-400 font-bold truncate max-w-[100px] sm:max-w-[130px]" title={partnerPseudonym}>
+                {partnerPseudonym}:
+              </span>
               <span className="text-white font-black">{partnerScore}</span>
             </div>
           </div>
@@ -319,40 +339,62 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
       </div>
 
       {/* Game Selector Tabs Bar */}
-      <div className="px-3 py-1.5 bg-[#0A0C16] border-b border-white/10 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar shrink-0">
-        <div className="flex items-center gap-1.5">
+      <div className="relative bg-[#0A0C16] border-b border-white/10 flex items-center px-2 py-1.5 shrink-0">
+        {/* Left Scroll Arrow */}
+        <button
+          type="button"
+          onClick={() => {
+            tabsRef.current?.scrollBy({ left: -160, behavior: 'smooth' });
+            sounds.playPop();
+          }}
+          className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 shrink-0 transition-colors mr-1 cursor-pointer"
+          title="Scroll Left"
+          aria-label="Scroll games left"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        {/* Scrollable Tabs Track */}
+        <div
+          ref={tabsRef}
+          onWheel={handleWheelTabs}
+          className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth py-0.5"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {JAM_GAMES.map((game) => {
             const Icon = game.icon;
             const isActive = activeGame === game.id;
             return (
               <button
                 key={game.id}
+                data-game-id={game.id}
                 type="button"
                 onClick={() => handleSelectGame(game.id as JamGameType)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap select-none ${
                   isActive
-                    ? `bg-gradient-to-r ${game.color} text-white shadow-md scale-[1.02]`
+                    ? `bg-gradient-to-r ${game.color} text-white shadow-md scale-[1.02] ring-1 ring-white/20`
                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{game.name}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">{game.name}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Quick Rule Pill for Active Game */}
+        {/* Right Scroll Arrow */}
         <button
           type="button"
           onClick={() => {
-            setRulesModalOpen(true);
+            tabsRef.current?.scrollBy({ left: 160, behavior: 'smooth' });
             sounds.playPop();
           }}
-          className="text-[11px] text-gray-400 hover:text-amber-300 font-semibold flex items-center gap-1 shrink-0 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 shrink-0 transition-colors ml-1 cursor-pointer"
+          title="Scroll Right"
+          aria-label="Scroll games right"
         >
-          <HelpCircle className="w-3 h-3 text-amber-400" />
-          <span className="hidden md:inline">How to play {activeRuleData.title.split(' ')[0]}</span>
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
