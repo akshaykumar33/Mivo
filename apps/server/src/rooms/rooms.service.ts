@@ -57,7 +57,11 @@ export class RoomsService {
       throw new NotFoundException({ code: 'ROOM_NOT_FOUND', message: 'Room not found' });
     }
 
-    const activeMembers: RoomMemberDTO[] = room.members.map((m) => ({
+    // Filter out stale room members who joined more than 2 hours ago
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const validMembers = room.members.filter((m) => new Date(m.joinedAt).getTime() >= twoHoursAgo.getTime());
+
+    const activeMembers: RoomMemberDTO[] = validMembers.map((m) => ({
       id: m.id,
       roomId: m.roomId,
       userId: m.userId,

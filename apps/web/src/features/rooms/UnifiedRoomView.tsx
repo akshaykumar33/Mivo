@@ -332,6 +332,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             screenStream={screenStream}
             remoteStreams={remoteStreams}
             audioLevel={audioLevel}
+            onToggleScreen={() => toggleScreenShare()}
           />
         )}
 
