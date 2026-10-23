@@ -64,7 +64,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
                 title="Close Roster"
               >
                 <X className="w-3.5 h-3.5" />
@@ -89,13 +89,13 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
         {/* Search Input & Simulation Buttons */}
         <div className="space-y-2 mb-3">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-white/40 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search stage members..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6]"
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#5E5CE6]"
             />
           </div>
 
@@ -111,10 +111,10 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
             {participants.length > 5 && (
               <button
                 onClick={() => clearSimulatedParticipants()}
-                className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-rose-950/50 hover:text-rose-400 text-white/40 border border-white/[0.08] transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-rose-950/50 hover:text-rose-400 text-[var(--text-muted)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                 title="Reset Simulation"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -127,7 +127,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
 
           return (
             <div key={p.id} className="relative group">
-              <div className="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-white/[0.04] transition-colors">
+              <div className="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors">
                 {(() => {
                   const livePresence = userStatuses[p.user.id];
                   const liveStatus = livePresence?.status || p.user.status;
@@ -142,12 +142,12 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                         status={liveStatus}
                       />
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-white truncate flex items-center gap-1">
+                        <div className="text-xs font-bold text-[var(--text-primary)] truncate flex items-center gap-1">
                           <span>{p.user.displayName || p.user.username}</span>
                           {isMe && <span className="text-[10px] text-[#5E5CE6] font-semibold">(You)</span>}
                         </div>
                         {liveCustomStatus && (
-                          <div className="text-[10px] text-white/50 truncate flex items-center gap-1">
+                          <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
                             <span className="truncate">{liveCustomStatus}</span>
                           </div>
                         )}
@@ -168,7 +168,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                   {isHost && !isMe && (
                     <button
                       onClick={() => setActiveMenuUserId(isMenuOpen ? null : p.userId)}
-                      className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                      className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/[0.08] transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                       title="Host Moderation"
                     >
                       <Sliders className="w-3 h-3" />
@@ -179,8 +179,8 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
 
               {/* Host Action Dropdown */}
               {isMenuOpen && (
-                <div className="absolute right-2 top-10 p-2 rounded-[16px] bg-[#0E111C]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl z-40 w-44 space-y-1">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/[0.06]">
+                <div className="absolute right-2 top-10 p-2 rounded-[16px] bg-[var(--bg-surface-0)] backdrop-blur-2xl border border-[var(--border-subtle)] shadow-2xl z-40 w-44 space-y-1">
+                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
                     Host Controls
                   </div>
                   <button
@@ -188,7 +188,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                       onHostAction?.('MUTE', p.userId);
                       setActiveMenuUserId(null);
                     }}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/[0.06] hover:text-white text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-[var(--text-primary)] text-left transition-colors cursor-pointer"
                   >
                     <MicOff className="w-3.5 h-3.5 text-[#FF9F0A]" />
                     <span>Mute Participant</span>
@@ -198,7 +198,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                       onHostAction?.('TRANSFER_HOST', p.userId);
                       setActiveMenuUserId(null);
                     }}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/[0.06] hover:text-white text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-[var(--text-primary)] text-left transition-colors cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2]" />
                     <span>Change Host</span>

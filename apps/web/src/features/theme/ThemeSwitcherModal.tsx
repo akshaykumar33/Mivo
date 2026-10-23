@@ -50,13 +50,13 @@ export const ThemeSwitcherModal: React.FC = () => {
               <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-lg font-bold font-display text-[#111827] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h2 className="text-sm sm:text-lg font-bold font-display text-[var(--text-primary)] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span>Visual Themes</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/20">
                   Multi-Theme Engine
                 </span>
               </h2>
-              <p className="text-[11px] sm:text-xs text-[#4B5563] truncate">
+              <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] truncate">
                 Customize your appearance with Velvet Crimson, OLED dark, or light palettes.
               </p>
             </div>
@@ -64,7 +64,7 @@ export const ThemeSwitcherModal: React.FC = () => {
 
           <button
             onClick={() => setIsThemeModalOpen(false)}
-            className="p-1.5 sm:p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer flex-shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors cursor-pointer flex-shrink-0"
             title="Close [ESC]"
           >
             <X className="w-5 h-5" />
@@ -102,8 +102,8 @@ export const ThemeSwitcherModal: React.FC = () => {
                   <span
                     className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       isLight
-                        ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                        : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                        : 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
                     }`}
                   >
                     {isLight ? <Sun className="w-2.5 h-2.5" /> : <Moon className="w-2.5 h-2.5" />}

@@ -92,19 +92,16 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const stageModes: Array<{
+  const workspaceModes: Array<{
     id: RoomCommunicationMode;
     label: string;
     icon: any;
     color: string;
     glow: string;
   }> = [
-    { id: 'TEXT', label: 'Chat', icon: MessageSquare, color: 'from-[#0A84FF] to-[#5E5CE6]', glow: 'shadow-[0_4px_16px_rgba(10,132,255,0.4)]' },
-    { id: 'VOICE', label: 'Voice', icon: Mic, color: 'from-[#30D158] to-[#63E6E2]', glow: 'shadow-[0_4px_16px_rgba(48,209,88,0.4)]' },
-    { id: 'VIDEO', label: 'Video', icon: Video, color: 'from-[#64D2FF] to-[#0A84FF]', glow: 'shadow-[0_4px_16px_rgba(100,210,255,0.4)]' },
-    { id: 'SCREEN_SHARE', label: 'Screen', icon: Monitor, color: 'from-[#5E5CE6] to-[#BF5AF2]', glow: 'shadow-[0_4px_16px_rgba(94,92,230,0.4)]' },
-    { id: 'CANVAS', label: 'Canvas', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]', glow: 'shadow-[0_4px_16px_rgba(255,159,10,0.4)]' },
-    { id: 'CODE', label: 'Code', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]', glow: 'shadow-[0_4px_16px_rgba(48,209,88,0.4)]' },
+    { id: 'TEXT', label: 'Chat', icon: MessageSquare, color: 'from-[#0A84FF] to-[#5E5CE6]', glow: 'shadow-[0_2px_10px_rgba(10,132,255,0.35)]' },
+    { id: 'CANVAS', label: 'Canvas', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]', glow: 'shadow-[0_2px_10px_rgba(255,159,10,0.35)]' },
+    { id: 'CODE', label: 'Code', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]', glow: 'shadow-[0_2px_10px_rgba(48,209,88,0.35)]' },
   ];
 
   const reactionList = ['heart', 'thumbs_up', 'fire', 'party', 'laugh', 'rocket', 'hundred', 'sparkles', 'clap'];
@@ -199,114 +196,123 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
       {/* ═══ Main Dock Bar ═══ */}
       <div
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        className="relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] max-w-[calc(100vw-24px)] overflow-x-auto scrollbar-none no-scrollbar"
+        className="relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-2xl bg-[var(--bg-surface-0)]/95 dark:bg-[#0A0C13]/90 border border-black/10 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-2xl max-w-[calc(100vw-24px)] overflow-x-auto scrollbar-none no-scrollbar"
       >
         {/* Top highlight line */}
-        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-        {/* ── Stage Mode Pills ── */}
-        <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex-shrink-0">
-          {stageModes.map((mode) => {
+        {/* ── Workspace / Stage Pills (Chat, Canvas, Code) ── */}
+        <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/10 flex-shrink-0">
+          {workspaceModes.map((mode) => {
             const Icon = mode.icon;
             const isActive = activeMode === mode.id;
             return (
               <button
                 key={mode.id}
                 onClick={() => onModeChange(mode.id)}
-                className={`relative group/btn flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-[10px] text-xs font-bold transition-all duration-200 cursor-pointer ${
+                className={`relative group/btn flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[10px] text-xs font-bold transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? `bg-gradient-to-r ${mode.color} !text-white shadow-md ${mode.glow} border border-white/25`
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.06]'
+                    ? `bg-gradient-to-r ${mode.color} !text-white shadow-md ${mode.glow} border border-white/30 scale-[1.02]`
+                    : 'text-stone-700 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
-                <span className="hidden xl:inline">{mode.label}</span>
-                <Tip text={`${mode.label} Mode`} groupClass="group-hover/btn:opacity-100" />
+                <span className="hidden sm:inline font-display">{mode.label}</span>
+                <Tip text={`${mode.label} Stage`} groupClass="group-hover/btn:opacity-100" />
               </button>
             );
           })}
         </div>
 
         {/* ── Separator ── */}
-        {isInCall && <div className="w-px h-4 sm:h-5 bg-[var(--border-subtle)] flex-shrink-0" />}
+        <div className="w-px h-4 sm:h-5 bg-black/10 dark:bg-white/15 flex-shrink-0 mx-0.5" />
 
-        {/* ── Call Controls (only in Voice/Video/Screen modes) ── */}
-        {isInCall && (
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-            {/* Mic */}
-            <button
-              onClick={onToggleMute}
-              className={`relative group/mic p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                isMuted
-                  ? 'bg-[#FF453A]/20 text-[#FF453A] hover:bg-[#FF453A] hover:!text-white'
-                  : isSpeaking
-                  ? 'bg-[#30D158] !text-black shadow-[0_0_16px_rgba(48,209,88,0.5)] scale-105'
-                  : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
-              }`}
-            >
-              {isMuted ? <MicOff className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <Mic className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
-              <Tip text={isMuted ? 'Unmute' : 'Mute'} groupClass="group-hover/mic:opacity-100" />
-            </button>
+        {/* ── Media Devices & Stage Controls (Mic / Camera / Screen Share - Single Unique Controls) ── */}
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+          {/* Mic / Voice Toggle */}
+          <button
+            onClick={() => {
+              if (activeMode === 'TEXT' || activeMode === 'CANVAS' || activeMode === 'CODE') {
+                onModeChange('VOICE');
+              }
+              onToggleMute();
+            }}
+            className={`relative group/mic p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isMuted
+                ? 'bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/30 hover:bg-[#FF453A] hover:!text-white'
+                : isSpeaking
+                ? 'bg-[#30D158] !text-black shadow-[0_0_16px_rgba(48,209,88,0.5)] scale-105 border border-white/30'
+                : activeMode === 'VOICE'
+                ? 'bg-[#30D158] !text-black shadow-md shadow-[#30D158]/40 border border-white/20'
+                : 'bg-[#30D158]/15 text-[#16a34a] dark:text-[#30D158] border border-[#30D158]/30 hover:bg-[#30D158] hover:!text-black'
+            }`}
+          >
+            {isMuted ? <MicOff className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <Mic className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
+            <Tip text={isMuted ? 'Unmute Microphone' : 'Mute Microphone'} groupClass="group-hover/mic:opacity-100" />
+          </button>
 
-            {/* Camera */}
-            <button
-              onClick={() => {
-                if (activeMode !== 'VIDEO' && activeMode !== 'SCREEN_SHARE') onModeChange('VIDEO');
-                onToggleCamera();
-              }}
-              className={`relative group/cam p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                isCameraOn
-                  ? 'bg-[#0A84FF] !text-white hover:bg-[#0A84FF]/90 shadow-md shadow-[#0A84FF]/30'
-                  : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
-              }`}
-            >
-              {isCameraOn ? <Video className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <VideoOff className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
-              <Tip text={isCameraOn ? 'Camera On' : 'Camera Off'} groupClass="group-hover/cam:opacity-100" />
-            </button>
+          {/* Camera / Video Meeting Toggle */}
+          <button
+            onClick={() => {
+              if (!isCameraOn) {
+                onModeChange('VIDEO');
+              }
+              onToggleCamera();
+            }}
+            className={`relative group/cam p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isCameraOn || activeMode === 'VIDEO'
+                ? 'bg-[#0A84FF] !text-white hover:bg-[#0A84FF]/90 shadow-md shadow-[#0A84FF]/35 border border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
+            }`}
+          >
+            {isCameraOn ? <Video className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <VideoOff className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
+            <Tip text={isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'} groupClass="group-hover/cam:opacity-100" />
+          </button>
 
-            {/* Screen Share */}
-            <button
-              onClick={() => {
-                if (activeMode !== 'SCREEN_SHARE') onModeChange('SCREEN_SHARE');
-                onToggleScreen();
-              }}
-              className={`relative group/scr p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                isScreenOn
-                  ? 'bg-[#5E5CE6] !text-white hover:bg-[#5E5CE6]/90 shadow-md shadow-[#5E5CE6]/30'
-                  : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
-              }`}
-            >
-              <Monitor className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <Tip text={isScreenOn ? 'Stop Share' : 'Share Screen'} groupClass="group-hover/scr:opacity-100" />
-            </button>
+          {/* Screen Share / Broadcast Toggle */}
+          <button
+            onClick={() => {
+              if (!isScreenOn) {
+                onModeChange('SCREEN_SHARE');
+              }
+              onToggleScreen();
+            }}
+            className={`relative group/scr p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isScreenOn || activeMode === 'SCREEN_SHARE'
+                ? 'bg-[#5E5CE6] !text-white hover:bg-[#5E5CE6]/90 shadow-md shadow-[#5E5CE6]/35 border border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
+            }`}
+          >
+            <Monitor className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+            <Tip text={isScreenOn ? 'Stop Screen Share' : 'Share Screen'} groupClass="group-hover/scr:opacity-100" />
+          </button>
 
-            {/* Reactions */}
-            <button
-              onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
-              className={`relative group/react p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                isReactionsTrayOpen
-                  ? 'bg-[#FFD60A]/20 text-[#FFD60A]'
-                  : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-white/[0.12]'
-              }`}
-            >
-              <Smile className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <Tip text="Reactions" groupClass="group-hover/react:opacity-100" />
-            </button>
-          </div>
-        )}
+          {/* Reactions */}
+          <button
+            onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
+            className={`relative group/react p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isReactionsTrayOpen
+                ? 'bg-[#FFD60A]/20 text-[#B45309] dark:text-[#FFD60A] border border-[#FFD60A]/40'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
+            }`}
+          >
+            <Smile className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+            <Tip text="Reactions" groupClass="group-hover/react:opacity-100" />
+          </button>
+        </div>
 
         {/* ── Separator ── */}
-        <div className="w-px h-5 sm:h-6 bg-[var(--border-subtle)] flex-shrink-0" />
+        <div className="w-px h-5 sm:h-6 bg-black/10 dark:bg-white/15 flex-shrink-0" />
 
         {/* ── AI + Participants + More ── */}
         <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           {/* AI Scribe */}
           <button
             onClick={onToggleWhisper}
-            className={`relative group/ai p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/ai p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
               isWhisperOpen
-                ? 'bg-gradient-to-r from-[#BF5AF2] to-[#5E5CE6] !text-white shadow-[0_0_16px_rgba(191,90,242,0.5)]'
-                : 'bg-[#BF5AF2]/10 text-[#BF5AF2] hover:bg-[#BF5AF2]/25'
+                ? 'bg-gradient-to-r from-[#BF5AF2] to-[#5E5CE6] !text-white shadow-[0_0_16px_rgba(191,90,242,0.5)] border border-white/20'
+                : 'bg-[#BF5AF2]/15 text-[#9333ea] dark:text-[#BF5AF2] border border-[#BF5AF2]/30 hover:bg-[#BF5AF2] hover:!text-white'
             }`}
           >
             <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
@@ -316,13 +322,13 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           {/* Participants */}
           <button
             onClick={onToggleParticipants}
-            className={`relative group/ppl flex items-center gap-1 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/ppl flex items-center gap-1 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl transition-all duration-150 cursor-pointer ${
               isParticipantsOpen
-                ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)]'
-                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
+                ? 'bg-black/[0.12] dark:bg-white/20 text-stone-950 dark:text-white border border-black/15 dark:border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
             }`}
           >
-            <Users className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+            <Users className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#5E5CE6]" />
             <span className="text-[10px] sm:text-[11px] font-bold font-mono">{participantCount}</span>
             <Tip text={`${participantCount} Online`} groupClass="group-hover/ppl:opacity-100" />
           </button>
@@ -330,10 +336,10 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           {/* More Options */}
           <button
             onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-            className={`relative group/more p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`relative group/more p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
               isMoreMenuOpen
-                ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)]'
-                : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
+                ? 'bg-black/[0.12] dark:bg-white/20 text-stone-950 dark:text-white border border-black/15 dark:border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
             }`}
           >
             <MoreVertical className="w-3.5 sm:w-4 h-3.5 sm:h-4" />

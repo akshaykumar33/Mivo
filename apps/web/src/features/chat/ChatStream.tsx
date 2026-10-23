@@ -236,23 +236,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] relative overflow-hidden select-none">
-      {/* Modern Room Header */}
-      <div className="h-12 border-b border-[var(--border-subtle)] px-3 sm:px-6 flex items-center justify-between bg-[var(--bg-surface-0)] backdrop-blur-xl z-20 flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#64D2FF] flex-shrink-0">
-            <Hash className="w-3.5 h-3.5 stroke-[2.5]" />
-          </div>
-          <span className="font-bold text-xs sm:text-sm text-[var(--text-primary)] font-display tracking-tight truncate">
-            {room.name}
-          </span>
-          {room.description && (
-            <span className="text-[11px] text-[var(--text-muted)] truncate max-w-[120px] sm:max-w-xs hidden sm:inline">
-              — {room.description}
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Message History Scroller */}
       <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-4 space-y-3 sm:space-y-4 custom-scrollbar">
         {isLoading && (
@@ -595,7 +578,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           );
         })}
 
-        <div ref={scrollBottomRef} />
+        <div ref={scrollBottomRef} className="h-4 flex-shrink-0" />
       </div>
 
       {/* Typing Indicator Bar */}

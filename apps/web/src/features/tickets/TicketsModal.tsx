@@ -191,12 +191,12 @@ export const TicketsModal: React.FC = () => {
                 placeholder="e.g. Realtime audio drops on Safari or New Room feature"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
                   Category
@@ -204,7 +204,7 @@ export const TicketsModal: React.FC = () => {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] focus:outline-none focus:border-[#DC2626] cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#DC2626] cursor-pointer"
                 >
                   <option value="Technical">Technical Bug</option>
                   <option value="Feature">Feature Request</option>
@@ -221,7 +221,7 @@ export const TicketsModal: React.FC = () => {
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] focus:outline-none focus:border-[#DC2626] cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#DC2626] cursor-pointer"
                 >
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -240,7 +240,7 @@ export const TicketsModal: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 resize-none transition-all shadow-xs"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 resize-none transition-all shadow-xs"
                 required
               />
             </div>
@@ -249,7 +249,7 @@ export const TicketsModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('LIST')}
-                className="px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-xs text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -356,7 +356,7 @@ export const TicketsModal: React.FC = () => {
                         {t.status !== 'RESOLVED' && (
                           <button
                             onClick={() => handleStatusChange(t.id, 'RESOLVED')}
-                            className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-700 border border-emerald-500/25 text-[10px] font-semibold transition-colors cursor-pointer"
+                            className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 text-[10px] font-semibold transition-colors cursor-pointer"
                           >
                             Resolve
                           </button>
@@ -364,7 +364,7 @@ export const TicketsModal: React.FC = () => {
                         {t.status !== 'CLOSED' && (
                           <button
                             onClick={() => handleStatusChange(t.id, 'CLOSED')}
-                            className="px-2 py-1 rounded-lg bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] text-[10px] font-semibold transition-colors cursor-pointer"
+                            className="px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[10px] font-semibold transition-colors cursor-pointer"
                           >
                             Close
                           </button>
@@ -383,7 +383,7 @@ export const TicketsModal: React.FC = () => {
           <span>Tickets sync automatically in real-time</span>
           <button
             onClick={() => setIsModalOpen(false)}
-            className="px-4 py-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border border-[var(--border-subtle)] font-medium transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border border-[var(--border-subtle)] font-medium transition-colors cursor-pointer"
           >
             Close
           </button>

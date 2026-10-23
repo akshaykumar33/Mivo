@@ -967,7 +967,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
                 sortedParticipants.length === 1 && !isCoHostEnabled
                   ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
               }`}
             >
               {/* Co-Host Stage Tile */}
@@ -1258,104 +1258,106 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         )}
       </div>
 
-      {/* Interactive Participant Video Drawer */}
-      {isAttendeeDrawerOpen ? (
-        <div className="flex-shrink-0 flex flex-col gap-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
-              Meeting Participants ({participants.length}) • Drag or Reorder
-            </span>
+      {/* Interactive Participant Video Drawer (Only in active call modes: Voice, Video, Screen) */}
+      {mode !== 'TEXT' && (
+        isAttendeeDrawerOpen ? (
+          <div className="flex-shrink-0 flex flex-col gap-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
+                Meeting Participants ({participants.length}) • Drag or Reorder
+              </span>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setIsCoHostEnabled(!isCoHostEnabled)}
-                className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
-                  isCoHostEnabled
-                    ? 'bg-violet-600/15 text-violet-600 dark:text-violet-300 border-violet-500/40'
-                    : 'bg-[var(--bg-surface-1)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border-[var(--border-subtle)]'
-                }`}
-                title="Toggle AI Stage Co-Host Assistant"
-              >
-                <Bot className="w-3 h-3" />
-                <span>{isCoHostEnabled ? 'AI Co-Host (On)' : '+ AI Assistant'}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setIsCoHostEnabled(!isCoHostEnabled)}
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    isCoHostEnabled
+                      ? 'bg-violet-600/15 text-violet-600 dark:text-violet-300 border-violet-500/40'
+                      : 'bg-[var(--bg-surface-1)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border-[var(--border-subtle)]'
+                  }`}
+                  title="Toggle AI Stage Co-Host Assistant"
+                >
+                  <Bot className="w-3 h-3" />
+                  <span>{isCoHostEnabled ? 'AI Co-Host (On)' : '+ AI Assistant'}</span>
+                </button>
 
-              <button
-                onClick={handleAutoArrange}
-                className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                title="Auto-Arrange Video Strip"
-              >
-                <LayoutGrid className="w-3 h-3" />
-                <span>Auto-Arrange</span>
-              </button>
+                <button
+                  onClick={handleAutoArrange}
+                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                  title="Auto-Arrange Video Strip"
+                >
+                  <LayoutGrid className="w-3 h-3" />
+                  <span>Auto-Arrange</span>
+                </button>
 
-              <button
-                onClick={() => setIsAttendeeDrawerOpen(false)}
-                className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                title="Collapse Video Drawer"
-              >
-                <ChevronDown className="w-3 h-3" />
-                <span>Hide</span>
-              </button>
-            </div>
-          </div>
-
-          <div
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
-          >
-            {isCoHostEnabled && (
-              <div className="w-48 sm:w-56 aspect-video flex-shrink-0">
-                <AiCoHostStageTile
-                  status={coHostStatus}
-                  lastSpeechText={lastSpeechText}
-                  onTriggerCommand={handleTriggerCoHost}
-                />
+                <button
+                  onClick={() => setIsAttendeeDrawerOpen(false)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                  title="Collapse Video Drawer"
+                >
+                  <ChevronDown className="w-3 h-3" />
+                  <span>Hide</span>
+                </button>
               </div>
-            )}
-            {sortedParticipants.map((p) => {
-              const isMe = p.userId === currentUserId;
-              const camOn = isMe ? isCameraOn : p.isCameraOn;
-              const participantMuted = isMe ? isMuted : p.isMuted;
-              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+            </div>
 
-              return (
-                <div key={p.id} className="w-48 sm:w-56 aspect-video flex-shrink-0">
-                  <LiveVideoTile
-                    user={p.user}
-                    isMe={isMe}
-                    isMuted={participantMuted}
-                    isCameraOn={camOn}
-                    isPinned={pinnedUserId === p.userId}
-                    onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
-                    isHost={isHost}
-                    onHostAction={handleHostAction}
-                    mediaStream={participantStream}
-                    audioLevel={isMe ? audioLevel : 0}
-                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    onDragStart={handleDragStart(p.userId)}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop(p.userId)}
-                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
-                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
+            <div
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
+            >
+              {isCoHostEnabled && (
+                <div className="w-48 sm:w-56 aspect-video flex-shrink-0">
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
                   />
                 </div>
-              );
-            })}
+              )}
+              {sortedParticipants.map((p) => {
+                const isMe = p.userId === currentUserId;
+                const camOn = isMe ? isCameraOn : p.isCameraOn;
+                const participantMuted = isMe ? isMuted : p.isMuted;
+                const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+                return (
+                  <div key={p.id} className="w-48 sm:w-56 aspect-video flex-shrink-0">
+                    <LiveVideoTile
+                      user={p.user}
+                      isMe={isMe}
+                      isMuted={participantMuted}
+                      isCameraOn={camOn}
+                      isPinned={pinnedUserId === p.userId}
+                      onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
+                      isHost={isHost}
+                      onHostAction={handleHostAction}
+                      mediaStream={participantStream}
+                      audioLevel={isMe ? audioLevel : 0}
+                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                      onDragStart={handleDragStart(p.userId)}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop(p.userId)}
+                      onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                      onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ) : (
-        /* Collapsed State: Sleek Restore Drawer Button */
-        <div className="flex justify-center flex-shrink-0 animate-fade-in">
-          <button
-            onClick={() => setIsAttendeeDrawerOpen(true)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] shadow-sm transition-all cursor-pointer"
-          >
-            <Users className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-            <span>Show Attendee Video Drawer ({participants.length})</span>
-            <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          </button>
-        </div>
+        ) : (
+          /* Collapsed State: Sleek Restore Drawer Button */
+          <div className="flex justify-center flex-shrink-0 animate-fade-in">
+            <button
+              onClick={() => setIsAttendeeDrawerOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] shadow-sm transition-all cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <span>Show Attendee Video Drawer ({participants.length})</span>
+              <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
+        )
       )}
 
       {/* Floating Live Fact-Check HUD Alert */}

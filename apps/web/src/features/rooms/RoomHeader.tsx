@@ -92,7 +92,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
     <>
       <header className="h-16 px-3 sm:px-5 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] backdrop-blur-2xl flex items-center justify-between shadow-sm select-none z-10 flex-shrink-0 gap-2 sm:gap-4">
         {/* Room Title & Hamburger / Closeable Tray Toggle */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
           {/* Mobile & Tablet Drawer Trigger (< lg) */}
           <button
             onClick={toggleMobileSidebar}
@@ -102,20 +102,18 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             <Menu className="w-4 h-4" />
           </button>
 
-          {/* Desktop Closeable Sidebar Tray Toggle (>= lg) */}
-          <button
-            onClick={toggleSidebarCollapse}
-            className="hidden lg:flex p-2 rounded-xl bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] transition-all cursor-pointer flex-shrink-0 group"
-            title={isSidebarCollapsed ? "Expand Sidebar Tray (Ctrl+\\)" : "Collapse Sidebar Tray (Ctrl+\\)"}
-          >
-            {isSidebarCollapsed ? (
+          {/* Desktop Closeable Sidebar Tray Toggle: Only show Expand button when collapsed (ChannelSidebar has the close button) */}
+          {isSidebarCollapsed && (
+            <button
+              onClick={toggleSidebarCollapse}
+              className="hidden lg:flex p-2 rounded-xl bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] transition-all cursor-pointer flex-shrink-0 group"
+              title="Expand Sidebar Tray (Ctrl+\)"
+            >
               <PanelLeftOpen className="w-4 h-4 text-[#5E5CE6] group-hover:scale-110 transition-transform" />
-            ) : (
-              <PanelLeftClose className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors" />
-            )}
-          </button>
+            </button>
+          )}
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 max-w-[150px] sm:max-w-[200px] flex-shrink-0">
             <div className="w-8 h-8 rounded-[12px] bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#5E5CE6] shadow-sm flex-shrink-0">
               <Hash className="w-4 h-4 stroke-[2.5]" />
             </div>
@@ -127,7 +125,6 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
                 <Lock className="w-3.5 h-3.5 text-[#FF9F0A]" />
               </span>
             )}
-
           </div>
 
           {/* Apple Live Recording Status Badge */}
@@ -145,8 +142,8 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
         </div>
 
-        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Stream, Canvas) */}
-        <div className="hidden lg:flex items-center flex-shrink-0">
+        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Canvas, Code) */}
+        <div className="hidden md:flex items-center justify-center flex-1 min-w-0 px-2 overflow-x-auto scrollbar-none">
           <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
@@ -164,7 +161,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
               title={isRecording ? 'Stop Recording' : 'Start Recording Session'}
             >
               <CircleDot className={`w-3.5 h-3.5 ${isRecording ? 'text-white' : 'text-[#FF453A]'}`} />
-              <span className="hidden xl:inline">{isRecording ? 'Recording...' : 'Record'}</span>
+              <span className="hidden 2xl:inline">{isRecording ? 'Recording...' : 'Record'}</span>
             </button>
           )}
 
@@ -175,7 +172,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             title="Add Users to this Group/Room (Single-Org)"
           >
             <UserPlus className="w-3.5 h-3.5 text-[#5E5CE6] group-hover:text-white transition-colors" />
-            <span className="hidden xl:inline">Add User</span>
+            <span className="hidden 2xl:inline">Add User</span>
           </button>
 
           {/* External Meeting Bridge Trigger */}
@@ -189,7 +186,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             title="External Meeting Hub (Google Meet & MS Teams)"
           >
             <Video className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">{hasActiveBridge ? 'Call Bridged' : 'Meet & Teams'}</span>
+            <span className="hidden 2xl:inline">{hasActiveBridge ? 'Call Bridged' : 'Meet & Teams'}</span>
           </button>
 
           {/* Whisper AI Scribe & Notes Drawer */}
@@ -199,7 +196,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             title="Open Whisper AI Scribe, Multilingual Translation & MOM"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2] group-hover:text-white transition-colors" />
-            <span className="hidden xl:inline">AI Notes & MOM</span>
+            <span className="hidden 2xl:inline">AI Notes & MOM</span>
           </button>
 
           {/* Anonymous Speed Connect Trigger */}
@@ -209,7 +206,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
             title="Connect with Anonymous Users & Guests"
           >
             <Sparkles className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-colors" />
-            <span className="hidden xl:inline">Anon Connect</span>
+            <span className="hidden 2xl:inline">Anon Connect</span>
           </button>
 
           {/* System User Documentation */}

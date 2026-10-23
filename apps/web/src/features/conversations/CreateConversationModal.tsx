@@ -162,7 +162,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               activeTab === 'direct'
                 ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-md'
-                : 'text-[var(--text-secondary)] hover:text-[#111827]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -177,7 +177,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               activeTab === 'group'
                 ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-md'
-                : 'text-[var(--text-secondary)] hover:text-[#111827]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -202,7 +202,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                 placeholder="Search by name or username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
               />
             </div>
 
@@ -248,7 +248,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                         />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#111827] group-hover:text-[#DC2626] transition-colors flex items-center gap-1.5">
+                        <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[#DC2626] transition-colors flex items-center gap-1.5">
                           <span>{u.displayName || u.username}</span>
                           <span className="px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-600 text-[9px] font-bold">
                             Dev
@@ -304,7 +304,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                   placeholder="https://example.com/icon.png"
                   value={groupIconUrl}
                   onChange={(e) => setGroupIconUrl(e.target.value)}
-                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-9 pr-4 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -324,7 +324,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                   placeholder="Filter users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                  className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                 />
               </div>
 
@@ -337,7 +337,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       onClick={() => toggleSelectUser(u.id)}
                       className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-red-500/10 border border-red-500/30 text-[#111827]'
+                          ? 'bg-red-500/10 border border-red-500/30 text-[var(--text-primary)]'
                           : 'hover:bg-black/[0.04] text-[var(--text-secondary)]'
                       }`}
                     >
@@ -348,7 +348,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                           size="xs"
                         />
                         <div>
-                          <div className="text-xs font-semibold text-[#111827]">
+                          <div className="text-xs font-semibold text-[var(--text-primary)]">
                             {u.displayName || u.username}
                           </div>
                           <div className="text-[10px] text-[var(--text-muted)]">@{u.username}</div>

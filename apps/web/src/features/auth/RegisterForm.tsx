@@ -43,13 +43,13 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-6 sm:p-8 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[#111827]">
+    <div className="w-full max-w-md p-6 sm:p-8 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[var(--text-primary)]">
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] text-white font-extrabold text-xl shadow-[0_8px_24px_rgba(220,38,38,0.35)] mb-3 border border-white/40">
           M
         </div>
-        <h1 className="text-2xl font-extrabold text-[#111827] tracking-tight font-display">Create an Account</h1>
-        <p className="text-xs sm:text-sm text-[#71717A] mt-1 font-medium">Join the next-gen communication platform</p>
+        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight font-display">Create an Account</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 font-medium">Join the next-gen communication platform</p>
       </div>
 
       {error && (

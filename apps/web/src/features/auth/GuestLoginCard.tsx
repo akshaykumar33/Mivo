@@ -51,20 +51,20 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/25 relative overflow-hidden text-[#111827] shadow-sm">
+    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/25 relative overflow-hidden text-[var(--text-primary)] shadow-sm">
       <div className="flex items-start justify-between gap-3 mb-2.5">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center font-bold text-sm shrink-0 border border-amber-500/30">
             <UserCheck className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#111827] flex items-center gap-1.5 font-display">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
               <span>Instant Guest Access</span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30">
+              <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                 Limited
               </span>
             </h3>
-            <p className="text-[11px] text-[#71717A] mt-0.5">
+            <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
               Jump straight into rooms & connect with anonymous peers without an email.
             </p>
           </div>
@@ -81,7 +81,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
       {isCustomizing ? (
         <form onSubmit={handleGuestLogin} className="space-y-2.5 mt-3">
           <div>
-            <label className="block text-[11px] font-semibold text-[#374151] mb-1">
+            <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
               Guest Nickname (Optional)
             </label>
             <input
@@ -90,7 +90,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Guest Explorer"
               maxLength={32}
-              className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-gray-900"
+              className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-[var(--text-primary)] placeholder-[var(--text-muted)]"
             />
           </div>
           <div className="flex items-center gap-2">

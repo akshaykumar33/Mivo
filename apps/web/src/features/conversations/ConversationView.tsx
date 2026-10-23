@@ -328,7 +328,7 @@ export const ConversationView: React.FC = () => {
         <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-[#DC2626] mb-4 shadow-inner">
           <Users className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-[#111827] font-display mb-1">
+        <h3 className="text-lg font-bold text-[var(--text-primary)] font-display mb-1">
           Select or Create a Conversation
         </h3>
         <p className="text-xs text-[var(--text-muted)] max-w-sm">
@@ -354,7 +354,7 @@ export const ConversationView: React.FC = () => {
           <button
             type="button"
             onClick={() => selectConversation(null)}
-            className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
+            className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
             title="Back to conversations"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -364,7 +364,7 @@ export const ConversationView: React.FC = () => {
           <button
             type="button"
             onClick={toggleMobileSidebar}
-            className="md:hidden p-1.5 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-1 flex-shrink-0"
+            className="md:hidden p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer mr-1 flex-shrink-0"
             title="Open workspaces"
           >
             <Menu className="w-4 h-4" />
@@ -393,7 +393,7 @@ export const ConversationView: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-[#111827] font-display">{title}</h2>
+              <h2 className="text-sm font-bold text-[var(--text-primary)] font-display">{title}</h2>
               {activeConv.type === 'GROUP' ? (
                 <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-[#DC2626] border border-red-500/20 text-[10px] font-semibold">
                   Group • {activeConv.members.length} members

@@ -152,13 +152,13 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
               <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-bold text-[#111827] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2 font-display">
+              <h3 className="text-sm sm:text-base font-bold text-[var(--text-primary)] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2 font-display">
                 <span>Meeting Hub</span>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-500/10 text-red-700 border border-red-500/25">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/25">
                   Google & Teams
                 </span>
               </h3>
-              <p className="text-[11px] sm:text-xs text-[#71717A] truncate sm:whitespace-normal">
+              <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] truncate sm:whitespace-normal">
                 Generate instant meetings or bridge cross-platform calls.
               </p>
             </div>
@@ -166,7 +166,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
 
           <button
             onClick={onClose}
-            className="p-1.5 sm:p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer flex-shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors cursor-pointer flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -179,7 +179,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             className={`py-2.5 sm:py-3 px-2.5 sm:px-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer flex-shrink-0 ${
               activeTab === 'instant'
                 ? 'border-[#DC2626] text-red-600 font-bold'
-                : 'border-transparent text-[#71717A] hover:text-[#111827]'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-red-600" />
@@ -191,7 +191,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             className={`py-3 px-3 border-b-2 flex items-center gap-2 transition-all cursor-pointer relative ${
               activeTab === 'active'
                 ? 'border-[#DC2626] text-red-600 font-bold'
-                : 'border-transparent text-[#71717A] hover:text-[#111827]'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Radio className="w-3.5 h-3.5 text-emerald-600" />
@@ -206,7 +206,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             className={`py-3 px-3 border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'settings'
                 ? 'border-[#DC2626] text-red-600 font-bold'
-                : 'border-transparent text-[#71717A] hover:text-[#111827]'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Settings2 className="w-3.5 h-3.5 text-[#71717A]" />
@@ -220,10 +220,10 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             <>
               {/* Provider Selection */}
               <div>
-                <label className="block text-xs font-bold text-[#71717A] uppercase tracking-wider mb-2.5">
+                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2.5">
                   1. Select Platform
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Google Meet Option */}
                   <div
                     onClick={() => setProvider('GOOGLE_MEET')}
@@ -237,8 +237,8 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       <GoogleMeetIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[#111827]">Google Meet</div>
-                      <div className="text-[11px] text-emerald-700 font-medium">meet.google.com</div>
+                      <div className="text-sm font-bold text-[var(--text-primary)]">Google Meet</div>
+                      <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">meet.google.com</div>
                     </div>
                   </div>
 
@@ -255,8 +255,8 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       <MicrosoftTeamsIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[#111827]">Microsoft Teams</div>
-                      <div className="text-[11px] text-indigo-700 font-medium">teams.microsoft.com</div>
+                      <div className="text-sm font-bold text-[var(--text-primary)]">Microsoft Teams</div>
+                      <div className="text-[11px] text-indigo-700 dark:text-indigo-400 font-medium">teams.microsoft.com</div>
                     </div>
                   </div>
                 </div>
