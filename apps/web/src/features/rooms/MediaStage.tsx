@@ -300,7 +300,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // Ambient speech recognition for "@mivo" or "Mivo, ..." voice commands
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || mode === 'TEXT') return;
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -347,7 +347,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         recognition.stop();
       } catch {}
     };
-  }, [handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
+  }, [mode, handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
 
   // Sync participant list to ordered array
   React.useEffect(() => {
@@ -536,23 +536,10 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     setSpatialPositions(newPositions);
   }, [sortedParticipants, isSpatialAudioActive]);
 
-  // TEXT MODE: Real-Time Chat Stream
-  if (mode === 'TEXT') {
-    if (!room) {
-      return (
-        <div className="flex-1 flex items-center justify-center bg-[#0E1017]">
-          <div className="w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      );
-    }
-
-    return <ChatStream room={room} />;
-  }
-
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
-  if (mode === 'VOICE') {
+  const renderVoiceStage = () => {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-8 pb-28 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-8 pb-28 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
@@ -783,12 +770,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         </div>
       </div>
     );
-  }
+  };
 
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
-  if (mode === 'VIDEO') {
+  const renderVideoStage = () => {
     return (
-      <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
+    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
         <LiveFactCheckHUD
           alert={factCheckAlert}
           onDismiss={() => setFactCheckAlert(null)}
@@ -1025,10 +1012,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         )}
       </div>
     );
-  }
+  };
 
   // SCREEN_SHARE or STREAM MODE: Studio Broadcast Theater with Interactive Preparation Deck & Participant Strip
-  return (
+  const renderScreenStage = () => {
+    return (
     <div className="flex-1 p-2 sm:p-5 pb-28 sm:pb-32 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-3">
       {/* Primary Studio Broadcast Stage Frame */}
       <div
@@ -1381,6 +1369,39 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           setFactCheckAlert(null);
         }}
       />
+    </div>
+    );
+  };
+
+  return (
+    <div className="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--bg-canvas)]">
+      {/* ── Real-Time Chat Stream (Kept hot in DOM: 0ms instant switch, zero re-fetching or scroll loss) ── */}
+      <div
+        className={`flex-1 flex flex-col h-full w-full ${
+          mode === 'TEXT' ? 'flex relative z-10' : 'hidden'
+        }`}
+      >
+        {room ? (
+          <ChatStream room={room} />
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-[#0E1017]">
+            <div className="w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Live Media Stages (Voice / Video / Screen Share) ── */}
+      <div
+        className={`flex-1 flex flex-col h-full w-full relative overflow-hidden ${
+          mode !== 'TEXT' ? 'flex' : 'hidden'
+        }`}
+      >
+        {mode === 'VOICE'
+          ? renderVoiceStage()
+          : mode === 'VIDEO'
+          ? renderVideoStage()
+          : renderScreenStage()}
+      </div>
     </div>
   );
 };

@@ -269,22 +269,39 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
   switchMode: async (mode: RoomCommunicationMode) => {
     const { activeRoom } = get();
-    if (!activeRoom) return;
+    if (!activeRoom || activeRoom.activeMode === mode) return;
 
-    const res = await api.patch<RoomDTO>(`/api/v1/rooms/${activeRoom.id}/mode`, {
-      activeMode: mode,
-    });
+    const previousMode = activeRoom.activeMode;
 
-    if (res.success) {
-      const socket = realtime.getSocket();
-      if (socket) {
-        socket.emit(REALTIME_EVENTS.ROOM_CHANGE_MODE, {
-          roomId: activeRoom.id,
-          activeMode: mode,
-        });
+    // 1. Instant optimistic state update (< 1ms UI transition)
+    set((state) => ({
+      activeRoom: state.activeRoom ? { ...state.activeRoom, activeMode: mode } : null,
+    }));
+
+    // 2. Realtime WebSocket broadcast to all peers in room
+    const socket = realtime.getSocket();
+    if (socket) {
+      socket.emit(REALTIME_EVENTS.ROOM_CHANGE_MODE, {
+        roomId: activeRoom.id,
+        activeMode: mode,
+      });
+    }
+
+    // 3. Asynchronous backend persistence with automatic rollback on network failure
+    try {
+      const res = await api.patch<RoomDTO>(`/api/v1/rooms/${activeRoom.id}/mode`, {
+        activeMode: mode,
+      });
+      if (!res.success) {
+        console.warn('Mode patch failed on server, reverting:', res.error);
+        set((state) => ({
+          activeRoom: state.activeRoom ? { ...state.activeRoom, activeMode: previousMode } : null,
+        }));
       }
+    } catch (err) {
+      console.error('Mode patch network failure, reverting:', err);
       set((state) => ({
-        activeRoom: state.activeRoom ? { ...state.activeRoom, activeMode: mode } : null,
+        activeRoom: state.activeRoom ? { ...state.activeRoom, activeMode: previousMode } : null,
       }));
     }
   },

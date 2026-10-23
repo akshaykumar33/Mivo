@@ -24,6 +24,7 @@ import {
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 import { useThemeStore } from '@/stores/themeStore';
 import { GraphicalReaction } from '@/features/reactions';
+import { useRoomAudioLevel } from '@/features/rooms/hooks';
 
 export interface FloatingCyberDockProps {
   activeMode: RoomCommunicationMode;
@@ -113,8 +114,10 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     setIsReactionsTrayOpen(false);
   };
 
-  const isSpeaking = !isMuted && audioLevel > 15;
-  const isInCall = activeMode !== 'TEXT';
+  const storeAudioLevel = useRoomAudioLevel();
+  const currentAudioLevel = audioLevel ?? storeAudioLevel;
+  const isSpeaking = !isMuted && currentAudioLevel > 15;
+  const isInCall = activeMode !== 'TEXT' || isCameraOn || !isMuted || isScreenOn;
 
   // Tooltip helper
   const Tip = ({ text, groupClass }: { text: string; groupClass: string }) => (
