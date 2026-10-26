@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useThemeStore, MIVO_THEMES, MivoThemeId } from '@/stores/themeStore';
+import { useThemeStore, MIVO_THEMES, MivoThemeId, MivoThemeMeta } from '@/stores/themeStore';
 
 describe('Theme Store & Multi-Theme Design Tokens', () => {
   beforeEach(() => {
@@ -11,7 +11,7 @@ describe('Theme Store & Multi-Theme Design Tokens', () => {
 
   it('defines 6 curated high-contrast and OLED dark/light theme presets', () => {
     expect(MIVO_THEMES).toHaveLength(6);
-    const themeIds = MIVO_THEMES.map((t) => t.id);
+    const themeIds = MIVO_THEMES.map((t: MivoThemeMeta) => t.id);
 
     expect(themeIds).toContain('crimson-cream');
     expect(themeIds).toContain('midnight');
@@ -20,7 +20,7 @@ describe('Theme Store & Multi-Theme Design Tokens', () => {
     expect(themeIds).toContain('light-frost');
     expect(themeIds).toContain('solar-warm');
 
-    const titanium = MIVO_THEMES.find((t) => t.id === 'titanium');
+    const titanium = MIVO_THEMES.find((t: MivoThemeMeta) => t.id === 'titanium');
     expect(titanium?.name).toBe('Apple Titanium');
     expect(titanium?.category).toBe('dark');
   });

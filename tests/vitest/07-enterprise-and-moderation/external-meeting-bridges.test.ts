@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ExternalMeetingProvider, ExternalMeetingBridgeDTO } from '@mivo/shared';
+import { ExternalMeetingProvider, ExternalMeetingBridgeDTO, ExternalMeetingDTO, UserSummaryDTO } from '@mivo/shared';
 
 export function validateExternalMeetingUrl(url: string, provider: ExternalMeetingProvider): boolean {
   if (!url || typeof url !== 'string') return false;
@@ -10,7 +10,7 @@ export function validateExternalMeetingUrl(url: string, provider: ExternalMeetin
     return gmeetRegex.test(url.trim());
   }
 
-  if (provider === 'MICROSOFT_TEAMS') {
+  if (provider === 'MS_TEAMS') {
     // Format: https://teams.microsoft.com/l/meetup-join/...
     const teamsRegex = /^https:\/\/(?:[a-z0-9-]+\.)?teams\.(?:microsoft|live)\.com\/.+$/i;
     return teamsRegex.test(url.trim());
@@ -20,28 +20,46 @@ export function validateExternalMeetingUrl(url: string, provider: ExternalMeetin
 }
 
 export function buildExternalBridgeDTO(
-  id: string,
+  meetingId: string,
   provider: ExternalMeetingProvider,
   url: string,
   title: string,
-  creatorName: string,
+  creator: UserSummaryDTO,
   roomId?: string,
   conversationId?: string
 ): ExternalMeetingBridgeDTO {
-  return {
-    id,
+  const meeting: ExternalMeetingDTO = {
+    id: meetingId,
     provider,
-    url,
     title,
-    creatorName,
-    roomId: roomId || null,
-    conversationId: conversationId || null,
+    meetingUrl: url,
+    meetingCode: 'code-123',
+    createdBy: creator,
     createdAt: new Date().toISOString(),
-    isActive: true,
+    status: 'ACTIVE',
+    roomId,
+    conversationId,
+  };
+
+  return {
+    roomId,
+    conversationId,
+    meeting,
+    activatedAt: new Date().toISOString(),
+    activatedBy: creator,
   };
 }
 
 describe('External Meeting Bridges (Google Meet & Microsoft Teams)', () => {
+  const mockUser: UserSummaryDTO = {
+    id: 'user-elena',
+    username: 'elena',
+    displayName: 'Elena Rostova',
+    avatarUrl: null,
+    status: 'ONLINE',
+    customStatus: null,
+  };
+
   it('validates canonical Google Meet join URLs and flags malformed URLs', () => {
     expect(validateExternalMeetingUrl('https://meet.google.com/abc-defg-hij', 'GOOGLE_MEET')).toBe(true);
     expect(validateExternalMeetingUrl('https://meet.google.com/xyz-uvwx-rst?authuser=1', 'GOOGLE_MEET')).toBe(true);
@@ -51,30 +69,29 @@ describe('External Meeting Bridges (Google Meet & Microsoft Teams)', () => {
 
   it('validates Microsoft Teams enterprise meetup links', () => {
     const validTeams = 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_OTYxNzE0?context=%7b%22Tid%22%3a%22123%22%7d';
-    expect(validateExternalMeetingUrl(validTeams, 'MICROSOFT_TEAMS')).toBe(true);
+    expect(validateExternalMeetingUrl(validTeams, 'MS_TEAMS')).toBe(true);
 
     const validTeamsLive = 'https://teams.live.com/meet/9382173192';
-    expect(validateExternalMeetingUrl(validTeamsLive, 'MICROSOFT_TEAMS')).toBe(true);
+    expect(validateExternalMeetingUrl(validTeamsLive, 'MS_TEAMS')).toBe(true);
 
-    expect(validateExternalMeetingUrl('https://office.com/launch/teams', 'MICROSOFT_TEAMS')).toBe(false);
+    expect(validateExternalMeetingUrl('https://office.com/launch/teams', 'MS_TEAMS')).toBe(false);
   });
 
   it('constructs active ExternalMeetingBridgeDTO with metadata and association pointers', () => {
     const bridge = buildExternalBridgeDTO(
-      'bridge-alpha-1',
+      'meet-alpha-1',
       'GOOGLE_MEET',
       'https://meet.google.com/abc-defg-hij',
       'Quarterly Board Sync',
-      'Elena Rostova',
+      mockUser,
       'room-war-room'
     );
 
-    expect(bridge.id).toBe('bridge-alpha-1');
-    expect(bridge.provider).toBe('GOOGLE_MEET');
-    expect(bridge.title).toBe('Quarterly Board Sync');
-    expect(bridge.creatorName).toBe('Elena Rostova');
+    expect(bridge.meeting.id).toBe('meet-alpha-1');
+    expect(bridge.meeting.provider).toBe('GOOGLE_MEET');
+    expect(bridge.meeting.title).toBe('Quarterly Board Sync');
+    expect(bridge.activatedBy.displayName).toBe('Elena Rostova');
     expect(bridge.roomId).toBe('room-war-room');
-    expect(bridge.conversationId).toBeNull();
-    expect(bridge.isActive).toBe(true);
+    expect(bridge.meeting.status).toBe('ACTIVE');
   });
 });

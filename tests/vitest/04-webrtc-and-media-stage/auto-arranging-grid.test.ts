@@ -103,7 +103,7 @@ describe('Smart Auto-Arranging Grid & Drag & Drop Reordering', () => {
       isCameraOn: false,
       isScreenOn: false,
       joinedAt: '2026-10-26T10:00:00Z',
-      user: { id: 'user-silent', username: 'silent', displayName: 'Silent Sam', avatarUrl: null, status: 'IDLE' },
+      user: { id: 'user-silent', username: 'silent', displayName: 'Silent Sam', avatarUrl: null, status: 'IDLE', customStatus: null },
     },
     {
       id: 'm2',
@@ -114,7 +114,7 @@ describe('Smart Auto-Arranging Grid & Drag & Drop Reordering', () => {
       isCameraOn: true,
       isScreenOn: false,
       joinedAt: '2026-10-26T10:01:00Z',
-      user: { id: 'user-active-speaker', username: 'speaker', displayName: 'Speaker Sally', avatarUrl: null, status: 'ONLINE' },
+      user: { id: 'user-active-speaker', username: 'speaker', displayName: 'Speaker Sally', avatarUrl: null, status: 'ONLINE', customStatus: null },
     },
     {
       id: 'm3',
@@ -125,7 +125,7 @@ describe('Smart Auto-Arranging Grid & Drag & Drop Reordering', () => {
       isCameraOn: true,
       isScreenOn: false,
       joinedAt: '2026-10-26T09:59:00Z',
-      user: { id: 'user-host', username: 'host', displayName: 'Host Harry', avatarUrl: null, status: 'DND' },
+      user: { id: 'user-host', username: 'host', displayName: 'Host Harry', avatarUrl: null, status: 'DND', customStatus: null },
     },
   ];
 

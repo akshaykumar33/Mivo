@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useCommunityStore } from '@/stores/communityStore';
+import { CommunityDTO, CommunityDetailsDTO } from '@mivo/shared';
 
-describe('Communities & RBAC Module — Zustand Community Store', () => {
+describe('Community Store & Multi-Tenant RBAC Workspaces', () => {
   beforeEach(() => {
     useCommunityStore.setState({
       communities: [],
@@ -11,7 +12,7 @@ describe('Communities & RBAC Module — Zustand Community Store', () => {
     });
   });
 
-  it('initializes with empty communities array and null activeCommunity', () => {
+  it('initializes with empty communities array and inactive community', () => {
     const state = useCommunityStore.getState();
     expect(state.communities).toEqual([]);
     expect(state.activeCommunity).toBeNull();
@@ -19,27 +20,29 @@ describe('Communities & RBAC Module — Zustand Community Store', () => {
     expect(state.isLoading).toBe(false);
   });
 
-  it('updates state when communities are populated', () => {
-    const mockCommunities = [
+  it('populates communities array and preserves community metadata', () => {
+    const mockCommunities: CommunityDTO[] = [
       {
         id: 'comm-1',
         name: 'Wysbryx Engineering',
         slug: 'wysbryx-engineering',
         description: 'Core Engineering Organization',
+        iconUrl: null,
+        bannerUrl: null,
         visibility: 'PRIVATE' as const,
         ownerId: 'usr-dev',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       },
       {
         id: 'comm-2',
         name: 'Design Guild',
         slug: 'design-guild',
         description: 'UI/UX Design Systems',
+        iconUrl: null,
+        bannerUrl: null,
         visibility: 'PUBLIC' as const,
         ownerId: 'usr-alex',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       },
     ];
 
@@ -51,39 +54,36 @@ describe('Communities & RBAC Module — Zustand Community Store', () => {
     expect(state.communities[1].slug).toBe('design-guild');
   });
 
-  it('updates activeCommunity details and spaces', () => {
-    const details = {
+  it('updates activeCommunity details and channels', () => {
+    const details: CommunityDetailsDTO = {
       id: 'comm-1',
       name: 'Wysbryx Engineering',
       slug: 'wysbryx-engineering',
       description: 'Core Engineering Organization',
+      iconUrl: null,
+      bannerUrl: null,
       visibility: 'PRIVATE' as const,
       ownerId: 'usr-dev',
-      spaces: [
+      createdAt: new Date().toISOString(),
+      channels: [
         {
-          id: 'spc-1',
-          name: 'General',
+          id: 'chn-1',
+          name: 'announcements',
           communityId: 'comm-1',
-          channels: [
-            {
-              id: 'chn-1',
-              name: 'announcements',
-              spaceId: 'spc-1',
-              mode: 'TEXT' as const,
-              isPrivate: false,
-            },
-          ],
+          topic: 'Platform updates',
+          position: 0,
+          isPrivate: false,
+          createdAt: new Date().toISOString(),
         },
       ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      roles: [],
     };
 
-    useCommunityStore.setState({ activeCommunity: details as any });
+    useCommunityStore.setState({ activeCommunity: details });
 
     const state = useCommunityStore.getState();
     expect(state.activeCommunity?.name).toBe('Wysbryx Engineering');
-    expect(state.activeCommunity?.spaces).toHaveLength(1);
-    expect(state.activeCommunity?.spaces[0].channels[0].name).toBe('announcements');
+    expect(state.activeCommunity?.channels).toHaveLength(1);
+    expect(state.activeCommunity?.channels[0].name).toBe('announcements');
   });
 });

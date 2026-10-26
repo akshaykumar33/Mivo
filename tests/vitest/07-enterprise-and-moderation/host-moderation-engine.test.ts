@@ -56,7 +56,7 @@ describe('Host Moderation and Governance Engine', () => {
       isCameraOn: true,
       isScreenOn: false,
       joinedAt: '2026-10-26T10:00:00Z',
-      user: { id: 'user-host', username: 'host', displayName: 'Host User', avatarUrl: null, status: 'ONLINE' },
+      user: { id: 'user-host', username: 'host', displayName: 'Host User', avatarUrl: null, status: 'ONLINE', customStatus: null },
     },
     {
       id: 'm2',
@@ -67,7 +67,7 @@ describe('Host Moderation and Governance Engine', () => {
       isCameraOn: false,
       isScreenOn: false,
       joinedAt: '2026-10-26T10:05:00Z',
-      user: { id: 'user-disruptive', username: 'badactor', displayName: 'Bad Actor', avatarUrl: null, status: 'ONLINE' },
+      user: { id: 'user-disruptive', username: 'badactor', displayName: 'Bad Actor', avatarUrl: null, status: 'ONLINE', customStatus: null },
     },
   ];
 

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { translationManager, SUPPORTED_LANGUAGES } from '@/lib/translation-manager';
+import { translationManager, SUPPORTED_LANGUAGES, LanguageOption } from '@/lib/translation-manager';
 
 describe('Whisper Scribe and Universal Translation Engine', () => {
   it('defines comprehensive list of 12 supported international languages with voice locales', () => {
     expect(SUPPORTED_LANGUAGES).toHaveLength(12);
 
-    const codes = SUPPORTED_LANGUAGES.map((l) => l.code);
+    const codes = SUPPORTED_LANGUAGES.map((l: LanguageOption) => l.code);
     expect(codes).toContain('es'); // Spanish
     expect(codes).toContain('fr'); // French
     expect(codes).toContain('de'); // German
@@ -19,7 +19,7 @@ describe('Whisper Scribe and Universal Translation Engine', () => {
     expect(codes).toContain('ko'); // Korean
     expect(codes).toContain('en'); // English
 
-    const spanish = SUPPORTED_LANGUAGES.find((l) => l.code === 'es');
+    const spanish = SUPPORTED_LANGUAGES.find((l: LanguageOption) => l.code === 'es');
     expect(spanish?.voiceLang).toBe('es-ES');
     expect(spanish?.nativeName).toBe('Español');
   });
@@ -51,7 +51,7 @@ describe('Whisper Scribe and Universal Translation Engine', () => {
 
   it('subscribes to and emits realtime subtitles to registered listeners', () => {
     let capturedSubtitle: any = null;
-    const unsubscribe = translationManager.onSubtitle((sub) => {
+    const unsubscribe = translationManager.onSubtitle((sub: any) => {
       capturedSubtitle = sub;
     });
 

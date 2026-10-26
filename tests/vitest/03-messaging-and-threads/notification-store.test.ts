@@ -28,8 +28,8 @@ describe('Notification Store & Unread Center', () => {
     store.setIsCenterOpen(true);
     expect(useNotificationStore.getState().isCenterOpen).toBe(true);
 
-    store.setFilter('CALL_INVITE');
-    expect(useNotificationStore.getState().filter).toBe('CALL_INVITE');
+    store.setFilter('CALL');
+    expect(useNotificationStore.getState().filter).toBe('CALL');
 
     store.setFilter('ALL');
     expect(useNotificationStore.getState().filter).toBe('ALL');
@@ -40,24 +40,26 @@ describe('Notification Store & Unread Center', () => {
       {
         id: 'n-1',
         userId: 'u-1',
-        actorId: 'u-2',
-        type: 'DM_MESSAGE',
+        type: 'MESSAGE',
         title: 'New direct message',
         body: 'Hey, are you free for a sync?',
-        linkUrl: '/conversations/conv-1',
+        entityId: 'conv-1',
+        data: null,
         isRead: false,
         createdAt: '2026-10-26T10:00:00Z',
+        readAt: null,
       },
       {
         id: 'n-2',
         userId: 'u-1',
-        actorId: 'u-3',
-        type: 'ROOM_INVITE',
-        title: 'Room invite',
-        body: 'Invited you to Keynote Stage',
-        linkUrl: '/rooms/room-1',
+        type: 'CALL',
+        title: 'Incoming Audio Call',
+        body: 'Dev Admin is calling you',
+        entityId: 'conv-2',
+        data: null,
         isRead: false,
         createdAt: '2026-10-26T10:05:00Z',
+        readAt: null,
       },
     ];
 
@@ -67,23 +69,23 @@ describe('Notification Store & Unread Center', () => {
     });
 
     // Mark single notification as read
-    useNotificationStore.setState((state) => ({
-      notifications: state.notifications.map((n) => (n.id === 'n-1' ? { ...n, isRead: true } : n)),
+    useNotificationStore.setState((state: any) => ({
+      notifications: state.notifications.map((n: NotificationDTO) => (n.id === 'n-1' ? { ...n, isRead: true } : n)),
       unreadCount: Math.max(0, state.unreadCount - 1),
     }));
 
     let state = useNotificationStore.getState();
     expect(state.unreadCount).toBe(1);
-    expect(state.notifications.find((n) => n.id === 'n-1')?.isRead).toBe(true);
+    expect(state.notifications.find((n: NotificationDTO) => n.id === 'n-1')?.isRead).toBe(true);
 
     // Mark all as read
-    useNotificationStore.setState((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+    useNotificationStore.setState((state: any) => ({
+      notifications: state.notifications.map((n: NotificationDTO) => ({ ...n, isRead: true })),
       unreadCount: 0,
     }));
 
     state = useNotificationStore.getState();
     expect(state.unreadCount).toBe(0);
-    expect(state.notifications.every((n) => n.isRead)).toBe(true);
+    expect(state.notifications.every((n: NotificationDTO) => n.isRead)).toBe(true);
   });
 });

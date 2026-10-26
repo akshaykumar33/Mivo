@@ -41,12 +41,12 @@ export function validateMiniAppSandbox(appType: MiniAppType): {
         supported: true,
         sandboxFlags: 'allow-scripts allow-forms allow-same-origin',
       };
-    case 'FIGMA':
+    case 'FIGMA_EMBED':
       return {
         supported: true,
         sandboxFlags: 'allow-scripts allow-forms allow-same-origin allow-popups',
       };
-    case 'PR_REVIEW':
+    case 'GITHUB_PR':
       return {
         supported: true,
         sandboxFlags: 'allow-scripts allow-forms allow-same-origin',
@@ -107,11 +107,11 @@ describe('Mivo Activities & Multiplayer Speed Chess Sandbox', () => {
     expect(chess.supported).toBe(true);
     expect(chess.sandboxFlags).toBe('allow-scripts allow-forms allow-same-origin');
 
-    const figma = validateMiniAppSandbox('FIGMA');
+    const figma = validateMiniAppSandbox('FIGMA_EMBED');
     expect(figma.supported).toBe(true);
     expect(figma.sandboxFlags).toContain('allow-popups');
 
-    const prReview = validateMiniAppSandbox('PR_REVIEW');
+    const prReview = validateMiniAppSandbox('GITHUB_PR');
     expect(prReview.supported).toBe(true);
   });
 });

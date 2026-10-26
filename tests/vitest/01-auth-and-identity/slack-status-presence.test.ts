@@ -23,11 +23,11 @@ describe('Auth & Identity Module — Slack Status & Presence Engine', () => {
     expect(statusInfo.customStatus).toBe('In an architecture sync');
   });
 
-  it('handles custom status clearing and away transitions', () => {
+  it('handles custom status clearing and idle transitions', () => {
     usePresenceStore.setState({
       userStatuses: {
         'usr-2': {
-          status: 'AWAY',
+          status: 'IDLE',
           customStatus: null,
           customStatusExpiresAt: null,
         },
@@ -35,7 +35,7 @@ describe('Auth & Identity Module — Slack Status & Presence Engine', () => {
     });
 
     const statusInfo = usePresenceStore.getState().userStatuses['usr-2'];
-    expect(statusInfo.status).toBe('AWAY');
+    expect(statusInfo.status).toBe('IDLE');
     expect(statusInfo.customStatus).toBeNull();
   });
 

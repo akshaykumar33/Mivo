@@ -45,10 +45,13 @@ describe('Ticket Store and Enterprise Support Workflow', () => {
       description: 'Audio jitter buffer drops packets under packet loss simulation.',
       status: 'OPEN',
       priority: 'HIGH',
+      category: 'AUDIO',
       creatorId: 'user-reporter',
+      assigneeId: null,
       communityId: 'comm-1',
       createdAt: '2026-10-26T10:00:00Z',
       updatedAt: '2026-10-26T10:00:00Z',
+      closedAt: null,
     };
 
     store.setSelectedTicket(mockTicket);
@@ -67,10 +70,13 @@ describe('Ticket Store and Enterprise Support Workflow', () => {
         description: 'WebRTC getUserMedia permission error',
         status: 'OPEN',
         priority: 'URGENT',
+        category: 'WEBRTC',
         creatorId: 'u1',
+        assigneeId: null,
         communityId: 'c1',
         createdAt: '2026-10-26T00:00:00Z',
         updatedAt: '2026-10-26T00:00:00Z',
+        closedAt: null,
       },
       {
         id: 't-2',
@@ -78,10 +84,13 @@ describe('Ticket Store and Enterprise Support Workflow', () => {
         description: 'Border opacity too low on OLED screens',
         status: 'IN_PROGRESS',
         priority: 'LOW',
+        category: 'UI',
         creatorId: 'u2',
+        assigneeId: null,
         communityId: 'c1',
         createdAt: '2026-10-26T00:00:00Z',
         updatedAt: '2026-10-26T00:00:00Z',
+        closedAt: null,
       },
       {
         id: 't-3',
@@ -89,10 +98,13 @@ describe('Ticket Store and Enterprise Support Workflow', () => {
         description: 'SMTP queue retry exceeded',
         status: 'RESOLVED',
         priority: 'MEDIUM',
+        category: 'EMAIL',
         creatorId: 'u3',
+        assigneeId: null,
         communityId: 'c1',
         createdAt: '2026-10-26T00:00:00Z',
         updatedAt: '2026-10-26T00:00:00Z',
+        closedAt: '2026-10-26T01:00:00Z',
       },
     ];
 
