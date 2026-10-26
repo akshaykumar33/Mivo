@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUserPresence } from '@/stores/presenceStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { Avatar } from '@mivo/ui';
-import { Plus, Compass, MessageSquare, BookOpen, Ticket } from 'lucide-react';
+import { Plus, Compass, MessageSquare, BookOpen, Ticket, FolderGit2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CreateCommunityModal } from './CreateCommunityModal';
@@ -16,6 +16,7 @@ import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { SlackUserMenuPopover } from '@/features/auth/SlackUserMenuPopover';
 import { SlackStatusModal } from '@/features/auth/SlackStatusModal';
 import { EditProfileModal } from '@/features/auth/EditProfileModal';
+import { ProjectsHubModal } from '@/features/projects/ProjectsHubModal';
 
 const COMMUNITY_PALETTES = [
   'from-[#DC2626] via-[#EF4444] to-[#F87171]',
@@ -31,7 +32,7 @@ export interface CommunitySidebarProps {
 
 export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }) => {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, isGuest, isOrg, isNonOrg, userTier, capabilities, projectsModalOpen, setProjectsModalOpen } = useAuthStore();
   const userPresence = useUserPresence(user?.id, user);
   const { setIsThemeModalOpen } = useThemeStore();
   const { communities, fetchCommunities } = useCommunityStore();
@@ -211,9 +212,36 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
                 <div className="text-[10px] text-[var(--text-muted)] truncate max-w-[140px]">
                   {userPresence.customStatus ? userPresence.customStatus : userPresence.status.toLowerCase()}
                 </div>
+                <div className="mt-1 flex items-center gap-1">
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                      isOrg
+                        ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                        : isGuest
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        : 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                    }`}
+                  >
+                    {capabilities.badgeLabel}
+                  </span>
+                </div>
               </div>
             </div>
           )}
+
+          {/* Developer Projects Showcase Hub */}
+          <div className="relative group flex items-center justify-center w-full">
+            <button
+              onClick={() => setProjectsModalOpen(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-[var(--bg-surface-1)] text-cyan-500 hover:bg-cyan-500 hover:!text-white border border-cyan-500/25 hover:border-cyan-500/50 transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+            >
+              <FolderGit2 className="w-4 h-4 stroke-[2.2]" />
+            </button>
+
+            <div className="absolute left-[72px] px-3 py-1 rounded-[10px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 whitespace-nowrap shadow-xl backdrop-blur-xl z-50">
+              Developer Projects Showcase
+            </div>
+          </div>
 
           <div className="relative group flex items-center justify-center w-full">
             <button
@@ -284,6 +312,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
         activeCommunity={uniqueCommunities[0] || null}
       />
       <InteractiveDocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
+      <ProjectsHubModal isOpen={projectsModalOpen} onClose={() => setProjectsModalOpen(false)} />
     </>
   );
 };

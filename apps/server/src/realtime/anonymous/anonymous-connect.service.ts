@@ -155,6 +155,22 @@ export class AnonymousConnectService {
       joinedAt: Date.now(),
     };
 
+    if (user.userTier === 'ORG') {
+      client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
+        inQueue: false,
+        message: 'Games and casual matchmaking activities are disabled for Organization accounts.',
+      });
+      return;
+    }
+
+    if (entry.isGuest && (payload.mode as string) !== 'TEXT') {
+      client.emit(REALTIME_EVENTS.ANON_QUEUE_STATUS, {
+        inQueue: false,
+        message: 'Guest accounts cannot participate in audio or video calls. Please upgrade to unlock calling.',
+      });
+      return;
+    }
+
     // Private Jam Room Matching by Room Code
     if (roomCode) {
       const existing = this.privateRooms.get(roomCode);
@@ -305,6 +321,7 @@ export class AnonymousConnectService {
     if (!sessionId) return;
     const session = this.sessions.get(sessionId);
     if (!session) return;
+    if (session.user1.isGuest || session.user2.isGuest) return;
 
     const partner = session.user1.socketId === client.id ? session.user2 : session.user1;
     const signalPayload = {

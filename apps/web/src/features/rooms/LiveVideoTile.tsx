@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Headphones,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
@@ -275,16 +276,20 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       </div>
 
       {/* Floating Bottom Nameplate, Dynamic Equalizer & Media Badges */}
-      <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-0)]/90 backdrop-blur-xl border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] z-10 shadow-lg">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="truncate font-bold text-xs text-[var(--text-primary)]">
+      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 text-xs text-white z-10 shadow-md gap-2">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <span className="truncate font-semibold text-xs text-white" title={user.displayName || user.username}>
             {user.displayName || user.username}
-            {isMe && ' (You)'}
           </span>
+          {isMe && (
+            <span className="text-slate-400 font-normal text-[10px] flex-shrink-0">
+              (You)
+            </span>
+          )}
 
           {/* Live Dynamic Audio Equalizer Bars */}
           {!isMuted && (
-            <div className="flex items-center gap-0.5 h-3">
+            <div className="flex items-center gap-0.5 h-3 flex-shrink-0">
               <span
                 className="w-0.5 bg-emerald-400 rounded-full transition-all duration-75"
                 style={{ height: isMe ? `${Math.max(3, (audioLevel / 100) * 12)}px` : '8px' }}
@@ -301,10 +306,14 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {spatialPanLabel && (
-            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/60 text-emerald-400 border border-white/10 shadow-sm" title="3D Spatial Stereo Position">
-              🎧 {spatialPanLabel}
+            <span
+              className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-white/10 text-emerald-400 border border-white/10 flex items-center gap-1"
+              title={`3D Spatial Pan: ${spatialPanLabel}`}
+            >
+              <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+              <span>{spatialPanLabel.replace('Left', 'L').replace('Right', 'R').replace('Center', 'C')}</span>
             </span>
           )}
           {isMuted ? (
@@ -315,7 +324,7 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
           {isCameraOn ? (
             <Video className="w-3.5 h-3.5 text-cyan-400" />
           ) : (
-            <VideoOff className="w-3.5 h-3.5 text-slate-500" />
+            <VideoOff className="w-3.5 h-3.5 text-slate-400" />
           )}
         </div>
       </div>

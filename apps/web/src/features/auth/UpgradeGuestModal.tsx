@@ -60,8 +60,8 @@ export const UpgradeGuestModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden text-[#111827]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-5 sm:p-7 shadow-2xl relative text-[var(--text-primary)]">
         {/* Ambient Top Glow */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500" />
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -69,7 +69,7 @@ export const UpgradeGuestModal: React.FC = () => {
         {/* Close Button */}
         <button
           onClick={() => setUpgradeModalOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -80,10 +80,10 @@ export const UpgradeGuestModal: React.FC = () => {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-[#111827] font-display">
+            <h2 className="text-xl font-extrabold text-[var(--text-primary)] font-display">
               Claim Your Full Account
             </h2>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-[var(--text-secondary)]">
               Unlock permanent access, 100MB file uploads, and organization ownership.
             </p>
           </div>

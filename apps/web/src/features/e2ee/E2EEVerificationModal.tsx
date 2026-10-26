@@ -1,9 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Shield, ShieldCheck, RefreshCw, X, Lock, CheckCircle2, KeyRound } from 'lucide-react';
+import { Shield, ShieldCheck, RefreshCw, X, Lock, CheckCircle2, KeyRound, Zap } from 'lucide-react';
 import { E2eeSafetyCodeVerification } from '@mivo/shared';
 import { e2eeEngine } from '@/lib/e2ee-engine';
+
+const getSasIcon = (token: string, idx: number) => {
+  const code = token.codePointAt(0) || idx;
+  const icons = [Shield, Zap, KeyRound, Lock, CheckCircle2, ShieldCheck];
+  return icons[code % icons.length];
+};
 
 export interface E2EEVerificationModalProps {
   isOpen: boolean;
@@ -80,17 +86,27 @@ export const E2EEVerificationModal: React.FC<E2EEVerificationModalProps> = ({
             </span>
           </div>
 
-          {/* Verification Emojis (SAS Visual Fingerprint) */}
+          {/* Verification Tokens (SAS Visual Fingerprint) */}
           <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-[var(--bg-surface-1)] to-[var(--bg-surface-2)] border border-[var(--border-subtle)] shadow-inner">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-              Out-of-Band Safety Emojis (SAS)
+              Out-of-Band Safety Tokens (SAS)
             </span>
-            <div className="flex items-center gap-4 text-4xl p-3 bg-[var(--bg-surface-0)]/70 rounded-xl border border-[var(--border-subtle)] shadow-sm">
-              {safetyCode?.verificationEmojis.map((emoji, idx) => (
-                <span key={idx} className="hover:scale-125 transition-transform select-none cursor-default">
-                  {emoji}
-                </span>
-              )) || ['🛡️', '⚡', '🔑', '🚀'].map((e, i) => <span key={i}>{e}</span>)}
+            <div className="flex items-center gap-3 p-3 bg-[var(--bg-surface-0)]/70 rounded-xl border border-[var(--border-subtle)] shadow-sm">
+              {(safetyCode?.verificationEmojis || ['SAS-1', 'SAS-2', 'SAS-3', 'SAS-4']).map((token, idx) => {
+                const IconComponent = getSasIcon(token, idx);
+                return (
+                  <div
+                    key={idx}
+                    className="w-12 h-12 rounded-xl bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] flex flex-col items-center justify-center gap-0.5 hover:scale-105 hover:border-[#5E5CE6] transition-all shadow-sm"
+                    title={`Token ${idx + 1}`}
+                  >
+                    <IconComponent className="w-5 h-5 text-[#5E5CE6]" />
+                    <span className="text-[8px] font-mono font-bold text-[var(--text-muted)]">
+                      {`T${idx + 1}`}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="mt-4 font-mono font-bold text-sm tracking-widest text-[#30D158] select-all bg-[var(--bg-surface-0)] px-3 py-1.5 rounded-lg border border-[#30D158]/30">

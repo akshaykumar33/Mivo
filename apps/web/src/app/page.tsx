@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@mivo/ui';
 import Link from 'next/link';
-import { MessageSquare, Mic, Video, Monitor, Radio, Shield, Sparkles, ArrowRight } from 'lucide-react';
+import { MessageSquare, Mic, Video, Monitor, Radio, Shield, Sparkles, ArrowRight, Zap } from 'lucide-react';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -72,7 +72,8 @@ export default function LandingPage() {
               type="button"
               className="w-full sm:w-auto px-5 py-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105"
             >
-              <span>Instant Guest Mode ⚡</span>
+              <Zap className="w-4 h-4 text-amber-400" />
+              <span>Instant Guest Mode</span>
             </button>
           </Link>
         </div>
@@ -105,7 +106,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="h-16 border-t border-slate-800/80 max-w-7xl mx-auto w-full px-6 flex items-center justify-between text-xs text-slate-500">
-        <div>© 2026 Mivo Inc. All rights reserved.</div>
+        <div>&copy; 2026 Mivo Inc. All rights reserved.</div>
         <div className="flex items-center gap-4">
           <span>PostgreSQL • Redis • WebRTC • Next.js • NestJS</span>
         </div>

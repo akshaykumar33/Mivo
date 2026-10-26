@@ -360,6 +360,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (!user || !data.roomId) return;
 
+    // Guest accounts cannot broadcast microphone, camera, or screen share to others
+    if (user.isGuest) {
+      data.isMuted = true;
+      data.isCameraOn = false;
+      data.isScreenOn = false;
+    }
+
     const updated = await prisma.roomMember.update({
       where: { roomId_userId: { roomId: data.roomId, userId: user.sub } },
       data: {
@@ -400,6 +407,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(REALTIME_EVENTS.SIGNALING_OFFER)
   handleSignalingOffer(@ConnectedSocket() client: Socket, @MessageBody() payload: any) {
+    if (client.data?.user?.isGuest) return;
     const targetRoom = this.getSignalingTarget(payload, client);
     if (targetRoom) {
       client.to(targetRoom).emit(REALTIME_EVENTS.SIGNALING_OFFER, {
@@ -411,6 +419,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(REALTIME_EVENTS.SIGNALING_ANSWER)
   handleSignalingAnswer(@ConnectedSocket() client: Socket, @MessageBody() payload: any) {
+    if (client.data?.user?.isGuest) return;
     const targetRoom = this.getSignalingTarget(payload, client);
     if (targetRoom) {
       client.to(targetRoom).emit(REALTIME_EVENTS.SIGNALING_ANSWER, {
@@ -422,6 +431,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(REALTIME_EVENTS.SIGNALING_ICE_CANDIDATE)
   handleSignalingCandidate(@ConnectedSocket() client: Socket, @MessageBody() payload: any) {
+    if (client.data?.user?.isGuest) return;
     const targetRoom = this.getSignalingTarget(payload, client);
     if (targetRoom) {
       client.to(targetRoom).emit(REALTIME_EVENTS.SIGNALING_ICE_CANDIDATE, {
@@ -548,27 +558,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { success: false, error: 'Message content or attachments required' };
     }
 
-    // Guest restrictions enforcement
+    // Guest restrictions enforcement: guests cannot message anyone
     if (user.isGuest) {
-      const now = Date.now();
-      const last = this.guestChatCooldowns.get(client.id) || 0;
-      if (now - last < 3000) {
-        return {
-          success: false,
-          error: 'Guest account limit: 3-second cooldown between messages. Upgrade to chat without limits.',
-        };
-      }
-      this.guestChatCooldowns.set(client.id, now);
-
-      if (data.attachments && data.attachments.length > 0) {
-        const hasLarge = data.attachments.some((a: any) => (a.size || 0) > 2 * 1024 * 1024);
-        if (hasLarge) {
-          return {
-            success: false,
-            error: 'Guest accounts cannot send attachments larger than 2MB.',
-          };
-        }
-      }
+      return {
+        success: false,
+        error: 'Guest accounts cannot message others. Please create a permanent account or sign in.',
+      };
     }
 
     try {
@@ -655,6 +650,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { success: false, error: 'Unauthorized or missing conversationId' };
     }
 
+    if (user.isGuest) {
+      return { success: false, error: 'Guest accounts cannot join direct message rooms' };
+    }
+
     const member = await prisma.conversationMember.findUnique({
       where: {
         conversationId_userId: {
@@ -691,6 +690,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (!user || !data?.conversationId) {
       return { success: false, error: 'Unauthorized or missing conversationId' };
+    }
+
+    if (user.isGuest) {
+      return {
+        success: false,
+        error: 'Guest accounts cannot send direct messages. Please upgrade to a full account.',
+      };
     }
 
     const trimmedContent = data.content?.trim() || '';
@@ -779,7 +785,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { conversationId: string }
   ) {
     const user = client.data?.user;
-    if (!user || !data?.conversationId) return;
+    if (!user || !data?.conversationId || user.isGuest) return;
 
     client.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_TYPING, {
       conversationId: data.conversationId,
@@ -794,7 +800,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { conversationId: string }
   ) {
     const user = client.data?.user;
-    if (!user || !data?.conversationId) return;
+    if (!user || !data?.conversationId || user.isGuest) return;
 
     client.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_STOP_TYPING, {
       conversationId: data.conversationId,
@@ -809,7 +815,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { conversationId: string; messageId: string; emoji: string }
   ) {
     const user = client.data?.user;
-    if (!user || !data?.conversationId || !data?.messageId || !data?.emoji) return;
+    if (!user || !data?.conversationId || !data?.messageId || !data?.emoji || user.isGuest) return;
 
     this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_REACTION_ADDED, {
       conversationId: data.conversationId,
@@ -833,6 +839,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { success: false, error: 'Unauthorized or missing conversationId' };
     }
 
+    if (user.isGuest) {
+      return {
+        success: false,
+        error: 'Guest accounts cannot initiate audio or video calls. Please upgrade to a full account.',
+      };
+    }
+
     try {
       const conv = await prisma.conversation.findUnique({
         where: { id: data.conversationId },
@@ -845,6 +858,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       if (!conv || conv.deletedAt) {
         return { success: false, error: 'Conversation not found' };
+      }
+
+      const hasGuest = conv.members.some((m) => Boolean((m.user as any)?.isGuest));
+      if (hasGuest) {
+        return { success: false, error: 'Cannot call guest accounts.' };
       }
 
       const isMember = conv.members.some((m) => m.userId === user.sub);
@@ -898,6 +916,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (!user || !data?.conversationId) {
       return { success: false, error: 'Unauthorized or missing conversationId' };
+    }
+
+    if (user.isGuest) {
+      return {
+        success: false,
+        error: 'Guest accounts cannot participate in audio or video calls. Please upgrade your account.',
+      };
     }
 
     client.join(`call:${data.conversationId}`);
@@ -1118,6 +1143,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data.user;
     if (!user || !data?.roomId || !data?.ticketProposal) return;
 
+    if (user.isGuest || user.userTier !== 'ORG') {
+      client.emit('error', {
+        code: 'ORG_FEATURE_RESTRICTED',
+        message: 'Spoken voice-to-task commands are exclusively available for Enterprise Organization accounts.',
+      });
+      return { success: false, error: 'Voice-to-task commands are restricted to organization members.' };
+    }
+
     try {
       // Find assignee user if name was suggested
       let assigneeId: string | undefined = undefined;
@@ -1205,6 +1238,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const user = client.data?.user;
     if (!user || !data?.roomId || !data?.kind) return { success: false, error: 'Invalid parameters' };
+    if (user.isGuest) {
+      return { success: false, error: 'Guest accounts cannot broadcast audio or video tracks.' };
+    }
     const producer = this.sfuEngine.produce(data.roomId, user.sub, data.kind, data.simulcast, data.initialLayer);
     
     // Broadcast producer to other room participants so they can consume it
@@ -1433,6 +1469,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const user = client.data?.user;
     if (!user || !data?.roomId || !data?.type) return { success: false };
+
+    if (user.userTier === 'ORG' && data.type === 'CHESS') {
+      client.emit('error', {
+        code: 'ORG_GAMES_DISABLED',
+        message: 'Games are disabled for organization enterprise accounts.',
+      });
+      return { success: false, error: 'Games are disabled in organization workspaces.' };
+    }
+
     const activity = this.miniAppsService.launchActivity(data.roomId, data.type, user.sub, data.initialPayload);
     this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, activity);
     return { success: true, data: activity };

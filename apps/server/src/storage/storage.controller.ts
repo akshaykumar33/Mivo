@@ -48,6 +48,13 @@ export class StorageController {
       });
     }
 
+    if (user.userTier === 'NON_ORG' && body.fileSize > 100 * 1024 * 1024) {
+      throw new ForbiddenException({
+        code: 'TIER_FILE_LIMIT',
+        message: 'Non-org developer accounts have a 100MB upload limit. Organization accounts enjoy unlimited cloud storage.',
+      });
+    }
+
     const result = await this.storageService.getPresignedUploadUrl(user.sub, body);
     return {
       success: true,
@@ -74,6 +81,13 @@ export class StorageController {
       throw new ForbiddenException({
         code: 'GUEST_FILE_LIMIT',
         message: 'Guest accounts cannot upload files larger than 2MB. Please upgrade to a full account for high-capacity file sharing.',
+      });
+    }
+
+    if (user.userTier === 'NON_ORG' && file.size > 100 * 1024 * 1024) {
+      throw new ForbiddenException({
+        code: 'TIER_FILE_LIMIT',
+        message: 'Non-org developer accounts have a 100MB upload limit. Organization accounts enjoy unlimited cloud storage.',
       });
     }
 

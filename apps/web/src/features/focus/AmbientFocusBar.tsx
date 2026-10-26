@@ -16,6 +16,7 @@ import {
   X,
   ChevronDown,
   Flame,
+  Zap,
 } from 'lucide-react';
 import { AmbientTrackType, PomodoroTimerState, REALTIME_EVENTS } from '@mivo/shared';
 import { ambientSound } from '@/lib/ambient-sound-generator';
@@ -175,10 +176,20 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
         {/* Pomodoro Timer Hero Card */}
         <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#1E2235]/60 to-[#141622]/80 border border-[#2B304A] flex items-center justify-between">
           <div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
+            <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 mb-0.5 ${
               pomodoro.state === 'SHORT_BREAK' ? 'text-[#30D158]' : 'text-[#BF5AF2]'
             }`}>
-              {pomodoro.state === 'SHORT_BREAK' ? '☕ Rest Break' : '⚡ Deep Focus Sprint'}
+              {pomodoro.state === 'SHORT_BREAK' ? (
+                <>
+                  <Coffee className="w-3 h-3" />
+                  <span>Rest Break</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3 h-3" />
+                  <span>Deep Focus Sprint</span>
+                </>
+              )}
             </span>
             <div className="text-3xl font-mono font-bold text-white tracking-tight">
               {timeFormatted}

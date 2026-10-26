@@ -37,6 +37,9 @@ import { RoomMeetingBridgeBanner } from '@/features/meetings/RoomMeetingBridgeBa
 import { ExternalMeetingHubModal } from '@/features/meetings/ExternalMeetingHubModal';
 import { WifiOff, Zap } from 'lucide-react';
 
+import { useRoomMode, useRoomMedia } from '@/features/rooms/hooks';
+import { useRoomUIStore } from '@/stores/roomUIStore';
+
 export interface UnifiedRoomViewProps {
   communityId: string;
   roomId: string;
@@ -45,36 +48,56 @@ export interface UnifiedRoomViewProps {
 export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, roomId }) => {
   const router = useRouter();
   const { user } = useAuthStore();
+  const activeRoom = useRoomStore((state) => state.activeRoom);
+  const participants = useRoomStore((state) => state.participants);
+  const joinRoom = useRoomStore((state) => state.joinRoom);
+  const leaveRoom = useRoomStore((state) => state.leaveRoom);
+
+  // High-performance selective custom hooks
+  const { activeMode, switchMode } = useRoomMode();
   const {
-    activeRoom,
-    participants,
     isMuted,
     isCameraOn,
     isScreenOn,
     localStream,
     screenStream,
     remoteStreams,
-    audioLevel,
-    joinRoom,
-    leaveRoom,
-    switchMode,
     toggleMute,
     toggleCamera,
     toggleScreenShare,
-  } = useRoomStore();
-  const { activeCommunity } = useCommunityStore();
+  } = useRoomMedia();
 
-  const [isInviteOpen, setIsInviteOpen] = React.useState(false);
-  const [isParticipantsOpen, setIsParticipantsOpen] = React.useState(false);
-  const [isWhisperOpen, setIsWhisperOpen] = React.useState(false);
-  const [isPiPOpen, setIsPiPOpen] = React.useState(false);
-  const [isDocsOpen, setIsDocsOpen] = React.useState(false);
-  const [isRecording, setIsRecording] = React.useState(false);
-  const [recordingHostName, setRecordingHostName] = React.useState('Host');
-  const [isSubtitlesEnabled, setIsSubtitlesEnabled] = React.useState(true);
-  const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
-  const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
-  const [activeMiniApp, setActiveMiniApp] = React.useState<ActivityStateBroadcast | null>(null);
+  // Centralized Zustand UI Store (eliminates local useStates and avoids re-render cascading)
+  const {
+    isInviteOpen,
+    isParticipantsOpen,
+    isWhisperOpen,
+    isPiPOpen,
+    isDocsOpen,
+    isRecording,
+    recordingHostName,
+    isSubtitlesEnabled,
+    activeBridge,
+    isMeetingHubOpen,
+    activeMiniApp,
+    setIsInviteOpen,
+    toggleInvite,
+    setIsParticipantsOpen,
+    toggleParticipants,
+    setIsWhisperOpen,
+    toggleWhisper,
+    setIsPiPOpen,
+    togglePiP,
+    setIsDocsOpen,
+    toggleDocs,
+    setIsMeetingHubOpen,
+    toggleMeetingHub,
+    setIsRecording,
+    setActiveBridge,
+    setActiveMiniApp,
+  } = useRoomUIStore();
+
+  const { activeCommunity } = useCommunityStore();
   const [pendingOutboxCount, setPendingOutboxCount] = React.useState(0);
   const [isOnline, setIsOnline] = React.useState(true);
 
@@ -172,8 +195,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
     const handleRecordingState = (data: RoomRecordingStatePayload) => {
       if (data.roomId === roomId) {
-        setIsRecording(data.isRecording);
-        if (data.hostName) setRecordingHostName(data.hostName);
+        setIsRecording(data.isRecording, data.hostName);
       }
     };
 
@@ -245,16 +267,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
       {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
       <RoomHeader
         room={activeRoom}
-        activeMode={activeRoom.activeMode}
+        activeMode={activeMode}
         onModeChange={(mode: RoomCommunicationMode) => switchMode(mode)}
         participantCount={participants.length}
         isRecording={isRecording}
         isHost={isHost}
         onToggleRecording={handleToggleRecording}
-        onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
-        onToggleInvite={() => setIsInviteOpen(!isInviteOpen)}
-        onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
-        onToggleMeetingHub={() => setIsMeetingHubOpen(!isMeetingHubOpen)}
+        onToggleParticipants={toggleParticipants}
+        onToggleInvite={toggleInvite}
+        onToggleWhisper={toggleWhisper}
+        onToggleMeetingHub={toggleMeetingHub}
         hasActiveBridge={!!activeBridge}
       />
 
@@ -293,8 +315,8 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
       {/* Main Content Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Dynamic Stage View with Live Media / Canvas Stage / Code Stage / Mini-App */}
-        {activeMiniApp ? (
+        {/* Dynamic Mini-App Stage */}
+        {activeMiniApp && (
           <ActivitySandboxStage
             activity={activeMiniApp}
             roomId={activeRoom.id}
@@ -302,7 +324,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             currentUserName={user?.displayName || user?.username}
             onClose={() => setActiveMiniApp(null)}
           />
-        ) : activeRoom.activeMode === 'CANVAS' ? (
+        )}
+
+        {/* Dynamic Canvas Stage */}
+        {!activeMiniApp && activeMode === 'CANVAS' && (
           <CollaborativeCanvasStage
             roomId={activeRoom.id}
             roomName={activeRoom.name}
@@ -310,7 +335,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             currentUserName={user?.displayName || user?.username}
             participants={participants}
           />
-        ) : activeRoom.activeMode === 'CODE' ? (
+        )}
+
+        {/* Dynamic Code Stage */}
+        {!activeMiniApp && activeMode === 'CODE' && (
           <CodeStage
             roomId={activeRoom.id}
             roomName={activeRoom.name}
@@ -318,9 +346,16 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             currentUserName={user?.displayName || user?.username}
             participants={participants}
           />
-        ) : (
+        )}
+
+        {/* MediaStage: Kept mounted for 0ms zero-latency switching between Chat, Voice, Video, and Screen Share */}
+        <div
+          className={`flex-1 flex overflow-hidden relative w-full h-full ${
+            !activeMiniApp && activeMode !== 'CANVAS' && activeMode !== 'CODE' ? 'flex' : 'hidden'
+          }`}
+        >
           <MediaStage
-            mode={activeRoom.activeMode}
+            mode={activeMode}
             room={activeRoom}
             participants={participants}
             currentUserId={user?.id}
@@ -331,17 +366,17 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             localStream={localStream}
             screenStream={screenStream}
             remoteStreams={remoteStreams}
-            audioLevel={audioLevel}
+            onToggleScreen={() => toggleScreenShare()}
           />
-        )}
+        </div>
 
         {/* Live Closed Captions & Dual Subtitles Overlay (Google Meet / Zoom style) */}
-        {activeRoom.activeMode !== 'TEXT' && (
+        {activeMode !== 'TEXT' && (
           <LiveSubtitlesOverlay isEnabled={isSubtitlesEnabled} targetLang="es" />
         )}
 
         {/* In-Call Floating Emoji Reactions Layer (Telegram / Zoom style) */}
-        {activeRoom.activeMode !== 'TEXT' && <FloatingReactionsLayer />}
+        {activeMode !== 'TEXT' && <FloatingReactionsLayer />}
 
         {/* Collapsible Participant List with Host Actions */}
         <ParticipantTray
@@ -372,7 +407,6 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           localStream={localStream}
           screenStream={screenStream}
           remoteStreams={remoteStreams}
-          audioLevel={audioLevel}
           isOpen={isPiPOpen}
           onClose={() => setIsPiPOpen(false)}
           onToggleMute={() => toggleMute()}
@@ -386,7 +420,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
         {/* Ultra-Modern Glowing Floating Cyber Navigation Dock */}
         <FloatingCyberDock
-          activeMode={activeRoom.activeMode}
+          activeMode={activeMode}
           onModeChange={(mode) => switchMode(mode)}
           isMuted={isMuted}
           isCameraOn={isCameraOn}
@@ -397,15 +431,14 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           isWhisperOpen={isWhisperOpen}
           isParticipantsOpen={isParticipantsOpen}
           participantCount={participants.length}
-          audioLevel={audioLevel}
           onToggleMute={() => toggleMute()}
           onToggleCamera={() => toggleCamera()}
           onToggleScreen={() => toggleScreenShare()}
-          onTogglePiP={() => setIsPiPOpen(!isPiPOpen)}
+          onTogglePiP={togglePiP}
           onToggleRecording={handleToggleRecording}
-          onToggleWhisper={() => setIsWhisperOpen(!isWhisperOpen)}
-          onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
-          onToggleDocs={() => setIsDocsOpen(!isDocsOpen)}
+          onToggleWhisper={toggleWhisper}
+          onToggleParticipants={toggleParticipants}
+          onToggleDocs={toggleDocs}
           onDisconnect={handleDisconnect}
         />
 

@@ -8,9 +8,9 @@ import { Phone, PhoneOff, Users, Volume2 } from 'lucide-react';
 
 export const IncomingCallModal: React.FC = () => {
   const { incomingCall, acceptCall, declineCall } = useConversationStore();
-  const { user } = useAuthStore();
+  const { user, isGuest } = useAuthStore();
 
-  if (!incomingCall) return null;
+  if (!incomingCall || isGuest) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">

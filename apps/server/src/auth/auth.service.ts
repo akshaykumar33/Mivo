@@ -15,6 +15,9 @@ import {
   AuthSessionResponse,
   JwtPayload,
   GuestLimitsDTO,
+  UserTier,
+  TierCapabilitiesDTO,
+  getTierCapabilities,
 } from '@mivo/shared';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
@@ -166,40 +169,9 @@ export class AuthService {
         avatarUrl: input.avatarUrl || null,
         status: 'ONLINE',
         isGuest: true,
+        userTier: 'GUEST',
       } as any,
     });
-
-    // Automatically join the default community with GUEST role if a community exists
-    try {
-      const publicCommunity = await prisma.community.findFirst({
-        where: { deletedAt: null },
-        include: {
-          roles: {
-            where: { name: 'Guest' },
-          },
-        },
-      });
-
-      if (publicCommunity) {
-        const guestRole =
-          publicCommunity.roles[0] ||
-          (await prisma.role.findFirst({
-            where: { communityId: publicCommunity.id, name: 'Guest' },
-          }));
-
-        if (guestRole) {
-          await prisma.communityMember.create({
-            data: {
-              communityId: publicCommunity.id,
-              userId: user.id,
-              roleId: guestRole.id,
-            },
-          });
-        }
-      }
-    } catch {
-      // Ignore if community join fails
-    }
 
     return this.createSession(user, userAgent, ipAddress);
   }
@@ -269,6 +241,7 @@ export class AuthService {
         username: input.username ? input.username.toLowerCase() : user.username,
         displayName: input.displayName || user.displayName,
         isGuest: false,
+        userTier: 'NON_ORG',
       } as any,
     });
 
@@ -294,35 +267,89 @@ export class AuthService {
     return this.createSession(updatedUser, userAgent, ipAddress);
   }
 
-  async getGuestLimits(userId: string): Promise<GuestLimitsDTO> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { isGuest: true, createdAt: true },
+  async resolveUserTier(user: any): Promise<{
+    userTier: UserTier;
+    organizationId?: string | null;
+    organizationName?: string | null;
+    organizationRole?: string | null;
+    organizationHierarchyLevel?: number | null;
+  }> {
+    if (!user || user.isGuest || user.userTier === 'GUEST') {
+      return {
+        userTier: 'GUEST',
+        organizationId: null,
+        organizationName: null,
+        organizationRole: null,
+        organizationHierarchyLevel: null,
+      };
+    }
+
+    const membership = await prisma.communityMember.findFirst({
+      where: { userId: user.id },
+      include: {
+        community: { select: { id: true, name: true, slug: true } },
+        role: { select: { id: true, name: true, position: true } },
+      },
     });
 
-    const isGuest = Boolean(user?.isGuest);
-    const expiresAt = user?.createdAt
-      ? new Date(user.createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
-      : undefined;
+    if (membership) {
+      let level = 4;
+      const roleName = membership.role?.name?.toLowerCase() || '';
+      if (roleName.includes('owner')) level = 1;
+      else if (roleName.includes('admin')) level = 2;
+      else if (roleName.includes('manager') || roleName.includes('lead')) level = 3;
+      else if (roleName.includes('guest')) level = 5;
+
+      return {
+        userTier: 'ORG',
+        organizationId: membership.community.id,
+        organizationName: membership.community.name,
+        organizationRole: membership.role?.name || 'Member',
+        organizationHierarchyLevel: level,
+      };
+    }
 
     return {
-      isGuest,
-      maxUploadSizeBytes: isGuest ? 2 * 1024 * 1024 : 100 * 1024 * 1024,
-      messageCooldownMs: isGuest ? 3000 : 0,
-      canCreateCommunity: !isGuest,
-      canManageRoles: !isGuest,
-      canCreateChannels: !isGuest,
-      sessionExpiresAt: isGuest ? expiresAt : undefined,
+      userTier: (user.userTier as UserTier) || 'NON_ORG',
+      organizationId: null,
+      organizationName: null,
+      organizationRole: null,
+      organizationHierarchyLevel: null,
+    };
+  }
+
+  async getGuestLimits(userId: string): Promise<GuestLimitsDTO> {
+    const user: any = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, isGuest: true, userTier: true, createdAt: true } as any,
+    });
+
+    const tierInfo = await this.resolveUserTier(user);
+    const caps = getTierCapabilities(tierInfo.userTier);
+    const createdAt = user?.createdAt ? new Date(user.createdAt).getTime() : Date.now();
+    const expiresAt = new Date(createdAt + 24 * 60 * 60 * 1000).toISOString();
+
+    return {
+      isGuest: tierInfo.userTier === 'GUEST',
+      maxUploadSizeBytes: caps.maxUploadSizeBytes || 100 * 1024 * 1024,
+      messageCooldownMs: tierInfo.userTier === 'GUEST' ? 999999 : 0,
+      canCreateCommunity: caps.canBuildCommunities,
+      canManageRoles: caps.hasOrgHierarchy,
+      canCreateChannels: caps.canBuildCommunities,
+      sessionExpiresAt: tierInfo.userTier === 'GUEST' ? expiresAt : undefined,
     };
   }
 
   private async createSession(user: any, userAgent?: string, ipAddress?: string) {
+    const tierInfo = await this.resolveUserTier(user);
+
     const accessToken = this.generateAccessToken({
       sub: user.id,
       email: user.email,
       username: user.username,
       displayName: user.displayName,
-      isGuest: Boolean(user.isGuest),
+      isGuest: Boolean(user.isGuest || tierInfo.userTier === 'GUEST'),
+      userTier: tierInfo.userTier,
     });
 
     const refreshToken = crypto.randomBytes(40).toString('hex');
@@ -350,12 +377,18 @@ export class AuthService {
           bio: user.bio,
           customStatus: user.customStatus,
           status: user.status,
-          isGuest: Boolean(user.isGuest),
+          isGuest: Boolean(user.isGuest || tierInfo.userTier === 'GUEST'),
+          userTier: tierInfo.userTier,
+          organizationId: tierInfo.organizationId,
+          organizationName: tierInfo.organizationName,
+          organizationRole: tierInfo.organizationRole,
+          organizationHierarchyLevel: tierInfo.organizationHierarchyLevel,
           createdAt: user.createdAt.toISOString(),
           lastSeenAt: user.lastSeenAt ? user.lastSeenAt.toISOString() : null,
         },
         accessToken,
-        isGuest: Boolean(user.isGuest),
+        isGuest: Boolean(user.isGuest || tierInfo.userTier === 'GUEST'),
+        capabilities: getTierCapabilities(tierInfo.userTier),
       },
       refreshToken,
     };

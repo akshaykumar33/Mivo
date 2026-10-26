@@ -14,7 +14,7 @@ import { EditProfileModal } from '@/features/auth/EditProfileModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 export const ConversationsSidebar: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, isGuest, setUpgradeModalOpen } = useAuthStore();
   const presence = useUserPresence(user?.id, user);
   const userStatuses = usePresenceStore((s) => s.userStatuses);
   const { setIsThemeModalOpen } = useThemeStore();
@@ -77,6 +77,14 @@ export const ConversationsSidebar: React.FC = () => {
     );
   });
 
+  const handleOpenCreate = () => {
+    if (isGuest) {
+      setUpgradeModalOpen(true);
+    } else {
+      setIsModalOpen(true);
+    }
+  };
+
   return (
     <aside className="w-full h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col justify-between select-none">
       <div className="flex-1 flex flex-col min-h-0">
@@ -99,9 +107,9 @@ export const ConversationsSidebar: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="w-7 h-7 rounded-lg bg-[#DC2626]/10 hover:bg-[#DC2626] text-[#DC2626] hover:text-white flex items-center justify-center transition-all shadow-sm border border-[#DC2626]/20 cursor-pointer"
-            title="Start Direct Message or Create Custom Group"
+            title={isGuest ? 'Messaging restricted for guest accounts' : 'Start Direct Message or Create Custom Group'}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -123,7 +131,24 @@ export const ConversationsSidebar: React.FC = () => {
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 custom-scrollbar">
-          {filteredConversations.length === 0 ? (
+          {isGuest ? (
+            <div className="py-8 px-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3 text-amber-600">
+                <Users className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-[#111827] mb-1">Guest Mode Active</p>
+              <p className="text-[11px] text-[var(--text-muted)] mb-3 leading-relaxed">
+                Guest accounts cannot message others or participate in calls. Upgrade to connect directly.
+              </p>
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white hover:from-[#EF4444] hover:to-[#DC2626] text-xs font-semibold shadow-md transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Upgrade Account</span>
+              </button>
+            </div>
+          ) : filteredConversations.length === 0 ? (
             <div className="py-12 px-4 text-center">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-3 text-[#DC2626]">
                 <Users className="w-5 h-5" />
@@ -131,7 +156,7 @@ export const ConversationsSidebar: React.FC = () => {
               <p className="text-xs text-[var(--text-muted)] mb-3">No conversations yet</p>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleOpenCreate}
                 className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white hover:from-[#EF4444] hover:to-[#DC2626] text-xs font-semibold shadow-md transition-all inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />

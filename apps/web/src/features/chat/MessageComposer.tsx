@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles, Eye } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles, Eye, Lock } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { storageClient } from '@/lib/storage-client';
@@ -24,6 +24,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   onMessageSent,
 }) => {
   const isGuest = useAuthStore((s) => s.isGuest);
+  const setUpgradeModalOpen = useAuthStore((s) => s.setUpgradeModalOpen);
   const [content, setContent] = React.useState('');
   const [stagedAttachments, setStagedAttachments] = React.useState<AttachmentMetaDTO[]>([]);
   const [previewFile, setPreviewFile] = React.useState<FileViewerItem | null>(null);
@@ -61,6 +62,10 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   }, [isEmojiPickerOpen, isMeetingMenuOpen]);
 
   const handleQuickMeeting = async (provider: 'GOOGLE_MEET' | 'MS_TEAMS') => {
+    if (isGuest) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     setIsMeetingMenuOpen(false);
     setIsCreatingQuickMeeting(true);
     try {
@@ -80,6 +85,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   // Emit typing indicator
   const handleTyping = () => {
+    if (isGuest) return;
     realtime.emit('chat:typing', { roomId });
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -93,12 +99,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     if (!files || files.length === 0) return;
 
     if (isGuest) {
-      const hasLarge = Array.from(files).some((f) => f.size > 2 * 1024 * 1024);
-      if (hasLarge) {
-        setCooldownWarning('Guest Limit: Files over 2MB are restricted. Upgrade to unlock 100MB uploads.');
-        setTimeout(() => setCooldownWarning(null), 4000);
-        return;
-      }
+      setUpgradeModalOpen(true);
+      return;
     }
 
     setIsUploading(true);
@@ -124,17 +126,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   const handleSend = async () => {
-    const text = content.trim();
-    if ((!text && stagedAttachments.length === 0) || isSending || isUploading) return;
-
-    // Guest rate-limiting cooldown enforcement
-    if (isGuest && lastSentTimeRef.current && Date.now() - lastSentTimeRef.current < 3000) {
-      const remaining = Math.ceil((3000 - (Date.now() - lastSentTimeRef.current)) / 1000);
-      setCooldownWarning(`Guest rate limit: please wait ${remaining}s before sending another message.`);
-      setTimeout(() => setCooldownWarning(null), 2500);
+    if (isGuest) {
+      setUpgradeModalOpen(true);
       return;
     }
-    lastSentTimeRef.current = Date.now();
+    const text = content.trim();
+    if ((!text && stagedAttachments.length === 0) || isSending || isUploading) return;
 
     setIsSending(true);
     const textToSend = text || (stagedAttachments.length > 0 ? 'Sent attachments' : '');
@@ -327,6 +324,28 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         )}
 
         {/* Input Chassis */}
+        {isGuest ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-amber-800 font-medium">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-bold text-[#111827]">Guest Account Restriction</div>
+                <div className="text-[11px] text-[var(--text-muted)]">
+                  Guest accounts cannot send messages or participate in calls. Upgrade to chat with members.
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUpgradeModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white text-xs font-semibold shadow-md shrink-0 cursor-pointer hover:from-[#EF4444] hover:to-[#DC2626] transition-all"
+            >
+              Upgrade Account
+            </button>
+          </div>
+        ) : (
         <div className="relative flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 rounded-[18px] bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus-within:border-red-500 focus-within:bg-[var(--bg-surface-2)] transition-all duration-200 shadow-sm">
           {/* Hidden Document Upload Input */}
           <input
@@ -475,6 +494,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             {isSending ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
+        )}
       </div>
 
       <ExternalMeetingHubModal

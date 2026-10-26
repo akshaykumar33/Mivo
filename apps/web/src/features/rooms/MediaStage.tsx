@@ -27,6 +27,12 @@ import {
   Headphones,
   Ticket,
   CheckCircle2,
+  Maximize2,
+  Minimize2,
+  AppWindow,
+  StopCircle,
+  Share2,
+  Shield,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -36,6 +42,8 @@ import { LiveFactCheckHUD, FactCheckAlertData } from './LiveFactCheckHUD';
 import { spatialAudio } from '../audio/SpatialAudioEngine';
 import { VoiceTicketConfirmationCard, VoiceTicketProposal } from '../tickets/VoiceTicketConfirmationCard';
 import { useTicketStore } from '@/stores/ticketStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useRoomStore } from '@/stores/roomStore';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 
@@ -52,6 +60,7 @@ export interface MediaStageProps {
   screenStream?: MediaStream | null;
   remoteStreams?: Record<string, MediaStream>;
   audioLevel?: number;
+  onToggleScreen?: () => void;
 }
 
 export const MediaStage: React.FC<MediaStageProps> = ({
@@ -67,26 +76,36 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   screenStream,
   remoteStreams = {},
   audioLevel = 0,
+  onToggleScreen,
 }) => {
   const screenVideoRef = React.useRef<HTMLVideoElement>(null);
+  const stageContainerRef = React.useRef<HTMLDivElement>(null);
   const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
   const [isAttendeeDrawerOpen, setIsAttendeeDrawerOpen] = React.useState(true);
 
+  // Screen Share Theater State
+  const [screenFitMode, setScreenFitMode] = React.useState<'contain' | 'cover'>('contain');
+  const [isStageFullscreen, setIsStageFullscreen] = React.useState(false);
+  const [selectedSourceType, setSelectedSourceType] = React.useState<'screen' | 'window' | 'tab'>('screen');
+  const [isAudioSharingEnabled, setIsAudioSharingEnabled] = React.useState(true);
+  const [broadcastDuration, setBroadcastDuration] = React.useState(0);
+
   // Active AI Stage Co-Host & Real-Time Duplex Voice Agent
-  const [isCoHostEnabled, setIsCoHostEnabled] = React.useState(true);
+  const [isCoHostEnabled, setIsCoHostEnabled] = React.useState(false);
   const [coHostStatus, setCoHostStatus] = React.useState<AiCoHostStatus>('LISTENING');
   const [lastSpeechText, setLastSpeechText] = React.useState('');
   const [pinnedDataTile, setPinnedDataTile] = React.useState<PinnedDataTilePayload | null>(null);
   const [factCheckAlert, setFactCheckAlert] = React.useState<FactCheckAlertData | null>(null);
   const { setIsModalOpen: openTicketsModal } = useTicketStore();
+  const { capabilities } = useAuthStore();
 
-  // 🎧 3D Spatial Audio & Dynamic Physics Grid
+  // 3D Spatial Audio & Dynamic Physics Grid
   const [isSpatialAudioActive, setIsSpatialAudioActive] = React.useState(true);
   const [spatialPositions, setSpatialPositions] = React.useState<Record<string, { pan: number; distance: number }>>({});
 
-  // ⚡ Spoken Voice-to-Ticket Automation
+  // Spoken Voice-to-Ticket Automation
   const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
   const [ticketToast, setTicketToast] = React.useState<string | null>(null);
 
@@ -189,9 +208,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     [room?.id]
   );
 
-  // ⚡ Spoken Voice-to-Ticket Extraction
+  // Spoken Voice-to-Ticket Extraction
   const handleExtractVoiceTicket = React.useCallback(
     async (snippet: string) => {
+      if (!capabilities?.canUseVoiceToTask) {
+        setTicketToast('Voice-to-Task Commands: Exclusive to Enterprise Organization accounts.');
+        setTimeout(() => setTicketToast(null), 5000);
+        return;
+      }
+
       const userKey = localStorage.getItem('mivo_gemini_api_key') || undefined;
       try {
         const res = await api.post<any>('/api/v1/ai/extract-ticket', {
@@ -216,7 +241,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         console.warn('Voice ticket extraction error:', err);
       }
     },
-    [participants, room]
+    [participants, room, capabilities?.canUseVoiceToTask]
   );
 
   const handleConfirmVoiceTicket = React.useCallback(
@@ -275,7 +300,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // Ambient speech recognition for "@mivo" or "Mivo, ..." voice commands
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || mode === 'TEXT') return;
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -291,7 +316,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       if (!text) return;
 
       const lower = text.toLowerCase();
-      // ⚡ Spoken Voice-to-Ticket trigger
+      // Spoken Voice-to-Ticket trigger
       if (
         lower.includes('ticket') ||
         lower.includes('file a ticket') ||
@@ -322,7 +347,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         recognition.stop();
       } catch {}
     };
-  }, [handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
+  }, [mode, handleTriggerCoHost, handleFactCheckAudit, handleExtractVoiceTicket]);
 
   // Sync participant list to ordered array
   React.useEffect(() => {
@@ -334,16 +359,82 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     });
   }, [participants]);
 
+  // Determine active screen broadcaster (either local user or remote attendee)
+  const remoteScreenPresenter = React.useMemo(() => {
+    return participants.find((p) => p.isScreenOn && p.userId !== currentUserId);
+  }, [participants, currentUserId]);
+
+  const isLocallySharing = isScreenOn && !!screenStream;
+  const isRemotelySharing = !!remoteScreenPresenter && !!remoteStreams[remoteScreenPresenter.userId];
+  const isScreenActive = isLocallySharing || isRemotelySharing;
+
+  const activeScreenStream = isLocallySharing
+    ? screenStream
+    : isRemotelySharing && remoteScreenPresenter
+    ? remoteStreams[remoteScreenPresenter.userId]
+    : null;
+
+  const presenterName = isLocallySharing
+    ? 'You'
+    : remoteScreenPresenter
+    ? remoteScreenPresenter.user.displayName || remoteScreenPresenter.user.username
+    : 'Presenter';
+
+  // Elapsed duration for screen sharing
+  React.useEffect(() => {
+    if (!isScreenActive) {
+      setBroadcastDuration(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setBroadcastDuration((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isScreenActive]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   React.useEffect(() => {
     if (screenVideoRef.current) {
-      if (screenStream) {
-        screenVideoRef.current.srcObject = screenStream;
+      if (activeScreenStream) {
+        screenVideoRef.current.srcObject = activeScreenStream;
         screenVideoRef.current.play().catch((e) => console.log('Screen play interrupted:', e));
       } else {
         screenVideoRef.current.srcObject = null;
       }
     }
-  }, [screenStream]);
+  }, [activeScreenStream]);
+
+  // Fullscreen management for theater stage
+  const handleToggleFullscreen = React.useCallback(() => {
+    if (!stageContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      stageContainerRef.current.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handleFsChange = () => {
+      setIsStageFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  // Screen share trigger
+  const handleToggleScreen = React.useCallback(() => {
+    if (onToggleScreen) {
+      onToggleScreen();
+    } else {
+      useRoomStore.getState().toggleScreenShare();
+    }
+  }, [onToggleScreen]);
 
   // Host Action Handler
   const handleHostAction = (action: 'MUTE' | 'KICK' | 'TRANSFER_HOST', targetUserId: string) => {
@@ -445,23 +536,10 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     setSpatialPositions(newPositions);
   }, [sortedParticipants, isSpatialAudioActive]);
 
-  // TEXT MODE: Real-Time Chat Stream
-  if (mode === 'TEXT') {
-    if (!room) {
-      return (
-        <div className="flex-1 flex items-center justify-center bg-[#0E1017]">
-          <div className="w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      );
-    }
-
-    return <ChatStream room={room} />;
-  }
-
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
-  if (mode === 'VOICE') {
+  const renderVoiceStage = () => {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-8 pb-28 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-8 pb-28 sm:pb-28 bg-[var(--bg-canvas)] select-none relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
 
@@ -516,11 +594,24 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
                 )
               }
-              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
-              title="Simulate Voice-to-Ticket Detection"
+              className={`flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-xl border transition-all shadow-md cursor-pointer ${
+                capabilities?.canUseVoiceToTask
+                  ? 'text-amber-300 hover:text-amber-200 bg-amber-600/25 border-amber-500/40 hover:bg-amber-600/40'
+                  : 'text-zinc-400 bg-zinc-800/60 border-zinc-700/50 hover:bg-zinc-800/80'
+              }`}
+              title={
+                capabilities?.canUseVoiceToTask
+                  ? 'Simulate Voice-to-Ticket Detection'
+                  : 'Voice-to-task commands are exclusive to Enterprise Organization accounts'
+              }
             >
               <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span>Voice-to-Ticket Demo</span>
+              {!capabilities?.canUseVoiceToTask && (
+                <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold border border-purple-500/30">
+                  Org Only
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -666,10 +757,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
                   {isSpatialAudioActive && spatialPositions[p.userId] && (
                     <span
-                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-block mt-1.5"
+                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-flex items-center gap-1 mt-1.5"
                       title="3D Spatial Audio Pan"
                     >
-                      🎧 {spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}
+                      <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+                      <span>{spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}</span>
                     </span>
                   )}
                 </div>
@@ -679,12 +771,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         </div>
       </div>
     );
-  }
+  };
 
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
-  if (mode === 'VIDEO') {
+  const renderVideoStage = () => {
     return (
-      <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
+    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
         <LiveFactCheckHUD
           alert={factCheckAlert}
           onDismiss={() => setFactCheckAlert(null)}
@@ -876,7 +968,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
                 sortedParticipants.length === 1 && !isCoHostEnabled
                   ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
               }`}
             >
               {/* Co-Host Stage Tile */}
@@ -921,159 +1013,352 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         )}
       </div>
     );
-  }
+  };
 
-  // SCREEN_SHARE or STREAM MODE: Real Display Stream Theater with Interactive Participant Video Strip
-  return (
-    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-3 sm:gap-4">
-      {/* Primary Dominant Screen Share Stage */}
-      <div className="flex-1 rounded-3xl bg-[#0B0D14] border border-[var(--border-subtle)] relative flex items-center justify-center shadow-2xl overflow-hidden min-h-[280px]">
-        {screenStream ? (
-          <video
-            ref={screenVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-contain rounded-3xl bg-black"
-          />
-        ) : (
-          <div className="text-center p-8">
-            <div className="inline-flex p-6 rounded-3xl bg-gradient-to-tr from-violet-600/20 to-indigo-600/20 text-violet-400 mb-5 border border-violet-500/30 shadow-2xl shadow-violet-600/20">
-              {mode === 'SCREEN_SHARE' ? (
-                <Monitor className="w-12 h-12 text-cyan-400" />
-              ) : (
-                <Radio className="w-12 h-12 animate-pulse text-rose-400" />
-              )}
-            </div>
-            <h4 className="text-xl font-extrabold text-[var(--text-primary)] font-display">
-              {mode === 'SCREEN_SHARE' ? 'Interactive Screen Broadcast' : 'Live Broadcaster Stage'}
-            </h4>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
-              Click &quot;Share Screen&quot; in the bottom dock to broadcast your window, or collaborate with attendee video feeds below.
-            </p>
-          </div>
-        )}
-
-        {/* Live Presentation Status Badge */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-lg shadow-rose-600/40 z-10">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-          <span>{mode === 'SCREEN_SHARE' ? 'PRESENTING' : 'LIVE ON STAGE'}</span>
-        </div>
-
-        {/* Participant Count & Quick Drawer Toggle Chip */}
-        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
-          <button
-            onClick={() => setIsAttendeeDrawerOpen(!isAttendeeDrawerOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-0)]/90 hover:bg-[var(--bg-surface-1)] backdrop-blur-md border border-[var(--border-subtle)] text-[11px] font-bold text-[var(--text-primary)] transition-all cursor-pointer shadow-lg"
-            title={isAttendeeDrawerOpen ? 'Collapse Attendee Video Drawer' : 'Expand Attendee Video Drawer'}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>{participants.length} in Meet</span>
-            <span className="text-[var(--text-muted)]">•</span>
-            <span className="text-violet-400 flex items-center gap-1">
-              {isAttendeeDrawerOpen ? (
-                <>
-                  <span>Hide Videos</span>
-                  <EyeOff className="w-3 h-3" />
-                </>
-              ) : (
-                <>
-                  <span>Show Videos</span>
-                  <Eye className="w-3 h-3" />
-                </>
-              )}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Interactive Closeable / Expandable Drag & Drop Video Drawer */}
-      {isAttendeeDrawerOpen ? (
-        <div className="flex-shrink-0 flex flex-col gap-2 animate-slide-up">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                Meeting Participants ({participants.length}) • Drag or Use Controls to Reorder
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={handleAutoArrange}
-                className="flex items-center gap-1 text-[10px] font-bold text-violet-400 hover:text-violet-300 px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                title="Auto-Arrange Video Strip"
-              >
-                <LayoutGrid className="w-3 h-3" />
-                <span>Auto-Arrange</span>
-              </button>
-
-              <button
-                onClick={() => setIsAttendeeDrawerOpen(false)}
-                className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                title="Collapse Video Drawer (Full-Screen Share View)"
-              >
-                <ChevronDown className="w-3 h-3" />
-                <span>Hide</span>
-              </button>
-            </div>
-          </div>
-
-          <div
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
-          >
-            {isCoHostEnabled && (
-              <div className="w-56 sm:w-64 aspect-video flex-shrink-0">
-                <AiCoHostStageTile
-                  status={coHostStatus}
-                  lastSpeechText={lastSpeechText}
-                  onTriggerCommand={handleTriggerCoHost}
-                />
+  // SCREEN_SHARE or STREAM MODE: Studio Broadcast Theater with Interactive Preparation Deck & Participant Strip
+  const renderScreenStage = () => {
+    return (
+    <div className="flex-1 p-2 sm:p-5 pb-28 sm:pb-32 bg-[var(--bg-canvas)] flex flex-col select-none overflow-hidden gap-3">
+      {/* Primary Studio Broadcast Stage Frame */}
+      <div
+        ref={stageContainerRef}
+        className="flex-1 rounded-2xl bg-[#0c0e17] border border-[#1e2333] relative flex flex-col shadow-sm overflow-hidden min-h-[360px]"
+      >
+        {/* Stage Integrated Header Bar */}
+        <div className="h-11 px-4 border-b border-[#1e2333] bg-[#111422]/95 flex items-center justify-between flex-shrink-0 z-20">
+          {/* Left: Broadcast Status */}
+          <div className="flex items-center gap-2.5">
+            {isScreenActive ? (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Broadcasting Live</span>
+                <span className="text-slate-600 text-xs">•</span>
+                <span className="text-xs text-slate-200 font-medium">Shared by {presenterName}</span>
+                <span className="text-[11px] font-mono text-slate-400 bg-white/[0.06] px-1.5 py-0.5 rounded border border-white/[0.08]">
+                  {formatDuration(broadcastDuration)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-xs font-semibold text-slate-200">
+                  {mode === 'SCREEN_SHARE' ? 'Screen Broadcast Stage' : 'Live Broadcaster Stage'}
+                </span>
+                <span className="text-slate-600 text-xs">•</span>
+                <span className="text-[11px] text-slate-400 font-medium">Standby & Ready</span>
               </div>
             )}
-            {sortedParticipants.map((p) => {
-              const isMe = p.userId === currentUserId;
-              const camOn = isMe ? isCameraOn : p.isCameraOn;
-              const participantMuted = isMe ? isMuted : p.isMuted;
-              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+          </div>
 
-              return (
-                <div key={p.id} className="w-56 sm:w-64 aspect-video flex-shrink-0">
-                  <LiveVideoTile
-                    user={p.user}
-                    isMe={isMe}
-                    isMuted={participantMuted}
-                    isCameraOn={camOn}
-                    isPinned={pinnedUserId === p.userId}
-                    onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
-                    isHost={isHost}
-                    onHostAction={handleHostAction}
-                    mediaStream={participantStream}
-                    audioLevel={isMe ? audioLevel : 0}
-                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    onDragStart={handleDragStart(p.userId)}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop(p.userId)}
-                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
-                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
-                  />
-                </div>
-              );
-            })}
+          {/* Center: Stream profile / resolution badge */}
+          <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-400">
+            <span className="px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-slate-300">
+              1080p 60fps
+            </span>
+            <span>WebRTC Low-Latency Mesh</span>
+          </div>
+
+          {/* Right: Stage View Controls */}
+          <div className="flex items-center gap-1.5">
+            {isScreenActive && (
+              <button
+                onClick={() => setScreenFitMode(screenFitMode === 'contain' ? 'cover' : 'contain')}
+                className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
+                title={screenFitMode === 'contain' ? 'Fill Frame' : 'Fit to Screen'}
+              >
+                <span>{screenFitMode === 'contain' ? 'Fit' : 'Fill'}</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleToggleFullscreen}
+              className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title={isStageFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            >
+              {isStageFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+
+            <button
+              onClick={() => setIsAttendeeDrawerOpen(!isAttendeeDrawerOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] font-medium text-slate-200 transition-colors cursor-pointer"
+              title={isAttendeeDrawerOpen ? 'Collapse Video Strip' : 'Show Video Strip'}
+            >
+              <Users className="w-3.5 h-3.5 text-slate-400" />
+              <span>{participants.length} in Meet</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-300">
+                {isAttendeeDrawerOpen ? 'Hide' : 'Show'}
+              </span>
+            </button>
           </div>
         </div>
-      ) : (
-        /* Collapsed State: Sleek Restore Drawer Button */
-        <div className="flex justify-center flex-shrink-0 animate-fade-in">
-          <button
-            onClick={() => setIsAttendeeDrawerOpen(true)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] shadow-xl transition-all hover:scale-105 cursor-pointer"
-          >
-            <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
-            <span>Show Attendee Video Drawer ({participants.length})</span>
-            <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          </button>
-        </div>
+
+        {/* Stage Viewport */}
+        {isScreenActive && activeScreenStream ? (
+          <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
+            <video
+              ref={screenVideoRef}
+              autoPlay
+              playsInline
+              muted={isLocallySharing}
+              className={`w-full h-full ${screenFitMode === 'cover' ? 'object-cover' : 'object-contain'} bg-black`}
+            />
+
+            {/* Floating Control HUD Overlay */}
+            {isLocallySharing && (
+              <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2 bg-[#0c0e17]/95 backdrop-blur-md border border-[#242b3d] px-3 py-2 rounded-xl shadow-lg">
+                <div className="flex items-center gap-2 pr-2 border-r border-[#242b3d]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-xs text-slate-200 font-medium">You are broadcasting</span>
+                </div>
+                <button
+                  onClick={handleToggleScreen}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <StopCircle className="w-3.5 h-3.5" />
+                  <span>Stop Sharing</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex-1 relative flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
+            {/* Safe Frame Guides (Delicate 16:9 Architectural Markings) */}
+            <div className="absolute inset-4 sm:inset-8 border border-white/[0.04] rounded-xl pointer-events-none flex flex-col justify-between p-3">
+              <div className="flex justify-between text-[9px] font-mono text-slate-600 uppercase tracking-widest">
+                <span>Safe 16:9</span>
+                <span>Studio Ready</span>
+              </div>
+              <div className="flex justify-between text-[9px] font-mono text-slate-600">
+                <span>Mivo Display Mesh</span>
+                <span>P2P Encrypted</span>
+              </div>
+            </div>
+
+            {/* Central Broadcast Preparation Card */}
+            <div className="max-w-xl w-full z-10 flex flex-col items-center text-center">
+              {/* Monogram / Icon */}
+              <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-200 mb-3 shadow-sm">
+                <Monitor className="w-6 h-6 text-slate-200" />
+              </div>
+
+              <h3 className="text-xl font-semibold text-white tracking-tight">
+                Broadcast Your Screen
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md">
+                Share live code, application windows, slides, or your entire desktop directly with this meeting.
+              </p>
+
+              {/* 3 Source Selector Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full mt-6">
+                {/* Option 1: Entire Screen */}
+                <button
+                  onClick={() => setSelectedSourceType('screen')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    selectedSourceType === 'screen'
+                      ? 'bg-white/[0.08] border-white/25 text-white'
+                      : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Monitor className="w-4 h-4 text-slate-300" />
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/[0.08]">
+                      All Displays
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white">Full Screen</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">Multi-window & code</div>
+                  </div>
+                </button>
+
+                {/* Option 2: App Window */}
+                <button
+                  onClick={() => setSelectedSourceType('window')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    selectedSourceType === 'window'
+                      ? 'bg-white/[0.08] border-white/25 text-white'
+                      : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <AppWindow className="w-4 h-4 text-slate-300" />
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/[0.08]">
+                      Privacy Safe
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white">App Window</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">VS Code, Figma, Slides</div>
+                  </div>
+                </button>
+
+                {/* Option 3: Browser Tab */}
+                <button
+                  onClick={() => setSelectedSourceType('tab')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    selectedSourceType === 'tab'
+                      ? 'bg-white/[0.08] border-white/25 text-white'
+                      : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Radio className="w-4 h-4 text-slate-300" />
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/[0.08]">
+                      Stereo Audio
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white">Browser Tab</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">Media & app preview</div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Action Bar */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 mt-5 w-full justify-center">
+                <button
+                  onClick={handleToggleScreen}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.98]"
+                >
+                  <Share2 className="w-4 h-4 text-slate-900" />
+                  <span>Start Screen Sharing</span>
+                </button>
+
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={isAudioSharingEnabled}
+                    onChange={(e) => setIsAudioSharingEnabled(e.target.checked)}
+                    className="rounded border-slate-700 text-slate-900 focus:ring-0 w-3.5 h-3.5 accent-slate-200 cursor-pointer"
+                  />
+                  <Volume2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Include audio feed</span>
+                </label>
+              </div>
+
+              {/* Telemetry Readiness Bar */}
+              <div className="grid grid-cols-3 gap-2 mt-6 pt-5 border-t border-white/[0.06] w-full text-left">
+                <div>
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500">Audience</div>
+                  <div className="text-xs font-medium text-slate-300 mt-0.5">
+                    {participants.length} {participants.length === 1 ? 'member' : 'members'} ready
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500">Transport</div>
+                  <div className="text-xs font-medium text-slate-300 mt-0.5">WebRTC Mesh P2P</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500">Security</div>
+                  <div className="text-xs font-medium text-slate-300 mt-0.5">Encrypted Stream</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Interactive Participant Video Drawer (Only in active call modes: Voice, Video, Screen) */}
+      {mode !== 'TEXT' && (
+        isAttendeeDrawerOpen ? (
+          <div className="flex-shrink-0 flex flex-col gap-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
+                Meeting Participants ({participants.length}) • Drag or Reorder
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setIsCoHostEnabled(!isCoHostEnabled)}
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    isCoHostEnabled
+                      ? 'bg-violet-600/15 text-violet-600 dark:text-violet-300 border-violet-500/40'
+                      : 'bg-[var(--bg-surface-1)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border-[var(--border-subtle)]'
+                  }`}
+                  title="Toggle AI Stage Co-Host Assistant"
+                >
+                  <Bot className="w-3 h-3" />
+                  <span>{isCoHostEnabled ? 'AI Co-Host (On)' : '+ AI Assistant'}</span>
+                </button>
+
+                <button
+                  onClick={handleAutoArrange}
+                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                  title="Auto-Arrange Video Strip"
+                >
+                  <LayoutGrid className="w-3 h-3" />
+                  <span>Auto-Arrange</span>
+                </button>
+
+                <button
+                  onClick={() => setIsAttendeeDrawerOpen(false)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
+                  title="Collapse Video Drawer"
+                >
+                  <ChevronDown className="w-3 h-3" />
+                  <span>Hide</span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar"
+            >
+              {isCoHostEnabled && (
+                <div className="w-48 sm:w-56 aspect-video flex-shrink-0">
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
+                  />
+                </div>
+              )}
+              {sortedParticipants.map((p) => {
+                const isMe = p.userId === currentUserId;
+                const camOn = isMe ? isCameraOn : p.isCameraOn;
+                const participantMuted = isMe ? isMuted : p.isMuted;
+                const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+                return (
+                  <div key={p.id} className="w-48 sm:w-56 aspect-video flex-shrink-0">
+                    <LiveVideoTile
+                      user={p.user}
+                      isMe={isMe}
+                      isMuted={participantMuted}
+                      isCameraOn={camOn}
+                      isPinned={pinnedUserId === p.userId}
+                      onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
+                      isHost={isHost}
+                      onHostAction={handleHostAction}
+                      mediaStream={participantStream}
+                      audioLevel={isMe ? audioLevel : 0}
+                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                      onDragStart={handleDragStart(p.userId)}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop(p.userId)}
+                      onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                      onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          /* Collapsed State: Sleek Restore Drawer Button */
+          <div className="flex justify-center flex-shrink-0 animate-fade-in">
+            <button
+              onClick={() => setIsAttendeeDrawerOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] shadow-sm transition-all cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <span>Show Attendee Video Drawer ({participants.length})</span>
+              <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
+        )
       )}
 
       {/* Floating Live Fact-Check HUD Alert */}
@@ -1087,6 +1372,39 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           setFactCheckAlert(null);
         }}
       />
+    </div>
+    );
+  };
+
+  return (
+    <div className="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--bg-canvas)]">
+      {/* ── Real-Time Chat Stream (Kept hot in DOM: 0ms instant switch, zero re-fetching or scroll loss) ── */}
+      <div
+        className={`flex-1 flex flex-col h-full w-full ${
+          mode === 'TEXT' ? 'flex relative z-10' : 'hidden'
+        }`}
+      >
+        {room ? (
+          <ChatStream room={room} />
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-[#0E1017]">
+            <div className="w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Live Media Stages (Voice / Video / Screen Share) ── */}
+      <div
+        className={`flex-1 flex flex-col h-full w-full relative overflow-hidden ${
+          mode !== 'TEXT' ? 'flex' : 'hidden'
+        }`}
+      >
+        {mode === 'VOICE'
+          ? renderVoiceStage()
+          : mode === 'VIDEO'
+          ? renderVideoStage()
+          : renderScreenStage()}
+      </div>
     </div>
   );
 };

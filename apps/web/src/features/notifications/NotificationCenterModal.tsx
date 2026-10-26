@@ -156,7 +156,7 @@ export const NotificationCenterModal: React.FC = () => {
             {counts.ALL > 0 && (
               <button
                 onClick={() => markAllAsRead()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 hover:bg-black/10 text-xs text-[var(--text-secondary)] hover:text-[#111827] border border-[var(--border-subtle)] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                 title="Mark all as read"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-[#059669]" />
@@ -165,7 +165,7 @@ export const NotificationCenterModal: React.FC = () => {
             )}
             <button
               onClick={() => setIsCenterOpen(false)}
-              className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -192,7 +192,7 @@ export const NotificationCenterModal: React.FC = () => {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                   active
                     ? 'bg-gradient-to-r from-[#DC2626] to-[#991B1B] text-white shadow-md'
-                    : 'bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827]'
+                    : 'bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -216,7 +216,7 @@ export const NotificationCenterModal: React.FC = () => {
                 setIsCenterOpen(false);
                 setIsTicketModalOpen(true);
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 border border-amber-500/25 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/25 text-xs font-semibold transition-colors cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">New Ticket</span>

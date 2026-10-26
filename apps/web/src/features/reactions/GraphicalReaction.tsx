@@ -497,16 +497,16 @@ export interface ReactionMeta {
 }
 
 export const GRAPHICAL_REACTIONS: ReactionMeta[] = [
-  { id: 'heart', label: 'Heart', aliases: ['❤️', 'heart', 'love'], component: HeartReaction },
-  { id: 'thumbs_up', label: 'Thumbs Up', aliases: ['👍', 'thumbs_up', 'like'], component: ThumbsUpReaction },
-  { id: 'fire', label: 'Fire', aliases: ['🔥', 'fire', 'lit'], component: FireReaction },
-  { id: 'party', label: 'Celebrate', aliases: ['🎉', 'party', 'celebrate'], component: PartyReaction },
-  { id: 'laugh', label: 'Joy', aliases: ['😂', 'laugh', 'joy', 'lol'], component: LaughReaction },
-  { id: 'rocket', label: 'Rocket', aliases: ['🚀', 'rocket', 'launch'], component: RocketReaction },
-  { id: 'hundred', label: '100', aliases: ['💯', 'hundred', '100'], component: HundredReaction },
-  { id: 'sparkles', label: 'Sparkles', aliases: ['✨', 'sparkles', 'magic'], component: SparklesReaction },
-  { id: 'clap', label: 'Clap', aliases: ['👏', 'clap', 'applause'], component: ClapReaction },
-  { id: 'raise_hand', label: 'Raise Hand', aliases: ['✋', 'raise_hand', 'hand'], component: RaiseHandReaction },
+  { id: 'heart', label: 'Heart', aliases: ['\u2764\uFE0F', 'heart', 'love'], component: HeartReaction },
+  { id: 'thumbs_up', label: 'Thumbs Up', aliases: ['\u{1F44D}', 'thumbs_up', 'like'], component: ThumbsUpReaction },
+  { id: 'fire', label: 'Fire', aliases: ['\u{1F525}', 'fire', 'lit'], component: FireReaction },
+  { id: 'party', label: 'Celebrate', aliases: ['\u{1F389}', 'party', 'celebrate'], component: PartyReaction },
+  { id: 'laugh', label: 'Joy', aliases: ['\u{1F602}', 'laugh', 'joy', 'lol'], component: LaughReaction },
+  { id: 'rocket', label: 'Rocket', aliases: ['\u{1F680}', 'rocket', 'launch'], component: RocketReaction },
+  { id: 'hundred', label: '100', aliases: ['\u{1F4AF}', 'hundred', '100'], component: HundredReaction },
+  { id: 'sparkles', label: 'Sparkles', aliases: ['\u2728', 'sparkles', 'magic'], component: SparklesReaction },
+  { id: 'clap', label: 'Clap', aliases: ['\u{1F44F}', 'clap', 'applause'], component: ClapReaction },
+  { id: 'raise_hand', label: 'Raise Hand', aliases: ['\u270B', 'raise_hand', 'hand'], component: RaiseHandReaction },
 ];
 
 /**
@@ -523,7 +523,7 @@ export function normalizeReactionKey(input: string): string {
 
 /**
  * High-fidelity Graphical Reaction Component.
- * Automatically accepts either unicode emojis (e.g. '❤️', '🔥') or canonical reaction IDs (e.g. 'heart', 'fire').
+ * Automatically accepts either reaction tokens or canonical reaction IDs (e.g. 'heart', 'fire').
  */
 export const GraphicalReaction: React.FC<{
   name: string;

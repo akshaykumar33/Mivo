@@ -38,7 +38,7 @@ const DEFAULT_FILES: CodeStageFile[] = [
     id: 'f1',
     name: 'index.ts',
     language: 'typescript',
-    content: `// ⚡ Mivo In-Room Pair-Programming Sandbox
+    content: `// Mivo In-Room Pair-Programming Sandbox
 // Collaborate, debug, and execute code in real-time with your team!
 
 interface WorkerTask {
@@ -79,7 +79,7 @@ scheduler.processNext();
     id: 'f2',
     name: 'server.py',
     language: 'python',
-    content: `# 🐍 Python 3 Multi-threaded WebRTC Telemetry Monitor
+    content: `# Python 3 Multi-threaded WebRTC Telemetry Monitor
 import time
 
 def calculate_sfu_egress_savings(participants: int):
@@ -100,7 +100,7 @@ for peers in [4, 8, 16, 32, 64]:
     id: 'f3',
     name: 'algorithm.rs',
     language: 'rust',
-    content: `// 🦀 High-performance Rust CRDT Lamport Clock
+    content: `// High-performance Rust CRDT Lamport Clock
 fn main() {
     println!("Initializing zero-lag local-first CRDT state vector...");
     println!("All mutations synchronized across 5 participants in 0ms.");
@@ -279,7 +279,7 @@ export const CodeStage: React.FC<CodeStageProps> = ({
       setAiAssistantThinking(false);
       if (action === 'EXPLAIN') {
         setStdout(
-          `🤖 AI Pair Programmer: Code Explanation\n` +
+          `[AI Pair Programmer] Code Explanation\n` +
           `• File: ${activeFile.name} (${activeFile.language.toUpperCase()})\n` +
           `• Architecture: Distributed priority queue scheduler pattern.\n` +
           `• Complexity: O(N log N) on enqueue sorting, O(1) dequeue processing.\n` +
@@ -287,13 +287,13 @@ export const CodeStage: React.FC<CodeStageProps> = ({
         );
       } else if (action === 'OPTIMIZE') {
         setStdout(
-          `🤖 AI Pair Programmer: Optimization Recommendation\n` +
+          `[AI Pair Programmer] Optimization Recommendation\n` +
           `• Replace Array.sort() with a Binary Max-Heap for O(log N) inserts!\n` +
           `• Memory footprint reduction: ~32% under high load.`
         );
       } else if (action === 'TEST') {
         setStdout(
-          `🤖 AI Pair Programmer: Unit Test Suite Generated\n` +
+          `[AI Pair Programmer] Unit Test Suite Generated\n` +
           `PASS test/scheduler.test.ts (3/3 passed)\n` +
           `  ✓ should queue tasks according to priority\n` +
           `  ✓ should process tasks in descending order\n` +

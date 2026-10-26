@@ -19,6 +19,12 @@ enum UserStatus {
   OFFLINE
 }
 
+enum UserTier {
+  GUEST
+  NON_ORG
+  ORG
+}
+
 model User {
   id               String            @id @default(uuid()) @db.Uuid
   email            String            @unique @db.VarChar(255)
@@ -37,10 +43,12 @@ model User {
   status           UserStatus        @default(OFFLINE)
   isEmailVerified  Boolean           @default(false)
   isGuest          Boolean           @default(false)
+  userTier         UserTier          @default(NON_ORG)
   lastSeenAt       DateTime?         @db.Timestamptz(6)
   createdAt        DateTime          @default(now()) @db.Timestamptz(6)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(6)
   deletedAt        DateTime?         @db.Timestamptz(6)
+
 
   sessions                Session[]
   ownedCommunities        Community[]          @relation("CommunityOwner")
@@ -54,6 +62,7 @@ model User {
   notifications           Notification[]
   createdTickets          Ticket[]             @relation("TicketCreator")
   assignedTickets         Ticket[]             @relation("TicketAssignee")
+  publishedProjects       Project[]
 
   @@index([email])
   @@index([username])
@@ -436,5 +445,26 @@ model Ticket {
   @@index([status])
   @@map("tickets")
 }
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(128)
+  description String   @db.Text
+  authorId    String   @db.Uuid
+  demoUrl     String?  @db.VarChar(512)
+  githubUrl   String?  @db.VarChar(512)
+  tags        String[] @default([])
+  codeSnippet String?  @db.Text
+  language    String?  @db.VarChar(32)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("projects")
+}
+
 
 

@@ -140,7 +140,7 @@ export const GAME_RULES_DATA: Record<
       '+100 PTS base score for a correct answer.',
       'Up to +50 PTS bonus for speed (the faster you buzz, the more points you get).',
     ],
-    proTip: 'Read the "💡 Fun Fact" box after each question—they make great conversation starters for live chat!',
+    proTip: 'Read the "Fun Fact" box after each question—they make great conversation starters for live chat!',
   },
   EMOJI: {
     title: 'Emoji Riddle Jam (Pop Culture Decoder)',
@@ -327,7 +327,7 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md cursor-pointer transition-transform hover:scale-105"
           >
-            Got It! Let's Jam 🚀
+            Got It! Let's Jam
           </button>
         </div>
       </div>

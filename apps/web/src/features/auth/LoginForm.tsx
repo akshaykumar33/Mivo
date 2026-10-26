@@ -68,7 +68,7 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl p-6 sm:p-8 md:p-10 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[#111827]">
+    <div className="w-full max-w-xl p-6 sm:p-8 md:p-10 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[var(--text-primary)]">
       {/* Radiant Velvet Ambient Glows */}
       <div className="absolute -top-32 -left-32 w-72 h-72 bg-gradient-to-tr from-red-500/10 to-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-72 h-72 bg-gradient-to-bl from-rose-500/10 to-red-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -79,10 +79,10 @@ export const LoginForm: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-tr from-[#DC2626] to-[#991B1B] text-white font-extrabold text-2xl shadow-[0_8px_24px_rgba(220,38,38,0.35)] mb-4 border border-white/40 hover:scale-105 transition-transform duration-300 font-display">
           M
         </div>
-        <h1 className="text-3xl font-extrabold text-[#111827] tracking-tight font-display">
+        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight font-display">
           Welcome to Mivo
         </h1>
-        <p className="text-xs sm:text-sm text-[#71717A] mt-1.5 font-medium">
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1.5 font-medium">
           Unified Real-Time Video, Voice & AI Collaboration OS
         </p>
       </div>
@@ -97,16 +97,16 @@ export const LoginForm: React.FC = () => {
       {/* Credentials Form */}
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
         <div>
-          <label className="block text-xs font-semibold text-[#111827] mb-1.5 ml-1">Email Address</label>
+          <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5 ml-1">Email Address</label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-[#71717A] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="email"
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[#111827] placeholder-[#71717A]/60 text-sm focus:outline-none focus:border-red-500 focus:bg-[var(--bg-surface-0)] focus:ring-2 focus:ring-red-500/20 transition-all font-medium"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[var(--text-primary)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:border-red-500 focus:bg-[var(--bg-surface-0)] focus:ring-2 focus:ring-red-500/20 transition-all font-medium"
             />
           </div>
         </div>
@@ -168,8 +168,8 @@ export const LoginForm: React.FC = () => {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-red-700">Dev Admin</div>
-                <div className="text-[10px] text-red-700 font-semibold truncate flex items-center gap-1">
+                <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-red-700">Dev Admin</div>
+                <div className="text-[10px] text-red-700 dark:text-red-400 font-semibold truncate flex items-center gap-1">
                   <Crown className="w-3 h-3 text-amber-500 inline shrink-0" />
                   <span>Community Owner</span>
                 </div>
@@ -187,8 +187,8 @@ export const LoginForm: React.FC = () => {
                 <Palette className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-purple-700">Alex Rivera</div>
-                <div className="text-[10px] text-purple-700 font-semibold truncate flex items-center gap-1">
+                <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-purple-700">Alex Rivera</div>
+                <div className="text-[10px] text-purple-700 dark:text-purple-400 font-semibold truncate flex items-center gap-1">
                   <Palette className="w-3 h-3 text-purple-600 inline shrink-0" />
                   <span>Staff Designer</span>
                 </div>
@@ -202,12 +202,12 @@ export const LoginForm: React.FC = () => {
             className="p-3 rounded-2xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-amber-500/40 text-left transition-all duration-200 group cursor-pointer relative overflow-hidden shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs font-mono font-bold text-amber-700 flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs font-mono font-bold text-amber-700 dark:text-amber-400 flex-shrink-0">
                 ES
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-amber-800">Carlos Mendoza</div>
-                <div className="text-[10px] text-amber-700 font-semibold truncate">Frontend Lead</div>
+                <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-amber-800">Carlos Mendoza</div>
+                <div className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold truncate">Frontend Lead</div>
               </div>
             </div>
           </button>
@@ -218,19 +218,19 @@ export const LoginForm: React.FC = () => {
             className="p-3 rounded-2xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-cyan-500/40 text-left transition-all duration-200 group cursor-pointer relative overflow-hidden shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-xs font-mono font-bold text-cyan-700 flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-xs font-mono font-bold text-cyan-700 dark:text-cyan-400 flex-shrink-0">
                 IN
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-[#111827] truncate group-hover:text-cyan-800">Priya Sharma</div>
-                <div className="text-[10px] text-cyan-700 font-semibold truncate">Cloud Architect</div>
+                <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-cyan-800">Priya Sharma</div>
+                <div className="text-[10px] text-cyan-700 dark:text-cyan-400 font-semibold truncate">Cloud Architect</div>
               </div>
             </div>
           </button>
         </div>
       </div>
 
-      <div className="mt-7 text-center text-xs text-[#71717A] relative z-10">
+      <div className="mt-7 text-center text-xs text-[var(--text-secondary)] relative z-10">
         Don&apos;t have an account?{' '}
         <Link href="/register" className="text-red-600 hover:text-red-700 font-bold hover:underline transition-colors">
           Create one now

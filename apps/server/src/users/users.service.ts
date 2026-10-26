@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { prisma } from '@mivo/database';
-import { UpdateProfileInput, UpdateStatusInput, UserDTO, UserSummaryDTO, REALTIME_EVENTS } from '@mivo/shared';
+import { UpdateProfileInput, UpdateStatusInput, UserDTO, UserSummaryDTO, UserTier, REALTIME_EVENTS } from '@mivo/shared';
 import { PresenceService } from '../realtime/presence.service.js';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
@@ -29,9 +29,17 @@ export class UsersService {
     return cleaned || null;
   }
 
-  async getProfile(userId: string): Promise<UserDTO> {
+  async getProfile(userId: string, requesterUserId?: string): Promise<UserDTO> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        memberships: {
+          include: {
+            community: { select: { id: true, name: true, slug: true } },
+            role: { select: { id: true, name: true, position: true } },
+          },
+        },
+      },
     });
 
     if (!user || user.deletedAt) {
@@ -39,6 +47,35 @@ export class UsersService {
         code: 'USER_NOT_FOUND',
         message: 'User profile not found',
       });
+    }
+
+    const isTargetGuest = Boolean(user.isGuest || user.userTier === 'GUEST');
+    const orgMembership = user.memberships?.[0];
+    const isTargetOrg = !isTargetGuest && Boolean(orgMembership);
+    const targetTier: UserTier = isTargetGuest ? 'GUEST' : isTargetOrg ? 'ORG' : 'NON_ORG';
+
+    // If requester is a GUEST: can only view non-org accounts profile
+    if (requesterUserId) {
+      const requester: any = await prisma.user.findUnique({
+        where: { id: requesterUserId },
+        select: { id: true, isGuest: true, userTier: true } as any,
+      });
+      const isRequesterGuest = Boolean(requester?.isGuest || requester?.userTier === 'GUEST');
+      if (isRequesterGuest && targetTier === 'ORG') {
+        throw new ForbiddenException({
+          code: 'ORG_PROFILE_RESTRICTED',
+          message: 'Guest accounts cannot view private enterprise organization profiles. Only independent non-org creator profiles are viewable.',
+        });
+      }
+    }
+
+    let orgHierarchyLevel: number | null = null;
+    if (orgMembership?.role?.name) {
+      const roleName = orgMembership.role.name.toLowerCase();
+      if (roleName.includes('owner')) orgHierarchyLevel = 1;
+      else if (roleName.includes('admin')) orgHierarchyLevel = 2;
+      else if (roleName.includes('manager') || roleName.includes('lead')) orgHierarchyLevel = 3;
+      else orgHierarchyLevel = 4;
     }
 
     let customStatus = (this.stripEmojis(user.customStatus) ?? null) as string | null;
@@ -66,7 +103,12 @@ export class UsersService {
       customStatus,
       customStatusExpiresAt: customStatusExpiresAt ? customStatusExpiresAt.toISOString() : null,
       status: user.status,
-      isGuest: Boolean((user as any).isGuest),
+      isGuest: isTargetGuest,
+      userTier: targetTier,
+      organizationId: orgMembership?.community?.id || null,
+      organizationName: orgMembership?.community?.name || null,
+      organizationRole: orgMembership?.role?.name || null,
+      organizationHierarchyLevel: orgHierarchyLevel,
       createdAt: user.createdAt.toISOString(),
       lastSeenAt: user.lastSeenAt ? user.lastSeenAt.toISOString() : null,
     };
@@ -200,10 +242,25 @@ export class UsersService {
   }
 
   async searchUsers(query?: string, currentUserId?: string): Promise<UserSummaryDTO[]> {
+    let isCallerGuest = false;
+    if (currentUserId) {
+      const currentUser: any = await prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { isGuest: true, userTier: true } as any,
+      });
+      isCallerGuest = Boolean(currentUser?.isGuest || currentUser?.userTier === 'GUEST');
+    }
+
     const trimmed = query?.trim().toLowerCase();
     const users: any[] = await prisma.user.findMany({
       where: {
         deletedAt: null,
+        isGuest: false,
+        // If caller is GUEST: "can view non-org accounts profile"
+        ...(isCallerGuest ? { userTier: 'NON_ORG' } : {}),
+        NOT: [
+          { username: { startsWith: 'guest_' } },
+        ],
         ...(currentUserId && { id: { not: currentUserId } }),
         ...(trimmed
           ? {
@@ -216,27 +273,44 @@ export class UsersService {
       },
       take: 20,
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        avatarUrl: true,
-        status: true,
-        isGuest: true,
-        customStatus: true,
-        customStatusExpiresAt: true,
-      } as any,
+      include: {
+        memberships: {
+          include: {
+            community: { select: { id: true, name: true } },
+            role: { select: { name: true } },
+          },
+        },
+      },
     });
 
     return users.map((u) => {
       const expired = this.isStatusExpired(u.customStatusExpiresAt);
+      const isTargetGuest = Boolean(u.isGuest || u.userTier === 'GUEST');
+      const orgMem = u.memberships?.[0];
+      const isTargetOrg = !isTargetGuest && Boolean(orgMem);
+      const targetTier: UserTier = isTargetGuest ? 'GUEST' : isTargetOrg ? 'ORG' : 'NON_ORG';
+
+      let orgLevel: number | null = null;
+      if (orgMem?.role?.name) {
+        const rn = orgMem.role.name.toLowerCase();
+        if (rn.includes('owner')) orgLevel = 1;
+        else if (rn.includes('admin')) orgLevel = 2;
+        else if (rn.includes('manager') || rn.includes('lead')) orgLevel = 3;
+        else orgLevel = 4;
+      }
+
       return {
         id: u.id,
         username: u.username,
         displayName: u.displayName,
         avatarUrl: u.avatarUrl,
         status: u.status,
-        isGuest: Boolean((u as any).isGuest),
+        isGuest: isTargetGuest,
+        userTier: targetTier,
+        organizationId: orgMem?.community?.id || null,
+        organizationName: orgMem?.community?.name || null,
+        organizationRole: orgMem?.role?.name || null,
+        organizationHierarchyLevel: orgLevel,
         customStatus: expired ? null : u.customStatus,
         customStatusExpiresAt: expired || !u.customStatusExpiresAt ? null : u.customStatusExpiresAt.toISOString(),
       };

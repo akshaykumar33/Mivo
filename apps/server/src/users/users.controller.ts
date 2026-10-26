@@ -65,8 +65,11 @@ export class UsersController {
   }
 
   @Get(':id')
-  async getUserProfile(@Param('id') id: string): Promise<ApiResponse<UserDTO>> {
-    const profile = await this.usersService.getProfile(id);
+  async getUserProfile(
+    @CurrentUser() currentUser: JwtPayload,
+    @Param('id') id: string
+  ): Promise<ApiResponse<UserDTO>> {
+    const profile = await this.usersService.getProfile(id, currentUser?.sub);
     return {
       success: true,
       data: profile,

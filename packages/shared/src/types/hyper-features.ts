@@ -1,5 +1,5 @@
 /**
- * 🌌 Mivo Hyper Features — Shared Types & Enums
+ * Mivo Hyper Features — Shared Types & Enums
  * Architectural abstractions for SFU, E2EE, Code Stage, AI Twin,
  * Ambient Focus, Mini-Apps Activities, and Local-First CRDT Sync.
  */
@@ -96,7 +96,7 @@ export interface E2eeSafetyCodeVerification {
   roomId: string;
   epoch: number;
   fingerprintHex: string; // e.g. "9824 5510 3982 7714"
-  verificationEmojis: [string, string, string, string]; // e.g. ["🛡️", "⚡", "🔑", "🚀"]
+  verificationEmojis: [string, string, string, string]; // e.g. ["SAS-1", "SAS-2", "SAS-3", "SAS-4"]
   participantsVerified: number;
 }
 

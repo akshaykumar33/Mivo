@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Zap, Trophy, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Zap, Trophy, RotateCcw, AlertTriangle, ShieldCheck, Octagon } from 'lucide-react';
 import { sounds } from './soundEffects';
 
 interface ReflexClashGameProps {
@@ -244,8 +244,8 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
       >
         {state === 'READY' && (
           <div className="text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto text-3xl">
-              ⚡
+            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto">
+              <Zap className="w-8 h-8 text-amber-400" />
             </div>
             <div>
               <h2 className="text-lg font-black text-white font-display">Ready to Duel?</h2>
@@ -261,14 +261,16 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
               }}
               className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-black font-extrabold text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer"
             >
-              Start Countdown! 🚀
+              Start Countdown!
             </button>
           </div>
         )}
 
         {state === 'WAITING' && (
           <div className="text-center space-y-2 pointer-events-none">
-            <div className="text-4xl animate-bounce">🛑</div>
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto animate-bounce">
+              <Octagon className="w-7 h-7 text-rose-500 fill-rose-500/20" />
+            </div>
             <h2 className="text-2xl font-black text-white tracking-widest font-mono">
               WAIT FOR GREEN...
             </h2>
@@ -278,7 +280,9 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
 
         {state === 'CLICK_NOW' && (
           <div className="text-center space-y-2 pointer-events-none">
-            <div className="text-5xl animate-ping">⚡</div>
+            <div className="w-16 h-16 rounded-full bg-black/20 flex items-center justify-center mx-auto animate-ping">
+              <Zap className="w-10 h-10 text-black fill-black" />
+            </div>
             <h2 className="text-3xl sm:text-4xl font-black text-black tracking-tight font-display">
               TAP NOW!
             </h2>
@@ -334,8 +338,8 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
                 <Trophy className="w-8 h-8 text-amber-400 mx-auto animate-bounce" />
                 <h3 className="text-base font-black text-white">
                   {myWins > partnerWins
-                    ? 'Champion of the Quick-Draw! 🏆'
-                    : `${partnerPseudonym} Takes the Belt! ⚡`}
+                    ? 'Champion of the Quick-Draw!'
+                    : `${partnerPseudonym} Takes the Belt!`}
                 </h3>
                 <button
                   type="button"

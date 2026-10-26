@@ -380,9 +380,42 @@ async function run() {
   // ===========================================================================
   console.log('\n--- 6. Testing Mivo Mini-Apps & Activity Sandboxes ---');
 
-  // 6a. Launch Chess Activity
-  const chessActivity = await new Promise((resolve) => {
+  // 6a. Verify Enterprise Tier Restriction: ORG accounts cannot launch CHESS
+  const orgChessAttempt = await new Promise((resolve) => {
     socket1.emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, {
+      roomId,
+      type: 'CHESS',
+    }, (res) => {
+      resolve(res);
+    });
+  });
+  assert(!orgChessAttempt.success, 'ORG account must not be permitted to launch games');
+  console.log('   🔒 Enterprise Tier Policy Verified: Games correctly disabled for ORG accounts');
+
+  // 6b. Authenticate Non-Org User for Multiplayer Gaming Activities
+  const nonOrgEmail = `gamer_${Date.now()}@test.mivo.dev`;
+  const nonOrgRes = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: nonOrgEmail,
+      username: `gamer_${Date.now()}`.slice(0, 20),
+      displayName: 'Non-Org Chess Master',
+      password: 'Password123!',
+    }),
+  });
+  const nonOrgData = await nonOrgRes.json();
+  assert(nonOrgData.success, 'Non-org user must register successfully');
+  const nonOrgSocket = io(SERVER_URL, {
+    auth: { token: nonOrgData.data.accessToken },
+    transports: ['websocket'],
+  });
+  await new Promise((resolve) => nonOrgSocket.on('connect', resolve));
+  await new Promise((resolve) => nonOrgSocket.emit(REALTIME_EVENTS.ROOM_JOIN, { roomId }, resolve));
+
+  // 6c. Launch Chess Activity as Non-Org User
+  const chessActivity = await new Promise((resolve) => {
+    nonOrgSocket.emit(REALTIME_EVENTS.ACTIVITY_LAUNCH, {
       roomId,
       type: 'CHESS',
     }, (res) => {
@@ -394,9 +427,9 @@ async function run() {
   assert(chessActivity.data.state.fen.startsWith('rnbqkbnr'), 'Should have standard chess FEN');
   console.log(`   ✅ Multiplayer Chess Mini-App Launched in Room #${room.name}`);
 
-  // 6b. Make Chess Move
+  // 6d. Make Chess Move
   const moveResult = await new Promise((resolve) => {
-    socket1.emit(REALTIME_EVENTS.ACTIVITY_ACTION, {
+    nonOrgSocket.emit(REALTIME_EVENTS.ACTIVITY_ACTION, {
       roomId,
       actionType: 'MOVE',
       payload: { move: 'e2-e4', newFen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1' },
@@ -408,14 +441,15 @@ async function run() {
   assert.strictEqual(moveResult.data.state.turn, 'b', 'Turn must switch to black');
   console.log(`   ✅ Move executed: "e2-e4" — Turn transferred to Black`);
 
-  // 6c. Close Activity
+  // 6e. Close Activity
   const closeRes = await new Promise((resolve) => {
-    socket1.emit(REALTIME_EVENTS.ACTIVITY_CLOSE, { roomId }, (res) => {
+    nonOrgSocket.emit(REALTIME_EVENTS.ACTIVITY_CLOSE, { roomId }, (res) => {
       resolve(res);
     });
   });
   assert(closeRes.success);
   console.log(`   ✅ Activity Session closed gracefully`);
+  nonOrgSocket.disconnect();
 
   // ===========================================================================
   // 7. CRDT SYNC & LOCAL-FIRST MESSAGING

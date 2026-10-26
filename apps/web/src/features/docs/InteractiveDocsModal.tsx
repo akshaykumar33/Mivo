@@ -315,14 +315,14 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs sm:text-sm font-extrabold text-[#111827] font-display tracking-tight truncate">
+                <h2 className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)] font-display tracking-tight truncate">
                   Mivo Documentation & Architecture Reference
                 </h2>
                 <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-red-500/10 text-red-600 border border-red-500/25">
                   v1.0 Pro
                 </span>
               </div>
-              <span className="text-[10px] sm:text-[11px] text-[#4B5563] font-medium truncate block">
+              <span className="text-[10px] sm:text-[11px] text-[var(--text-secondary)] font-medium truncate block">
                 Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
               </span>
             </div>
@@ -331,7 +331,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors cursor-pointer"
               title="Close Documentation (Esc)"
             >
               <X className="w-5 h-5" />
@@ -351,7 +351,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                 placeholder="Search articles & guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder-[#71717A] focus:outline-none focus:border-red-500 font-medium transition-all"
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[#71717A] focus:outline-none focus:border-red-500 font-medium transition-all"
               />
             </div>
 
@@ -365,7 +365,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <div key={categoryName} className="space-y-1">
                     <button
                       onClick={() => toggleCategory(categoryName)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[#4B5563] hover:text-[#111827] hover:bg-black/[0.04] transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[#4B5563] hover:text-[var(--text-primary)] hover:bg-black/[0.04] transition-colors"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isExpanded ? (
@@ -391,7 +391,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                               className={`w-full flex flex-col gap-0.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
                                   ? 'bg-red-500/10 border border-red-500/30 text-red-700 shadow-sm'
-                                  : 'text-[#4B5563] hover:bg-black/[0.04] hover:text-[#111827]'
+                                  : 'text-[#4B5563] hover:bg-black/[0.04] hover:text-[var(--text-primary)]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate">
@@ -421,7 +421,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <Compass className="w-3.5 h-3.5 text-red-600" />
                   <span>{activeArticle.category}</span>
                   <span>/</span>
-                  <span className="text-[#111827] font-semibold">{activeArticle.title}</span>
+                  <span className="text-[var(--text-primary)] font-semibold">{activeArticle.title}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-mono">
@@ -445,11 +445,11 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                     <div className="px-4 py-2.5 bg-black/[0.02] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[#71717A]">
                       <div className="flex items-center gap-2">
                         <Terminal className="w-3.5 h-3.5 text-red-600" />
-                        <span className="font-mono text-[11px] uppercase tracking-wider font-semibold text-[#111827]">{activeArticle.codeSnippet.lang}</span>
+                        <span className="font-mono text-[11px] uppercase tracking-wider font-semibold text-[var(--text-primary)]">{activeArticle.codeSnippet.lang}</span>
                       </div>
                       <button
                         onClick={() => handleCopyCode(activeArticle.codeSnippet!.code)}
-                        className="flex items-center gap-1.5 text-[11px] text-[#4B5563] hover:text-[#111827] transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-[11px] text-[#4B5563] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                       >
                         {copiedSnippet ? (
                           <>
@@ -464,7 +464,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                         )}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-red-800 bg-[#FFFDF9] overflow-x-auto leading-relaxed border-t border-[var(--border-subtle)]">
+                    <pre className="p-4 text-xs font-mono text-red-600 dark:text-red-300 bg-[var(--bg-surface-1)] overflow-x-auto leading-relaxed border-t border-[var(--border-subtle)]">
                       <code>{activeArticle.codeSnippet.code}</code>
                     </pre>
                   </div>
@@ -487,32 +487,32 @@ function formatMarkdownToHtml(md: string): string {
   const processed = lines.map((line) => {
     let l = line;
     if (l.startsWith('# ')) {
-      return `<h1 class="text-2xl font-extrabold text-[#111827] font-display border-b border-[var(--border-subtle)] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
+      return `<h1 class="text-2xl font-extrabold text-[var(--text-primary)] font-display border-b border-[var(--border-subtle)] pb-3 mb-4 mt-2 tracking-tight">${l.slice(2)}</h1>`;
     }
     if (l.startsWith('### ')) {
       return `<h3 class="text-sm font-bold text-red-600 font-display uppercase tracking-wider mt-5 mb-2">${l.slice(4)}</h3>`;
     }
     if (l.startsWith('## ')) {
-      return `<h2 class="text-lg font-bold text-[#111827] font-display mt-6 mb-3">${l.slice(3)}</h2>`;
+      return `<h2 class="text-lg font-bold text-[var(--text-primary)] font-display mt-6 mb-3">${l.slice(3)}</h2>`;
     }
     if (l.startsWith('> [!TIP]') || l.startsWith('> [!NOTE]')) {
       const type = l.includes('TIP') ? 'TIP' : 'NOTE';
-      return `<div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium my-3 flex items-start gap-2.5">
+      return `<div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium my-3 flex items-start gap-2.5">
         <span class="font-bold uppercase text-[10px] tracking-wider px-1.5 py-0.5 rounded bg-amber-600 text-white">${type}</span>
       </div>`;
     }
     if (l.startsWith('> ')) {
-      return `<blockquote class="p-3 rounded-2xl bg-red-50/50 border-l-4 border-red-500 text-[#4B5563] text-xs italic my-3">${l.slice(2)}</blockquote>`;
+      return `<blockquote class="p-3 rounded-2xl bg-red-500/10 border-l-4 border-red-500 text-[var(--text-secondary)] text-xs italic my-3">${l.slice(2)}</blockquote>`;
     }
     if (l.startsWith('* ') || l.startsWith('- ')) {
       const itemText = l.slice(2)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#111827] font-semibold">$1</strong>')
-        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 font-mono text-xs border border-red-200">$1</code>');
-      return `<li class="text-[#4B5563] ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
+        .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-600 dark:text-red-300 font-mono text-xs border border-red-500/20">$1</code>');
+      return `<li class="text-[var(--text-secondary)] ml-4 list-disc mb-1.5 leading-relaxed text-xs">${itemText}</li>`;
     }
     return l
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#111827] font-semibold">$1</strong>')
-      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 font-mono text-xs border border-red-200">$1</code>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)] font-semibold">$1</strong>')
+      .replace(/\`(.*?)\`/g, '<code class="px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-600 dark:text-red-300 font-mono text-xs border border-red-500/20">$1</code>');
   });
 
   return processed.join('<br />');

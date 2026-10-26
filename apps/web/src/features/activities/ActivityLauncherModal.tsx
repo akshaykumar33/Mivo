@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { X, Play, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
+import { X, Play, Sparkles, ExternalLink, ShieldCheck, Lock, Gamepad2, Palette, GitPullRequest } from 'lucide-react';
 import { MiniAppManifest, MiniAppType, REALTIME_EVENTS } from '@mivo/shared';
 import { realtime } from '@/lib/socket-client';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface ActivityLauncherModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ const ACTIVITIES: MiniAppManifest[] = [
     type: 'CHESS',
     title: 'Multiplayer Speed Chess',
     description: 'Real-time collaborative chessboard with blitz timers, piece animation, and move history.',
-    icon: '♟️',
+    icon: 'chess',
     sandboxFlags: 'allow-scripts allow-forms allow-same-origin',
   },
   {
@@ -26,7 +27,7 @@ const ACTIVITIES: MiniAppManifest[] = [
     type: 'FIGMA_EMBED',
     title: 'Figma Live Stage Review',
     description: 'Inspect UI/UX design prototypes, pin inline annotations, and review layouts simultaneously.',
-    icon: '🎨',
+    icon: 'figma',
     initialUrl: 'https://www.figma.com/embed?community_demo=1',
     sandboxFlags: 'allow-scripts allow-forms allow-same-origin allow-popups',
   },
@@ -35,7 +36,7 @@ const ACTIVITIES: MiniAppManifest[] = [
     type: 'GITHUB_PR',
     title: 'GitHub PR Live Diff Review',
     description: 'Inspect code diffs side-by-side, discuss commits, and submit peer review approvals.',
-    icon: '🐙',
+    icon: 'github',
     sandboxFlags: 'allow-scripts allow-forms allow-same-origin',
   },
 ];
@@ -46,6 +47,7 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
   roomId,
   onLaunch,
 }) => {
+  const { isOrg } = useAuthStore();
   if (!isOpen) return null;
 
   const handleLaunchActivity = (type: MiniAppType) => {
@@ -92,8 +94,14 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
               className="p-4 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] hover:border-[#5E5CE6]/50 transition-all flex items-center justify-between group"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform">
-                  {act.icon}
+                <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  {act.type === 'CHESS' ? (
+                    <Gamepad2 className="w-6 h-6 text-amber-500" />
+                  ) : act.type === 'FIGMA_EMBED' ? (
+                    <Palette className="w-6 h-6 text-purple-500" />
+                  ) : (
+                    <GitPullRequest className="w-6 h-6 text-emerald-500" />
+                  )}
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)] font-display group-hover:text-[#64D2FF] transition-colors">
@@ -109,13 +117,24 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={() => handleLaunchActivity(act.type)}
-                className="px-4 py-2 rounded-xl bg-[#5E5CE6] hover:bg-[#5E5CE6]/90 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
-              >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>Launch</span>
-              </button>
+              {act.type === 'CHESS' && isOrg ? (
+                <button
+                  disabled
+                  title="Games are disabled in Enterprise Organization workspaces."
+                  className="px-3.5 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/50 text-zinc-400 font-bold text-xs flex items-center gap-1.5 cursor-not-allowed flex-shrink-0"
+                >
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Disabled (Org)</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleLaunchActivity(act.type)}
+                  className="px-4 py-2 rounded-xl bg-[#5E5CE6] hover:bg-[#5E5CE6]/90 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Launch</span>
+                </button>
+              )}
             </div>
           ))}
         </div>

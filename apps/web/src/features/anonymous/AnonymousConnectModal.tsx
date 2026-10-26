@@ -47,15 +47,15 @@ import { GameRulesModal } from './jam/GameRulesModal';
 const SUGGESTED_TAGS = ['Tech', 'Gaming', 'AI', 'Music', 'Casual', 'Coding', 'Movies', 'Crypto'];
 
 const QUICK_ICEBREAKERS = [
-  '🍕 Pineapple on pizza: Yes or No?',
-  '🦄 If you had 1 superpower, what would it be?',
-  '🌙 What is your go-to midnight snack?',
-  '🛸 Do you believe aliens have visited Earth?',
-  '🎧 What is the best song ever created?',
+  'Pineapple on pizza: Yes or No?',
+  'If you had 1 superpower, what would it be?',
+  'What is your go-to midnight snack?',
+  'Do you believe aliens have visited Earth?',
+  'What is the best song ever created?',
 ];
 
 export const AnonymousConnectModal: React.FC = () => {
-  const { user, isGuest, anonConnectModalOpen, setAnonConnectModalOpen, setUpgradeModalOpen } =
+  const { user, isGuest, isOrg, anonConnectModalOpen, setAnonConnectModalOpen, setUpgradeModalOpen } =
     useAuthStore();
 
   const [mode, setMode] = React.useState<'TEXT' | 'VIDEO'>('TEXT');
@@ -67,8 +67,8 @@ export const AnonymousConnectModal: React.FC = () => {
   const [isTheaterMode, setIsTheaterMode] = React.useState(false);
   const [mobileTab, setMobileTab] = React.useState<'CHAT' | 'PLAYGROUND'>('PLAYGROUND');
 
-  // Matchmaking & 2nd Player Room Mode
-  const [matchTab, setMatchTab] = React.useState<'DISCOVERY' | 'PRIVATE' | 'SOLO'>('DISCOVERY');
+  // Matchmaking & 2nd Player Room Mode (Guests default to PRIVATE connection code)
+  const [matchTab, setMatchTab] = React.useState<'DISCOVERY' | 'PRIVATE' | 'SOLO'>(isGuest ? 'PRIVATE' : 'DISCOVERY');
   const [roomCodeInput, setRoomCodeInput] = React.useState('');
   const [activeRoomCode, setActiveRoomCode] = React.useState<string | null>(null);
   const [copiedInvite, setCopiedInvite] = React.useState(false);
@@ -239,7 +239,7 @@ export const AnonymousConnectModal: React.FC = () => {
         {
           id: 'welcome-jam',
           sender: 'Mivo Co-Op Jam',
-          content: `You matched with ${data.partner.pseudonym}! Try drawing, playing Pong, or answering a dilemma together! 🎨🎮`,
+          content: `You matched with ${data.partner.pseudonym}! Try drawing, playing Pong, or answering a dilemma together!`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isSelf: false,
           isSystem: true,
@@ -286,7 +286,7 @@ export const AnonymousConnectModal: React.FC = () => {
         {
           id: Math.random().toString(),
           sender: 'System',
-          content: data.message || 'Your partner has disconnected or skipped. Switched to Solo Practice with Nova ✨!',
+          content: data.message || 'Your partner has disconnected or skipped. Switched to Solo Practice with Nova!',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isSelf: false,
           isSystem: true,
@@ -294,7 +294,7 @@ export const AnonymousConnectModal: React.FC = () => {
       ]);
       setPartner({
         userId: 'bot-companion',
-        pseudonym: 'Nova ✨ (AI Partner)',
+        pseudonym: 'Nova (AI Partner)',
         isGuest: false,
         interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
       });
@@ -384,7 +384,7 @@ export const AnonymousConnectModal: React.FC = () => {
     setCurrentSessionId(demoSessionId);
     setPartner({
       userId: 'bot-companion',
-      pseudonym: 'Nova ✨ (AI Partner)',
+      pseudonym: 'Nova (AI Partner)',
       isGuest: false,
       interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
     });
@@ -393,8 +393,8 @@ export const AnonymousConnectModal: React.FC = () => {
     setMessages([
       {
         id: 'msg-welcome-demo',
-        sender: 'Nova ✨ (AI Partner)',
-        content: "Welcome to Canvas & Trivia Jam! 🎨 Select any game on the right — we can doodle, play Pong, solve emoji riddles, or test our reaction speeds! You can also invite a real 2nd player anytime.",
+        sender: 'Nova (AI Partner)',
+        content: "Welcome to Canvas & Trivia Jam! Select any game on the right — we can doodle, play Pong, solve riddles, or test our reaction speeds! You can also invite a real 2nd player anytime.",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isSelf: false,
       },
@@ -499,12 +499,43 @@ export const AnonymousConnectModal: React.FC = () => {
 
   const activePartner = partner || {
     userId: 'bot-companion',
-    pseudonym: 'Nova ✨ (AI Partner)',
+    pseudonym: 'Nova (AI Partner)',
     isGuest: false,
     interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
   };
 
   if (!anonConnectModalOpen) return null;
+
+  if (isOrg) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+        <div className="w-full max-w-md bg-[var(--bg-surface-0)] border border-purple-500/30 rounded-3xl p-6 shadow-2xl text-center">
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto mb-4">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-[var(--text-primary)] font-display">
+            Games Disabled for Organization Workspaces
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)] mt-2 leading-relaxed">
+            Casual minigames and random anonymous matchmaking are disabled in Enterprise Organization accounts to maintain workplace focus and compliance.
+          </p>
+          <div className="mt-4 p-3 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)] text-left space-y-1">
+            <div className="font-semibold text-purple-400">Your Enterprise Features:</div>
+            <div>• Unlimited Cloud Storage</div>
+            <div>• Spoken Voice-to-Task Ticket AI Extraction</div>
+            <div>• Real-time Live Code Sharing stages</div>
+            <div>• Full HD Group Video & Audio Meetings</div>
+          </div>
+          <button
+            onClick={() => setAnonConnectModalOpen(false)}
+            className="mt-5 w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+          >
+            Return to Workspace
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -600,7 +631,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 }`}
               >
                 <Radio className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">🎲 Match Strangers</span>
+                <span className="truncate">Match Strangers</span>
               </button>
 
               <button
@@ -613,7 +644,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 }`}
               >
                 <Users className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">🔑 Invite 2nd Player</span>
+                <span className="truncate">Invite 2nd Player</span>
               </button>
 
               <button
@@ -622,7 +653,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
               >
                 <Gamepad2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span className="truncate">🤖 Solo / Practice</span>
+                <span className="truncate">Solo / Practice</span>
               </button>
             </div>
 
@@ -941,7 +972,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 onClick={handleLaunchDemoJam}
                 className="py-2 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors cursor-pointer"
               >
-                Launch with AI Partner Immediately 🚀
+                Launch with AI Partner Immediately
               </button>
 
               <button

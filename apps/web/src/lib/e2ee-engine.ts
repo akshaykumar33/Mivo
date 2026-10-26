@@ -30,7 +30,7 @@ export class E2eeClientEngine {
         roomId,
         epoch: this.currentEpoch,
         fingerprintHex: '9824 5510 3982 7714',
-        verificationEmojis: ['🛡️', '⚡', '🔑', '🚀'],
+        verificationEmojis: ['SAS-SHIELD', 'SAS-BOLT', 'SAS-KEY', 'SAS-ROCKET'],
         participantsVerified: 2,
       };
       this.safetyCode = mock;
@@ -48,7 +48,7 @@ export class E2eeClientEngine {
             roomId,
             epoch: this.currentEpoch,
             fingerprintHex: '9824 5510 3982 7714',
-            verificationEmojis: ['🛡️', '⚡', '🔑', '🚀'],
+            verificationEmojis: ['SAS-SHIELD', 'SAS-BOLT', 'SAS-KEY', 'SAS-ROCKET'],
             participantsVerified: 2,
           };
           this.safetyCode = fallback;

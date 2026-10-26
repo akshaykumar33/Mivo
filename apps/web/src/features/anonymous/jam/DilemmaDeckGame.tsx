@@ -19,15 +19,15 @@ interface WouldYouRatherItem {
   id: string;
   type: 'WYR';
   title: string;
-  optionA: { text: string; icon: string };
-  optionB: { text: string; icon: string };
+  optionA: { text: string };
+  optionB: { text: string };
 }
 
 interface Rank4Item {
   id: string;
   type: 'RANK4';
   title: string;
-  items: Array<{ id: string; label: string; icon: string }>;
+  items: Array<{ id: string; label: string }>;
 }
 
 const DILEMMAS: Array<WouldYouRatherItem | Rank4Item> = [
@@ -35,61 +35,61 @@ const DILEMMAS: Array<WouldYouRatherItem | Rank4Item> = [
     id: 'wyr-1',
     type: 'WYR',
     title: 'Superpower Dilemma',
-    optionA: { text: 'Have 10Gbps Wi-Fi in your brain, but ads play in your dreams', icon: '📶' },
-    optionB: { text: 'Be able to teleport anywhere, but arrive soaking wet each time', icon: '⚡' },
+    optionA: { text: 'Have 10Gbps Wi-Fi in your brain, but ads play in your dreams' },
+    optionB: { text: 'Be able to teleport anywhere, but arrive soaking wet each time' },
   },
   {
     id: 'wyr-2',
     type: 'WYR',
     title: 'Food Crisis',
-    optionA: { text: 'Every meal tastes like delicious pizza forever', icon: '🍕' },
-    optionB: { text: 'Can eat unlimited tacos without ever feeling full or unhealthy', icon: '🌮' },
+    optionA: { text: 'Every meal tastes like delicious pizza forever' },
+    optionB: { text: 'Can eat unlimited tacos without ever feeling full or unhealthy' },
   },
   {
     id: 'wyr-3',
     type: 'WYR',
     title: 'Time Paradox',
-    optionA: { text: 'Travel 500 years into the future with a jetpack', icon: '🚀' },
-    optionB: { text: 'Travel 500 years into the past as a wizard with a smartphone', icon: '🧙' },
+    optionA: { text: 'Travel 500 years into the future with a jetpack' },
+    optionB: { text: 'Travel 500 years into the past as a wizard with a smartphone' },
   },
   {
     id: 'wyr-4',
     type: 'WYR',
     title: 'Social Hazard',
-    optionA: { text: 'Speak only in rhyming rap verses in all serious conversations', icon: '🎤' },
-    optionB: { text: 'Your search history is projected above your head for 10 minutes a day', icon: '🔎' },
+    optionA: { text: 'Speak only in rhyming rap verses in all serious conversations' },
+    optionB: { text: 'Your search history is projected above your head for 10 minutes a day' },
   },
   {
     id: 'rank-1',
     type: 'RANK4',
-    title: 'Rank the Ultimate Midnight Snacks 🌙',
+    title: 'Rank the Ultimate Midnight Snacks',
     items: [
-      { id: '1', label: 'Cold Leftover Pizza', icon: '🍕' },
-      { id: '2', label: 'Instant Ramen with Egg', icon: '🍜' },
-      { id: '3', label: 'Warm Chocolate Chip Cookies & Milk', icon: '🍪' },
-      { id: '4', label: 'Tortilla Chips & Spicy Queso Dip', icon: '🧀' },
+      { id: '1', label: 'Cold Leftover Pizza' },
+      { id: '2', label: 'Instant Ramen with Egg' },
+      { id: '3', label: 'Warm Chocolate Chip Cookies & Milk' },
+      { id: '4', label: 'Tortilla Chips & Spicy Queso Dip' },
     ],
   },
   {
     id: 'rank-2',
     type: 'RANK4',
-    title: 'Rank Survival Skills in a Zombie Apocalypse 🧟',
+    title: 'Rank Survival Skills in a Zombie Apocalypse',
     items: [
-      { id: '1', label: 'Parkour Ninja Mobility', icon: '🏃' },
-      { id: '2', label: 'DIY Solar & Generator Engineering', icon: '⚡' },
-      { id: '3', label: 'Wilderness Foraging & Pure Water Purifying', icon: '🍄' },
-      { id: '4', label: 'Charismatic Leader Negotiator', icon: '👑' },
+      { id: '1', label: 'Parkour Ninja Mobility' },
+      { id: '2', label: 'DIY Solar & Generator Engineering' },
+      { id: '3', label: 'Wilderness Foraging & Pure Water Purifying' },
+      { id: '4', label: 'Charismatic Leader Negotiator' },
     ],
   },
   {
     id: 'rank-3',
     type: 'RANK4',
-    title: 'Rank the Worst Work Annoyances 💻',
+    title: 'Rank the Worst Work Annoyances',
     items: [
-      { id: '1', label: '"Quick Call" with No Agenda', icon: '📞' },
-      { id: '2', label: 'Wi-Fi Drops Right During Presentation', icon: '⚠️' },
-      { id: '3', label: 'Meeting That Could Have Been a Slack Message', icon: '📧' },
-      { id: '4', label: 'Broken Coffee Machine on Monday Morning', icon: '☕' },
+      { id: '1', label: '"Quick Call" with No Agenda' },
+      { id: '2', label: 'Wi-Fi Drops Right During Presentation' },
+      { id: '3', label: 'Meeting That Could Have Been a Slack Message' },
+      { id: '4', label: 'Broken Coffee Machine on Monday Morning' },
     ],
   },
 ];
@@ -296,7 +296,9 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
                     : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                 }`}
               >
-                <div className="text-3xl mb-2">{currentDilemma.optionA.icon}</div>
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 font-extrabold text-sm flex items-center justify-center mb-2 border border-purple-500/30">
+                  A
+                </div>
                 <div className="text-xs sm:text-sm font-bold text-white leading-snug">
                   {currentDilemma.optionA.text}
                 </div>
@@ -327,7 +329,9 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
                     : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                 }`}
               >
-                <div className="text-3xl mb-2">{currentDilemma.optionB.icon}</div>
+                <div className="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-300 font-extrabold text-sm flex items-center justify-center mb-2 border border-pink-500/30">
+                  B
+                </div>
                 <div className="text-xs sm:text-sm font-bold text-white leading-snug">
                   {currentDilemma.optionB.text}
                 </div>
@@ -409,7 +413,6 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
                       <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 font-mono font-bold flex items-center justify-center border border-indigo-500/30">
                         #{idx + 1}
                       </span>
-                      <span className="text-xl">{item.icon}</span>
                       <span className="font-bold text-white">{item.label}</span>
                     </div>
 
@@ -453,7 +456,7 @@ export const DilemmaDeckGame: React.FC<DilemmaDeckGameProps> = ({
                   onClick={handleSubmitRank}
                   className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-40 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
                 >
-                  {myRankSubmitted ? 'Locked In ✓' : 'Lock In Ranking 🔒'}
+                  {myRankSubmitted ? 'Locked In ✓' : 'Lock In Ranking'}
                 </button>
               </div>
             ) : (
