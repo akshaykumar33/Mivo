@@ -9,6 +9,10 @@ import { MediaStage } from './MediaStage';
 import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
 import { CodeStage } from '@/features/code-stage/CodeStage';
 import { ActivitySandboxStage } from '@/features/activities/ActivitySandboxStage';
+import { ActivityLauncherModal } from '@/features/activities/ActivityLauncherModal';
+import { AmbientFocusBar } from '@/features/focus/AmbientFocusBar';
+import { E2EEVerificationModal } from '@/features/e2ee/E2EEVerificationModal';
+import { AiTwinSettingsModal } from '@/features/ai-twin/AiTwinSettingsModal';
 import { InviteRoomMemberModal } from './InviteRoomMemberModal';
 import { localFirstStore } from '@/lib/local-first/localFirstStore';
 import { ParticipantTray } from './ParticipantTray';
@@ -100,6 +104,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const { activeCommunity } = useCommunityStore();
   const [pendingOutboxCount, setPendingOutboxCount] = React.useState(0);
   const [isOnline, setIsOnline] = React.useState(true);
+  const [isActivityLauncherOpen, setIsActivityLauncherOpen] = React.useState(false);
+  const [isFocusBarOpen, setIsFocusBarOpen] = React.useState(false);
+  const [isE2EEOpen, setIsE2EEOpen] = React.useState(false);
+  const [isAiTwinOpen, setIsAiTwinOpen] = React.useState(false);
 
   // Subscribe to Local-First CRDT Outbox & Online status
   React.useEffect(() => {
@@ -453,6 +461,51 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onToggleParticipants={toggleParticipants}
           onToggleDocs={toggleDocs}
           onDisconnect={handleDisconnect}
+          onOpenFocusBar={() => setIsFocusBarOpen(true)}
+          onOpenActivityLauncher={() => setIsActivityLauncherOpen(true)}
+          onOpenE2EE={() => setIsE2EEOpen(true)}
+          onOpenAiTwin={() => setIsAiTwinOpen(true)}
+        />
+
+        {/* Activity Launcher Modal */}
+        <ActivityLauncherModal
+          isOpen={isActivityLauncherOpen}
+          onClose={() => setIsActivityLauncherOpen(false)}
+          roomId={activeRoom.id}
+          onLaunch={(type) => {
+            setActiveMiniApp({
+              activityId: `activity-${type.toLowerCase()}`,
+              type,
+              roomId: activeRoom.id,
+              startedByUserId: user?.id || 'dev',
+              participants: [user?.id || 'dev'],
+              state: { turn: 'w' },
+            });
+            setIsActivityLauncherOpen(false);
+          }}
+        />
+
+        {/* Ambient Focus & Spatial Audio Bar */}
+        <AmbientFocusBar
+          roomId={activeRoom.id}
+          isOpen={isFocusBarOpen}
+          onClose={() => setIsFocusBarOpen(false)}
+        />
+
+        {/* Zero-Trust E2EE Room Verification Modal */}
+        <E2EEVerificationModal
+          isOpen={isE2EEOpen}
+          onClose={() => setIsE2EEOpen(false)}
+          roomId={activeRoom.id}
+          roomName={activeRoom.name}
+        />
+
+        {/* AI Twin Persona & Auto-Reply Settings Modal */}
+        <AiTwinSettingsModal
+          isOpen={isAiTwinOpen}
+          onClose={() => setIsAiTwinOpen(false)}
+          userId={user?.id || ''}
+          userName={user?.displayName || user?.username || 'User'}
         />
 
         {/* External Meeting Hub Modal (Google Meet & MS Teams) */}
@@ -464,7 +517,6 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           activeBridge={activeBridge}
           onBridgeUpdated={fetchBridge}
         />
-
 
         {/* Group / Room Add User Modal (Single-Org Bound) */}
         <InviteRoomMemberModal

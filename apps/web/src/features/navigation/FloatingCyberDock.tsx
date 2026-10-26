@@ -20,6 +20,10 @@ import {
   Palette,
   PictureInPicture2,
   Code2,
+  Headphones,
+  Gamepad2,
+  ShieldCheck,
+  Bot,
 } from 'lucide-react';
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 import { useThemeStore } from '@/stores/themeStore';
@@ -48,6 +52,10 @@ export interface FloatingCyberDockProps {
   onToggleParticipants: () => void;
   onToggleDocs: () => void;
   onDisconnect: () => void;
+  onOpenFocusBar?: () => void;
+  onOpenActivityLauncher?: () => void;
+  onOpenE2EE?: () => void;
+  onOpenAiTwin?: () => void;
 }
 
 export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
@@ -72,6 +80,10 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
   onToggleParticipants,
   onToggleDocs,
   onDisconnect,
+  onOpenFocusBar,
+  onOpenActivityLauncher,
+  onOpenE2EE,
+  onOpenAiTwin,
 }) => {
   const { setIsThemeModalOpen } = useThemeStore();
   const [isReactionsTrayOpen, setIsReactionsTrayOpen] = React.useState(false);
@@ -189,6 +201,34 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           >
             <Palette className="w-4 h-4 text-[#BF5AF2]" />
             <span>Switch Visual Theme</span>
+          </button>
+          <button
+            onClick={() => { onOpenFocusBar?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Headphones className="w-4 h-4 text-[#FF9F0A]" />
+            <span>Focus & Ambient Sounds</span>
+          </button>
+          <button
+            onClick={() => { onOpenActivityLauncher?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Gamepad2 className="w-4 h-4 text-[#30D158]" />
+            <span>Activities & Sandbox</span>
+          </button>
+          <button
+            onClick={() => { onOpenE2EE?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#30D158]" />
+            <span>Zero-Trust E2EE Room</span>
+          </button>
+          <button
+            onClick={() => { onOpenAiTwin?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Bot className="w-4 h-4 text-[#BF5AF2]" />
+            <span>AI Twin Settings</span>
           </button>
         </div>
       )}

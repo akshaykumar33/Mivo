@@ -33,12 +33,26 @@ export const DEMO_USERS = {
  * Log into Mivo via API and inject token into localStorage for zero-latency authentication.
  */
 export async function injectAuth(page: Page, email = DEMO_USERS.devAdmin.email, password = DEMO_USERS.devAdmin.password): Promise<AuthUser> {
-  const loginRes = await page.request.post('http://localhost:4000/api/v1/auth/login', {
-    data: { email, password },
-  });
-  const data = await loginRes.json();
-  if (!data.success) {
-    throw new Error(`Failed to authenticate ${email}: ${JSON.stringify(data)}`);
+  let data: any;
+  let lastError: any;
+  let loginRes: any;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      loginRes = await page.request.post('http://localhost:4000/api/v1/auth/login', {
+        data: { email, password },
+      });
+      data = await loginRes.json();
+      if (data.success) break;
+      lastError = data;
+    } catch (err) {
+      lastError = err;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+
+  if (!data?.success) {
+    throw new Error(`Failed to authenticate ${email}: ${JSON.stringify(lastError || data)}`);
   }
 
   const token = data.data.accessToken;
