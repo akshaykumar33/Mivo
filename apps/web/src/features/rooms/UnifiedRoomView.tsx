@@ -206,12 +206,22 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     };
   }, [roomId]);
 
-  // Auto-open PiP overlay if presenting screen
+  // Auto-open PiP overlay when presenting screen or presenting slides/code
+  const prevModeRef = React.useRef(activeMode);
+  const prevScreenRef = React.useRef(isScreenOn);
+
   React.useEffect(() => {
-    if (isScreenOn) {
+    const startedSharing = !prevScreenRef.current && isScreenOn;
+    const switchedToPresenterMode =
+      prevModeRef.current !== activeMode && (activeMode === 'CANVAS' || activeMode === 'CODE');
+
+    if (startedSharing || switchedToPresenterMode) {
       setIsPiPOpen(true);
     }
-  }, [isScreenOn]);
+
+    prevModeRef.current = activeMode;
+    prevScreenRef.current = isScreenOn;
+  }, [isScreenOn, activeMode, setIsPiPOpen]);
 
   if (!activeRoom) {
     return (
@@ -413,6 +423,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onToggleCamera={() => toggleCamera()}
           onToggleScreen={() => toggleScreenShare()}
           onDisconnect={handleDisconnect}
+          activeMode={activeMode}
+          onSwitchMode={switchMode}
+          roomName={activeRoom.name}
         />
 
         {/* Floating Interactive Documentation Hub */}

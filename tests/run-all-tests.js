@@ -32,6 +32,7 @@ const MODULE_TESTS = [
   // 4. WebRTC Media Stage Module
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/equalizer-decibels.unit.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/auto-arranging-grid.unit.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/floating-pip.unit.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/integration/room-mode-switcher.integration.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/webrtc-mesh-calling.e2e.test.js' },
 

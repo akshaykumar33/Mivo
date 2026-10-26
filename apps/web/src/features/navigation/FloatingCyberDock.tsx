@@ -287,6 +287,19 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             <Tip text={isScreenOn ? 'Stop Screen Share' : 'Share Screen'} groupClass="group-hover/scr:opacity-100" />
           </button>
 
+          {/* Floating PiP Presenter Button */}
+          <button
+            onClick={onTogglePiP}
+            className={`relative group/pip p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isPiPOpen
+                ? 'bg-[#FF9F0A] !text-black shadow-md shadow-[#FF9F0A]/40 border border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
+            }`}
+          >
+            <PictureInPicture2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+            <Tip text={isPiPOpen ? 'Close PiP Presenter' : 'Floating PiP Presenter'} groupClass="group-hover/pip:opacity-100" />
+          </button>
+
           {/* Reactions */}
           <button
             onClick={() => setIsReactionsTrayOpen(!isReactionsTrayOpen)}
