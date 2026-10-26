@@ -359,8 +359,8 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
                 {winner === 'DRAW'
                   ? "It's a Stalemate!"
                   : winner === myPlayerNum
-                  ? 'Victory is Yours! 🏆'
-                  : `${partnerPseudonym} Takes the Crown! 👑`}
+                  ? 'Victory is Yours!'
+                  : `${partnerPseudonym} Takes the Crown!`}
               </h4>
               <p className="text-xs text-cyan-300 font-mono mt-0.5">
                 {winner === myPlayerNum ? 'Master Strategist (+100 PTS)' : 'Spectacular 4-in-a-Row!'}
@@ -370,7 +370,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
               onClick={() => resetGame(true)}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white font-bold text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer"
             >
-              Play Again ⚡
+              Play Again
             </button>
           </div>
         )}

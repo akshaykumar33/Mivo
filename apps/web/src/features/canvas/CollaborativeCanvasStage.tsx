@@ -555,7 +555,7 @@ export const CollaborativeCanvasStage: React.FC<CollaborativeCanvasStageProps> =
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleGenerateAiArchitecture()}
-              placeholder="🎙️ Speak or type: 'Let's build a microservice with auth gateway and Redis'..."
+              placeholder="Speak or type: 'Let's build a microservice with auth gateway and Redis'..."
               className="w-full pl-9 pr-20 py-1.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/60 transition-all"
             />
             <Sparkles className="w-3.5 h-3.5 text-amber-400 absolute left-3 pointer-events-none" />

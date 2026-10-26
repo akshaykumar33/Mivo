@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   GripVertical,
+  X,
 } from 'lucide-react';
 
 export type AiCoHostStatus = 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING';
@@ -288,9 +289,9 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
           <button
             type="button"
             onClick={() => setIsInputExpanded(false)}
-            className="p-1 text-white/40 hover:text-white text-xs cursor-pointer"
+            className="p-1 text-white/40 hover:text-white cursor-pointer"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         </form>
       )}

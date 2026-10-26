@@ -5,6 +5,7 @@ import {
   Sparkles,
   X,
   AlertOctagon,
+  AlertTriangle,
   CheckCircle2,
   Clock,
   User,
@@ -162,8 +163,9 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
                     {/* Blocker Callout Box */}
                     {t.isBlocker && t.blockerReason && (
                       <div className="mt-2 p-2 rounded-xl bg-black/40 border border-rose-500/30 text-[11px] text-rose-200/90 leading-relaxed font-sans">
-                        <strong className="text-rose-400 font-bold uppercase tracking-wider text-[9px] block mb-0.5">
-                          🚨 Active Blocker Summary
+                        <strong className="text-rose-400 font-bold uppercase tracking-wider text-[9px] flex items-center gap-1 mb-0.5">
+                          <AlertTriangle className="w-3 h-3 text-rose-400" />
+                          <span>Active Blocker Summary</span>
                         </strong>
                         {t.blockerReason}
                       </div>

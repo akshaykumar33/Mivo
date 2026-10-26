@@ -17,7 +17,7 @@ interface EmojiDecoderGameProps {
 
 interface EmojiRiddle {
   id: string;
-  emojis: string;
+  clues: string[];
   answer: string;
   category: string;
   hint: string;
@@ -26,58 +26,58 @@ interface EmojiRiddle {
 const EMOJI_RIDDLES: EmojiRiddle[] = [
   {
     id: 'e-1',
-    emojis: '🦁 👑 🌅 🐗',
+    clues: ['LION', 'CROWN', 'SUNRISE', 'SAVANNA'],
     answer: 'THE LION KING',
-    category: 'Disney Classic 🎬',
+    category: 'Disney Classic',
     hint: 'Hakuna Matata in the Pride Lands',
   },
   {
     id: 'e-2',
-    emojis: '🚢 🧊 💔 🌊',
+    clues: ['SHIP', 'ICEBERG', 'HEARTBREAK', 'OCEAN'],
     answer: 'TITANIC',
-    category: 'Epic Romance 🎥',
+    category: 'Epic Romance',
     hint: 'I will never let go, Jack',
   },
   {
     id: 'e-3',
-    emojis: '🧙‍♂️ 💍 🌋 🧝',
+    clues: ['WIZARD', 'RING', 'VOLCANO', 'ELF'],
     answer: 'LORD OF THE RINGS',
-    category: 'Fantasy Epic ⚔️',
+    category: 'Fantasy Epic',
     hint: 'One Ring to rule them all in Mordor',
   },
   {
     id: 'e-4',
-    emojis: '🕶️ 💊 🐇 💻',
+    clues: ['SUNGLASSES', 'PILL', 'RABBIT', 'CYBERSPACE'],
     answer: 'THE MATRIX',
-    category: 'Sci-Fi Action 🤖',
+    category: 'Sci-Fi Action',
     hint: 'Red pill or blue pill with Neo',
   },
   {
     id: 'e-5',
-    emojis: '👻 🚫 🔫 🧪',
+    clues: ['GHOST', 'PROHIBITION', 'BLASTER', 'SLIME'],
     answer: 'GHOSTBUSTERS',
-    category: '80s Comedy 👻',
+    category: '80s Comedy',
     hint: 'Who you gonna call?',
   },
   {
     id: 'e-6',
-    emojis: '🦖 🏝️ 🚙 🧬',
+    clues: ['DINOSAUR', 'ISLAND', 'JEEP', 'DNA'],
     answer: 'JURASSIC PARK',
-    category: 'Adventure 🦕',
+    category: 'Adventure',
     hint: 'Life finds a way on Isla Nublar',
   },
   {
     id: 'e-7',
-    emojis: '🕷️ 🧑 🕸️ 🗽',
+    clues: ['SPIDER', 'HERO', 'WEB', 'NEW YORK'],
     answer: 'SPIDER-MAN',
-    category: 'Superhero 🦸',
+    category: 'Superhero',
     hint: 'Friendly neighborhood web slinger',
   },
   {
     id: 'e-8',
-    emojis: '🦇 🃏 🌃 🚓',
+    clues: ['BAT', 'JOKER', 'NIGHT', 'GOTHAM'],
     answer: 'THE DARK KNIGHT',
-    category: 'Blockbuster 🦇',
+    category: 'Blockbuster',
     hint: 'Why so serious in Gotham City?',
   },
 ];
@@ -122,7 +122,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
       if (action === 'EMOJI_SOLVED') {
         setSolved(true);
         setWinnerName(payload.winnerName);
-        setFeedback(`🎉 ${payload.winnerName} solved it! "${currentRiddle.answer}"`);
+        setFeedback(`${payload.winnerName} solved it! "${currentRiddle.answer}"`);
         sounds.playCorrect();
         onScoreUpdate(100, payload.winnerName === myPseudonym);
       } else if (action === 'EMOJI_NEXT') {
@@ -160,7 +160,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
     if (normClean === normTarget) {
       setSolved(true);
       setWinnerName(myPseudonym);
-      setFeedback(`🎉 You nailed it! "${currentRiddle.answer}" (+100 PTS)`);
+      setFeedback(`You nailed it! "${currentRiddle.answer}" (+100 PTS)`);
       sounds.playCorrect();
       onScoreUpdate(100, true);
 
@@ -169,7 +169,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
         answer: currentRiddle.answer,
       });
     } else {
-      setFeedback(`❌ "${clean}" is incorrect. Try another guess!`);
+      setFeedback(`"${clean}" is incorrect. Try another guess!`);
       sounds.playBounce();
     }
   };
@@ -191,7 +191,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
       if (Math.random() > 0.6) {
         setSolved(true);
         setWinnerName(partnerPseudonym);
-        setFeedback(`🤖 ${partnerPseudonym} decoded it! "${currentRiddle.answer}"`);
+        setFeedback(`${partnerPseudonym} decoded it! "${currentRiddle.answer}"`);
         sounds.playCorrect();
         onScoreUpdate(100, false);
       }
@@ -211,14 +211,14 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xs sm:text-sm font-extrabold tracking-tight">
-                Emoji Riddle Jam
+                Cipher Riddle Jam
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
                 {currentRiddle.category}
               </span>
             </div>
             <p className="text-[10px] text-gray-400">
-              Decode the movie or title from the emoji sequence!
+              Decode the movie or title from the clue keywords!
             </p>
           </div>
         </div>
@@ -235,8 +235,15 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
 
       {/* Main Riddle Container */}
       <div className="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-4 my-2">
-        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 shadow-2xl flex items-center justify-center tracking-widest text-4xl sm:text-5xl animate-pulse">
-          {currentRiddle.emojis}
+        <div className="p-5 rounded-3xl bg-white/5 border border-white/10 shadow-2xl flex items-center justify-center gap-2.5 flex-wrap">
+          {currentRiddle.clues.map((clue, idx) => (
+            <span
+              key={idx}
+              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-white font-mono font-black text-xs sm:text-sm tracking-wider shadow-sm"
+            >
+              {clue}
+            </span>
+          ))}
         </div>
 
         {/* Word Outline Mask */}
@@ -294,7 +301,7 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
               onClick={handleNextRiddle}
               className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
             >
-              Next Riddle 🚀
+              Next Riddle
             </button>
           </div>
         )}

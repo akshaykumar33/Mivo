@@ -80,7 +80,7 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
       setGameOver(true);
       const loser = isMyTurn ? myPseudonym : partnerPseudonym;
       setLoserName(loser);
-      setFeedback(`💣 Boom! ${loser} ran out of time!`);
+      setFeedback(`Boom! ${loser} ran out of time!`);
       sounds.playBounce();
       onScoreUpdate(100, !isMyTurn);
     }
@@ -140,21 +140,21 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
 
     // Validation 1: Starts with required character
     if (!clean.startsWith(requiredChar)) {
-      setFeedback(`⚠️ Word must start with the letter "${requiredChar}"!`);
+      setFeedback(`Word must start with the letter "${requiredChar}"!`);
       sounds.playBounce();
       return;
     }
 
     // Validation 2: Min length 3
     if (clean.length < 3) {
-      setFeedback('⚠️ Minimum 3 letters required!');
+      setFeedback('Minimum 3 letters required!');
       sounds.playBounce();
       return;
     }
 
     // Validation 3: Not already used
     if (chain.some((item) => item.word === clean)) {
-      setFeedback(`⚠️ "${clean}" was already used in this chain!`);
+      setFeedback(`"${clean}" was already used in this chain!`);
       sounds.playBounce();
       return;
     }
@@ -300,7 +300,7 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
             }`}
             title={isMyTurn ? 'Your Turn' : `${partnerPseudonym}'s Turn`}
           >
-            {isMyTurn ? '👉 Your Turn' : `${partnerPseudonym}&apos;s Turn`}
+            {isMyTurn ? 'Your Turn' : `${partnerPseudonym}&apos;s Turn`}
           </span>
         </div>
       </div>
@@ -353,7 +353,9 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
       {/* Game Over Modal */}
       {gameOver && (
         <div className="my-2 p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-center space-y-2 animate-fade-in">
-          <div className="text-xl">💣 💥</div>
+          <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-1">
+            <AlertTriangle className="w-5 h-5 text-rose-400" />
+          </div>
           <div className="text-sm font-black text-rose-300 font-display">
             {loserName === myPseudonym ? 'You Ran Out of Time!' : `${partnerPseudonym} Ran Out of Time!`}
           </div>
@@ -369,7 +371,7 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
             }}
             className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-colors cursor-pointer"
           >
-            Play Again ⚡
+            Play Again
           </button>
         </div>
       )}

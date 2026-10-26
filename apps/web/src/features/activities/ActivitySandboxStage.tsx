@@ -12,6 +12,8 @@ import {
   AlertCircle,
   GitPullRequest,
   RotateCcw,
+  Gamepad2,
+  Palette,
 } from 'lucide-react';
 import { ActivityStateBroadcast, MiniAppType, REALTIME_EVENTS } from '@mivo/shared';
 import { realtime } from '@/lib/socket-client';
@@ -66,10 +68,10 @@ export const ActivitySandboxStage: React.FC<ActivitySandboxStageProps> = ({
     }
   };
 
-  // ♟️ Multiplayer Chess Game State
+  // Multiplayer Chess Game State
   const initialBoard = [
     ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
-    ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+    ['\u265F', '\u265F', '\u265F', '\u265F', '\u265F', '\u265F', '\u265F', '\u265F'],
     ['', '', '', '', '', '', '', ''],
     ['', '', '', '', '', '', '', ''],
     ['', '', '', '', '', '', '', ''],
@@ -115,8 +117,14 @@ export const ActivitySandboxStage: React.FC<ActivitySandboxStageProps> = ({
       {/* Activity Top Bar */}
       <div className="h-11 px-4 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <span className="text-lg">
-            {activity.type === 'CHESS' ? '♟️' : activity.type === 'FIGMA_EMBED' ? '🎨' : '🐙'}
+          <span className="flex items-center justify-center">
+            {activity.type === 'CHESS' ? (
+              <Gamepad2 className="w-5 h-5 text-amber-400" />
+            ) : activity.type === 'FIGMA_EMBED' ? (
+              <Palette className="w-5 h-5 text-purple-400" />
+            ) : (
+              <GitPullRequest className="w-5 h-5 text-emerald-400" />
+            )}
           </span>
           <div>
             <h4 className="text-xs font-bold text-[var(--text-primary)] font-display flex items-center gap-2">
@@ -209,8 +217,8 @@ export const ActivitySandboxStage: React.FC<ActivitySandboxStageProps> = ({
               </a>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#F24E1E] via-[#A259FF] to-[#1ABCFE] flex items-center justify-center shadow-[0_0_32px_rgba(162,89,255,0.4)] text-3xl">
-                🎨
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#F24E1E] via-[#A259FF] to-[#1ABCFE] flex items-center justify-center shadow-[0_0_32px_rgba(162,89,255,0.4)]">
+                <Palette className="w-10 h-10 text-white" />
               </div>
               <div className="max-w-md">
                 <h3 className="text-base font-bold text-white font-display">Mivo UI/UX Design System v3.2</h3>

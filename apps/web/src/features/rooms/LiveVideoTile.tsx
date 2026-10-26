@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Headphones,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
@@ -308,10 +309,11 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {spatialPanLabel && (
             <span
-              className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-white/10 text-emerald-400 border border-white/10"
+              className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-white/10 text-emerald-400 border border-white/10 flex items-center gap-1"
               title={`3D Spatial Pan: ${spatialPanLabel}`}
             >
-              🎧 {spatialPanLabel.replace('Left', 'L').replace('Right', 'R').replace('Center', 'C')}
+              <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+              <span>{spatialPanLabel.replace('Left', 'L').replace('Right', 'R').replace('Center', 'C')}</span>
             </span>
           )}
           {isMuted ? (

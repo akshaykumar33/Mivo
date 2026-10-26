@@ -36,21 +36,21 @@ interface SpeedDoodlingGameProps {
 }
 
 const DOODLE_WORDS = [
-  { word: 'PIZZA', hint: 'Cheesy Italian slice', category: 'Food 🍕' },
-  { word: 'ROBOT', hint: 'Mechanical buddy with gears', category: 'Tech 🤖' },
-  { word: 'PENGUIN', hint: 'Waddles on ice in a tuxedo', category: 'Animals 🐧' },
-  { word: 'ROCKET', hint: 'Blasts off to outer space', category: 'Sci-Fi 🚀' },
-  { word: 'TACO', hint: 'Crunchy shell with spicy salsa', category: 'Food 🌮' },
-  { word: 'GHOST', hint: 'Says boo and walks through walls', category: 'Spooky 👻' },
-  { word: 'GUITAR', hint: 'Six strings for rock & roll', category: 'Music 🎸' },
-  { word: 'RAINBOW', hint: 'Colors after the rain storm', category: 'Nature 🌈' },
-  { word: 'HAMBURGER', hint: 'Juicy patty between sesame buns', category: 'Food 🍔' },
-  { word: 'VOLCANO', hint: 'Mountain spewing hot magma', category: 'Nature 🌋' },
-  { word: 'ALIEN', hint: 'Green extraterrestrial visitor', category: 'Sci-Fi 👽' },
-  { word: 'SUNGLASSES', hint: 'Cool shades for bright days', category: 'Fashion 🕶️' },
-  { word: 'UNICORN', hint: 'Magical horse with a golden horn', category: 'Mythical 🦄' },
-  { word: 'CATAPULT', hint: 'Medieval boulder hurler', category: 'History 🏰' },
-  { word: 'HEADPHONES', hint: 'Over-ear audio listening gear', category: 'Tech 🎧' },
+  { word: 'PIZZA', hint: 'Cheesy Italian slice', category: 'Food' },
+  { word: 'ROBOT', hint: 'Mechanical buddy with gears', category: 'Tech' },
+  { word: 'PENGUIN', hint: 'Waddles on ice in a tuxedo', category: 'Animals' },
+  { word: 'ROCKET', hint: 'Blasts off to outer space', category: 'Sci-Fi' },
+  { word: 'TACO', hint: 'Crunchy shell with spicy salsa', category: 'Food' },
+  { word: 'GHOST', hint: 'Says boo and walks through walls', category: 'Spooky' },
+  { word: 'GUITAR', hint: 'Six strings for rock & roll', category: 'Music' },
+  { word: 'RAINBOW', hint: 'Colors after the rain storm', category: 'Nature' },
+  { word: 'HAMBURGER', hint: 'Juicy patty between sesame buns', category: 'Food' },
+  { word: 'VOLCANO', hint: 'Mountain spewing hot magma', category: 'Nature' },
+  { word: 'ALIEN', hint: 'Green extraterrestrial visitor', category: 'Sci-Fi' },
+  { word: 'SUNGLASSES', hint: 'Cool shades for bright days', category: 'Fashion' },
+  { word: 'UNICORN', hint: 'Magical horse with a golden horn', category: 'Mythical' },
+  { word: 'CATAPULT', hint: 'Medieval boulder hurler', category: 'History' },
+  { word: 'HEADPHONES', hint: 'Over-ear audio listening gear', category: 'Tech' },
 ];
 
 const PALETTE = [
@@ -142,7 +142,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     if (timeLeft === 0) {
       setTimerActive(false);
       setRoundSolved(true);
-      setFeedback(`⏰ Time's up! The word was "${targetWord}"`);
+      setFeedback(`Time's up! The word was "${targetWord}"`);
       sounds.playBounce();
       return;
     }
@@ -197,7 +197,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
         setRoundSolved(true);
         setTimerActive(false);
         setWinnerName(payload.winnerName);
-        setFeedback(`🎉 ${payload.winnerName} got it! The word was "${payload.word}"`);
+        setFeedback(`${payload.winnerName} got it! The word was "${payload.word}"`);
         sounds.playCorrect();
         onScoreUpdate(100, payload.winnerName === myPseudonym);
       } else if (action === 'DOODLE_NEW_ROUND') {
@@ -300,7 +300,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
       setRoundSolved(true);
       setTimerActive(false);
       setWinnerName(myPseudonym);
-      setFeedback(`🎉 Brilliant! You guessed "${targetWord}" correctly!`);
+      setFeedback(`Brilliant! You guessed "${targetWord}" correctly!`);
       sounds.playCorrect();
       onScoreUpdate(100, true);
 
@@ -311,9 +311,9 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
     } else {
       // Check if close
       if (clean.includes(targetWord) || targetWord.includes(clean)) {
-        setFeedback(`🔥 "${clean}" is burning hot! Almost there!`);
+        setFeedback(`"${clean}" is burning hot! Almost there!`);
       } else {
-        setFeedback(`❌ "${clean}" is not it. Keep trying!`);
+        setFeedback(`"${clean}" is not it. Keep trying!`);
       }
       sounds.playBounce();
     }
@@ -331,7 +331,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
           setRoundSolved(true);
           setTimerActive(false);
           setWinnerName(partnerPseudonym);
-          setFeedback(`🤖 ${partnerPseudonym} guessed "${targetWord}"!`);
+          setFeedback(`${partnerPseudonym} guessed "${targetWord}"!`);
           sounds.playCorrect();
           onScoreUpdate(100, false);
         }
@@ -351,7 +351,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs sm:text-sm font-extrabold tracking-tight">
-                {isDrawer ? '🎨 You are Drawing!' : `👀 ${partnerPseudonym} is Drawing!`}
+                {isDrawer ? 'You are Drawing!' : `${partnerPseudonym} is Drawing!`}
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
                 {activeWordObj.category}
@@ -464,7 +464,7 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
               }}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer"
             >
-              Next Round (Swap Artist) 🚀
+              Next Round (Swap Artist)
             </button>
           </div>
         )}

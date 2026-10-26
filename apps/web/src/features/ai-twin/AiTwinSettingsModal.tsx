@@ -267,14 +267,16 @@ export const AiTwinSettingsModal: React.FC<AiTwinSettingsModalProps> = ({
                     }`}
                   >
                     {msg.sender === 'twin' && (
-                      <span className="text-[9px] font-bold text-[#BF5AF2] uppercase block mb-0.5">
-                        🤖 AI Twin
+                      <span className="text-[9px] font-bold text-[#BF5AF2] uppercase flex items-center gap-1 mb-0.5">
+                        <Bot className="w-2.5 h-2.5" />
+                        AI Twin
                       </span>
                     )}
                     <p>{msg.text}</p>
                     {msg.slot && (
-                      <div className="mt-1.5 p-1 rounded bg-[#30D158]/20 border border-[#30D158]/30 text-[10px] text-[#30D158] font-bold">
-                        📅 Proposed Slot: {msg.slot}
+                      <div className="mt-1.5 p-1 rounded bg-[#30D158]/20 border border-[#30D158]/30 text-[10px] text-[#30D158] font-bold flex items-center gap-1">
+                        <Calendar className="w-3 h-3 shrink-0" />
+                        Proposed Slot: {msg.slot}
                       </div>
                     )}
                   </div>

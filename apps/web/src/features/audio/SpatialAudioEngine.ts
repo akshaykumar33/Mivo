@@ -1,5 +1,5 @@
 /**
- * 🎧 3D Spatial Audio Engine
+ * 3D Spatial Audio Engine
  * Leverages the Web Audio API (PannerNode / StereoPannerNode) to pan participant
  * audio in 3D stereo space based on their stage coordinates, eliminating voice collisions.
  */

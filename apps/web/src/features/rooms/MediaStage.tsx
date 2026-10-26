@@ -101,11 +101,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const { setIsModalOpen: openTicketsModal } = useTicketStore();
   const { capabilities } = useAuthStore();
 
-  // 🎧 3D Spatial Audio & Dynamic Physics Grid
+  // 3D Spatial Audio & Dynamic Physics Grid
   const [isSpatialAudioActive, setIsSpatialAudioActive] = React.useState(true);
   const [spatialPositions, setSpatialPositions] = React.useState<Record<string, { pan: number; distance: number }>>({});
 
-  // ⚡ Spoken Voice-to-Ticket Automation
+  // Spoken Voice-to-Ticket Automation
   const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
   const [ticketToast, setTicketToast] = React.useState<string | null>(null);
 
@@ -208,7 +208,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     [room?.id]
   );
 
-  // ⚡ Spoken Voice-to-Ticket Extraction
+  // Spoken Voice-to-Ticket Extraction
   const handleExtractVoiceTicket = React.useCallback(
     async (snippet: string) => {
       if (!capabilities?.canUseVoiceToTask) {
@@ -316,7 +316,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       if (!text) return;
 
       const lower = text.toLowerCase();
-      // ⚡ Spoken Voice-to-Ticket trigger
+      // Spoken Voice-to-Ticket trigger
       if (
         lower.includes('ticket') ||
         lower.includes('file a ticket') ||
@@ -757,10 +757,11 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
                   {isSpatialAudioActive && spatialPositions[p.userId] && (
                     <span
-                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-block mt-1.5"
+                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-emerald-400 shadow-sm inline-flex items-center gap-1 mt-1.5"
                       title="3D Spatial Audio Pan"
                     >
-                      🎧 {spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}
+                      <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+                      <span>{spatialAudio.formatPanLabel(spatialPositions[p.userId].pan)}</span>
                     </span>
                   )}
                 </div>

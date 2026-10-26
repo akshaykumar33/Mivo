@@ -423,7 +423,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
             </div>
             <div>
               <h4 className="text-xl font-black font-display text-white">
-                {winner} Triumphs! 🏆
+                {winner} Triumphs!
               </h4>
               <p className="text-xs text-amber-300 font-mono mt-0.5">
                 Final Score: {p1Score} - {p2Score} (+100 PTS)
@@ -437,7 +437,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
               }}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer"
             >
-              Play Rematch ⚡
+              Play Rematch
             </button>
           </div>
         )}

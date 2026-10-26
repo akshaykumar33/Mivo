@@ -25,6 +25,7 @@ import {
   Music,
   X,
   Eye,
+  Bot,
 } from 'lucide-react';
 import { storageClient } from '@/lib/storage-client';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
@@ -140,9 +141,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           id: `ai-msg-${Date.now()}`,
           roomId: room.id,
           senderId: 'mivo-ai-cohost',
-          content: `🤖 **Mivo AI Co-Host:** ${data.speechText}${
+          content: `**Mivo AI Co-Host:** ${data.speechText}${
             data.pinnedTile?.tickets?.length
-              ? `\n\n📌 **Live Sprint Stage Sync:**\n` +
+              ? `\n\n**Live Sprint Stage Sync:**\n` +
                 data.pinnedTile.tickets
                   .map(
                     (t: any) =>
@@ -359,8 +360,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       {((msg as any).isAiTwin || msg.content.includes('AI Twin')) && (
                         <div className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-[#BF5AF2]/15 to-[#5E5CE6]/15 border border-[#BF5AF2]/30 flex items-center justify-between text-xs animate-fadeIn">
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-[#BF5AF2]/20 text-[#BF5AF2] text-[10px] font-bold">
-                              🤖 AI Twin • Out of Office
+                            <span className="px-2 py-0.5 rounded-full bg-[#BF5AF2]/20 text-[#BF5AF2] text-[10px] font-bold flex items-center gap-1">
+                              <Bot className="w-3 h-3" />
+                              AI Twin • Out of Office
                             </span>
                             <span className="text-[11px] text-[#71717A] hidden sm:inline">
                               Auto-replied from indexed project notes

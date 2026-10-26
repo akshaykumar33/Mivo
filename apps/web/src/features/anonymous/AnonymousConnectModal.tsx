@@ -47,11 +47,11 @@ import { GameRulesModal } from './jam/GameRulesModal';
 const SUGGESTED_TAGS = ['Tech', 'Gaming', 'AI', 'Music', 'Casual', 'Coding', 'Movies', 'Crypto'];
 
 const QUICK_ICEBREAKERS = [
-  '🍕 Pineapple on pizza: Yes or No?',
-  '🦄 If you had 1 superpower, what would it be?',
-  '🌙 What is your go-to midnight snack?',
-  '🛸 Do you believe aliens have visited Earth?',
-  '🎧 What is the best song ever created?',
+  'Pineapple on pizza: Yes or No?',
+  'If you had 1 superpower, what would it be?',
+  'What is your go-to midnight snack?',
+  'Do you believe aliens have visited Earth?',
+  'What is the best song ever created?',
 ];
 
 export const AnonymousConnectModal: React.FC = () => {
@@ -239,7 +239,7 @@ export const AnonymousConnectModal: React.FC = () => {
         {
           id: 'welcome-jam',
           sender: 'Mivo Co-Op Jam',
-          content: `You matched with ${data.partner.pseudonym}! Try drawing, playing Pong, or answering a dilemma together! 🎨🎮`,
+          content: `You matched with ${data.partner.pseudonym}! Try drawing, playing Pong, or answering a dilemma together!`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isSelf: false,
           isSystem: true,
@@ -286,7 +286,7 @@ export const AnonymousConnectModal: React.FC = () => {
         {
           id: Math.random().toString(),
           sender: 'System',
-          content: data.message || 'Your partner has disconnected or skipped. Switched to Solo Practice with Nova ✨!',
+          content: data.message || 'Your partner has disconnected or skipped. Switched to Solo Practice with Nova!',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isSelf: false,
           isSystem: true,
@@ -294,7 +294,7 @@ export const AnonymousConnectModal: React.FC = () => {
       ]);
       setPartner({
         userId: 'bot-companion',
-        pseudonym: 'Nova ✨ (AI Partner)',
+        pseudonym: 'Nova (AI Partner)',
         isGuest: false,
         interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
       });
@@ -384,7 +384,7 @@ export const AnonymousConnectModal: React.FC = () => {
     setCurrentSessionId(demoSessionId);
     setPartner({
       userId: 'bot-companion',
-      pseudonym: 'Nova ✨ (AI Partner)',
+      pseudonym: 'Nova (AI Partner)',
       isGuest: false,
       interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
     });
@@ -393,8 +393,8 @@ export const AnonymousConnectModal: React.FC = () => {
     setMessages([
       {
         id: 'msg-welcome-demo',
-        sender: 'Nova ✨ (AI Partner)',
-        content: "Welcome to Canvas & Trivia Jam! 🎨 Select any game on the right — we can doodle, play Pong, solve emoji riddles, or test our reaction speeds! You can also invite a real 2nd player anytime.",
+        sender: 'Nova (AI Partner)',
+        content: "Welcome to Canvas & Trivia Jam! Select any game on the right — we can doodle, play Pong, solve riddles, or test our reaction speeds! You can also invite a real 2nd player anytime.",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isSelf: false,
       },
@@ -499,7 +499,7 @@ export const AnonymousConnectModal: React.FC = () => {
 
   const activePartner = partner || {
     userId: 'bot-companion',
-    pseudonym: 'Nova ✨ (AI Partner)',
+    pseudonym: 'Nova (AI Partner)',
     isGuest: false,
     interests: ['Doodling', 'RetroGames', 'Trivia', 'Memes'],
   };
@@ -631,7 +631,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 }`}
               >
                 <Radio className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">🎲 Match Strangers</span>
+                <span className="truncate">Match Strangers</span>
               </button>
 
               <button
@@ -644,7 +644,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 }`}
               >
                 <Users className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">🔑 Invite 2nd Player</span>
+                <span className="truncate">Invite 2nd Player</span>
               </button>
 
               <button
@@ -653,7 +653,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
               >
                 <Gamepad2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span className="truncate">🤖 Solo / Practice</span>
+                <span className="truncate">Solo / Practice</span>
               </button>
             </div>
 
@@ -972,7 +972,7 @@ export const AnonymousConnectModal: React.FC = () => {
                 onClick={handleLaunchDemoJam}
                 className="py-2 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors cursor-pointer"
               >
-                Launch with AI Partner Immediately 🚀
+                Launch with AI Partner Immediately
               </button>
 
               <button

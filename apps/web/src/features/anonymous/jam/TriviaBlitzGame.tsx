@@ -27,7 +27,7 @@ interface Question {
 const TRIVIA_QUESTIONS: Question[] = [
   {
     id: 't-1',
-    category: 'Internet & Tech 💻',
+    category: 'Internet & Tech',
     question: 'What was the very first video uploaded to YouTube in 2005?',
     options: ['Charlie bit my finger', 'Me at the zoo', 'Gangnam Style', 'Evolution of Dance'],
     correctIndex: 1,
@@ -35,7 +35,7 @@ const TRIVIA_QUESTIONS: Question[] = [
   },
   {
     id: 't-2',
-    category: 'Absurd Science 🧪',
+    category: 'Absurd Science',
     question: 'How many hearts does an octopus have?',
     options: ['1 Heart', '2 Hearts', '3 Hearts', '9 Hearts'],
     correctIndex: 2,
@@ -43,7 +43,7 @@ const TRIVIA_QUESTIONS: Question[] = [
   },
   {
     id: 't-3',
-    category: 'Gaming Lore 🎮',
+    category: 'Gaming Lore',
     question: 'What was Mario originally called in his 1981 debut game Donkey Kong?',
     options: ['Jumpman', 'Plumber Boy', 'Luigi Prototype', 'Mr. Mustache'],
     correctIndex: 0,
@@ -51,7 +51,7 @@ const TRIVIA_QUESTIONS: Question[] = [
   },
   {
     id: 't-4',
-    category: 'Space & Cosmos 🌌',
+    category: 'Space & Cosmos',
     question: 'One day on Venus is longer than one year on Venus. True or False?',
     options: ['True (Venus rotates very slowly)', 'False (Nonsense physics)', 'Only during summer', 'Nobody knows yet'],
     correctIndex: 0,
@@ -59,7 +59,7 @@ const TRIVIA_QUESTIONS: Question[] = [
   },
   {
     id: 't-5',
-    category: 'Pop Culture & Food 🍕',
+    category: 'Pop Culture & Food',
     question: 'Which country eats the most pizza per capita in the world?',
     options: ['Italy', 'United States', 'Norway', 'Canada'],
     correctIndex: 2,
@@ -67,7 +67,7 @@ const TRIVIA_QUESTIONS: Question[] = [
   },
   {
     id: 't-6',
-    category: 'Weird Animals 🦩',
+    category: 'Weird Animals',
     question: 'Why are flamingos pink?',
     options: ['Genetic pigmentation', 'Their diet of shrimp and algae', 'Sunburn from salt lakes', 'Courtship feathers'],
     correctIndex: 1,
@@ -315,14 +315,14 @@ export const TriviaBlitzGame: React.FC<TriviaBlitzGameProps> = ({
       {showAnswer && (
         <div className="mt-3 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3 animate-fade-in shrink-0">
           <div className="text-xs text-gray-300">
-            <span className="text-amber-400 font-bold">💡 Fun Fact: </span>
+            <span className="text-amber-400 font-bold">Fun Fact: </span>
             <span>{currentQ.funFact}</span>
           </div>
           <button
             onClick={handleNextQuestion}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer shrink-0"
           >
-            Next 🚀
+            Next
           </button>
         </div>
       )}
