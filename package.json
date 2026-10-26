@@ -11,6 +11,7 @@
     "check:types": "turbo run check:types",
     "test": "turbo run test",
     "test:suites": "node tests/run-all-tests.js",
+    "test:vitest": "vitest run",
     "test:e2e": "playwright test",
     "clean": "turbo run clean"
   },
