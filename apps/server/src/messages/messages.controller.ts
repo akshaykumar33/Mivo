@@ -58,6 +58,18 @@ export class MessagesController {
     };
   }
 
+  @Get(':messageId/thread')
+  async getThread(
+    @Param('roomId') roomId: string,
+    @Param('messageId') messageId: string
+  ): Promise<ApiResponse<any>> {
+    const thread = await this.messagesService.getThread(roomId, messageId);
+    return {
+      success: true,
+      data: thread,
+    };
+  }
+
   @Post('crdt-sync')
   async crdtSync(
     @Param('roomId') roomId: string,

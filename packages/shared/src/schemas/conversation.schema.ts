@@ -13,6 +13,9 @@ export const CreateGroupConversationSchema = z.object({
 export const SendDirectMessageSchema = z.object({
   content: z.string().max(4000).optional().default(''),
   attachments: z.array(z.any()).optional(),
+  replyToId: z.string().uuid().optional().nullable(),
+  threadId: z.string().uuid().optional().nullable(),
+  isThreadBroadcast: z.boolean().optional(),
 }).refine((data) => (data.content && data.content.trim().length > 0) || (data.attachments && data.attachments.length > 0), {
   message: 'Message content or attachments required',
 });
@@ -20,3 +23,4 @@ export const SendDirectMessageSchema = z.object({
 export type CreateDirectConversationInput = z.infer<typeof CreateDirectConversationSchema>;
 export type CreateGroupConversationInput = z.infer<typeof CreateGroupConversationSchema>;
 export type SendDirectMessageInput = z.infer<typeof SendDirectMessageSchema>;
+

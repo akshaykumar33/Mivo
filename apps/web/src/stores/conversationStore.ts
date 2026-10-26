@@ -52,7 +52,15 @@ interface ConversationState {
   selectConversation: (conversationId: string | null) => Promise<void>;
   startDirectConversation: (recipientId: string) => Promise<ConversationDTO>;
   createGroupConversation: (name: string, memberIds: string[], iconUrl?: string) => Promise<ConversationDTO>;
-  sendMessage: (conversationId: string, content: string, attachments?: any[]) => Promise<void>;
+  sendMessage: (
+    conversationId: string,
+    content: string,
+    attachments?: any[],
+    replyToId?: string,
+    threadId?: string,
+    isThreadBroadcast?: boolean
+  ) => Promise<void>;
+  addDirectMessage: (msg: DirectMessageDTO) => void;
   sendTyping: (conversationId: string) => void;
   sendStopTyping: (conversationId: string) => void;
   addReaction: (conversationId: string, messageId: string, emoji: string) => void;
@@ -187,7 +195,14 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     throw new Error(res.error?.message || 'Failed to create group conversation');
   },
 
-  sendMessage: async (conversationId: string, content: string, attachments?: any[]) => {
+  sendMessage: async (
+    conversationId: string,
+    content: string,
+    attachments?: any[],
+    replyToId?: string,
+    threadId?: string,
+    isThreadBroadcast?: boolean
+  ) => {
     if (useAuthStore.getState().isGuest) {
       useAuthStore.getState().setUpgradeModalOpen(true);
       return;
@@ -198,12 +213,18 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         conversationId,
         content,
         attachments,
+        replyToId,
+        threadId,
+        isThreadBroadcast,
       });
     } else {
       // Fallback to REST API
       const res = await api.post<DirectMessageDTO>(`/api/v1/conversations/${conversationId}/messages`, {
         content,
         attachments,
+        replyToId,
+        threadId,
+        isThreadBroadcast,
       });
       if (res.success && res.data) {
         const msg = res.data;
@@ -218,6 +239,19 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         });
       }
     }
+  },
+
+  addDirectMessage: (msg: DirectMessageDTO) => {
+    set((state) => {
+      const list = state.messages[msg.conversationId] || [];
+      if (list.some((m) => m.id === msg.id)) return state;
+      return {
+        messages: {
+          ...state.messages,
+          [msg.conversationId]: [...list, msg],
+        },
+      };
+    });
   },
 
   sendTyping: (conversationId: string) => {
@@ -463,6 +497,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     // Remove any previous handlers to avoid duplicate event handling
     socket.off(REALTIME_EVENTS.DM_NEW_MESSAGE);
+    socket.off(REALTIME_EVENTS.DM_THREAD_UPDATED);
     socket.off(REALTIME_EVENTS.DM_TYPING);
     socket.off(REALTIME_EVENTS.DM_STOP_TYPING);
     socket.off(REALTIME_EVENTS.CALL_INCOMING);
@@ -508,6 +543,22 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
           },
           conversations: updatedConversations,
           unreadCounts,
+        };
+      });
+    });
+
+    // 1b. DM Thread Updated (reply count & participants live update)
+    socket.on(REALTIME_EVENTS.DM_THREAD_UPDATED, (data: { conversationId: string; threadId: string; threadMeta: any }) => {
+      set((state) => {
+        const list = state.messages[data.conversationId] || [];
+        const updatedList = list.map((m) =>
+          m.id === data.threadId ? { ...m, threadMeta: data.threadMeta } : m
+        );
+        return {
+          messages: {
+            ...state.messages,
+            [data.conversationId]: updatedList,
+          },
         };
       });
     });

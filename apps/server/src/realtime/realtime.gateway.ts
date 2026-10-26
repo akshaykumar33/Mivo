@@ -546,7 +546,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage(REALTIME_EVENTS.CHAT_SEND_MESSAGE)
   async handleChatMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; content?: string; attachments?: any[] }
+    @MessageBody() data: { roomId: string; content?: string; attachments?: any[]; replyToId?: string; threadId?: string; isThreadBroadcast?: boolean }
   ) {
     const user = client.data?.user;
     if (!user || !data?.roomId) {
@@ -575,20 +575,49 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         return { success: false, error: 'Room not found' };
       }
 
+      const replyToId = data.replyToId ? data.replyToId.trim() : undefined;
+      const threadId = data.threadId ? data.threadId.trim() : undefined;
+      const isThreadBroadcast = !!data.isThreadBroadcast;
+
       const message = await prisma.message.create({
         data: {
           roomId: data.roomId,
           senderId: user.sub,
           content: trimmedContent || (data.attachments?.length ? 'Sent attachments' : ''),
           attachments: data.attachments || undefined,
+          replyToId,
+          threadId,
+          isThreadBroadcast,
         },
         include: {
           sender: true,
+          replyTo: {
+            include: { sender: true },
+          },
         },
       });
 
       const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
       const expired = isExpired(message.sender.customStatusExpiresAt);
+
+      let replyToDto: any = null;
+      if (message.replyTo) {
+        replyToDto = {
+          id: message.replyTo.id,
+          senderId: message.replyTo.senderId,
+          content: message.replyTo.content,
+          attachments: message.replyTo.attachments as any,
+          createdAt: message.replyTo.createdAt.toISOString(),
+          sender: {
+            id: message.replyTo.sender.id,
+            username: message.replyTo.sender.username,
+            displayName: message.replyTo.sender.displayName,
+            avatarUrl: message.replyTo.sender.avatarUrl,
+            status: message.replyTo.sender.status,
+            customStatus: isExpired(message.replyTo.sender.customStatusExpiresAt) ? null : message.replyTo.sender.customStatus,
+          },
+        };
+      }
 
       const dto: MessageDTO = {
         id: message.id,
@@ -598,6 +627,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         attachments: message.attachments as any,
         createdAt: message.createdAt.toISOString(),
         updatedAt: message.updatedAt.toISOString(),
+        replyToId: message.replyToId,
+        replyTo: replyToDto,
+        threadId: message.threadId,
+        isThreadBroadcast: message.isThreadBroadcast,
         sender: {
           id: message.sender.id,
           username: message.sender.username,
@@ -612,7 +645,39 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
       };
 
-      this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, dto);
+      if (threadId) {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_THREAD_NEW_MESSAGE, {
+          roomId: data.roomId,
+          threadId,
+          message: dto,
+        });
+
+        // Compute updated thread meta
+        const threadReplies = await prisma.message.findMany({
+          where: { threadId, deletedAt: null },
+          select: { createdAt: true, sender: { select: { avatarUrl: true } } },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const threadMeta = {
+          replyCount: threadReplies.length,
+          lastReplyAt: threadReplies[0]?.createdAt ? threadReplies[0].createdAt.toISOString() : null,
+          participantAvatars: Array.from(new Set(threadReplies.map((r) => r.sender?.avatarUrl).filter(Boolean) as string[])),
+          participantCount: threadReplies.length,
+        };
+
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_THREAD_UPDATED, {
+          roomId: data.roomId,
+          threadId,
+          threadMeta,
+        });
+
+        if (isThreadBroadcast) {
+          this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, dto);
+        }
+      } else {
+        this.server.to(`room:${data.roomId}`).emit(REALTIME_EVENTS.CHAT_NEW_MESSAGE, dto);
+      }
 
       return { success: true, data: dto };
     } catch (err: any) {
@@ -685,7 +750,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage(REALTIME_EVENTS.DM_SEND_MESSAGE)
   async handleDmSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversationId: string; content?: string; attachments?: any[] }
+    @MessageBody() data: { conversationId: string; content?: string; attachments?: any[]; replyToId?: string; threadId?: string; isThreadBroadcast?: boolean }
   ) {
     const user = client.data?.user;
     if (!user || !data?.conversationId) {
@@ -718,15 +783,25 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         return { success: false, error: 'Not a member of this conversation' };
       }
 
+      const replyToId = data.replyToId ? data.replyToId.trim() : undefined;
+      const threadId = data.threadId ? data.threadId.trim() : undefined;
+      const isThreadBroadcast = !!data.isThreadBroadcast;
+
       const message = await prisma.directMessage.create({
         data: {
           conversationId: data.conversationId,
           senderId: user.sub,
           content: trimmedContent || (data.attachments?.length ? 'Sent attachments' : ''),
           attachments: data.attachments || undefined,
+          replyToId,
+          threadId,
+          isThreadBroadcast,
         },
         include: {
           sender: true,
+          replyTo: {
+            include: { sender: true },
+          },
         },
       });
 
@@ -738,6 +813,25 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       const isExpired = (exp?: Date | null) => exp && exp.getTime() <= Date.now();
       const expired = isExpired(message.sender.customStatusExpiresAt);
 
+      let replyToDto: any = null;
+      if (message.replyTo) {
+        replyToDto = {
+          id: message.replyTo.id,
+          senderId: message.replyTo.senderId,
+          content: message.replyTo.content,
+          attachments: message.replyTo.attachments as any,
+          createdAt: message.replyTo.createdAt.toISOString(),
+          sender: {
+            id: message.replyTo.sender.id,
+            username: message.replyTo.sender.username,
+            displayName: message.replyTo.sender.displayName,
+            avatarUrl: message.replyTo.sender.avatarUrl,
+            status: message.replyTo.sender.status,
+            customStatus: isExpired(message.replyTo.sender.customStatusExpiresAt) ? null : message.replyTo.sender.customStatus,
+          },
+        };
+      }
+
       const dto: DirectMessageDTO = {
         id: message.id,
         conversationId: message.conversationId,
@@ -746,6 +840,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         attachments: message.attachments as any,
         createdAt: message.createdAt.toISOString(),
         updatedAt: message.updatedAt.toISOString(),
+        replyToId: message.replyToId,
+        replyTo: replyToDto,
+        threadId: message.threadId,
+        isThreadBroadcast: message.isThreadBroadcast,
         sender: {
           id: message.sender.id,
           username: message.sender.username,
@@ -760,8 +858,39 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
       };
 
-      // Emit to conversation room
-      this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+      if (threadId) {
+        this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_THREAD_NEW_MESSAGE, {
+          conversationId: data.conversationId,
+          threadId,
+          message: dto,
+        });
+
+        const threadReplies = await prisma.directMessage.findMany({
+          where: { threadId, deletedAt: null },
+          select: { createdAt: true, sender: { select: { avatarUrl: true } } },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const threadMeta = {
+          replyCount: threadReplies.length,
+          lastReplyAt: threadReplies[0]?.createdAt ? threadReplies[0].createdAt.toISOString() : null,
+          participantAvatars: Array.from(new Set(threadReplies.map((r) => r.sender?.avatarUrl).filter(Boolean) as string[])),
+          participantCount: threadReplies.length,
+        };
+
+        this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_THREAD_UPDATED, {
+          conversationId: data.conversationId,
+          threadId,
+          threadMeta,
+        });
+
+        if (isThreadBroadcast) {
+          this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+        }
+      } else {
+        // Emit to conversation room
+        this.server.to(`dm:${data.conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+      }
 
       // Also deliver to individual member rooms for notification badges
       const members = await prisma.conversationMember.findMany({

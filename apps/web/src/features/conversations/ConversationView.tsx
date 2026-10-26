@@ -30,7 +30,12 @@ import {
   ChevronLeft,
   Menu,
   Lock,
+  CornerUpLeft,
+  MessageSquareReply,
+  MessageSquareText,
+  ChevronRight,
 } from 'lucide-react';
+import { ThreadSidebar } from '../chat/ThreadSidebar';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { storageClient } from '@/lib/storage-client';
 import { api } from '@/lib/api-client';
@@ -148,11 +153,44 @@ export const ConversationView: React.FC = () => {
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [isMeetingHubOpen, setIsMeetingHubOpen] = React.useState(false);
   const [activeBridge, setActiveBridge] = React.useState<ExternalMeetingBridgeDTO | null>(null);
+  const [replyingTo, setReplyingTo] = React.useState<DirectMessageDTO | null>(null);
+  const [activeThreadRoot, setActiveThreadRoot] = React.useState<DirectMessageDTO | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const docInputRef = React.useRef<HTMLInputElement>(null);
   const mediaInputRef = React.useRef<HTMLInputElement>(null);
+  const messageInputRef = React.useRef<HTMLInputElement>(null);
   const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-focus message input when replying
+  React.useEffect(() => {
+    if (replyingTo) {
+      messageInputRef.current?.focus();
+    }
+  }, [replyingTo]);
+
+  // Cancel reply on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && replyingTo) {
+        setReplyingTo(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [replyingTo]);
+
+  const handleJumpToMessage = (messageId: string) => {
+    const el = document.getElementById(`dm-msg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => {
+        setHighlightedMessageId((curr) => (curr === messageId ? null : curr));
+      }, 2000);
+    }
+  };
 
   const activeConv = conversations.find((c) => c.id === activeConversationId);
   const rawMessages = (activeConversationId && messages[activeConversationId]) || [];
@@ -306,11 +344,13 @@ export const ConversationView: React.FC = () => {
     if (!trimmed && pendingAttachments.length === 0) return;
 
     const attachmentsToSend = pendingAttachments.length > 0 ? pendingAttachments : undefined;
+    const replyTargetId = replyingTo?.id || undefined;
     setInputContent('');
     setPendingAttachments([]);
+    setReplyingTo(null);
     sendStopTyping(activeConversationId);
 
-    await sendMessage(activeConversationId, trimmed, attachmentsToSend);
+    await sendMessage(activeConversationId, trimmed, attachmentsToSend, replyTargetId);
   };
 
   const handleStartCall = () => {
@@ -339,14 +379,15 @@ export const ConversationView: React.FC = () => {
   }
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={`flex-1 flex flex-col bg-[var(--bg-canvas)] h-full overflow-hidden relative transition-colors ${
-        isDragOver ? 'ring-2 ring-[#DC2626] ring-inset bg-red-950/5' : ''
-      }`}
-    >
+    <div className="flex-1 flex h-full overflow-hidden select-none">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`flex-1 flex flex-col bg-[var(--bg-canvas)] h-full overflow-hidden relative transition-colors min-w-0 ${
+          isDragOver ? 'ring-2 ring-[#DC2626] ring-inset bg-red-950/5' : ''
+        }`}
+      >
       {/* Top Header */}
       <header className="h-16 border-b border-[var(--border-subtle)] px-3 sm:px-6 flex items-center justify-between bg-[var(--bg-surface-0)]/80 backdrop-blur-md z-10 gap-2">
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
@@ -505,10 +546,15 @@ export const ConversationView: React.FC = () => {
               minute: '2-digit',
             });
 
+            const isHighlighted = highlightedMessageId === msg.id;
+
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 group relative ${isMe ? 'justify-end' : 'justify-start'}`}
+                id={`dm-msg-${msg.id}`}
+                className={`flex gap-3 group relative transition-all duration-300 p-1 rounded-2xl ${
+                  isMe ? 'justify-end' : 'justify-start'
+                } ${isHighlighted ? 'ring-2 ring-emerald-500/70 bg-emerald-500/10 shadow-md' : ''}`}
               >
                 {!isMe && (
                   <Avatar
@@ -530,6 +576,21 @@ export const ConversationView: React.FC = () => {
                     <span>{formattedTime}</span>
                   </div>
 
+                  {/* Slack-style "Replied to a thread" indicator */}
+                  {msg.isThreadBroadcast && (
+                    <div
+                      onClick={() => {
+                        const root = convMessages.find((m) => m.id === msg.threadId) || msg;
+                        setActiveThreadRoot(root);
+                      }}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-red-600 hover:underline cursor-pointer mb-1 select-none"
+                      title="View original thread"
+                    >
+                      <MessageSquareText className="w-3.5 h-3.5" />
+                      <span>Replied to a thread</span>
+                    </div>
+                  )}
+
                   {/* Message Bubble */}
                   <div
                     className={`rounded-2xl p-3 text-xs leading-relaxed transition-all shadow-md ${
@@ -538,6 +599,26 @@ export const ConversationView: React.FC = () => {
                         : 'bg-[var(--bg-surface-0)] text-[#111827] border border-[var(--border-subtle)] shadow-sm rounded-tl-xs'
                     }`}
                   >
+                    {/* WhatsApp-style Quoted Message Box */}
+                    {msg.replyTo && (
+                      <div
+                        onClick={() => handleJumpToMessage(msg.replyTo!.id)}
+                        className={`mb-2 p-2 px-3 rounded-xl border-l-[3.5px] border-emerald-500 transition-all cursor-pointer select-none text-left ${
+                          isMe
+                            ? 'bg-black/20 text-white hover:bg-black/30'
+                            : 'bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] text-[#111827] dark:text-gray-100'
+                        }`}
+                        title="Click to jump to quoted message"
+                      >
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 mb-0.5">
+                          <CornerUpLeft className="w-3 h-3" />
+                          <span>{msg.replyTo.sender?.displayName || msg.replyTo.sender?.username || 'User'}</span>
+                        </div>
+                        <div className="text-xs opacity-85 line-clamp-2">
+                          {msg.replyTo.content || 'Shared attachment'}
+                        </div>
+                      </div>
+                    )}
                     {(() => {
                       const hasMeeting = msg.attachments?.some((a: any) => a.type === 'external-meeting');
                       const cleaned = sanitizeChatMessage(msg.content || '', !!hasMeeting);
@@ -723,8 +804,30 @@ export const ConversationView: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Reaction Pill Hover Bar */}
+                  {/* Reaction & Action Hover Bar */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 bg-[var(--bg-surface-0)] px-2 py-0.5 rounded-xl border border-[var(--border-subtle)] shadow-sm">
+                    {/* WhatsApp Reply Button */}
+                    <button
+                      type="button"
+                      onClick={() => setReplyingTo(msg)}
+                      className="p-1 rounded-md text-[var(--text-muted)] hover:text-emerald-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
+                      title="Reply (WhatsApp quote)"
+                    >
+                      <CornerUpLeft className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Slack Reply in Thread Button */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveThreadRoot(msg)}
+                      className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
+                      title="Reply in thread (Slack style)"
+                    >
+                      <MessageSquareReply className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="w-px h-3.5 bg-[var(--border-subtle)] mx-0.5" />
+
                     {EMOJI_OPTIONS.map((emoji) => (
                       <button
                         key={emoji}
@@ -737,6 +840,41 @@ export const ConversationView: React.FC = () => {
                       </button>
                     ))}
                   </div>
+
+                  {/* Slack-style Thread Footer Button */}
+                  {msg.threadMeta && msg.threadMeta.replyCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveThreadRoot(msg)}
+                      className="mt-1.5 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-red-400 transition-all text-xs group/thread shadow-sm cursor-pointer select-none"
+                    >
+                      {msg.threadMeta.participantAvatars && msg.threadMeta.participantAvatars.length > 0 && (
+                        <div className="flex items-center -space-x-1.5 overflow-hidden">
+                          {msg.threadMeta.participantAvatars.slice(0, 3).map((av, avIdx) => (
+                            <Avatar
+                              key={avIdx}
+                              src={av || undefined}
+                              fallbackText="U"
+                              className="w-4 h-4 rounded-md ring-1 ring-white dark:ring-black"
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <span className="font-bold text-red-600 dark:text-red-400 group-hover/thread:underline">
+                        {msg.threadMeta.replyCount} {msg.threadMeta.replyCount === 1 ? 'reply' : 'replies'}
+                      </span>
+                      {msg.threadMeta.lastReplyAt && (
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                          Last reply{' '}
+                          {new Date(msg.threadMeta.lastReplyAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      )}
+                      <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover/thread:translate-x-0.5 transition-transform" />
+                    </button>
+                  )}
 
                   {/* Reaction Badges List if present on direct message */}
                   {(msg as any).reactions && Object.keys((msg as any).reactions).length > 0 && (
@@ -827,6 +965,34 @@ export const ConversationView: React.FC = () => {
 
       {/* Input Box Footer */}
       <footer className="p-2 sm:p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-0)]/90 backdrop-blur-md">
+        {/* WhatsApp-Style Quote Reply Preview Banner */}
+        {replyingTo && (
+          <div className="flex items-center justify-between p-2.5 px-3.5 mb-2.5 rounded-2xl bg-[var(--bg-surface-2)] border-l-4 border-emerald-500 shadow-sm border border-[var(--border-subtle)] border-l-emerald-500 animate-slide-down">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <CornerUpLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div className="min-w-0 text-xs">
+                <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1.5">
+                  <span>Replying to</span>
+                  <span className="text-[#111827] dark:text-white">
+                    {replyingTo.sender?.displayName || replyingTo.sender?.username || 'User'}
+                  </span>
+                </p>
+                <p className="text-[var(--text-muted)] truncate max-w-lg mt-0.5">
+                  {replyingTo.content || (replyingTo.attachments?.length ? 'Shared an attachment' : 'Message')}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
+              title="Cancel reply (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {isGuest ? (
           <div className="flex flex-col sm:flex-row items-center justify-between p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 gap-3">
             <div className="flex items-center gap-2.5 text-xs text-amber-800 font-medium">
@@ -932,6 +1098,7 @@ export const ConversationView: React.FC = () => {
 
           {/* Message Input */}
           <input
+            ref={messageInputRef}
             type="text"
             placeholder={`Message ${title}...`}
             value={inputContent}
@@ -970,6 +1137,23 @@ export const ConversationView: React.FC = () => {
           onBridgeUpdated={() => {
             if (activeConversationId) {
               fetchBridge(activeConversationId);
+            }
+          }}
+        />
+      )}
+      </div>
+
+      {/* Slack-style Thread Sidebar Drawer */}
+      {activeThreadRoot && activeConv && (
+        <ThreadSidebar
+          conversationId={activeConv.id}
+          conversationTitle={title}
+          rootMessage={activeThreadRoot}
+          onClose={() => setActiveThreadRoot(null)}
+          onScrollToMessage={handleJumpToMessage}
+          onReplyAdded={(reply) => {
+            if (reply.isThreadBroadcast) {
+              useConversationStore.getState().addDirectMessage(reply as DirectMessageDTO);
             }
           }}
         />
