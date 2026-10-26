@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Headphones,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
 
@@ -35,7 +36,12 @@ export interface LiveVideoTileProps {
   audioLevel?: number;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
+  onDragEnter?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
   spatialPanLabel?: string;
@@ -54,7 +60,12 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   audioLevel = 0,
   onDragStart,
   onDragOver,
+  onDragEnter,
+  onDragLeave,
+  onDragEnd,
   onDrop,
+  isDragging = false,
+  isDragOver = false,
   onMoveLeft,
   onMoveRight,
   spatialPanLabel,
@@ -81,14 +92,21 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragEnd={onDragEnd}
       onDrop={onDrop}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setShowVolumeSlider(false);
       }}
-      className={`relative w-full aspect-video rounded-3xl bg-[#0D1017] border flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-200 group select-none cursor-grab active:cursor-grabbing ${
-        isPinned
+      className={`relative w-full aspect-video rounded-3xl bg-[#0D1017] border flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-300 group select-none ${
+        isDragging
+          ? 'opacity-35 scale-[0.97] border-dashed border-violet-400 ring-2 ring-violet-500/40 shadow-none cursor-grabbing'
+          : isDragOver
+          ? 'scale-[1.03] border-violet-400 ring-4 ring-violet-500/60 shadow-2xl shadow-violet-500/30 bg-violet-950/40 cursor-pointer'
+          : isPinned
           ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/20'
           : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
@@ -97,6 +115,26 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
     >
       {/* Subtle Ambient Radial Glow */}
       <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
+
+      {/* Drop Target Indicator Overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-violet-950/75 backdrop-blur-xs border-2 border-dashed border-violet-400 rounded-3xl pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-600 text-white text-xs font-bold shadow-xl">
+            <ArrowLeftRight className="w-3.5 h-3.5 animate-pulse" />
+            <span>Drop to Swap with {user.displayName || user.username}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Active Dragging Indicator Overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-xs rounded-3xl pointer-events-none">
+          <span className="text-xs font-bold text-violet-300 flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-950/80 border border-violet-500/40">
+            <GripVertical className="w-3.5 h-3.5 animate-bounce" />
+            Reordering Tile...
+          </span>
+        </div>
+      )}
 
       {/* Real Live Video Feed */}
       {isCameraOn ? (
@@ -124,13 +162,25 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         </div>
       )}
 
-      {/* Top Left Drag Handle & Connection Badge */}
-      <div className="absolute top-3 left-3 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Top Left Drag Handle & Quick Reorder Controls */}
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
         <div
-          className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white cursor-grab active:cursor-grabbing"
-          title="Drag & Drop to Reorder"
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            onDragStart?.(e);
+          }}
+          onDragEnd={(e) => {
+            e.stopPropagation();
+            onDragEnd?.(e);
+          }}
+          className="p-1.5 px-2.5 rounded-xl bg-[#090B10]/90 backdrop-blur-md border border-white/[0.12] text-white/70 hover:text-white hover:border-violet-500/60 hover:bg-violet-600/30 cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1.5 transition-all group/handle"
+          title="Grab handle to reorder tile on the fly"
         >
-          <GripVertical className="w-3.5 h-3.5" />
+          <GripVertical className="w-3.5 h-3.5 text-violet-400 group-hover/handle:text-violet-300" />
+          <span className="text-[10px] font-bold tracking-wider uppercase text-zinc-300 group-hover/handle:text-white">
+            Drag
+          </span>
         </div>
         {onMoveLeft && (
           <button
@@ -156,7 +206,7 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
-        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06]">
+        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06] hidden sm:inline-block">
           1080p • 60fps
         </span>
       </div>

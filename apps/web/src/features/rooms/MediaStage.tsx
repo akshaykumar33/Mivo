@@ -33,6 +33,8 @@ import {
   StopCircle,
   Share2,
   Shield,
+  GripVertical,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -83,6 +85,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
+  const [dragOverId, setDragOverId] = React.useState<string | null>(null);
+  const [isCustomOrdered, setIsCustomOrdered] = React.useState(false);
+  const [arrangeToast, setArrangeToast] = React.useState<string | null>(null);
   const [isAttendeeDrawerOpen, setIsAttendeeDrawerOpen] = React.useState(true);
 
   // Screen Share Theater State
@@ -449,11 +454,105 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     }
   };
 
-  // Reset to auto-arranged speaker grid
-  const handleAutoArrange = () => {
+  // Computes optimal speaker balance layout:
+  // - High priority: active speakers (unmuted & audio activity)
+  // - Medium priority: live camera streaming
+  // - Host/moderator anchor
+  // - Symmetrical stereophonic balance for spatial audio acoustics
+  const computeOptimalSpeakerOrder = React.useCallback(
+    (list: RoomMemberDTO[]) => {
+      if (list.length <= 1) return list.map((p) => p.userId);
+
+      const scored = list.map((p) => {
+        const isMe = p.userId === currentUserId;
+        const speaking = isMe ? !isMuted && audioLevel > 5 : !p.isMuted;
+        const camera = isMe ? isCameraOn : p.isCameraOn;
+        const isHostMember = (isHost && isMe) || (room && (room as any).hostId === p.userId) || ((p as any).role === 'HOST');
+
+        let score = 0;
+        if (speaking) score += 100;
+        if (camera) score += 50;
+        if (isHostMember) score += 20;
+
+        return { userId: p.userId, score, speaking, camera };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+
+      // Distribute top speakers across center, left, right for spatial balance
+      if (scored.length >= 3) {
+        const left: typeof scored = [];
+        const center: typeof scored = [];
+        const right: typeof scored = [];
+
+        scored.forEach((item, idx) => {
+          if (idx % 3 === 0) center.push(item);
+          else if (idx % 3 === 1) left.push(item);
+          else right.push(item);
+        });
+
+        const balanced: typeof scored = [];
+        const maxLen = Math.max(left.length, center.length, right.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (left[i]) balanced.push(left[i]);
+          if (center[i]) balanced.push(center[i]);
+          if (right[i]) balanced.push(right[i]);
+        }
+        return balanced.map((b) => b.userId);
+      }
+
+      return scored.map((s) => s.userId);
+    },
+    [currentUserId, isMuted, audioLevel, isCameraOn, room]
+  );
+
+  // Dynamic grid auto-arranging class
+  const getDynamicGridClass = React.useCallback((tileCount: number) => {
+    switch (tileCount) {
+      case 1:
+        return 'grid-cols-1 max-w-4xl mx-auto w-full my-auto';
+      case 2:
+        return 'grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto w-full my-auto';
+      case 3:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto w-full my-auto';
+      case 4:
+        return 'grid-cols-2 max-w-5xl mx-auto w-full my-auto';
+      case 5:
+      case 6:
+        return 'grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto w-full';
+      case 7:
+      case 8:
+      case 9:
+        return 'grid-cols-2 md:grid-cols-3 max-w-7xl mx-auto w-full';
+      default:
+        return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 w-full';
+    }
+  }, []);
+
+  // Synchronize participants when membership changes
+  React.useEffect(() => {
+    if (!isCustomOrdered) {
+      const optimal = computeOptimalSpeakerOrder(participants);
+      setOrderedParticipantIds(optimal);
+    } else {
+      setOrderedParticipantIds((prev) => {
+        const currentSet = new Set(participants.map((p) => p.userId));
+        const filtered = prev.filter((id) => currentSet.has(id));
+        const missing = participants.filter((p) => !filtered.includes(p.userId)).map((p) => p.userId);
+        return [...filtered, ...missing];
+      });
+    }
+  }, [participants, isCustomOrdered, computeOptimalSpeakerOrder]);
+
+  // Reset to auto-arranged speaker grid with optimal speaker balance
+  const handleAutoArrange = React.useCallback(() => {
     setPinnedUserId(null);
-    setOrderedParticipantIds(participants.map((p) => p.userId));
-  };
+    const optimal = computeOptimalSpeakerOrder(participants);
+    setOrderedParticipantIds(optimal);
+    setIsCustomOrdered(false);
+    setArrangeToast('Optimal speaker balance restored');
+    setTimeout(() => setArrangeToast(null), 3000);
+  }, [computeOptimalSpeakerOrder, participants]);
 
   // Drag & Drop Reordering handlers
   const handleDragStart = (userId: string) => (e: React.DragEvent) => {
@@ -467,9 +566,31 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragEnter = (targetUserId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedId && draggedId !== targetUserId) {
+      setDragOverId(targetUserId);
+    }
+  };
+
+  const handleDragLeave = (targetUserId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragOverId === targetUserId) {
+      setDragOverId(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
   const handleDrop = (targetUserId: string) => (e: React.DragEvent) => {
     e.preventDefault();
     const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    setDragOverId(null);
+    setDraggedId(null);
+
     if (!sourceId || sourceId === targetUserId) return;
 
     setOrderedParticipantIds((prev) => {
@@ -482,7 +603,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       }
       return [...currentList];
     });
-    setDraggedId(null);
+    setIsCustomOrdered(true);
+    setArrangeToast('Tile reordered on the fly');
+    setTimeout(() => setArrangeToast(null), 2500);
   };
 
   const handleMoveTile = (userId: string, direction: 'left' | 'right') => {
@@ -497,6 +620,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       currentList.splice(toIndex, 0, item);
       return [...currentList];
     });
+    setIsCustomOrdered(true);
   };
 
   // Sort participants by current drag order
@@ -552,12 +676,27 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <h3 className="text-xl font-bold text-[var(--text-primary)] font-display">
               {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
             </h3>
+            {isCustomOrdered ? (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold animate-in fade-in">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span>Custom Layout</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold animate-in fade-in">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                <span>Speaker Balanced</span>
+              </span>
+            )}
             <button
               onClick={handleAutoArrange}
-              className="flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] transition-colors"
-              title="Auto-Arrange Speaker Order"
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                isCustomOrdered
+                  ? 'bg-violet-600/30 hover:bg-violet-600/50 border-violet-500/50 text-violet-200 hover:text-white ring-2 ring-violet-500/25'
+                  : 'bg-white/[0.04] border-white/[0.06] text-violet-400 hover:text-violet-300'
+              }`}
+              title="Auto-Arrange Speaker Order (Restores optimal speaker balance)"
             >
-              <LayoutGrid className="w-3 h-3" />
+              <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
               <span>Auto-Arrange</span>
             </button>
             <button
@@ -668,6 +807,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             const isMe = p.userId === currentUserId;
             const participantMuted = isMe ? isMuted : p.isMuted;
             const isSpeaking = !participantMuted && (isMe ? audioLevel > 5 : true);
+            const isDragging = draggedId === p.userId;
+            const isDragOver = dragOverId === p.userId;
 
             return (
               <div
@@ -675,35 +816,64 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 draggable
                 onDragStart={handleDragStart(p.userId)}
                 onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter(p.userId)}
+                onDragLeave={handleDragLeave(p.userId)}
+                onDragEnd={handleDragEnd}
                 onDrop={handleDrop(p.userId)}
-                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
-                  isSpeaking
+                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border transition-all duration-300 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
+                  isDragging
+                    ? 'opacity-35 scale-[0.97] border-dashed border-violet-400 ring-2 ring-violet-500/40 shadow-none'
+                    : isDragOver
+                    ? 'scale-[1.04] border-violet-400 ring-4 ring-violet-500/60 shadow-2xl shadow-violet-500/30 bg-violet-950/40'
+                    : isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                     : 'border-[var(--border-subtle)] hover:border-violet-500/30'
                 }`}
               >
-                {/* Voice Card Reorder Arrows */}
-                <div className="absolute top-2 left-2 right-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <button
-                    onClick={(e) => {
+                {/* Drop Target Indicator */}
+                {isDragOver && (
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-violet-950/85 backdrop-blur-xs rounded-3xl border-2 border-dashed border-violet-400 pointer-events-none animate-in fade-in zoom-in-95">
+                    <ArrowLeftRight className="w-4 h-4 text-violet-300 animate-pulse mb-1" />
+                    <span className="text-[10px] font-bold text-white text-center px-2">Drop to Swap</span>
+                  </div>
+                )}
+
+                {/* Voice Card Drag Handle & Quick Reorder Controls */}
+                <div className="absolute top-2 left-2 right-2 flex items-center justify-between opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <div
+                    draggable
+                    onDragStart={(e) => {
                       e.stopPropagation();
-                      handleMoveTile(p.userId, 'left');
+                      handleDragStart(p.userId)(e);
                     }}
-                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
-                    title="Move Left"
+                    onDragEnd={handleDragEnd}
+                    className="p-1 rounded-lg bg-black/60 hover:bg-violet-600/40 text-white/70 hover:text-white transition-all cursor-grab active:cursor-grabbing border border-white/10"
+                    title="Grab handle to reorder tile on the fly"
                   >
-                    <ChevronLeft className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoveTile(p.userId, 'right');
-                    }}
-                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
-                    title="Move Right"
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
+                    <GripVertical className="w-3 h-3 text-violet-400" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTile(p.userId, 'left');
+                      }}
+                      className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer border border-white/10"
+                      title="Move Left"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTile(p.userId, 'right');
+                      }}
+                      className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer border border-white/10"
+                      title="Move Right"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -942,14 +1112,31 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 </button>
               </div>
 
-              <button
-                onClick={handleAutoArrange}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-3 py-1 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors"
-                title="Reset to Auto-Arranged Grid"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Auto-Arrange Grid</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {isCustomOrdered ? (
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold animate-in fade-in">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Custom Layout</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold animate-in fade-in">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <span>Speaker Balanced</span>
+                  </span>
+                )}
+                <button
+                  onClick={handleAutoArrange}
+                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                    isCustomOrdered
+                      ? 'bg-violet-600/30 hover:bg-violet-600/50 border-violet-500/50 text-violet-200 hover:text-white ring-2 ring-violet-500/25'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-violet-400 hover:text-violet-300 hover:bg-[var(--bg-surface-2)]'
+                  }`}
+                  title="Reset to Auto-Arranged Grid (Restores optimal speaker balance)"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Auto-Arrange Grid</span>
+                </button>
+              </div>
             </div>
 
             {/* Voice-to-Ticket Interactive Confirmation Card */}
@@ -965,10 +1152,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             )}
 
             <div
-              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
-                sortedParticipants.length === 1 && !isCoHostEnabled
-                  ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
+              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center transition-all duration-300 ${
+                getDynamicGridClass(sortedParticipants.length + (isCoHostEnabled ? 1 : 0))
               }`}
             >
               {/* Co-Host Stage Tile */}
@@ -1002,7 +1187,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                     spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                     onDragStart={handleDragStart(p.userId)}
                     onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter(p.userId)}
+                    onDragLeave={handleDragLeave(p.userId)}
+                    onDragEnd={handleDragEnd}
                     onDrop={handleDrop(p.userId)}
+                    isDragging={draggedId === p.userId}
+                    isDragOver={dragOverId === p.userId}
                     onMoveLeft={() => handleMoveTile(p.userId, 'left')}
                     onMoveRight={() => handleMoveTile(p.userId, 'right')}
                   />
@@ -1282,12 +1472,28 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   <span>{isCoHostEnabled ? 'AI Co-Host (On)' : '+ AI Assistant'}</span>
                 </button>
 
+                {isCustomOrdered ? (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Custom</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <span>Balanced</span>
+                  </span>
+                )}
+
                 <button
                   onClick={handleAutoArrange}
-                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                  title="Auto-Arrange Video Strip"
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    isCustomOrdered
+                      ? 'bg-violet-600/25 text-violet-200 border-violet-500/40 hover:bg-violet-600/40'
+                      : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)]'
+                  }`}
+                  title="Auto-Arrange Video Strip (Restores optimal speaker balance)"
                 >
-                  <LayoutGrid className="w-3 h-3" />
+                  <LayoutGrid className="w-3 h-3 text-violet-400" />
                   <span>Auto-Arrange</span>
                 </button>
 
@@ -1337,7 +1543,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                       onDragStart={handleDragStart(p.userId)}
                       onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter(p.userId)}
+                      onDragLeave={handleDragLeave(p.userId)}
+                      onDragEnd={handleDragEnd}
                       onDrop={handleDrop(p.userId)}
+                      isDragging={draggedId === p.userId}
+                      isDragOver={dragOverId === p.userId}
                       onMoveLeft={() => handleMoveTile(p.userId, 'left')}
                       onMoveRight={() => handleMoveTile(p.userId, 'right')}
                     />
@@ -1378,6 +1589,14 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--bg-canvas)]">
+      {/* Auto-Arrange / Reorder Feedback Toast */}
+      {arrangeToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-violet-950/95 border border-violet-500/50 text-violet-200 text-xs font-bold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 backdrop-blur-md pointer-events-none">
+          <CheckCircle2 className="w-4 h-4 text-violet-400" />
+          <span>{arrangeToast}</span>
+        </div>
+      )}
+
       {/* ── Real-Time Chat Stream (Kept hot in DOM: 0ms instant switch, zero re-fetching or scroll loss) ── */}
       <div
         className={`flex-1 flex flex-col h-full w-full ${
