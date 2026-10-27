@@ -41,8 +41,8 @@ async function bootstrap() {
   app.useWebSocketAdapter(redisIoAdapter);
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
-  console.log(`[Server] Mivo Backend Server running on http://localhost:${port}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`[Server] Mivo Backend Server running on http://0.0.0.0:${port}`);
 }
 
 process.on('unhandledRejection', (reason) => {
