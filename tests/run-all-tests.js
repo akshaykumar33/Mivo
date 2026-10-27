@@ -36,6 +36,9 @@ const MODULE_TESTS = [
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/spotlight-focus-mode.unit.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/dynamic-audio-bitrate.unit.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/integration/room-mode-switcher.integration.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/integration/audio-bitrate-dynamic-switching.integration.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/hd-conference-audio-bitrates.e2e.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/spotlight-focus-mode.e2e.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/webrtc-mesh-calling.e2e.test.js' },
 
   // 5. Host Moderation Module
