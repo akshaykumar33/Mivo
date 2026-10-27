@@ -183,7 +183,15 @@ export class WebRTCMeshManager {
       document.body.appendChild(audioElem);
     }
     audioElem.srcObject = stream;
-    audioElem.volume = 1.0;
+    // Apply saved volume or standard 1.0 (clamped between 0.0 and 1.0 for HTMLAudioElement)
+    let initialVol = 1.0;
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(`mivo_peer_vol_${peerUserId}`);
+      if (saved) {
+        initialVol = Math.max(0, Math.min(1.0, Number(saved) / 100));
+      }
+    }
+    audioElem.volume = initialVol;
     audioElem.play().catch(() => {});
   }
 
@@ -191,6 +199,11 @@ export class WebRTCMeshManager {
    * Adjust remote peer audio volume (0% to 200%)
    */
   public setPeerVolume(peerUserId: string, volumePercent: number) {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(`mivo_peer_vol_${peerUserId}`, volumePercent.toString());
+      } catch {}
+    }
     if (typeof document === 'undefined') return;
     const audioElem = document.getElementById(`remote-audio-${peerUserId}`) as HTMLAudioElement;
     if (audioElem) {

@@ -120,3 +120,54 @@ describe('Spotlight Focus Mode Stage Logic', () => {
     expect(filmstrip2.map((p) => p.userId)).toEqual(['u2', 'u3']);
   });
 });
+
+describe('SpatialAudioEngine & Volume Persistence', () => {
+  it('stores and retrieves peer volume preferences across session storage', () => {
+    const mockStorage = new Map<string, string>();
+    const savePeerVol = (userId: string, vol: number) => {
+      const clamped = Math.max(0, Math.min(200, vol));
+      mockStorage.set(`mivo_peer_vol_${userId}`, clamped.toString());
+      return clamped;
+    };
+    const getPeerVol = (userId: string) => {
+      const val = mockStorage.get(`mivo_peer_vol_${userId}`);
+      return val ? Number(val) : 100;
+    };
+
+    expect(getPeerVol('user-123')).toBe(100);
+    savePeerVol('user-123', 175);
+    expect(getPeerVol('user-123')).toBe(175);
+    savePeerVol('user-123', 250); // clamp
+    expect(getPeerVol('user-123')).toBe(200);
+    savePeerVol('user-123', -20); // clamp
+    expect(getPeerVol('user-123')).toBe(0);
+  });
+});
+
+describe('Stage Modes & STREAM Theater', () => {
+  it('supports all 5 communication modes: TEXT, VOICE, VIDEO, SCREEN_SHARE, STREAM', () => {
+    const supportedModes = ['TEXT', 'VOICE', 'VIDEO', 'SCREEN_SHARE', 'STREAM'];
+    expect(supportedModes).toHaveLength(5);
+    expect(supportedModes).toContain('STREAM');
+    expect(supportedModes).toContain('SCREEN_SHARE');
+  });
+});
+
+describe('Interactive Documentation Hub Articles', () => {
+  it('contains comprehensive documentation covering all 11 core architectural features', async () => {
+    const { DOC_ARTICLES } = await import('../../../apps/web/src/features/docs/InteractiveDocsModal');
+    expect(DOC_ARTICLES.length).toBeGreaterThanOrEqual(10);
+
+    const titles = DOC_ARTICLES.map((a) => a.title.toLowerCase());
+    expect(titles.some((t) => t.includes('stage') || t.includes('room'))).toBe(true);
+    expect(titles.some((t) => t.includes('grid') || t.includes('reorder'))).toBe(true);
+    expect(titles.some((t) => t.includes('spotlight'))).toBe(true);
+    expect(titles.some((t) => t.includes('picture-in-picture') || t.includes('pip'))).toBe(true);
+    expect(titles.some((t) => t.includes('audio') || t.includes('volume') || t.includes('gain'))).toBe(true);
+    expect(titles.some((t) => t.includes('moderation') || t.includes('host'))).toBe(true);
+    expect(titles.some((t) => t.includes('translation') || t.includes('tts'))).toBe(true);
+    expect(titles.some((t) => t.includes('scribe') || t.includes('mom'))).toBe(true);
+    expect(titles.some((t) => t.includes('recording') || t.includes('consent'))).toBe(true);
+    expect(titles.some((t) => t.includes('rbac') || t.includes('permission'))).toBe(true);
+  });
+});

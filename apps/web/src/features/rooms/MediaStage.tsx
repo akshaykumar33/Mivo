@@ -1841,14 +1841,20 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <div className="max-w-xl w-full z-10 flex flex-col items-center text-center">
               {/* Monogram / Icon */}
               <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-200 mb-3 shadow-sm">
-                <Monitor className="w-6 h-6 text-slate-200" />
+                {mode === 'STREAM' ? (
+                  <Radio className="w-6 h-6 text-cyan-400 animate-pulse" />
+                ) : (
+                  <Monitor className="w-6 h-6 text-slate-200" />
+                )}
               </div>
 
               <h3 className="text-xl font-semibold text-white tracking-tight">
-                Broadcast Your Screen
+                {mode === 'STREAM' ? 'Live Stream Broadcaster' : 'Broadcast Your Screen'}
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md">
-                Share live code, application windows, slides, or your entire desktop directly with this meeting.
+                {mode === 'STREAM'
+                  ? 'Broadcast ultra-low latency interactive audio, video, and screen streams to all room members in real-time.'
+                  : 'Share live code, application windows, slides, or your entire desktop directly with this meeting.'}
               </p>
 
               {/* 3 Source Selector Cards */}
@@ -1923,8 +1929,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   onClick={handleToggleScreen}
                   className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.98]"
                 >
-                  <Share2 className="w-4 h-4 text-slate-900" />
-                  <span>Start Screen Sharing</span>
+                  {mode === 'STREAM' ? (
+                    <Radio className="w-4 h-4 text-cyan-600" />
+                  ) : (
+                    <Share2 className="w-4 h-4 text-slate-900" />
+                  )}
+                  <span>{mode === 'STREAM' ? 'Go Live / Start Broadcast' : 'Start Screen Sharing'}</span>
                 </button>
 
                 <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-colors">

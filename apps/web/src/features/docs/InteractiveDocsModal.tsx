@@ -19,6 +19,7 @@ import {
   Languages,
   CircleDot,
   PictureInPicture2,
+  Volume2,
   Users,
   Copy,
   Check,
@@ -215,6 +216,107 @@ Mivo bridges language barriers across global teams:
 
 ### 2. Native Speech Synthesis (TTS)
 * Click the **Speaker icon (\`Volume2\`)** on any translated message to hear it read aloud in a native regional accent!
+    `,
+  },
+  {
+    id: 'floating-pip-presenter',
+    category: '3. Real-Time Stage Engine',
+    title: 'Floating Picture-in-Picture (PiP) Presenter',
+    summary: 'Draggable, resizable floating window to view participant feeds while presenting.',
+    readTime: '2 min read',
+    icon: PictureInPicture2,
+    content: `
+# Floating Picture-in-Picture (PiP) Presenter
+
+Mivo includes a draggable floating PiP overlay designed for uninterrupted multitasking:
+
+### 1. Launching PiP
+* Click the **PiP button** on the Floating Cyber Dock or Cyber Navigation bar.
+* The stage transforms into a floating glassmorphic window staying pinned above your workspace.
+
+### 2. Multi-Mode Controls
+* **Size Toggles**: Toggle between Small (S), Medium (M), and Large (L) window dimensions.
+* **Minimize Pill**: Collapse into a compact active-speaker pill showing current speaker and audio level.
+* **View Modes**: Switch between Grid view and Spotlight hero view directly inside PiP.
+* **Quick Media Toggles**: Toggle your microphone, camera, or screen share without leaving the presenter window.
+    `,
+  },
+  {
+    id: 'recording-compliance',
+    category: '6. Enterprise & Compliance',
+    title: 'Permission-Gated Recording & Consent Compliance',
+    summary: 'Host-governed recording with room-wide consent alert and persistent timer.',
+    readTime: '3 min read',
+    icon: CircleDot,
+    content: `
+# Permission-Gated Recording & Consent Compliance
+
+Mivo adheres strictly to zero-client-trust privacy standards:
+
+### 1. Host Permission Enforcement
+* Only room hosts or admins with the \`ROOM_RECORD\` permission can initiate meeting recordings.
+
+### 2. Room-Wide Consent Banner
+* When recording begins, an unmissable red compliance banner (\`RecordingConsentBanner.tsx\`) displays on all attendee screens.
+* Clearly indicates who started the recording and gives attendees the option to acknowledge or leave the session.
+
+### 3. Live Elapsed REC Timer Badge
+* A persistent glowing red REC badge pulses with an active elapsed recording duration timer.
+
+### 4. Automatic .webm Download & Cloud Archive
+* When the recording stops, the captured meeting video is automatically downloaded to the host's device as a high-definition \`.webm\` file and archived to cloud storage.
+    `,
+  },
+  {
+    id: 'moderation-rbac',
+    category: '6. Enterprise & Compliance',
+    title: 'Host & Admin Moderation & Zero-Client-Trust RBAC',
+    summary: 'Remote mute, host handover, and eviction enforced by 16 server-side permissions.',
+    readTime: '3 min read',
+    icon: Shield,
+    content: `
+# Host Moderation & Zero-Client-Trust Granular RBAC
+
+Mivo enforces a strict zero-client-trust security architecture:
+
+### 1. Host Moderation WebSocket Signals (\`ROOM_HOST_ACTION\`)
+* **Remote Mute**: Hosts can mute any loud or noisy attendee across the entire room.
+* **Host Transfer**: Seamlessly handover host privileges to another member.
+* **Eviction**: Remove uninvited participants with instant redirection and token invalidation.
+
+### 2. Zero-Client-Trust Server Guard
+* The client cannot forge permissions. The NestJS backend evaluates 16 fine-grained permissions server-side on every request via \`@RequirePermissions(...)\` and \`PermissionsGuard\`.
+    `,
+    codeSnippet: {
+      lang: 'typescript',
+      code: `// Server-Side Zero-Client-Trust Guard Evaluation
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions(Permission.ROOM_MODERATE, Permission.ROOM_RECORD)
+@Post(':id/moderate')
+async moderateRoom(@Param('id') id: string) { ... }`,
+    },
+  },
+  {
+    id: 'spatial-audio-volume',
+    category: '3. Real-Time Stage Engine',
+    title: '3D Spatial Audio & Individual Peer Volume (0% to 200%)',
+    summary: 'Independent Web Audio gain amplification up to 2.0x and stereo spatial panning.',
+    readTime: '2 min read',
+    icon: Volume2,
+    content: `
+# 3D Spatial Audio & Peer Volume Sliders
+
+Mivo gives you complete acoustic control over every participant:
+
+### 1. Individual 0% to 200% Gain Sliders
+* Hover over any speaker's tile and adjust their volume slider from **0% (Mute)** to **200% (2.0x Gain Boost)**.
+* Standard HTML5 audio elements are clamped at 1.0; Mivo utilizes the Web Audio API's \`GainNode\` to cleanly amplify soft-spoken participants up to double volume without clipping distortion.
+
+### 2. Session Persistence
+* Custom volume adjustments for teammates are automatically remembered across browser tabs and reconnects.
+
+### 3. Stereophonic 3D Positional Audio
+* Based on each participant's X/Y coordinates in the responsive grid, their audio is dynamically panned left, center, or right using a Web Audio \`StereoPannerNode\`.
     `,
   },
   {

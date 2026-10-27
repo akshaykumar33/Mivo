@@ -58,6 +58,12 @@ class SpatialAudioEngine {
    */
   public setPeerVolume(userId: string, volumePercent: number): void {
     const clamped = Math.max(0, Math.min(200, volumePercent));
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(`mivo_peer_vol_${userId}`, clamped.toString());
+      } catch {}
+    }
+
     let node = this.participants.get(userId);
     if (!node) {
       node = { userId, pan: 0, distance: 0, volume: clamped };
@@ -75,7 +81,18 @@ class SpatialAudioEngine {
   }
 
   public getPeerVolume(userId: string): number {
-    return this.participants.get(userId)?.volume ?? 100;
+    const node = this.participants.get(userId);
+    if (node?.volume !== undefined) return node.volume;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(`mivo_peer_vol_${userId}`);
+        if (saved !== null && saved !== undefined) {
+          const parsed = Number(saved);
+          if (!Number.isNaN(parsed)) return Math.max(0, Math.min(200, parsed));
+        }
+      } catch {}
+    }
+    return 100;
   }
 
   /**
@@ -109,7 +126,7 @@ class SpatialAudioEngine {
       const existing = this.participants.get(userId);
       const pan = existing?.pan ?? 0;
       const distance = existing?.distance ?? 0;
-      const volume = existing?.volume ?? 100;
+      const volume = existing?.volume ?? this.getPeerVolume(userId);
 
       if (pannerNode && this.isEnabled) {
         pannerNode.pan.setValueAtTime(pan, ctx.currentTime);
