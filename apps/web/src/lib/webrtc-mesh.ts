@@ -5,7 +5,12 @@
  */
 
 import { realtime } from './socket-client';
-import { REALTIME_EVENTS } from '@mivo/shared';
+import {
+  REALTIME_EVENTS,
+  AudioBitrateProfile,
+  AudioBitrateConfig,
+  AUDIO_BITRATE_CONSTANTS,
+} from '@mivo/shared';
 
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
@@ -22,19 +27,28 @@ export class WebRTCMeshManager {
   private currentUserId: string | null = null;
   private onRemoteStreamCallback: ((peerId: string, stream: MediaStream) => void) | null = null;
   private onPeerDisconnectedCallback: ((peerId: string) => void) | null = null;
+  private onBitrateChangedCallback: ((config: AudioBitrateConfig) => void) | null = null;
+
+  // Audio Bitrate Management: 16 to 128 kbps, 32 kbps standard baseline
+  private currentBitrateKbps: number = AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS;
+  private currentProfile: AudioBitrateProfile = 'standard';
+  private adaptiveMonitorTimer: ReturnType<typeof setInterval> | null = null;
 
   init(
     roomId: string,
     currentUserId: string,
     onRemoteStream?: (peerId: string, stream: MediaStream) => void,
-    onPeerDisconnected?: (peerId: string) => void
+    onPeerDisconnected?: (peerId: string) => void,
+    onBitrateChanged?: (config: AudioBitrateConfig) => void
   ) {
     this.currentRoomId = roomId;
     this.currentUserId = currentUserId;
     this.onRemoteStreamCallback = onRemoteStream || null;
     this.onPeerDisconnectedCallback = onPeerDisconnected || null;
+    this.onBitrateChangedCallback = onBitrateChanged || null;
 
     this.setupSignalingListeners();
+    this.startAdaptiveBitrateMonitoring();
   }
 
   setLocalStream(stream: MediaStream | null) {
@@ -76,10 +90,10 @@ export class WebRTCMeshManager {
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
       });
-      const optimizedSdp = this.optimizeAudioSdp(offer.sdp || '');
+      const optimizedSdp = this.optimizeAudioSdp(offer.sdp || '', this.currentBitrateKbps);
       const sdpDescription = new RTCSessionDescription({ type: offer.type, sdp: optimizedSdp });
       await pc.setLocalDescription(sdpDescription);
-      this.configureHighQualityAudioSender(pc);
+      this.configureAudioSender(pc);
 
       const socket = realtime.getSocket();
       if (socket && this.currentRoomId) {
@@ -111,6 +125,7 @@ export class WebRTCMeshManager {
   }
 
   cleanup() {
+    this.stopAdaptiveBitrateMonitoring();
     this.peers.forEach((pc) => pc.close());
     this.peers.clear();
     this.remoteStreams.clear();
@@ -120,6 +135,8 @@ export class WebRTCMeshManager {
     this.localStream = null;
     this.currentRoomId = null;
     this.currentUserId = null;
+    this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS;
+    this.currentProfile = 'standard';
   }
 
   private createPeerConnection(peerUserId: string): RTCPeerConnection {
@@ -195,10 +212,10 @@ export class WebRTCMeshManager {
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         const answer = await pc.createAnswer();
-        const optimizedAnswerSdp = this.optimizeAudioSdp(answer.sdp || '');
+        const optimizedAnswerSdp = this.optimizeAudioSdp(answer.sdp || '', this.currentBitrateKbps);
         const answerDescription = new RTCSessionDescription({ type: answer.type, sdp: optimizedAnswerSdp });
         await pc.setLocalDescription(answerDescription);
-        this.configureHighQualityAudioSender(pc);
+        this.configureAudioSender(pc);
 
         socket.emit(REALTIME_EVENTS.SIGNALING_ANSWER, {
           roomId: this.currentRoomId,
@@ -240,53 +257,257 @@ export class WebRTCMeshManager {
   }
 
   /**
-   * Optimize WebRTC SDP for high-definition Opus voice audio:
-   * Sets maxaveragebitrate=128000 (128 kbps HD voice),
-   * enables stereo spatial sound, in-band forward error correction (FEC),
-   * and discontinuous transmission (DTX) to prevent packet loss.
+   * Dynamically update audio bitrate (clamped between 16 kbps and 128 kbps).
+   * Updates all active RTCRtpSenders immediately without dropping the call.
    */
-  private optimizeAudioSdp(sdp: string): string {
+  public async setAudioBitrate(kbps: number) {
+    const clamped = Math.min(
+      AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
+      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(kbps))
+    );
+    this.currentBitrateKbps = clamped;
+
+    if (clamped === AUDIO_BITRATE_CONSTANTS.MIN_KBPS) {
+      this.currentProfile = 'low-bandwidth';
+    } else if (clamped === AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS) {
+      this.currentProfile = 'standard';
+    } else if (clamped === AUDIO_BITRATE_CONSTANTS.HD_KBPS) {
+      this.currentProfile = 'hd';
+    } else if (clamped === AUDIO_BITRATE_CONSTANTS.MAX_KBPS) {
+      this.currentProfile = 'studio';
+    }
+
+    await this.applyBitrateToAllSenders(clamped);
+    this.notifyBitrateChanged();
+  }
+
+  /**
+   * Set predefined audio profile:
+   * - 'low-bandwidth': 16 kbps (cellular saver, mono, DTX, FEC)
+   * - 'standard': 32 kbps (standard conference baseline, mono, DTX, FEC)
+   * - 'hd': 64 kbps (high-definition, stereo)
+   * - 'studio': 128 kbps (full spectrum fidelity, stereo)
+   * - 'adaptive': dynamically scales between 16 and 128 kbps based on network health
+   */
+  public async setAudioProfile(profile: AudioBitrateProfile) {
+    this.currentProfile = profile;
+    switch (profile) {
+      case 'low-bandwidth':
+        this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.MIN_KBPS; // 16
+        break;
+      case 'standard':
+        this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // 32
+        break;
+      case 'hd':
+        this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.HD_KBPS; // 64
+        break;
+      case 'studio':
+        this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.MAX_KBPS; // 128
+        break;
+      case 'adaptive':
+        if (this.currentBitrateKbps < AUDIO_BITRATE_CONSTANTS.MIN_KBPS) {
+          this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+        }
+        break;
+    }
+
+    await this.applyBitrateToAllSenders(this.currentBitrateKbps);
+    this.notifyBitrateChanged();
+  }
+
+  public getAudioBitrateConfig(): AudioBitrateConfig {
+    const isLowBw = this.currentBitrateKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+    return {
+      profile: this.currentProfile,
+      currentBitrateKbps: this.currentBitrateKbps,
+      minBitrateKbps: AUDIO_BITRATE_CONSTANTS.MIN_KBPS,
+      maxBitrateKbps: AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
+      isLowBandwidthOptimized: isLowBw,
+      usedtx: true,
+      useinbandfec: true,
+      stereo: !isLowBw,
+    };
+  }
+
+  private notifyBitrateChanged() {
+    if (this.onBitrateChangedCallback) {
+      this.onBitrateChangedCallback(this.getAudioBitrateConfig());
+    }
+  }
+
+  /**
+   * Optimize WebRTC SDP for dynamic Opus voice & conference audio:
+   * Sets maxaveragebitrate (16000 to 128000 bps, 32000 bps standard baseline).
+   * Low-bandwidth optimization (bitrate <= 32 kbps):
+   * - mono speech encoding (stereo=0;sprop-stereo=0) to focus 100% bandwidth on vocal clarity
+   * - discontinuous transmission (usedtx=1) to eliminate up to 70% of network packets during silence
+   * - in-band forward error correction (useinbandfec=1) to prevent audio jitter/loss
+   * - variable bitrate (cbr=0) to minimize soft-speech and background noise bit consumption
+   * High-definition audio (> 32 kbps):
+   * - stereo=1;sprop-stereo=1 for spatial field and music/instrument fidelity
+   */
+  public optimizeAudioSdp(sdp: string, targetBitrateKbps: number = this.currentBitrateKbps): string {
     if (!sdp) return sdp;
     const opusMatch = sdp.match(/a=rtpmap:(\d+)\s+opus\/48000/i);
     if (!opusMatch) return sdp;
     const pt = opusMatch[1];
 
+    const clampedKbps = Math.min(
+      AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
+      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(targetBitrateKbps))
+    );
+    const bitrateBps = clampedKbps * 1000;
+    const isLowBw = clampedKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // <= 32 kbps
+
     const fmtpRegex = new RegExp(`a=fmtp:${pt}\\s+(.*)`);
     if (fmtpRegex.test(sdp)) {
       return sdp.replace(fmtpRegex, (_match, params) => {
-        let p = params;
-        if (!p.includes('maxaveragebitrate=')) p += ';maxaveragebitrate=128000';
-        if (!p.includes('stereo=')) p += ';stereo=1;sprop-stereo=1';
-        if (!p.includes('useinbandfec=')) p += ';useinbandfec=1';
-        if (!p.includes('usedtx=')) p += ';usedtx=1';
-        return `a=fmtp:${pt} ${p}`;
+        const paramMap = new Map<string, string>();
+        params.split(';').forEach((pair: string) => {
+          const [k, v] = pair.trim().split('=');
+          if (k) paramMap.set(k.trim().toLowerCase(), v ? v.trim() : '');
+        });
+
+        // Dynamic bitrate and low-bandwidth optimizations
+        paramMap.set('maxaveragebitrate', String(bitrateBps));
+        paramMap.set('stereo', isLowBw ? '0' : '1');
+        paramMap.set('sprop-stereo', isLowBw ? '0' : '1');
+        paramMap.set('useinbandfec', '1');
+        paramMap.set('usedtx', '1');
+        paramMap.set('cbr', '0');
+
+        const formatted = Array.from(paramMap.entries())
+          .map(([k, v]) => (v ? `${k}=${v}` : k))
+          .join(';');
+        return `a=fmtp:${pt} ${formatted}`;
       });
     }
 
+    const lowBwParams = isLowBw
+      ? `maxaveragebitrate=${bitrateBps};stereo=0;sprop-stereo=0;useinbandfec=1;usedtx=1;cbr=0`
+      : `maxaveragebitrate=${bitrateBps};stereo=1;sprop-stereo=1;useinbandfec=1;usedtx=1;cbr=0`;
+
     return sdp.replace(
       new RegExp(`(a=rtpmap:${pt}\\s+opus\\/48000[^\r\n]*)`),
-      `$1\r\na=fmtp:${pt} maxaveragebitrate=128000;stereo=1;sprop-stereo=1;useinbandfec=1;usedtx=1`
+      `$1\r\na=fmtp:${pt} ${lowBwParams}`
     );
   }
 
   /**
-   * Configure high bitrate and priority on RTCRtpSender for HD voice transmission
+   * Apply dynamic maxBitrate and priority to an audio sender's encodings
    */
-  private configureHighQualityAudioSender(pc: RTCPeerConnection) {
+  public async applyBitrateToSender(
+    sender: RTCRtpSender,
+    bitrateKbps: number = this.currentBitrateKbps
+  ) {
+    if (sender.track?.kind !== 'audio') return;
     try {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      const clampedKbps = Math.min(
+        AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
+        Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, bitrateKbps)
+      );
+      params.encodings[0].maxBitrate = clampedKbps * 1000;
+      (params.encodings[0] as any).priority = 'high';
+      (params.encodings[0] as any).networkPriority = 'high';
+      await sender.setParameters(params);
+    } catch {
+      // Set parameters may be unsupported in some environments or during connection teardown
+    }
+  }
+
+  /**
+   * Apply dynamic bitrate to all active peer connections
+   */
+  public async applyBitrateToAllSenders(bitrateKbps: number = this.currentBitrateKbps) {
+    const promises: Promise<void>[] = [];
+    this.peers.forEach((pc) => {
       pc.getSenders().forEach((sender) => {
         if (sender.track?.kind === 'audio') {
-          const params = sender.getParameters();
-          if (!params.encodings || params.encodings.length === 0) {
-            params.encodings = [{}];
-          }
-          params.encodings[0].maxBitrate = 128000; // 128 kbps
-          (params.encodings[0] as any).priority = 'high';
-          (params.encodings[0] as any).networkPriority = 'high';
-          sender.setParameters(params).catch(() => {});
+          promises.push(this.applyBitrateToSender(sender, bitrateKbps));
         }
       });
-    } catch {}
+    });
+    await Promise.allSettled(promises);
+  }
+
+  /**
+   * Configure audio sender encoding bitrates and priority upon connection
+   */
+  public configureAudioSender(pc: RTCPeerConnection) {
+    pc.getSenders().forEach((sender) => {
+      if (sender.track?.kind === 'audio') {
+        this.applyBitrateToSender(sender, this.currentBitrateKbps);
+      }
+    });
+  }
+
+  /**
+   * Starts periodic network quality sampling to adapt audio bitrates automatically
+   * when profile is 'adaptive' or during network congestion.
+   */
+  private startAdaptiveBitrateMonitoring() {
+    this.stopAdaptiveBitrateMonitoring();
+    this.adaptiveMonitorTimer = setInterval(async () => {
+      if (this.currentProfile !== 'adaptive' || this.peers.size === 0) return;
+
+      let maxRtt = 0;
+      let maxPacketLossRatio = 0;
+      let samplesCount = 0;
+
+      for (const [, pc] of this.peers) {
+        try {
+          const stats = await pc.getStats();
+          stats.forEach((report) => {
+            if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
+              if (typeof report.currentRoundTripTime === 'number') {
+                maxRtt = Math.max(maxRtt, report.currentRoundTripTime);
+                samplesCount++;
+              }
+            }
+            if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
+              if (typeof report.fractionLost === 'number') {
+                maxPacketLossRatio = Math.max(maxPacketLossRatio, report.fractionLost);
+                samplesCount++;
+              }
+            }
+          });
+        } catch {
+          // getStats failed or unsupported
+        }
+      }
+
+      if (samplesCount === 0) return;
+
+      // Congestion threshold: RTT > 250ms or packet loss > 4%
+      // Degrade to low-bandwidth 16 kbps
+      if (maxRtt > 0.25 || maxPacketLossRatio > 0.04) {
+        if (this.currentBitrateKbps > AUDIO_BITRATE_CONSTANTS.MIN_KBPS) {
+          this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.MIN_KBPS; // 16 kbps
+          await this.applyBitrateToAllSenders(16);
+          this.notifyBitrateChanged();
+        }
+      }
+      // Good network health: RTT < 100ms and packet loss < 1%
+      // Restore up to standard 32 kbps baseline
+      else if (maxRtt < 0.1 && maxPacketLossRatio < 0.01) {
+        if (this.currentBitrateKbps < AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS) {
+          this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // 32 kbps
+          await this.applyBitrateToAllSenders(32);
+          this.notifyBitrateChanged();
+        }
+      }
+    }, 3000);
+  }
+
+  private stopAdaptiveBitrateMonitoring() {
+    if (this.adaptiveMonitorTimer) {
+      clearInterval(this.adaptiveMonitorTimer);
+      this.adaptiveMonitorTimer = null;
+    }
   }
 }
 

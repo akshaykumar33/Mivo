@@ -34,3 +34,24 @@ export interface RoomMemberDTO {
   isScreenOn: boolean;
   joinedAt: string;
 }
+
+export type AudioBitrateProfile = 'low-bandwidth' | 'standard' | 'hd' | 'studio' | 'adaptive';
+
+export interface AudioBitrateConfig {
+  profile: AudioBitrateProfile;
+  currentBitrateKbps: number;
+  minBitrateKbps: number;
+  maxBitrateKbps: number;
+  isLowBandwidthOptimized: boolean;
+  usedtx: boolean;
+  useinbandfec: boolean;
+  stereo: boolean;
+}
+
+export const AUDIO_BITRATE_CONSTANTS = {
+  MIN_KBPS: 16,
+  STANDARD_KBPS: 32,
+  HD_KBPS: 64,
+  MAX_KBPS: 128,
+  DEFAULT_KBPS: 32,
+} as const;

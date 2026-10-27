@@ -1,7 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { RoomMemberDTO, RoomCommunicationMode, RoomDTO, REALTIME_EVENTS } from '@mivo/shared';
+import {
+  RoomMemberDTO,
+  RoomCommunicationMode,
+  RoomDTO,
+  REALTIME_EVENTS,
+  AudioBitrateProfile,
+  AUDIO_BITRATE_CONSTANTS,
+} from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
 import {
   Mic,
@@ -35,6 +42,10 @@ import {
   Shield,
   GripVertical,
   ArrowLeftRight,
+  Gauge,
+  Leaf,
+  Sliders,
+  Check,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -115,6 +126,27 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // Spoken Voice-to-Ticket Automation
   const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
   const [ticketToast, setTicketToast] = React.useState<string | null>(null);
+
+  // Dynamic WebRTC Audio Bitrate & Quality (16 - 128 kbps, 32 kbps standard baseline)
+  const {
+    audioBitrateKbps,
+    audioProfile,
+    setAudioBitrate,
+    setAudioProfile,
+  } = useRoomStore();
+  const [isBitrateMenuOpen, setIsBitrateMenuOpen] = React.useState(false);
+  const bitrateMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isBitrateMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bitrateMenuRef.current && !bitrateMenuRef.current.contains(e.target as Node)) {
+        setIsBitrateMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isBitrateMenuOpen]);
 
   // Speech synthesis for AI Co-Host Duplex Voice
   const speakVerbalResponse = React.useCallback((text: string) => {
@@ -756,6 +788,234 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     setSpatialPositions(newPositions);
   }, [sortedParticipants, isSpatialAudioActive]);
 
+  // Audio Bitrate Dynamic Control Popover (16 - 128 kbps, 32 kbps standard baseline)
+  const renderBitrateControl = () => {
+    const isLowBw = audioBitrateKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
+    return (
+      <div className="relative inline-block" ref={bitrateMenuRef}>
+        <button
+          onClick={() => setIsBitrateMenuOpen((prev) => !prev)}
+          className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+            isBitrateMenuOpen
+              ? 'bg-violet-600/40 border-violet-500/60 text-white ring-2 ring-violet-500/30'
+              : isLowBw
+              ? 'bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/40 text-emerald-300'
+              : 'bg-indigo-600/20 hover:bg-indigo-600/30 border-indigo-500/40 text-indigo-300'
+          }`}
+          title="Configure Dynamic WebRTC Audio Bitrate (16 - 128 kbps) & Low-Bandwidth Optimizations"
+        >
+          {isLowBw ? (
+            <Leaf className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          ) : (
+            <Gauge className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          )}
+          <span>
+            {audioBitrateKbps} kbps{' '}
+            <span className="opacity-75 font-normal">
+              ({audioProfile === 'standard' ? 'Standard' : audioProfile === 'low-bandwidth' ? 'Low-BW' : audioProfile.toUpperCase()})
+            </span>
+          </span>
+          {isLowBw && (
+            <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase font-extrabold">
+              Opt
+            </span>
+          )}
+          <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform ${isBitrateMenuOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isBitrateMenuOpen && (
+          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#0f111a]/95 backdrop-blur-xl border border-white/10 shadow-2xl p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white leading-tight">Audio Bitrate & Bandwidth</h4>
+                  <p className="text-[10px] text-zinc-400">WebRTC Opus Dynamic Encoder</p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-300 text-[10px] font-extrabold">
+                {audioBitrateKbps} kbps
+              </span>
+            </div>
+
+            {/* Current status explanation */}
+            <div className="my-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-zinc-200">
+                  Active Mode: <span className="text-violet-300 font-bold capitalize">{audioProfile}</span>
+                </span>
+                {isLowBw ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
+                    <Leaf className="w-3 h-3" /> Low-BW Optimized
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-cyan-400 font-bold">
+                    <Headphones className="w-3 h-3" /> Wideband Stereo
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-zinc-400 leading-relaxed">
+                {isLowBw
+                  ? '32 kbps is the standard conference baseline with mono speech, DTX silence suppression (saves ~70% idle data), and in-band FEC packet recovery.'
+                  : 'High definition stereo transmission active with in-band FEC and DTX for spatial and studio fidelity.'}
+              </p>
+            </div>
+
+            {/* Quick Profile Presets */}
+            <div className="space-y-1.5 mb-3">
+              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Quality Presets</div>
+
+              {/* Low Bandwidth 16k */}
+              <button
+                onClick={() => setAudioProfile('low-bandwidth')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'low-bandwidth' || (audioProfile !== 'adaptive' && audioBitrateKbps === 16)
+                    ? 'bg-emerald-600/25 border-emerald-500/50 text-emerald-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="text-left">
+                    <div>16 kbps · Low Bandwidth</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Cellular & weak signal saver · Mono + DTX</div>
+                  </div>
+                </div>
+                {(audioProfile === 'low-bandwidth' || audioBitrateKbps === 16) && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+              </button>
+
+              {/* Standard 32k [Default / Recommended] */}
+              <button
+                onClick={() => setAudioProfile('standard')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'standard' || (audioProfile !== 'adaptive' && audioBitrateKbps === 32)
+                    ? 'bg-violet-600/30 border-violet-500/50 text-violet-200 font-bold ring-1 ring-violet-500/30'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span>32 kbps · Standard Conference</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 font-semibold">Recommended</span>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Standard baseline · Crystal voice clarity & low bandwidth</div>
+                  </div>
+                </div>
+                {(audioProfile === 'standard' || audioBitrateKbps === 32) && <Check className="w-3.5 h-3.5 text-violet-400" />}
+              </button>
+
+              {/* HD 64k */}
+              <button
+                onClick={() => setAudioProfile('hd')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'hd' || (audioProfile !== 'adaptive' && audioBitrateKbps === 64)
+                    ? 'bg-cyan-600/25 border-cyan-500/50 text-cyan-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Headphones className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="text-left">
+                    <div>64 kbps · HD Audio</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">High-definition wideband stereo speech</div>
+                  </div>
+                </div>
+                {(audioProfile === 'hd' || audioBitrateKbps === 64) && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+              </button>
+
+              {/* Studio 128k */}
+              <button
+                onClick={() => setAudioProfile('studio')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'studio' || (audioProfile !== 'adaptive' && audioBitrateKbps === 128)
+                    ? 'bg-fuchsia-600/25 border-fuchsia-500/50 text-fuchsia-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Gauge className="w-3.5 h-3.5 text-fuchsia-400" />
+                  <div className="text-left">
+                    <div>128 kbps · Studio Fidelity</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Maximum Opus quality · Full stereo music & instruments</div>
+                  </div>
+                </div>
+                {(audioProfile === 'studio' || audioBitrateKbps === 128) && <Check className="w-3.5 h-3.5 text-fuchsia-400" />}
+              </button>
+
+              {/* Adaptive Dynamic */}
+              <button
+                onClick={() => setAudioProfile('adaptive')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'adaptive'
+                    ? 'bg-amber-600/25 border-amber-500/50 text-amber-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="text-left">
+                    <div>Adaptive (16 – 128 kbps)</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Auto-scales dynamically based on RTT & packet loss</div>
+                  </div>
+                </div>
+                {audioProfile === 'adaptive' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+              </button>
+            </div>
+
+            {/* Manual Slider Fine Tuning */}
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] mb-3">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-300 mb-2">
+                <span>Fine-Tune Bitrate</span>
+                <span className="text-violet-400 font-mono font-bold">{audioBitrateKbps} kbps</span>
+              </div>
+              <input
+                type="range"
+                min={AUDIO_BITRATE_CONSTANTS.MIN_KBPS}
+                max={AUDIO_BITRATE_CONSTANTS.MAX_KBPS}
+                step={4}
+                value={audioBitrateKbps}
+                onChange={(e) => setAudioBitrate(Number(e.target.value))}
+                className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-700 rounded-lg appearance-none"
+              />
+              <div className="flex justify-between text-[9px] text-zinc-500 font-mono mt-1">
+                <span>16k (Low)</span>
+                <span className="text-violet-400 font-semibold">32k (Std)</span>
+                <span>64k (HD)</span>
+                <span>128k (Max)</span>
+              </div>
+            </div>
+
+            {/* Low-Bandwidth Feature Specs */}
+            <div className="grid grid-cols-2 gap-1.5 text-[9px] text-zinc-400 pt-2 border-t border-white/5">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>DTX Silence Suppression</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>In-Band FEC Protection</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>{isLowBw ? 'Mono Speech (100% voice)' : 'Stereo Spatial Audio'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>Real-Time Adaptation</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   const renderVoiceStage = () => {
     return (
@@ -811,6 +1071,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <Headphones className="w-3.5 h-3.5 text-emerald-400" />
               <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
             </button>
+            {renderBitrateControl()}
             <button
               onClick={() =>
                 handleTriggerCoHost(
@@ -1092,6 +1353,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <Headphones className="w-3.5 h-3.5 text-emerald-400" />
               <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
             </button>
+
+            {renderBitrateControl()}
 
             <button
               onClick={() =>
@@ -1489,6 +1752,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
           {/* Right: Stage View Controls */}
           <div className="flex items-center gap-1.5">
+            {renderBitrateControl()}
             {isScreenActive && (
               <button
                 onClick={() => setScreenFitMode(screenFitMode === 'contain' ? 'cover' : 'contain')}
