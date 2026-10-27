@@ -1,11 +1,10 @@
 services:
   - type: web
     name: mivo-server
-    runtime: node
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
     region: oregon
-    buildCommand: pnpm install && pnpm --filter @mivo/database run build && pnpm --filter @mivo/server run build
-    startCommand: node apps/server/dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,4 +21,4 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: CORS_ORIGIN
-        sync: false
+        value: "*"

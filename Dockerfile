@@ -8,11 +8,22 @@ FROM base AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl python3 make g++
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+# 1. Copy repository configuration and manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json tsconfig.json ./
 COPY packages ./packages
 COPY apps/server ./apps/server
 
+# 2. Configure pnpm and install dependencies
+RUN pnpm config set enable-pre-post-scripts true
 RUN pnpm install --frozen-lockfile
+
+# 3. Build workspace packages in correct topological order
+# Dummy DATABASE_URL for Prisma client compilation
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/mivo"
+ENV DIRECT_URL="postgresql://dummy:dummy@localhost:5432/mivo"
+
+RUN pnpm --filter @mivo/shared run build
+RUN pnpm --filter @mivo/database exec prisma generate
 RUN pnpm --filter @mivo/database run build
 RUN pnpm --filter @mivo/server run build
 
