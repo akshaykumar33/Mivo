@@ -32,6 +32,9 @@ export interface AiCoHostStageTileProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  onClick?: () => void;
+  isSpotlightHero?: boolean;
+  filmstripMode?: boolean;
 }
 
 export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
@@ -45,6 +48,9 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
   onDragStart,
   onDragOver,
   onDrop,
+  onClick,
+  isSpotlightHero = false,
+  filmstripMode = false,
 }) => {
   const [isMuted, setIsMuted] = React.useState(false);
   const [isInputExpanded, setIsInputExpanded] = React.useState(false);
@@ -64,22 +70,48 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      draggable={!isSpotlightHero}
+      onDragStart={!isSpotlightHero ? onDragStart : undefined}
+      onDragOver={!isSpotlightHero ? onDragOver : undefined}
+      onDrop={!isSpotlightHero ? onDrop : undefined}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button, input, form, [data-prevent-tile-click]')) {
+          return;
+        }
+        onClick?.();
+      }}
       className={`relative w-full aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-[#121424] via-[#0E101D] to-[#0A0B14] border-2 transition-all duration-300 group flex flex-col justify-between p-3.5 sm:p-4 select-none shadow-xl ${
-        isSpeaking
+        onClick ? 'cursor-pointer' : ''
+      } ${
+        isSpotlightHero
+          ? isSpeaking
+            ? 'border-emerald-400 ring-4 ring-emerald-500/50 shadow-2xl shadow-emerald-500/30'
+            : 'border-violet-500 ring-2 ring-violet-500/50 shadow-2xl shadow-violet-950/60'
+          : isPinned
+          ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/30'
+          : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
           : isThinking
           ? 'border-amber-500/80 shadow-amber-500/20 ring-2 ring-amber-500/20 animate-pulse'
           : isListening
           ? 'border-cyan-500/60 shadow-cyan-500/10'
+          : filmstripMode
+          ? 'border-violet-500/40 hover:border-violet-400 hover:ring-2 hover:ring-violet-500/50'
           : 'border-violet-500/40 hover:border-violet-500/70'
       }`}
     >
       {/* Background Animated Atmosphere */}
       <div className="absolute inset-0 bg-radial from-violet-600/15 via-transparent to-transparent pointer-events-none" />
+
+      {/* Filmstrip Hover Overlay: Click to Spotlight prompt */}
+      {filmstripMode && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/95 text-white text-[11px] font-extrabold shadow-xl border border-violet-400/40 tracking-wide uppercase">
+            <Pin className="w-3 h-3 fill-current text-amber-300" />
+            <span>Spotlight AI Co-Host</span>
+          </div>
+        </div>
+      )}
 
       {/* Top Controls Bar */}
       <div className="flex items-center justify-between z-10">
@@ -125,7 +157,7 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
 
         {/* Pin & Tile Actions */}
         <div className="flex items-center gap-1">
-          {onMoveLeft && (
+          {onMoveLeft && !isSpotlightHero && (
             <button
               onClick={onMoveLeft}
               className="p-1 rounded-lg bg-black/40 hover:bg-white/[0.1] text-white/60 hover:text-white transition-all cursor-pointer opacity-0 group-hover:opacity-100"
@@ -135,7 +167,7 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
             </button>
           )}
 
-          {onMoveRight && (
+          {onMoveRight && !isSpotlightHero && (
             <button
               onClick={onMoveRight}
               className="p-1 rounded-lg bg-black/40 hover:bg-white/[0.1] text-white/60 hover:text-white transition-all cursor-pointer opacity-0 group-hover:opacity-100"
@@ -147,15 +179,18 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
 
           {onTogglePin && (
             <button
-              onClick={onTogglePin}
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin();
+              }}
               className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
                 isPinned
-                  ? 'bg-violet-600/40 border-violet-500 text-white'
+                  ? 'bg-violet-600/90 border-violet-400 text-white shadow-lg'
                   : 'bg-black/40 border-white/[0.08] text-white/60 hover:text-white'
               }`}
               title={isPinned ? 'Unpin Co-Host' : 'Spotlight Co-Host'}
             >
-              <Pin className="w-3.5 h-3.5" />
+              {isPinned ? <PinOff className="w-3.5 h-3.5 text-amber-300" /> : <Pin className="w-3.5 h-3.5" />}
             </button>
           )}
 

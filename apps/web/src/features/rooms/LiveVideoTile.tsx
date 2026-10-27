@@ -45,6 +45,9 @@ export interface LiveVideoTileProps {
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
   spatialPanLabel?: string;
+  onClick?: () => void;
+  isSpotlightHero?: boolean;
+  filmstripMode?: boolean;
 }
 
 export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
@@ -69,6 +72,9 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   onMoveLeft,
   onMoveRight,
   spatialPanLabel,
+  onClick,
+  isSpotlightHero = false,
+  filmstripMode = false,
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = React.useState(100);
@@ -89,32 +95,56 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragEnd={onDragEnd}
-      onDrop={onDrop}
+      draggable={!isSpotlightHero}
+      onDragStart={!isSpotlightHero ? onDragStart : undefined}
+      onDragOver={!isSpotlightHero ? onDragOver : undefined}
+      onDragEnter={!isSpotlightHero ? onDragEnter : undefined}
+      onDragLeave={!isSpotlightHero ? onDragLeave : undefined}
+      onDragEnd={!isSpotlightHero ? onDragEnd : undefined}
+      onDrop={!isSpotlightHero ? onDrop : undefined}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button, input, [data-prevent-tile-click]')) {
+          return;
+        }
+        onClick?.();
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setShowVolumeSlider(false);
       }}
       className={`relative w-full aspect-video rounded-3xl bg-[#0D1017] border flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-300 group select-none ${
+        onClick ? 'cursor-pointer' : ''
+      } ${
         isDragging
           ? 'opacity-35 scale-[0.97] border-dashed border-violet-400 ring-2 ring-violet-500/40 shadow-none cursor-grabbing'
           : isDragOver
           ? 'scale-[1.03] border-violet-400 ring-4 ring-violet-500/60 shadow-2xl shadow-violet-500/30 bg-violet-950/40 cursor-pointer'
+          : isSpotlightHero
+          ? isSpeaking
+            ? 'border-emerald-400 ring-4 ring-emerald-500/50 shadow-2xl shadow-emerald-500/30'
+            : 'border-violet-500/80 ring-2 ring-violet-500/50 shadow-2xl shadow-violet-950/60'
           : isPinned
           ? 'border-violet-500 ring-2 ring-violet-500/40 shadow-violet-500/20'
           : isSpeaking
           ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+          : filmstripMode
+          ? 'border-white/[0.08] hover:border-violet-400 hover:ring-2 hover:ring-violet-500/50'
           : 'border-white/[0.08] hover:border-violet-500/40'
       }`}
     >
       {/* Subtle Ambient Radial Glow */}
       <div className="absolute inset-0 bg-radial from-violet-600/10 via-transparent to-transparent pointer-events-none" />
+
+      {/* Filmstrip Hover Overlay: Click to Spotlight prompt */}
+      {filmstripMode && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/95 text-white text-[11px] font-extrabold shadow-xl border border-violet-400/40 tracking-wide uppercase">
+            <Pin className="w-3 h-3 fill-current text-amber-300" />
+            <span>Click to Spotlight</span>
+          </div>
+        </div>
+      )}
 
       {/* Drop Target Indicator Overlay */}
       {isDragOver && (
@@ -162,72 +192,95 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
         </div>
       )}
 
-      {/* Top Left Drag Handle & Quick Reorder Controls */}
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-        <div
-          draggable
-          onDragStart={(e) => {
-            e.stopPropagation();
-            onDragStart?.(e);
-          }}
-          onDragEnd={(e) => {
-            e.stopPropagation();
-            onDragEnd?.(e);
-          }}
-          className="p-1.5 px-2.5 rounded-xl bg-[#090B10]/90 backdrop-blur-md border border-white/[0.12] text-white/70 hover:text-white hover:border-violet-500/60 hover:bg-violet-600/30 cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1.5 transition-all group/handle"
-          title="Grab handle to reorder tile on the fly"
-        >
-          <GripVertical className="w-3.5 h-3.5 text-violet-400 group-hover/handle:text-violet-300" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-zinc-300 group-hover/handle:text-white">
-            Drag
+      {/* Top Left Controls: Spotlight Hero Badge OR Drag Handle */}
+      {isSpotlightHero ? (
+        <div className="absolute top-3 left-3 flex items-center gap-2 z-20">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-violet-600/90 backdrop-blur-md border border-violet-400/50 text-white shadow-xl">
+            <Pin className="w-3.5 h-3.5 fill-current text-amber-300 animate-pulse" />
+            <span className="text-[11px] font-black tracking-wider uppercase">
+              Spotlight Hero
+            </span>
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-xl bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.08] hidden sm:inline-block">
+            1080p • 60fps
           </span>
         </div>
-        {onMoveLeft && (
-          <button
-            onClick={(e) => {
+      ) : (
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+          <div
+            draggable
+            onDragStart={(e) => {
               e.stopPropagation();
-              onMoveLeft();
+              onDragStart?.(e);
             }}
-            className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
-            title="Move Tile Left"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-        )}
-        {onMoveRight && (
-          <button
-            onClick={(e) => {
+            onDragEnd={(e) => {
               e.stopPropagation();
-              onMoveRight();
+              onDragEnd?.(e);
             }}
-            className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
-            title="Move Tile Right"
+            className="p-1.5 px-2.5 rounded-xl bg-[#090B10]/90 backdrop-blur-md border border-white/[0.12] text-white/70 hover:text-white hover:border-violet-500/60 hover:bg-violet-600/30 cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1.5 transition-all group/handle"
+            title="Grab handle to reorder tile on the fly"
           >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06] hidden sm:inline-block">
-          1080p • 60fps
-        </span>
-      </div>
+            <GripVertical className="w-3.5 h-3.5 text-violet-400 group-hover/handle:text-violet-300" />
+            <span className="text-[10px] font-bold tracking-wider uppercase text-zinc-300 group-hover/handle:text-white">
+              Drag
+            </span>
+          </div>
+          {onMoveLeft && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveLeft();
+              }}
+              className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
+              title="Move Tile Left"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onMoveRight && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveRight();
+              }}
+              className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
+              title="Move Tile Right"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-emerald-400 border border-white/[0.06] hidden sm:inline-block">
+            1080p • 60fps
+          </span>
+        </div>
+      )}
 
       {/* Top Right Quick-Action Hover Controls */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-        {/* Pin to Spotlight Button */}
+      <div
+        className={`absolute top-3 right-3 flex items-center gap-1.5 z-20 transition-opacity ${
+          isSpotlightHero ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        {/* Pin to Spotlight / Unpin Button */}
         {onTogglePin && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onTogglePin();
             }}
-            className={`p-1.5 rounded-xl backdrop-blur-md border transition-all ${
+            className={`p-1.5 px-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer flex items-center gap-1.5 shadow-lg ${
               isPinned
-                ? 'bg-violet-600 text-white border-violet-400'
+                ? 'bg-violet-600/90 text-white border-violet-400 hover:bg-violet-700'
                 : 'bg-[#090B10]/80 border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.08]'
             }`}
             title={isPinned ? 'Unpin from Main Stage' : 'Spotlight / Pin to Main Stage'}
           >
-            {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            {isPinned ? <PinOff className="w-3.5 h-3.5 text-amber-300" /> : <Pin className="w-3.5 h-3.5" />}
+            {isSpotlightHero && (
+              <span className="text-[10px] font-bold text-white hidden sm:inline-block">
+                Unpin
+              </span>
+            )}
           </button>
         )}
 
@@ -326,14 +379,21 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       </div>
 
       {/* Floating Bottom Nameplate, Dynamic Equalizer & Media Badges */}
-      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 text-xs text-white z-10 shadow-md gap-2">
+      <div
+        className={`absolute bottom-2 left-2 right-2 flex items-center justify-between rounded-xl bg-black/85 backdrop-blur-md border border-white/10 text-white z-10 shadow-lg gap-2 transition-all ${
+          isSpotlightHero ? 'px-3.5 py-2 text-sm' : 'px-2.5 py-1.5 text-xs'
+        }`}
+      >
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <span className="truncate font-semibold text-xs text-white" title={user.displayName || user.username}>
+          <span
+            className={`truncate font-semibold text-white ${isSpotlightHero ? 'text-sm font-bold' : 'text-xs'}`}
+            title={user.displayName || user.username}
+          >
             {user.displayName || user.username}
           </span>
           {isMe && (
-            <span className="text-slate-400 font-normal text-[10px] flex-shrink-0">
-              (You)
+            <span className="text-violet-300 font-semibold text-[10px] flex-shrink-0 bg-violet-950/60 px-1.5 py-0.5 rounded border border-violet-500/30">
+              You
             </span>
           )}
 

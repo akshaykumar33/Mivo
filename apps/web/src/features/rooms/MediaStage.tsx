@@ -82,7 +82,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 }) => {
   const screenVideoRef = React.useRef<HTMLVideoElement>(null);
   const stageContainerRef = React.useRef<HTMLDivElement>(null);
+  const filmstripScrollRef = React.useRef<HTMLDivElement>(null);
   const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = React.useState<'grid' | 'spotlight'>('grid');
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
   const [dragOverId, setDragOverId] = React.useState<string | null>(null);
@@ -547,6 +549,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // Reset to auto-arranged speaker grid with optimal speaker balance
   const handleAutoArrange = React.useCallback(() => {
     setPinnedUserId(null);
+    setLayoutMode('grid');
     const optimal = computeOptimalSpeakerOrder(participants);
     setOrderedParticipantIds(optimal);
     setIsCustomOrdered(false);
@@ -634,7 +637,100 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     });
   }, [participants, orderedParticipantIds]);
 
+  const isCoHostPinned = pinnedUserId === 'ai-cohost';
   const pinnedParticipant = participants.find((p) => p.userId === pinnedUserId);
+
+  // Compute effective spotlight participant for Spotlight Focus Mode
+  const effectiveSpotlightParticipant = React.useMemo(() => {
+    if (pinnedParticipant) return pinnedParticipant;
+    if (layoutMode === 'spotlight' && !isCoHostPinned && !pinnedDataTile) {
+      return (
+        sortedParticipants.find((p) => p.userId !== currentUserId && !p.isMuted) ||
+        sortedParticipants.find((p) => p.userId === currentUserId) ||
+        sortedParticipants[0] ||
+        null
+      );
+    }
+    return null;
+  }, [pinnedParticipant, layoutMode, isCoHostPinned, pinnedDataTile, sortedParticipants, currentUserId]);
+
+  // Spotlight Toggle Handler
+  const handleTogglePin = React.useCallback((targetUserId: string) => {
+    if (pinnedUserId === targetUserId) {
+      // Unpin -> return to Grid View
+      setPinnedUserId(null);
+      setLayoutMode('grid');
+      setArrangeToast('Exited Spotlight Focus Mode');
+    } else {
+      // Pin target -> enter Spotlight Focus Mode
+      setPinnedUserId(targetUserId);
+      setLayoutMode('spotlight');
+      if (targetUserId === 'ai-cohost') {
+        setArrangeToast('Spotlight focused on AI Co-Host');
+      } else {
+        const target = participants.find((p) => p.userId === targetUserId);
+        const name = target?.user.displayName || target?.user.username || 'Speaker';
+        setArrangeToast(`Spotlight focused on ${name}`);
+      }
+    }
+    setTimeout(() => setArrangeToast(null), 2500);
+  }, [pinnedUserId, participants]);
+
+  // Layout mode switcher (Grid vs Spotlight)
+  const handleToggleLayoutMode = React.useCallback((mode: 'grid' | 'spotlight') => {
+    setLayoutMode(mode);
+    if (mode === 'grid') {
+      setPinnedUserId(null);
+      setArrangeToast('Switched to Grid View');
+    } else {
+      if (!pinnedUserId) {
+        const topSpeaker =
+          sortedParticipants.find((p) => p.userId !== currentUserId && !p.isMuted) ||
+          sortedParticipants[0];
+        if (topSpeaker) {
+          setPinnedUserId(topSpeaker.userId);
+        }
+      }
+      setArrangeToast('Switched to Spotlight Focus Mode');
+    }
+    setTimeout(() => setArrangeToast(null), 2500);
+  }, [pinnedUserId, sortedParticipants, currentUserId]);
+
+  // Disconnect safety cleanup: if pinned user leaves room, fallback smoothly
+  React.useEffect(() => {
+    if (pinnedUserId && pinnedUserId !== 'ai-cohost') {
+      const exists = participants.some((p) => p.userId === pinnedUserId);
+      if (!exists) {
+        if (participants.length > 0) {
+          const next = participants.find((p) => p.userId !== currentUserId && !p.isMuted) || participants[0];
+          setPinnedUserId(next ? next.userId : null);
+        } else {
+          setPinnedUserId(null);
+          setLayoutMode('grid');
+        }
+      }
+    }
+  }, [participants, pinnedUserId, currentUserId]);
+
+  // Escape key shortcut to return to Grid View
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (layoutMode === 'spotlight' || pinnedUserId !== null)) {
+        setPinnedUserId(null);
+        setLayoutMode('grid');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [layoutMode, pinnedUserId]);
+
+  // Smooth scroll filmstrip
+  const handleScrollFilmstrip = React.useCallback((direction: 'left' | 'right') => {
+    if (filmstripScrollRef.current) {
+      const amount = direction === 'left' ? -260 : 260;
+      filmstripScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  }, []);
 
   // Connect incoming WebRTC remoteStreams to Spatial Audio Engine
   React.useEffect(() => {
@@ -945,8 +1041,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   const renderVideoStage = () => {
+    const activeHeroParticipant = effectiveSpotlightParticipant;
+    const isHeroActive = Boolean(pinnedDataTile || isCoHostPinned || activeHeroParticipant);
+    const heroName = isCoHostPinned
+      ? 'Mivo AI Co-Host'
+      : activeHeroParticipant?.user.displayName || activeHeroParticipant?.user.username || 'Speaker';
+
     return (
-    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
+      <div className="flex-1 p-2 sm:p-5 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative gap-3">
+        {/* Live Fact Check HUD Alert */}
         <LiveFactCheckHUD
           alert={factCheckAlert}
           onDismiss={() => setFactCheckAlert(null)}
@@ -958,161 +1061,97 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           }}
         />
 
-        {pinnedDataTile ? (
-          // Spotlight Mode: Dominant Pinned AI Data Tile + Attendee Strip
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
-              <AiPinnedDataTile
-                payload={pinnedDataTile}
-                onDismiss={() => {
-                  setPinnedDataTile(null);
-                  const socket = realtime.getSocket();
-                  if (socket && room?.id) {
-                    socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
-                  }
-                }}
-                onOpenTicketsModal={() => openTicketsModal(true)}
-              />
-            </div>
+        {/* Global Video Stage Controls Header Bar */}
+        <div className="flex items-center justify-between px-1 flex-wrap gap-2 flex-shrink-0 z-10">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+              Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
+            </span>
 
-            {/* Bottom attendee filmstrip with Co-Host */}
-            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
-              {isCoHostEnabled && (
-                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
-                  <AiCoHostStageTile
-                    status={coHostStatus}
-                    lastSpeechText={lastSpeechText}
-                    onTriggerCommand={handleTriggerCoHost}
-                  />
-                </div>
-              )}
-              {sortedParticipants.map((p) => {
-                const isMe = p.userId === currentUserId;
-                return (
-                  <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
-                    <LiveVideoTile
-                      user={p.user}
-                      isMe={isMe}
-                      isMuted={isMe ? isMuted : p.isMuted}
-                      isCameraOn={isMe ? isCameraOn : p.isCameraOn}
-                      isPinned={false}
-                      onTogglePin={() => setPinnedUserId(p.userId)}
-                      isHost={isHost}
-                      onHostAction={handleHostAction}
-                      mediaStream={isMe ? localStream : remoteStreams[p.userId]}
-                      audioLevel={isMe ? audioLevel : 0}
-                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+            {/* Spotlight Active Indicator Badge */}
+            {isHeroActive && (
+              <span className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-violet-600/20 border border-violet-500/40 text-violet-300 text-[11px] font-extrabold animate-in fade-in">
+                <Pin className="w-3 h-3 fill-current text-amber-300 animate-pulse" />
+                <span>Spotlight: {heroName}</span>
+              </span>
+            )}
+
+            <button
+              onClick={() => {
+                const next = !isSpatialAudioActive;
+                setIsSpatialAudioActive(next);
+                spatialAudio.setEnabled(next);
+              }}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                isSpatialAudioActive
+                  ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+              }`}
+              title="Toggle 3D Positional Stereo Spatial Audio"
+            >
+              <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+              <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+            </button>
+
+            <button
+              onClick={() =>
+                handleTriggerCoHost(
+                  'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
+              title="Trigger Mivo AI Stage Co-Host"
+            >
+              <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>@mivo Sprint Blockers</span>
+            </button>
+
+            <button
+              onClick={() =>
+                handleExtractVoiceTicket(
+                  "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+              title="Simulate Voice-to-Ticket Detection"
+            >
+              <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Voice-to-Ticket Demo</span>
+            </button>
           </div>
-        ) : pinnedParticipant ? (
-          // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
-              <LiveVideoTile
-                user={pinnedParticipant.user}
-                isMe={pinnedParticipant.userId === currentUserId}
-                isMuted={pinnedParticipant.userId === currentUserId ? isMuted : pinnedParticipant.isMuted}
-                isCameraOn={pinnedParticipant.userId === currentUserId ? isCameraOn : pinnedParticipant.isCameraOn}
-                isPinned={true}
-                onTogglePin={() => setPinnedUserId(null)}
-                isHost={isHost}
-                onHostAction={handleHostAction}
-                mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
-                audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
-                spatialPanLabel={isSpatialAudioActive && spatialPositions[pinnedParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[pinnedParticipant.userId].pan) : undefined}
-              />
+
+          <div className="flex items-center gap-2">
+            {/* View Mode Switcher: Grid View vs Spotlight View */}
+            <div className="flex items-center p-0.5 rounded-xl bg-black/40 border border-white/10 shadow-inner">
+              <button
+                onClick={() => handleToggleLayoutMode('grid')}
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  !isHeroActive
+                    ? 'bg-violet-600 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                }`}
+                title="Switch to Equal Responsive Grid View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Grid</span>
+              </button>
+              <button
+                onClick={() => handleToggleLayoutMode('spotlight')}
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  isHeroActive
+                    ? 'bg-violet-600 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                }`}
+                title="Switch to Spotlight Focus Mode (Dominant 16:9 Hero Stage + Attendee Filmstrip)"
+              >
+                <Pin className="w-3.5 h-3.5" />
+                <span>Spotlight</span>
+              </button>
             </div>
 
-            {/* Bottom attendee filmstrip */}
-            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
-              {isCoHostEnabled && (
-                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
-                  <AiCoHostStageTile
-                    status={coHostStatus}
-                    lastSpeechText={lastSpeechText}
-                    onTriggerCommand={handleTriggerCoHost}
-                  />
-                </div>
-              )}
-              {sortedParticipants
-                .filter((p) => p.userId !== pinnedUserId)
-                .map((p) => {
-                  const isMe = p.userId === currentUserId;
-                  return (
-                    <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
-                      <LiveVideoTile
-                        user={p.user}
-                        isMe={isMe}
-                        isMuted={isMe ? isMuted : p.isMuted}
-                        isCameraOn={isMe ? isCameraOn : p.isCameraOn}
-                        isPinned={false}
-                        onTogglePin={() => setPinnedUserId(p.userId)}
-                        isHost={isHost}
-                        onHostAction={handleHostAction}
-                        mediaStream={isMe ? localStream : remoteStreams[p.userId]}
-                        audioLevel={isMe ? audioLevel : 0}
-                        spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                      />
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        ) : (
-          // Standard Equal Auto-Adjusting Grid with Drag & Drop
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between mb-3 px-1 flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                  Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
-                </span>
-                <button
-                  onClick={() => {
-                    const next = !isSpatialAudioActive;
-                    setIsSpatialAudioActive(next);
-                    spatialAudio.setEnabled(next);
-                  }}
-                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
-                    isSpatialAudioActive
-                      ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
-                  }`}
-                  title="Toggle 3D Positional Stereo Spatial Audio"
-                >
-                  <Headphones className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
-                </button>
-                <button
-                  onClick={() =>
-                    handleTriggerCoHost(
-                      'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
-                    )
-                  }
-                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
-                  title="Trigger Mivo AI Stage Co-Host"
-                >
-                  <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                  <span>@mivo Sprint Blockers</span>
-                </button>
-                <button
-                  onClick={() =>
-                    handleExtractVoiceTicket(
-                      "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
-                    )
-                  }
-                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
-                  title="Simulate Voice-to-Ticket Detection"
-                >
-                  <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Voice-to-Ticket Demo</span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
+            {/* Custom Layout indicator & reset for Grid View */}
+            {!isHeroActive && (
+              <>
                 {isCustomOrdered ? (
                   <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold animate-in fade-in">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -1134,71 +1173,271 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   title="Reset to Auto-Arranged Grid (Restores optimal speaker balance)"
                 >
                   <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
-                  <span>Auto-Arrange Grid</span>
+                  <span>Auto-Arrange</span>
                 </button>
-              </div>
-            </div>
-
-            {/* Voice-to-Ticket Interactive Confirmation Card */}
-            {voiceTicketProposal && (
-              <div className="w-full max-w-xl mx-auto mb-4 z-30">
-                <VoiceTicketConfirmationCard
-                  proposal={voiceTicketProposal}
-                  roomId={room?.id}
-                  onConfirm={handleConfirmVoiceTicket}
-                  onDismiss={() => setVoiceTicketProposal(null)}
-                />
-              </div>
+              </>
             )}
 
-            <div
-              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center transition-all duration-300 ${
-                getDynamicGridClass(sortedParticipants.length + (isCoHostEnabled ? 1 : 0))
-              }`}
-            >
-              {/* Co-Host Stage Tile */}
-              {isCoHostEnabled && (
-                <AiCoHostStageTile
-                  status={coHostStatus}
-                  lastSpeechText={lastSpeechText}
-                  onTriggerCommand={handleTriggerCoHost}
-                />
-              )}
+            {/* Exit Spotlight button when in Spotlight Mode */}
+            {isHeroActive && (
+              <button
+                onClick={() => handleToggleLayoutMode('grid')}
+                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl bg-white/[0.06] hover:bg-rose-950/60 hover:text-rose-200 border border-white/10 hover:border-rose-500/40 text-zinc-300 transition-all cursor-pointer shadow-sm"
+                title="Exit Spotlight Focus Mode (Return to Grid)"
+              >
+                <PinOff className="w-3.5 h-3.5 text-violet-400" />
+                <span>Exit Spotlight</span>
+              </button>
+            )}
+          </div>
+        </div>
 
-              {sortedParticipants.map((p) => {
-                const isMe = p.userId === currentUserId;
-                const camOn = isMe ? isCameraOn : p.isCameraOn;
-                const participantMuted = isMe ? isMuted : p.isMuted;
-                const participantStream = isMe ? localStream : remoteStreams[p.userId];
+        {/* Voice-to-Ticket Interactive Confirmation Card */}
+        {voiceTicketProposal && (
+          <div className="w-full max-w-xl mx-auto mb-2 z-30 flex-shrink-0">
+            <VoiceTicketConfirmationCard
+              proposal={voiceTicketProposal}
+              roomId={room?.id}
+              onConfirm={handleConfirmVoiceTicket}
+              onDismiss={() => setVoiceTicketProposal(null)}
+            />
+          </div>
+        )}
 
-                return (
+        {/* STAGE CONTENT: Spotlight Mode vs Grid Mode */}
+        {isHeroActive ? (
+          /* Spotlight Focus Mode: Dominant 16:9 Hero Stage + Attendee Filmstrip */
+          <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+            {/* 1. Dominant 16:9 Hero Stage Container */}
+            <div className="flex-1 min-h-0 flex items-center justify-center relative p-1 sm:p-2">
+              <div className="w-full max-w-5xl xl:max-w-6xl max-h-full aspect-video mx-auto relative flex items-center justify-center">
+                {/* Atmospheric Ambient Halo Backlight */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-violet-600/30 via-indigo-600/20 to-purple-600/30 rounded-3xl blur-2xl opacity-75 pointer-events-none" />
+
+                {/* Top Overlay Banner on Hero Stage */}
+                <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-none">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/90 text-white text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-xl border border-violet-400/40">
+                    <Pin className="w-3.5 h-3.5 fill-current text-amber-300 animate-pulse" />
+                    <span>Spotlight Focus Mode</span>
+                  </div>
+                  <span className="text-[11px] text-white/80 font-bold bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 hidden sm:inline-block">
+                    16:9 Hero Stage
+                  </span>
+                </div>
+
+                {/* Top Right Exit Spotlight button on Hero Stage */}
+                <button
+                  onClick={() => handleToggleLayoutMode('grid')}
+                  className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 hover:bg-black text-zinc-300 hover:text-white text-xs font-bold backdrop-blur-md border border-white/15 hover:border-violet-400/50 shadow-xl transition-all cursor-pointer"
+                  title="Exit Spotlight Focus Mode"
+                >
+                  <PinOff className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Exit Spotlight</span>
+                </button>
+
+                {/* Hero Stage Content */}
+                {pinnedDataTile ? (
+                  <AiPinnedDataTile
+                    payload={pinnedDataTile}
+                    onDismiss={() => {
+                      setPinnedDataTile(null);
+                      const socket = realtime.getSocket();
+                      if (socket && room?.id) {
+                        socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
+                      }
+                    }}
+                    onOpenTicketsModal={() => openTicketsModal(true)}
+                  />
+                ) : isCoHostPinned ? (
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
+                    isPinned={true}
+                    onTogglePin={() => handleTogglePin('ai-cohost')}
+                    isSpotlightHero={true}
+                  />
+                ) : activeHeroParticipant ? (
                   <LiveVideoTile
-                    key={p.id}
-                    user={p.user}
-                    isMe={isMe}
-                    isMuted={participantMuted}
-                    isCameraOn={camOn}
-                    isPinned={false}
-                    onTogglePin={() => setPinnedUserId(p.userId)}
+                    user={activeHeroParticipant.user}
+                    isMe={activeHeroParticipant.userId === currentUserId}
+                    isMuted={activeHeroParticipant.userId === currentUserId ? isMuted : activeHeroParticipant.isMuted}
+                    isCameraOn={activeHeroParticipant.userId === currentUserId ? isCameraOn : activeHeroParticipant.isCameraOn}
+                    isPinned={true}
+                    onTogglePin={() => handleTogglePin(activeHeroParticipant.userId)}
                     isHost={isHost}
                     onHostAction={handleHostAction}
-                    mediaStream={participantStream}
-                    audioLevel={isMe ? audioLevel : 0}
-                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    onDragStart={handleDragStart(p.userId)}
-                    onDragOver={handleDragOver}
-                    onDragEnter={handleDragEnter(p.userId)}
-                    onDragLeave={handleDragLeave(p.userId)}
-                    onDragEnd={handleDragEnd}
-                    onDrop={handleDrop(p.userId)}
-                    isDragging={draggedId === p.userId}
-                    isDragOver={dragOverId === p.userId}
-                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
-                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                    mediaStream={activeHeroParticipant.userId === currentUserId ? localStream : remoteStreams[activeHeroParticipant.userId]}
+                    audioLevel={activeHeroParticipant.userId === currentUserId ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[activeHeroParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[activeHeroParticipant.userId].pan) : undefined}
+                    isSpotlightHero={true}
                   />
-                );
-              })}
+                ) : null}
+              </div>
             </div>
+
+            {/* 2. Attendee Filmstrip Below */}
+            <div className="flex-shrink-0 w-full pt-2 pb-1 border-t border-white/[0.08] bg-black/30 backdrop-blur-md rounded-2xl px-3 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-violet-400" />
+                    Attendee Filmstrip ({
+                      (sortedParticipants.filter((p) => p.userId !== activeHeroParticipant?.userId).length) +
+                      (isCoHostEnabled && !isCoHostPinned ? 1 : 0)
+                    })
+                  </span>
+                  <span className="text-[10px] text-zinc-500 hidden sm:inline-block">
+                    • Click any attendee to switch spotlight
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleScrollFilmstrip('left')}
+                    className="p-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-all cursor-pointer"
+                    title="Scroll filmstrip left"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScrollFilmstrip('right')}
+                    className="p-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-all cursor-pointer"
+                    title="Scroll filmstrip right"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Filmstrip Horizontal Track */}
+              <div
+                ref={filmstripScrollRef}
+                className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scroll-smooth min-h-[90px]"
+              >
+                {/* AI Co-Host Tile in Filmstrip (if enabled and not currently the hero) */}
+                {isCoHostEnabled && !isCoHostPinned && (
+                  <div
+                    className="w-44 sm:w-52 aspect-video flex-shrink-0 flex items-center relative group/strip cursor-pointer rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-violet-500/60"
+                    onClick={() => handleTogglePin('ai-cohost')}
+                  >
+                    <AiCoHostStageTile
+                      status={coHostStatus}
+                      lastSpeechText={lastSpeechText}
+                      onTriggerCommand={handleTriggerCoHost}
+                      isPinned={false}
+                      onTogglePin={() => handleTogglePin('ai-cohost')}
+                      filmstripMode={true}
+                    />
+                  </div>
+                )}
+
+                {/* Attendee Tiles in Filmstrip */}
+                {sortedParticipants
+                  .filter((p) => p.userId !== activeHeroParticipant?.userId)
+                  .map((p) => {
+                    const isMe = p.userId === currentUserId;
+                    const camOn = isMe ? isCameraOn : p.isCameraOn;
+                    const participantMuted = isMe ? isMuted : p.isMuted;
+                    const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+                    return (
+                      <div
+                        key={p.id}
+                        className="w-44 sm:w-52 aspect-video flex-shrink-0 flex items-center relative group/strip cursor-pointer rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-violet-500/60"
+                        onClick={() => handleTogglePin(p.userId)}
+                      >
+                        <LiveVideoTile
+                          user={p.user}
+                          isMe={isMe}
+                          isMuted={participantMuted}
+                          isCameraOn={camOn}
+                          isPinned={false}
+                          onTogglePin={() => handleTogglePin(p.userId)}
+                          isHost={isHost}
+                          onHostAction={handleHostAction}
+                          mediaStream={participantStream}
+                          audioLevel={isMe ? audioLevel : 0}
+                          spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                          filmstripMode={true}
+                          onClick={() => handleTogglePin(p.userId)}
+                          onDragStart={handleDragStart(p.userId)}
+                          onDragOver={handleDragOver}
+                          onDragEnter={handleDragEnter(p.userId)}
+                          onDragLeave={handleDragLeave(p.userId)}
+                          onDragEnd={handleDragEnd}
+                          onDrop={handleDrop(p.userId)}
+                          isDragging={draggedId === p.userId}
+                          isDragOver={dragOverId === p.userId}
+                          onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                          onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                        />
+                      </div>
+                    );
+                  })}
+
+                {/* Fallback when no other attendees are in the filmstrip */}
+                {sortedParticipants.filter((p) => p.userId !== activeHeroParticipant?.userId).length === 0 && !isCoHostEnabled && (
+                  <div className="h-20 w-full flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-xs text-zinc-400 gap-2 px-4">
+                    <Users className="w-4 h-4 text-violet-400" />
+                    <span>Spotlight Focus active. As other participants join, they will appear in this attendee filmstrip.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Standard Equal Auto-Adjusting Grid with Drag & Drop */
+          <div
+            className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center transition-all duration-300 ${
+              getDynamicGridClass(sortedParticipants.length + (isCoHostEnabled ? 1 : 0))
+            }`}
+          >
+            {/* Co-Host Stage Tile */}
+            {isCoHostEnabled && (
+              <AiCoHostStageTile
+                status={coHostStatus}
+                lastSpeechText={lastSpeechText}
+                onTriggerCommand={handleTriggerCoHost}
+                isPinned={false}
+                onTogglePin={() => handleTogglePin('ai-cohost')}
+                onClick={() => handleTogglePin('ai-cohost')}
+              />
+            )}
+
+            {sortedParticipants.map((p) => {
+              const isMe = p.userId === currentUserId;
+              const camOn = isMe ? isCameraOn : p.isCameraOn;
+              const participantMuted = isMe ? isMuted : p.isMuted;
+              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+              return (
+                <LiveVideoTile
+                  key={p.id}
+                  user={p.user}
+                  isMe={isMe}
+                  isMuted={participantMuted}
+                  isCameraOn={camOn}
+                  isPinned={false}
+                  onTogglePin={() => handleTogglePin(p.userId)}
+                  isHost={isHost}
+                  onHostAction={handleHostAction}
+                  mediaStream={participantStream}
+                  audioLevel={isMe ? audioLevel : 0}
+                  spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                  onDragStart={handleDragStart(p.userId)}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter(p.userId)}
+                  onDragLeave={handleDragLeave(p.userId)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop(p.userId)}
+                  isDragging={draggedId === p.userId}
+                  isDragOver={dragOverId === p.userId}
+                  onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                  onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -1535,7 +1774,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       isMuted={participantMuted}
                       isCameraOn={camOn}
                       isPinned={pinnedUserId === p.userId}
-                      onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
+                      onTogglePin={() => handleTogglePin(p.userId)}
                       isHost={isHost}
                       onHostAction={handleHostAction}
                       mediaStream={participantStream}
