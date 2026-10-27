@@ -275,7 +275,7 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       {/* Top Right Quick-Action Hover Controls */}
       <div
         className={`absolute top-3 right-3 flex items-center gap-1.5 z-20 transition-opacity ${
-          isSpotlightHero ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          isSpotlightHero || showVolumeSlider || showHostMenu ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}
       >
         {/* Pin to Spotlight / Unpin Button */}
@@ -308,56 +308,66 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 setShowVolumeSlider(!showVolumeSlider);
+                setShowHostMenu(false);
               }}
-              className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors"
+              className="p-1.5 rounded-xl bg-[#090B10]/80 backdrop-blur-md border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
               title="Adjust Volume"
             >
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
 
             {showVolumeSlider && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-9 p-3 rounded-2xl bg-[#090B10]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl z-30 w-40 space-y-2"
-              >
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
-                  <span>User Volume</span>
-                  <span className={volume > 100 ? 'text-emerald-400 font-mono font-extrabold' : 'text-violet-400 font-mono font-bold'}>
-                    {volume}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="200"
-                  value={volume}
-                  onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+              <>
+                <div
+                  className="fixed inset-0 z-20 cursor-default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowVolumeSlider(false);
+                  }}
                 />
-                <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
-                  <button
-                    type="button"
-                    onClick={() => handleVolumeChange(0)}
-                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-rose-500/20 text-rose-400 transition-colors"
-                  >
-                    0%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleVolumeChange(100)}
-                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-violet-500/20 text-violet-300 transition-colors"
-                  >
-                    100%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleVolumeChange(200)}
-                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-emerald-500/20 text-emerald-300 transition-colors"
-                  >
-                    200%
-                  </button>
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-9 p-3 rounded-2xl bg-[#090B10]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl z-30 w-44 space-y-2 animate-in fade-in duration-150"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                    <span>User Volume</span>
+                    <span className={volume > 100 ? 'text-emerald-400 font-mono font-extrabold' : 'text-violet-400 font-mono font-bold'}>
+                      {volume}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="200"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+                  />
+                  <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
+                    <button
+                      type="button"
+                      onClick={() => handleVolumeChange(0)}
+                      className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-rose-500/20 text-rose-400 transition-colors cursor-pointer"
+                    >
+                      0%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleVolumeChange(100)}
+                      className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-violet-500/20 text-violet-300 transition-colors cursor-pointer"
+                    >
+                      100%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleVolumeChange(200)}
+                      className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-emerald-500/20 text-emerald-300 transition-colors cursor-pointer"
+                    >
+                      200%
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
@@ -369,52 +379,62 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 setShowHostMenu(!showHostMenu);
+                setShowVolumeSlider(false);
               }}
-              className="p-1.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 hover:text-white hover:bg-rose-600 transition-all"
+              className="p-1.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 hover:text-white hover:bg-rose-600 transition-all cursor-pointer"
               title="Host Moderation Controls"
             >
               <Sliders className="w-3.5 h-3.5" />
             </button>
 
             {showHostMenu && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-9 p-2 rounded-2xl bg-[#090B10]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl z-40 w-44 space-y-1"
-              >
-                <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-white/[0.06]">
-                  Host Actions
+              <>
+                <div
+                  className="fixed inset-0 z-20 cursor-default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowHostMenu(false);
+                  }}
+                />
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-9 p-2 rounded-2xl bg-[#090B10]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl z-40 w-44 space-y-1 animate-in fade-in duration-150"
+                >
+                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-white/[0.06]">
+                    Host Actions
+                  </div>
+                  <button
+                    onClick={() => {
+                      onHostAction?.('MUTE', user.id);
+                      setShowHostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors cursor-pointer"
+                  >
+                    <MicOff className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Mute Participant</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onHostAction?.('TRANSFER_HOST', user.id);
+                      setShowHostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                    <span>Transfer Host</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onHostAction?.('KICK', user.id);
+                      setShowHostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/60 hover:text-rose-300 text-left transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Remove from Room</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    onHostAction?.('MUTE', user.id);
-                    setShowHostMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors"
-                >
-                  <MicOff className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Mute Participant</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onHostAction?.('TRANSFER_HOST', user.id);
-                    setShowHostMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-white/[0.06] hover:text-white text-left transition-colors"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-                  <span>Transfer Host</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onHostAction?.('KICK', user.id);
-                    setShowHostMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/60 hover:text-rose-300 text-left transition-colors"
-                >
-                  <X className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Remove from Room</span>
-                </button>
-              </div>
+              </>
             )}
           </div>
         )}
