@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles, Eye, Lock } from 'lucide-react';
+import { Send, Smile, Paperclip, X, FileText, FilePlus, Image as ImageIcon, Loader2, Video, Sparkles, Eye, Lock, CornerUpLeft } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
 import { storageClient } from '@/lib/storage-client';
@@ -16,12 +16,16 @@ export interface MessageComposerProps {
   roomId: string;
   roomName: string;
   onMessageSent?: (msg: MessageDTO) => void;
+  replyingTo?: MessageDTO | null;
+  onCancelReply?: () => void;
 }
 
 export const MessageComposer: React.FC<MessageComposerProps> = ({
   roomId,
   roomName,
   onMessageSent,
+  replyingTo,
+  onCancelReply,
 }) => {
   const isGuest = useAuthStore((s) => s.isGuest);
   const setUpgradeModalOpen = useAuthStore((s) => s.setUpgradeModalOpen);
@@ -125,6 +129,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     setStagedAttachments((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  // Auto-focus on replyingTo
+  React.useEffect(() => {
+    if (replyingTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyingTo]);
+
   const handleSend = async () => {
     if (isGuest) {
       setUpgradeModalOpen(true);
@@ -136,6 +147,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     setIsSending(true);
     const textToSend = text || (stagedAttachments.length > 0 ? 'Sent attachments' : '');
     const attachmentsToSend = [...stagedAttachments];
+    const replyTargetId = replyingTo?.id || undefined;
 
     setContent('');
     setStagedAttachments([]);
@@ -150,10 +162,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       const res = await api.post<MessageDTO>(`/api/v1/rooms/${roomId}/messages`, {
         content: textToSend,
         attachments: attachmentsToSend.length > 0 ? attachmentsToSend : undefined,
+        replyToId: replyTargetId,
       });
 
       if (res.success && res.data) {
         onMessageSent?.(res.data);
+        onCancelReply?.();
       }
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -170,6 +184,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape' && replyingTo) {
+      e.preventDefault();
+      onCancelReply?.();
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -248,6 +267,34 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       )}
 
       <div className="max-w-5xl mx-auto space-y-2">
+        {/* WhatsApp-Style Quote Reply Preview Banner */}
+        {replyingTo && (
+          <div className="flex items-center justify-between p-2.5 px-3.5 rounded-2xl bg-[var(--bg-surface-2)] border-l-4 border-emerald-500 shadow-sm border border-[var(--border-subtle)] border-l-emerald-500 animate-slide-down">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <CornerUpLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div className="min-w-0 text-xs">
+                <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1.5">
+                  <span>Replying to</span>
+                  <span className="text-[#111827] dark:text-white">
+                    {replyingTo.sender?.displayName || replyingTo.sender?.username || 'User'}
+                  </span>
+                </p>
+                <p className="text-[var(--text-muted)] truncate max-w-lg mt-0.5">
+                  {replyingTo.content || (replyingTo.attachments?.length ? 'Shared an attachment' : 'Message')}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onCancelReply}
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
+              title="Cancel reply (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {cooldownWarning && (
           <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 text-[11px] font-medium flex items-center justify-between gap-2 px-3 animate-fade-in">
             <span>{cooldownWarning}</span>

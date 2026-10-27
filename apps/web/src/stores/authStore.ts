@@ -126,6 +126,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkAuth: async () => {
     try {
+      const storedToken = typeof window !== 'undefined' ? localStorage.getItem('mivo_access_token') : null;
+      if (storedToken) {
+        api.setAccessToken(storedToken);
+        const profileRes = await api.get<UserDTO>('/api/v1/users/me');
+        if (profileRes.success && profileRes.data) {
+          get().setAuth(profileRes.data, storedToken);
+          return;
+        }
+      }
+
       const res = await api.post<{ accessToken: string }>('/api/v1/auth/refresh');
       if (res.success && res.data?.accessToken) {
         if (typeof window !== 'undefined') {

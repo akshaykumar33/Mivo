@@ -163,7 +163,7 @@ export class SfuEngineService {
       roomId,
       simulcast: kind === 'video' ? simulcast : false,
       activeLayer: kind === 'video' ? initialLayer : '1080p',
-      bitrateKbps: kind === 'video' ? bitrateMap[initialLayer] : 64,
+      bitrateKbps: kind === 'video' ? bitrateMap[initialLayer] : 32, // Standard 32 kbps conference audio baseline
       paused: false,
     };
 

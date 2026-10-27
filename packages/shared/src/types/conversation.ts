@@ -12,6 +12,17 @@ export interface ConversationMemberDTO {
   user: UserSummaryDTO;
 }
 
+import { ThreadMetaDTO } from './message.js';
+
+export interface QuotedDirectMessageDTO {
+  id: string;
+  senderId: string;
+  content: string;
+  attachments?: AttachmentMetaDTO[] | null;
+  createdAt: string;
+  sender: UserSummaryDTO;
+}
+
 export interface DirectMessageDTO {
   id: string;
   conversationId: string;
@@ -21,6 +32,20 @@ export interface DirectMessageDTO {
   createdAt: string;
   updatedAt: string;
   sender: UserSummaryDTO;
+
+  // WhatsApp-style Quote Reply
+  replyToId?: string | null;
+  replyTo?: QuotedDirectMessageDTO | null;
+
+  // Slack-style Thread
+  threadId?: string | null;
+  isThreadBroadcast?: boolean;
+  threadMeta?: ThreadMetaDTO | null;
+}
+
+export interface DirectThreadDetailsDTO {
+  rootMessage: DirectMessageDTO;
+  replies: DirectMessageDTO[];
 }
 
 export interface ConversationDTO {

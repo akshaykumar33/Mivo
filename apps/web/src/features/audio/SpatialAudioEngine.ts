@@ -11,6 +11,7 @@ export interface ParticipantSpatialNode {
   gainNode?: GainNode;
   pan: number; // -1.0 (hard left) to +1.0 (hard right)
   distance: number; // 0.0 to 1.0 (distance from center)
+  volume: number; // 0 to 200 (100 is default 1.0 gain, up to 2.0 boost)
 }
 
 class SpatialAudioEngine {
@@ -53,6 +54,48 @@ class SpatialAudioEngine {
   }
 
   /**
+   * Adjust individual peer volume independently from 0% to 200%
+   */
+  public setPeerVolume(userId: string, volumePercent: number): void {
+    const clamped = Math.max(0, Math.min(200, volumePercent));
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(`mivo_peer_vol_${userId}`, clamped.toString());
+      } catch {}
+    }
+
+    let node = this.participants.get(userId);
+    if (!node) {
+      node = { userId, pan: 0, distance: 0, volume: clamped };
+      this.participants.set(userId, node);
+    } else {
+      node.volume = clamped;
+    }
+
+    const ctx = this.getAudioContext();
+    if (node.gainNode && ctx) {
+      const baseGain = clamped / 100; // 0.0 to 2.0 (200% gain boost)
+      const targetGain = Math.max(0, baseGain * Math.max(0.8, 1.0 - (node.distance || 0) * 0.2));
+      node.gainNode.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.05);
+    }
+  }
+
+  public getPeerVolume(userId: string): number {
+    const node = this.participants.get(userId);
+    if (node?.volume !== undefined) return node.volume;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(`mivo_peer_vol_${userId}`);
+        if (saved !== null && saved !== undefined) {
+          const parsed = Number(saved);
+          if (!Number.isNaN(parsed)) return Math.max(0, Math.min(200, parsed));
+        }
+      } catch {}
+    }
+    return 100;
+  }
+
+  /**
    * Attach a remote WebRTC MediaStream to the spatial panner graph
    */
   public attachStream(userId: string, stream: MediaStream): void {
@@ -83,10 +126,16 @@ class SpatialAudioEngine {
       const existing = this.participants.get(userId);
       const pan = existing?.pan ?? 0;
       const distance = existing?.distance ?? 0;
+      const volume = existing?.volume ?? this.getPeerVolume(userId);
 
       if (pannerNode && this.isEnabled) {
         pannerNode.pan.setValueAtTime(pan, ctx.currentTime);
       }
+
+      // Initialize gain with peer volume & spatial distance attenuation
+      const baseGain = volume / 100;
+      const targetGain = Math.max(0, baseGain * Math.max(0.8, 1.0 - distance * 0.2));
+      gainNode.gain.setValueAtTime(targetGain, ctx.currentTime);
 
       this.participants.set(userId, {
         userId,
@@ -95,6 +144,7 @@ class SpatialAudioEngine {
         gainNode,
         pan,
         distance,
+        volume,
       });
     } catch (err) {
       console.warn(`[SpatialAudio] Failed to attach stream for ${userId}:`, err);
@@ -129,7 +179,7 @@ class SpatialAudioEngine {
 
     let node = this.participants.get(userId);
     if (!node) {
-      node = { userId, pan, distance };
+      node = { userId, pan, distance, volume: 100 };
       this.participants.set(userId, node);
     } else {
       node.pan = pan;
@@ -140,9 +190,10 @@ class SpatialAudioEngine {
       // Smooth linear ramp to eliminate audio clicks
       node.pannerNode.pan.linearRampToValueAtTime(pan, ctx.currentTime + 0.05);
 
-      // Subtle distance attenuation (up to 20% softer at outer edges)
+      // Subtle distance attenuation (up to 20% softer at outer edges) multiplied by individual volume
       if (node.gainNode) {
-        const targetGain = Math.max(0.8, 1.0 - distance * 0.2);
+        const baseGain = (node.volume ?? 100) / 100;
+        const targetGain = Math.max(0, baseGain * Math.max(0.8, 1.0 - distance * 0.2));
         node.gainNode.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.05);
       }
     }

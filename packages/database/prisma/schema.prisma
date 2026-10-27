@@ -297,20 +297,31 @@ model AuditLog {
 // -----------------------------------------------------------------------------
 
 model Message {
-  id          String    @id @default(uuid()) @db.Uuid
-  roomId      String    @db.Uuid
-  senderId    String    @db.Uuid
-  content     String    @db.Text
-  attachments Json?
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
-  deletedAt   DateTime? @db.Timestamptz(6)
+  id                String    @id @default(uuid()) @db.Uuid
+  roomId            String    @db.Uuid
+  senderId          String    @db.Uuid
+  content           String    @db.Text
+  attachments       Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt         DateTime? @db.Timestamptz(6)
 
-  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  sender      User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyToId         String?   @db.Uuid
+  replyTo           Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies           Message[] @relation("MessageReplies")
+
+  threadId          String?   @db.Uuid
+  thread            Message?  @relation("MessageThreads", fields: [threadId], references: [id], onDelete: Cascade)
+  threadReplies     Message[] @relation("MessageThreads")
+  isThreadBroadcast Boolean   @default(false)
+
+  room              Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender            User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([roomId, createdAt(sort: Desc)])
   @@index([senderId])
+  @@index([replyToId])
+  @@index([threadId])
   @@map("messages")
 }
 
@@ -359,20 +370,31 @@ model ConversationMember {
 }
 
 model DirectMessage {
-  id             String       @id @default(uuid()) @db.Uuid
-  conversationId String       @db.Uuid
-  senderId       String       @db.Uuid
-  content        String       @db.Text
-  attachments    Json?
-  createdAt      DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime     @updatedAt @db.Timestamptz(6)
-  deletedAt      DateTime?    @db.Timestamptz(6)
+  id                String         @id @default(uuid()) @db.Uuid
+  conversationId    String         @db.Uuid
+  senderId          String         @db.Uuid
+  content           String         @db.Text
+  attachments       Json?
+  createdAt         DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime       @updatedAt @db.Timestamptz(6)
+  deletedAt         DateTime?      @db.Timestamptz(6)
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyToId         String?        @db.Uuid
+  replyTo           DirectMessage? @relation("DirectMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies           DirectMessage[] @relation("DirectMessageReplies")
+
+  threadId          String?        @db.Uuid
+  thread            DirectMessage? @relation("DirectMessageThreads", fields: [threadId], references: [id], onDelete: Cascade)
+  threadReplies     DirectMessage[] @relation("DirectMessageThreads")
+  isThreadBroadcast Boolean        @default(false)
+
+  conversation      Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender            User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt(sort: Desc)])
   @@index([senderId])
+  @@index([replyToId])
+  @@index([threadId])
   @@map("direct_messages")
 }
 

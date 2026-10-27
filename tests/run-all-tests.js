@@ -22,6 +22,7 @@ const MODULE_TESTS = [
   // 3. Messaging & Chat Module
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/message-formatter.unit.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/auto-disappearing-messages.unit.test.js' },
+  { module: 'messaging-chat', file: 'tests/modules/messaging-chat/unit/replies-and-threads.unit.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-retention-db.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/message-persistence.integration.test.js' },
   { module: 'messaging-chat', file: 'tests/modules/messaging-chat/integration/socket-realtime-flow.integration.test.js' },
@@ -30,7 +31,14 @@ const MODULE_TESTS = [
 
   // 4. WebRTC Media Stage Module
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/equalizer-decibels.unit.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/auto-arranging-grid.unit.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/floating-pip.unit.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/spotlight-focus-mode.unit.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/unit/dynamic-audio-bitrate.unit.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/integration/room-mode-switcher.integration.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/integration/audio-bitrate-dynamic-switching.integration.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/hd-conference-audio-bitrates.e2e.test.js' },
+  { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/spotlight-focus-mode.e2e.test.js' },
   { module: 'webrtc-media-stage', file: 'tests/modules/webrtc-media-stage/e2e/webrtc-mesh-calling.e2e.test.js' },
 
   // 5. Host Moderation Module

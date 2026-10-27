@@ -87,6 +87,19 @@ export class ConversationsController {
     };
   }
 
+  @Get(':id/messages/:messageId/thread')
+  async getThread(
+    @CurrentUser() user: any,
+    @Param('id') conversationId: string,
+    @Param('messageId') messageId: string
+  ): Promise<ApiResponse<any>> {
+    const thread = await this.conversationsService.getThread(conversationId, messageId, user.sub);
+    return {
+      success: true,
+      data: thread,
+    };
+  }
+
   @Post(':id/messages')
   @UsePipes(new ZodValidationPipe(SendDirectMessageSchema))
   async sendMessage(
@@ -101,3 +114,4 @@ export class ConversationsController {
     };
   }
 }
+

@@ -31,6 +31,8 @@ export const REALTIME_EVENTS = {
   // Realtime Messaging
   CHAT_SEND_MESSAGE: 'chat:send_message',
   CHAT_NEW_MESSAGE: 'chat:new_message',
+  CHAT_THREAD_NEW_MESSAGE: 'chat:thread_new_message',
+  CHAT_THREAD_UPDATED: 'chat:thread_updated',
   CHAT_TYPING: 'chat:typing',
   CHAT_STOP_TYPING: 'chat:stop_typing',
   CHAT_REACTION_ADD: 'chat:reaction_add',
@@ -41,6 +43,8 @@ export const REALTIME_EVENTS = {
   DM_LEAVE: 'dm:leave',
   DM_SEND_MESSAGE: 'dm:send_message',
   DM_NEW_MESSAGE: 'dm:new_message',
+  DM_THREAD_NEW_MESSAGE: 'dm:thread_new_message',
+  DM_THREAD_UPDATED: 'dm:thread_updated',
   DM_TYPING: 'dm:typing',
   DM_STOP_TYPING: 'dm:stop_typing',
   DM_REACTION_ADD: 'dm:reaction_add',

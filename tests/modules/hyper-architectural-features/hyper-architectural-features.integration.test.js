@@ -411,7 +411,10 @@ async function run() {
     transports: ['websocket'],
   });
   await new Promise((resolve) => nonOrgSocket.on('connect', resolve));
-  await new Promise((resolve) => nonOrgSocket.emit(REALTIME_EVENTS.ROOM_JOIN, { roomId }, resolve));
+  await new Promise((resolve) => {
+    nonOrgSocket.once(REALTIME_EVENTS.ROOM_JOINED, resolve);
+    nonOrgSocket.emit(REALTIME_EVENTS.ROOM_JOIN, { roomId });
+  });
 
   // 6c. Launch Chess Activity as Non-Org User
   const chessActivity = await new Promise((resolve) => {

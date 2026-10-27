@@ -13,6 +13,9 @@ import {
   CreateGroupConversationInput,
   SendDirectMessageInput,
   REALTIME_EVENTS,
+  DirectThreadDetailsDTO,
+  ThreadMetaDTO,
+  QuotedDirectMessageDTO,
 } from '@mivo/shared';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
@@ -270,15 +273,94 @@ export class ConversationsService {
         conversationId,
         deletedAt: null,
         createdAt: { gte: retentionCutoff },
+        OR: [
+          { threadId: null },
+          { isThreadBroadcast: true },
+        ],
       },
       take: limit,
       orderBy: { createdAt: 'asc' },
       include: {
         sender: true,
+        replyTo: {
+          include: { sender: true },
+        },
+        threadReplies: {
+          where: { deletedAt: null },
+          include: { sender: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        _count: {
+          select: { threadReplies: { where: { deletedAt: null } } },
+        },
       },
     });
 
     return messages.map((m) => this.mapMessageToDTO(m));
+  }
+
+  async getThread(conversationId: string, messageId: string, userId: string): Promise<DirectThreadDetailsDTO> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isGuest: true },
+    });
+    if (user?.isGuest) {
+      throw new ForbiddenException({ code: 'GUEST_RESTRICTED', message: 'Guest accounts cannot access conversations.' });
+    }
+
+    await this.ensureMembership(conversationId, userId);
+
+    const rootMessage = await prisma.directMessage.findUnique({
+      where: { id: messageId },
+      include: {
+        sender: true,
+        replyTo: {
+          include: { sender: true },
+        },
+        threadReplies: {
+          where: { deletedAt: null },
+          include: { sender: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        _count: {
+          select: { threadReplies: { where: { deletedAt: null } } },
+        },
+      },
+    });
+
+    if (!rootMessage || rootMessage.deletedAt || rootMessage.conversationId !== conversationId) {
+      throw new NotFoundException({ code: 'MESSAGE_NOT_FOUND', message: 'Thread root message not found in this conversation' });
+    }
+
+    const replies = await prisma.directMessage.findMany({
+      where: {
+        conversationId,
+        threadId: messageId,
+        deletedAt: null,
+      },
+      include: {
+        sender: true,
+        replyTo: {
+          include: { sender: true },
+        },
+        threadReplies: {
+          where: { deletedAt: null },
+          include: { sender: true },
+          take: 1,
+        },
+        _count: {
+          select: { threadReplies: { where: { deletedAt: null } } },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      rootMessage: this.mapMessageToDTO(rootMessage),
+      replies: replies.map((r) => this.mapMessageToDTO(r)),
+    };
   }
 
   async createMessage(
@@ -301,6 +383,23 @@ export class ConversationsService {
 
     const text = input.content?.trim() || '';
     const attachments = input.attachments && input.attachments.length > 0 ? input.attachments : undefined;
+    const replyToId = input.replyToId ? input.replyToId.trim() : undefined;
+    const threadId = input.threadId ? input.threadId.trim() : undefined;
+    const isThreadBroadcast = !!input.isThreadBroadcast;
+
+    if (replyToId) {
+      const parent = await prisma.directMessage.findUnique({ where: { id: replyToId } });
+      if (!parent || parent.deletedAt || parent.conversationId !== conversationId) {
+        throw new NotFoundException({ code: 'REPLY_TARGET_NOT_FOUND', message: 'Replied message not found' });
+      }
+    }
+
+    if (threadId) {
+      const root = await prisma.directMessage.findUnique({ where: { id: threadId } });
+      if (!root || root.deletedAt || root.conversationId !== conversationId) {
+        throw new NotFoundException({ code: 'THREAD_ROOT_NOT_FOUND', message: 'Thread root message not found' });
+      }
+    }
 
     const message = await prisma.directMessage.create({
       data: {
@@ -308,9 +407,24 @@ export class ConversationsService {
         senderId,
         content: text || (attachments ? 'Sent attachments' : ''),
         attachments: attachments as any,
+        replyToId,
+        threadId,
+        isThreadBroadcast,
       },
       include: {
         sender: true,
+        replyTo: {
+          include: { sender: true },
+        },
+        threadReplies: {
+          where: { deletedAt: null },
+          include: { sender: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        _count: {
+          select: { threadReplies: { where: { deletedAt: null } } },
+        },
       },
     });
 
@@ -322,8 +436,29 @@ export class ConversationsService {
 
     const dto = this.mapMessageToDTO(message);
 
-    // Broadcast to real-time conversation room
-    this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+    if (threadId) {
+      // Broadcast to thread
+      this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_THREAD_NEW_MESSAGE, {
+        conversationId,
+        threadId,
+        message: dto,
+      });
+
+      // Update parent thread metadata
+      const threadMeta = await this.computeDirectThreadMeta(threadId);
+      this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_THREAD_UPDATED, {
+        conversationId,
+        threadId,
+        threadMeta,
+      });
+
+      if (isThreadBroadcast) {
+        this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+      }
+    } else {
+      // Broadcast to real-time conversation room
+      this.realtimeGateway.server.to(`dm:${conversationId}`).emit(REALTIME_EVENTS.DM_NEW_MESSAGE, dto);
+    }
 
     // Dispatch notification to other conversation members
     const otherMembers = await prisma.conversationMember.findMany({
@@ -347,6 +482,34 @@ export class ConversationsService {
     }
 
     return dto;
+  }
+
+  private async computeDirectThreadMeta(threadId: string): Promise<ThreadMetaDTO> {
+    const replies = await prisma.directMessage.findMany({
+      where: { threadId, deletedAt: null },
+      select: {
+        createdAt: true,
+        sender: {
+          select: {
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const replyCount = replies.length;
+    const lastReplyAt = replies[0]?.createdAt ? replies[0].createdAt.toISOString() : null;
+    const participantAvatars = Array.from(
+      new Set(replies.map((r) => r.sender?.avatarUrl).filter(Boolean) as string[])
+    );
+
+    return {
+      replyCount,
+      lastReplyAt,
+      participantAvatars,
+      participantCount: participantAvatars.length,
+    };
   }
 
   private async ensureMembership(conversationId: string, userId: string) {
@@ -409,6 +572,50 @@ export class ConversationsService {
 
   private mapMessageToDTO(m: any): DirectMessageDTO {
     const expired = this.isStatusExpired(m.sender?.customStatusExpiresAt);
+
+    let replyTo: QuotedDirectMessageDTO | null = null;
+    if (m.replyTo) {
+      const replyExpired = this.isStatusExpired(m.replyTo.sender?.customStatusExpiresAt);
+      replyTo = {
+        id: m.replyTo.id,
+        senderId: m.replyTo.senderId,
+        content: m.replyTo.content,
+        attachments: m.replyTo.attachments,
+        createdAt: m.replyTo.createdAt.toISOString(),
+        sender: {
+          id: m.replyTo.sender.id,
+          username: m.replyTo.sender.username,
+          displayName: m.replyTo.sender.displayName,
+          avatarUrl: m.replyTo.sender.avatarUrl,
+          status: m.replyTo.sender.status,
+          customStatus: replyExpired ? null : m.replyTo.sender.customStatus,
+          customStatusExpiresAt:
+            replyExpired || !m.replyTo.sender.customStatusExpiresAt
+              ? null
+              : new Date(m.replyTo.sender.customStatusExpiresAt).toISOString(),
+        },
+      };
+    }
+
+    let threadMeta: ThreadMetaDTO | null = null;
+    const replyCount = m._count?.threadReplies || 0;
+    if (replyCount > 0) {
+      const lastReply = m.threadReplies?.[0];
+      const participantAvatars = Array.from(
+        new Set(
+          (m.threadReplies || [])
+            .map((r: any) => r.sender?.avatarUrl)
+            .filter(Boolean) as string[]
+        )
+      );
+      threadMeta = {
+        replyCount,
+        lastReplyAt: lastReply?.createdAt ? new Date(lastReply.createdAt).toISOString() : null,
+        participantAvatars,
+        participantCount: participantAvatars.length,
+      };
+    }
+
     return {
       id: m.id,
       conversationId: m.conversationId,
@@ -417,6 +624,11 @@ export class ConversationsService {
       attachments: m.attachments,
       createdAt: m.createdAt.toISOString(),
       updatedAt: m.updatedAt.toISOString(),
+      replyToId: m.replyToId,
+      replyTo,
+      threadId: m.threadId,
+      isThreadBroadcast: m.isThreadBroadcast,
+      threadMeta,
       sender: {
         id: m.sender.id,
         username: m.sender.username,

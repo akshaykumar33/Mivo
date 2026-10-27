@@ -9,6 +9,10 @@ import { MediaStage } from './MediaStage';
 import { CollaborativeCanvasStage } from '@/features/canvas/CollaborativeCanvasStage';
 import { CodeStage } from '@/features/code-stage/CodeStage';
 import { ActivitySandboxStage } from '@/features/activities/ActivitySandboxStage';
+import { ActivityLauncherModal } from '@/features/activities/ActivityLauncherModal';
+import { AmbientFocusBar } from '@/features/focus/AmbientFocusBar';
+import { E2EEVerificationModal } from '@/features/e2ee/E2EEVerificationModal';
+import { AiTwinSettingsModal } from '@/features/ai-twin/AiTwinSettingsModal';
 import { InviteRoomMemberModal } from './InviteRoomMemberModal';
 import { localFirstStore } from '@/lib/local-first/localFirstStore';
 import { ParticipantTray } from './ParticipantTray';
@@ -50,6 +54,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const { user } = useAuthStore();
   const activeRoom = useRoomStore((state) => state.activeRoom);
   const participants = useRoomStore((state) => state.participants);
+  const hostUserId = useRoomStore((state) => state.hostUserId);
   const joinRoom = useRoomStore((state) => state.joinRoom);
   const leaveRoom = useRoomStore((state) => state.leaveRoom);
 
@@ -100,6 +105,10 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const { activeCommunity } = useCommunityStore();
   const [pendingOutboxCount, setPendingOutboxCount] = React.useState(0);
   const [isOnline, setIsOnline] = React.useState(true);
+  const [isActivityLauncherOpen, setIsActivityLauncherOpen] = React.useState(false);
+  const [isFocusBarOpen, setIsFocusBarOpen] = React.useState(false);
+  const [isE2EEOpen, setIsE2EEOpen] = React.useState(false);
+  const [isAiTwinOpen, setIsAiTwinOpen] = React.useState(false);
 
   // Subscribe to Local-First CRDT Outbox & Online status
   React.useEffect(() => {
@@ -206,12 +215,22 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     };
   }, [roomId]);
 
-  // Auto-open PiP overlay if presenting screen
+  // Auto-open PiP overlay when presenting screen or presenting slides/code
+  const prevModeRef = React.useRef(activeMode);
+  const prevScreenRef = React.useRef(isScreenOn);
+
   React.useEffect(() => {
-    if (isScreenOn) {
+    const startedSharing = !prevScreenRef.current && isScreenOn;
+    const switchedToPresenterMode =
+      prevModeRef.current !== activeMode && (activeMode === 'CANVAS' || activeMode === 'CODE');
+
+    if (startedSharing || switchedToPresenterMode) {
       setIsPiPOpen(true);
     }
-  }, [isScreenOn]);
+
+    prevModeRef.current = activeMode;
+    prevScreenRef.current = isScreenOn;
+  }, [isScreenOn, activeMode, setIsPiPOpen]);
 
   if (!activeRoom) {
     return (
@@ -232,7 +251,11 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     router.push(`/communities/${communityId}`);
   };
 
-  const isHost = user?.email === 'dev@mivo.app' || user?.email === 'alex@mivo.app';
+  const isHost =
+    Boolean(user?.id && hostUserId && user.id === hostUserId) ||
+    user?.email === 'dev@mivo.app' ||
+    user?.email === 'alex@mivo.app' ||
+    Boolean(activeRoom && (activeRoom as any).hostId === user?.id);
 
   const handleToggleRecording = async () => {
     const socket = realtime.getSocket();
@@ -413,6 +436,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onToggleCamera={() => toggleCamera()}
           onToggleScreen={() => toggleScreenShare()}
           onDisconnect={handleDisconnect}
+          activeMode={activeMode}
+          onSwitchMode={switchMode}
+          roomName={activeRoom.name}
         />
 
         {/* Floating Interactive Documentation Hub */}
@@ -440,6 +466,51 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           onToggleParticipants={toggleParticipants}
           onToggleDocs={toggleDocs}
           onDisconnect={handleDisconnect}
+          onOpenFocusBar={() => setIsFocusBarOpen(true)}
+          onOpenActivityLauncher={() => setIsActivityLauncherOpen(true)}
+          onOpenE2EE={() => setIsE2EEOpen(true)}
+          onOpenAiTwin={() => setIsAiTwinOpen(true)}
+        />
+
+        {/* Activity Launcher Modal */}
+        <ActivityLauncherModal
+          isOpen={isActivityLauncherOpen}
+          onClose={() => setIsActivityLauncherOpen(false)}
+          roomId={activeRoom.id}
+          onLaunch={(type) => {
+            setActiveMiniApp({
+              activityId: `activity-${type.toLowerCase()}`,
+              type,
+              roomId: activeRoom.id,
+              startedByUserId: user?.id || 'dev',
+              participants: [user?.id || 'dev'],
+              state: { turn: 'w' },
+            });
+            setIsActivityLauncherOpen(false);
+          }}
+        />
+
+        {/* Ambient Focus & Spatial Audio Bar */}
+        <AmbientFocusBar
+          roomId={activeRoom.id}
+          isOpen={isFocusBarOpen}
+          onClose={() => setIsFocusBarOpen(false)}
+        />
+
+        {/* Zero-Trust E2EE Room Verification Modal */}
+        <E2EEVerificationModal
+          isOpen={isE2EEOpen}
+          onClose={() => setIsE2EEOpen(false)}
+          roomId={activeRoom.id}
+          roomName={activeRoom.name}
+        />
+
+        {/* AI Twin Persona & Auto-Reply Settings Modal */}
+        <AiTwinSettingsModal
+          isOpen={isAiTwinOpen}
+          onClose={() => setIsAiTwinOpen(false)}
+          userId={user?.id || ''}
+          userName={user?.displayName || user?.username || 'User'}
         />
 
         {/* External Meeting Hub Modal (Google Meet & MS Teams) */}
@@ -451,7 +522,6 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
           activeBridge={activeBridge}
           onBridgeUpdated={fetchBridge}
         />
-
 
         {/* Group / Room Add User Modal (Single-Org Bound) */}
         <InviteRoomMemberModal

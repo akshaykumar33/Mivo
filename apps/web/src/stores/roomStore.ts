@@ -9,6 +9,8 @@ import {
   RoomParticipantLeftBroadcast,
   RoomModeChangedBroadcast,
   RoomParticipantStateUpdatedBroadcast,
+  AudioBitrateProfile,
+  AUDIO_BITRATE_CONSTANTS,
 } from '@mivo/shared';
 import { api } from '@/lib/api-client';
 import { realtime } from '@/lib/socket-client';
@@ -28,6 +30,9 @@ interface RoomState {
   screenStream: MediaStream | null;
   remoteStreams: Record<string, MediaStream>;
   audioLevel: number;
+  audioBitrateKbps: number;
+  audioProfile: AudioBitrateProfile;
+  hostUserId: string | null;
   joinRoom: (roomId: string, currentUserId?: string) => Promise<void>;
   leaveRoom: () => void;
   switchMode: (mode: RoomCommunicationMode) => Promise<void>;
@@ -37,6 +42,8 @@ interface RoomState {
   toggleScreenShare: () => Promise<void>;
   simulateBulkParticipants: (count?: number) => void;
   clearSimulatedParticipants: () => void;
+  setAudioBitrate: (kbps: number) => Promise<void>;
+  setAudioProfile: (profile: AudioBitrateProfile) => Promise<void>;
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
@@ -51,6 +58,9 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   screenStream: null,
   remoteStreams: {},
   audioLevel: 0,
+  audioBitrateKbps: AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS,
+  audioProfile: 'standard',
+  hostUserId: null,
 
   simulateBulkParticipants: (count = 100) => {
     const names = [
@@ -159,6 +169,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
               delete updated[peerId];
               return { remoteStreams: updated };
             });
+          },
+          (config) => {
+            set({
+              audioBitrateKbps: config.currentBitrateKbps,
+              audioProfile: config.profile,
+            });
           }
         );
       }
@@ -205,6 +221,22 @@ export const useRoomStore = create<RoomState>((set, get) => ({
               participants: state.participants.filter((p) => p.userId !== data.userId),
             }));
             webrtcMesh.disconnectPeer(data.userId);
+
+            // Eviction compliance: if current user was kicked by the host, cleanly exit
+            if (currentUserId && data.userId === currentUserId && data.reason?.toLowerCase().includes('host')) {
+              get().leaveRoom();
+              if (typeof window !== 'undefined') {
+                alert('You were removed from this room by the host or moderator.');
+                window.location.href = '/channels';
+              }
+            }
+          }
+        });
+
+        socket.off(REALTIME_EVENTS.ROOM_HOST_TRANSFERRED);
+        socket.on(REALTIME_EVENTS.ROOM_HOST_TRANSFERRED, (data: { roomId: string; newHostUserId: string }) => {
+          if (data.roomId === roomId) {
+            set({ hostUserId: data.newHostUserId });
           }
         });
 
@@ -233,6 +265,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
                   : p
               ),
             }));
+
+            // Remote host mute: if host muted current user, stop mic hardware track
+            if (currentUserId && data.userId === currentUserId && data.isMuted) {
+              mediaManager.stopMicrophone();
+              set({ isMuted: true });
+            }
           }
         });
       }
@@ -264,6 +302,9 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       screenStream: null,
       remoteStreams: {},
       audioLevel: 0,
+      audioBitrateKbps: AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS,
+      audioProfile: 'standard',
+      hostUserId: null,
     });
   },
 
@@ -425,5 +466,23 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         });
       }
     }
+  },
+
+  setAudioBitrate: async (kbps: number) => {
+    await webrtcMesh.setAudioBitrate(kbps);
+    const cfg = webrtcMesh.getAudioBitrateConfig();
+    set({
+      audioBitrateKbps: cfg.currentBitrateKbps,
+      audioProfile: cfg.profile,
+    });
+  },
+
+  setAudioProfile: async (profile: AudioBitrateProfile) => {
+    await webrtcMesh.setAudioProfile(profile);
+    const cfg = webrtcMesh.getAudioBitrateConfig();
+    set({
+      audioBitrateKbps: cfg.currentBitrateKbps,
+      audioProfile: cfg.profile,
+    });
   },
 }));

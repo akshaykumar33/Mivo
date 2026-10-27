@@ -20,6 +20,10 @@ import {
   Palette,
   PictureInPicture2,
   Code2,
+  Headphones,
+  Gamepad2,
+  ShieldCheck,
+  Bot,
 } from 'lucide-react';
 import { reactionBus } from '@/features/rooms/FloatingReactionsLayer';
 import { useThemeStore } from '@/stores/themeStore';
@@ -48,6 +52,10 @@ export interface FloatingCyberDockProps {
   onToggleParticipants: () => void;
   onToggleDocs: () => void;
   onDisconnect: () => void;
+  onOpenFocusBar?: () => void;
+  onOpenActivityLauncher?: () => void;
+  onOpenE2EE?: () => void;
+  onOpenAiTwin?: () => void;
 }
 
 export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
@@ -72,6 +80,10 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
   onToggleParticipants,
   onToggleDocs,
   onDisconnect,
+  onOpenFocusBar,
+  onOpenActivityLauncher,
+  onOpenE2EE,
+  onOpenAiTwin,
 }) => {
   const { setIsThemeModalOpen } = useThemeStore();
   const [isReactionsTrayOpen, setIsReactionsTrayOpen] = React.useState(false);
@@ -190,6 +202,34 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             <Palette className="w-4 h-4 text-[#BF5AF2]" />
             <span>Switch Visual Theme</span>
           </button>
+          <button
+            onClick={() => { onOpenFocusBar?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Headphones className="w-4 h-4 text-[#FF9F0A]" />
+            <span>Focus & Ambient Sounds</span>
+          </button>
+          <button
+            onClick={() => { onOpenActivityLauncher?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Gamepad2 className="w-4 h-4 text-[#30D158]" />
+            <span>Activities & Sandbox</span>
+          </button>
+          <button
+            onClick={() => { onOpenE2EE?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#30D158]" />
+            <span>Zero-Trust E2EE Room</span>
+          </button>
+          <button
+            onClick={() => { onOpenAiTwin?.(); setIsMoreMenuOpen(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+          >
+            <Bot className="w-4 h-4 text-[#BF5AF2]" />
+            <span>AI Twin Settings</span>
+          </button>
         </div>
       )}
 
@@ -285,6 +325,19 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           >
             <Monitor className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             <Tip text={isScreenOn ? 'Stop Screen Share' : 'Share Screen'} groupClass="group-hover/scr:opacity-100" />
+          </button>
+
+          {/* Floating PiP Presenter Button */}
+          <button
+            onClick={onTogglePiP}
+            className={`relative group/pip p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+              isPiPOpen
+                ? 'bg-[#FF9F0A] !text-black shadow-md shadow-[#FF9F0A]/40 border border-white/20'
+                : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
+            }`}
+          >
+            <PictureInPicture2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+            <Tip text={isPiPOpen ? 'Close PiP Presenter' : 'Floating PiP Presenter'} groupClass="group-hover/pip:opacity-100" />
           </button>
 
           {/* Reactions */}

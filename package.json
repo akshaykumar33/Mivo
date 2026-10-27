@@ -11,9 +11,12 @@
     "check:types": "turbo run check:types",
     "test": "turbo run test",
     "test:suites": "node tests/run-all-tests.js",
+    "test:vitest": "vitest run",
+    "test:e2e": "playwright test",
     "clean": "turbo run clean"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },

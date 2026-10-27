@@ -1,7 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { RoomMemberDTO, RoomCommunicationMode, RoomDTO, REALTIME_EVENTS } from '@mivo/shared';
+import {
+  RoomMemberDTO,
+  RoomCommunicationMode,
+  RoomDTO,
+  REALTIME_EVENTS,
+  AudioBitrateProfile,
+  AUDIO_BITRATE_CONSTANTS,
+} from '@mivo/shared';
 import { Avatar } from '@mivo/ui';
 import {
   Mic,
@@ -33,6 +40,12 @@ import {
   StopCircle,
   Share2,
   Shield,
+  GripVertical,
+  ArrowLeftRight,
+  Gauge,
+  Leaf,
+  Sliders,
+  Check,
 } from 'lucide-react';
 import { ChatStream } from '../chat/ChatStream';
 import { LiveVideoTile } from './LiveVideoTile';
@@ -80,9 +93,14 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 }) => {
   const screenVideoRef = React.useRef<HTMLVideoElement>(null);
   const stageContainerRef = React.useRef<HTMLDivElement>(null);
+  const filmstripScrollRef = React.useRef<HTMLDivElement>(null);
   const [pinnedUserId, setPinnedUserId] = React.useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = React.useState<'grid' | 'spotlight'>('grid');
   const [orderedParticipantIds, setOrderedParticipantIds] = React.useState<string[]>([]);
   const [draggedId, setDraggedId] = React.useState<string | null>(null);
+  const [dragOverId, setDragOverId] = React.useState<string | null>(null);
+  const [isCustomOrdered, setIsCustomOrdered] = React.useState(false);
+  const [arrangeToast, setArrangeToast] = React.useState<string | null>(null);
   const [isAttendeeDrawerOpen, setIsAttendeeDrawerOpen] = React.useState(true);
 
   // Screen Share Theater State
@@ -108,6 +126,36 @@ export const MediaStage: React.FC<MediaStageProps> = ({
   // Spoken Voice-to-Ticket Automation
   const [voiceTicketProposal, setVoiceTicketProposal] = React.useState<VoiceTicketProposal | null>(null);
   const [ticketToast, setTicketToast] = React.useState<string | null>(null);
+
+  // Dynamic WebRTC Audio Bitrate & Quality (16 - 128 kbps, 32 kbps standard baseline)
+  const {
+    audioBitrateKbps,
+    audioProfile,
+    setAudioBitrate,
+    setAudioProfile,
+  } = useRoomStore();
+  const [isBitrateMenuOpen, setIsBitrateMenuOpen] = React.useState(false);
+  const bitrateMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isBitrateMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bitrateMenuRef.current && !bitrateMenuRef.current.contains(e.target as Node)) {
+        setIsBitrateMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsBitrateMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isBitrateMenuOpen]);
 
   // Speech synthesis for AI Co-Host Duplex Voice
   const speakVerbalResponse = React.useCallback((text: string) => {
@@ -449,11 +497,106 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     }
   };
 
-  // Reset to auto-arranged speaker grid
-  const handleAutoArrange = () => {
+  // Computes optimal speaker balance layout:
+  // - High priority: active speakers (unmuted & audio activity)
+  // - Medium priority: live camera streaming
+  // - Host/moderator anchor
+  // - Symmetrical stereophonic balance for spatial audio acoustics
+  const computeOptimalSpeakerOrder = React.useCallback(
+    (list: RoomMemberDTO[]) => {
+      if (list.length <= 1) return list.map((p) => p.userId);
+
+      const scored = list.map((p) => {
+        const isMe = p.userId === currentUserId;
+        const speaking = isMe ? !isMuted && audioLevel > 5 : !p.isMuted;
+        const camera = isMe ? isCameraOn : p.isCameraOn;
+        const isHostMember = (isHost && isMe) || (room && (room as any).hostId === p.userId) || ((p as any).role === 'HOST');
+
+        let score = 0;
+        if (speaking) score += 100;
+        if (camera) score += 50;
+        if (isHostMember) score += 20;
+
+        return { userId: p.userId, score, speaking, camera };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+
+      // Distribute top speakers across center, left, right for spatial balance
+      if (scored.length >= 3) {
+        const left: typeof scored = [];
+        const center: typeof scored = [];
+        const right: typeof scored = [];
+
+        scored.forEach((item, idx) => {
+          if (idx % 3 === 0) center.push(item);
+          else if (idx % 3 === 1) left.push(item);
+          else right.push(item);
+        });
+
+        const balanced: typeof scored = [];
+        const maxLen = Math.max(left.length, center.length, right.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (left[i]) balanced.push(left[i]);
+          if (center[i]) balanced.push(center[i]);
+          if (right[i]) balanced.push(right[i]);
+        }
+        return balanced.map((b) => b.userId);
+      }
+
+      return scored.map((s) => s.userId);
+    },
+    [currentUserId, isMuted, audioLevel, isCameraOn, room]
+  );
+
+  // Dynamic grid auto-arranging class
+  const getDynamicGridClass = React.useCallback((tileCount: number) => {
+    switch (tileCount) {
+      case 1:
+        return 'grid-cols-1 max-w-4xl mx-auto w-full my-auto';
+      case 2:
+        return 'grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto w-full my-auto';
+      case 3:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto w-full my-auto';
+      case 4:
+        return 'grid-cols-2 max-w-5xl mx-auto w-full my-auto';
+      case 5:
+      case 6:
+        return 'grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto w-full';
+      case 7:
+      case 8:
+      case 9:
+        return 'grid-cols-2 md:grid-cols-3 max-w-7xl mx-auto w-full';
+      default:
+        return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 w-full';
+    }
+  }, []);
+
+  // Synchronize participants when membership changes
+  React.useEffect(() => {
+    if (!isCustomOrdered) {
+      const optimal = computeOptimalSpeakerOrder(participants);
+      setOrderedParticipantIds(optimal);
+    } else {
+      setOrderedParticipantIds((prev) => {
+        const currentSet = new Set(participants.map((p) => p.userId));
+        const filtered = prev.filter((id) => currentSet.has(id));
+        const missing = participants.filter((p) => !filtered.includes(p.userId)).map((p) => p.userId);
+        return [...filtered, ...missing];
+      });
+    }
+  }, [participants, isCustomOrdered, computeOptimalSpeakerOrder]);
+
+  // Reset to auto-arranged speaker grid with optimal speaker balance
+  const handleAutoArrange = React.useCallback(() => {
     setPinnedUserId(null);
-    setOrderedParticipantIds(participants.map((p) => p.userId));
-  };
+    setLayoutMode('grid');
+    const optimal = computeOptimalSpeakerOrder(participants);
+    setOrderedParticipantIds(optimal);
+    setIsCustomOrdered(false);
+    setArrangeToast('Optimal speaker balance restored');
+    setTimeout(() => setArrangeToast(null), 3000);
+  }, [computeOptimalSpeakerOrder, participants]);
 
   // Drag & Drop Reordering handlers
   const handleDragStart = (userId: string) => (e: React.DragEvent) => {
@@ -467,9 +610,31 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragEnter = (targetUserId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedId && draggedId !== targetUserId) {
+      setDragOverId(targetUserId);
+    }
+  };
+
+  const handleDragLeave = (targetUserId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragOverId === targetUserId) {
+      setDragOverId(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
   const handleDrop = (targetUserId: string) => (e: React.DragEvent) => {
     e.preventDefault();
     const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    setDragOverId(null);
+    setDraggedId(null);
+
     if (!sourceId || sourceId === targetUserId) return;
 
     setOrderedParticipantIds((prev) => {
@@ -482,7 +647,9 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       }
       return [...currentList];
     });
-    setDraggedId(null);
+    setIsCustomOrdered(true);
+    setArrangeToast('Tile reordered on the fly');
+    setTimeout(() => setArrangeToast(null), 2500);
   };
 
   const handleMoveTile = (userId: string, direction: 'left' | 'right') => {
@@ -497,6 +664,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
       currentList.splice(toIndex, 0, item);
       return [...currentList];
     });
+    setIsCustomOrdered(true);
   };
 
   // Sort participants by current drag order
@@ -510,7 +678,100 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     });
   }, [participants, orderedParticipantIds]);
 
+  const isCoHostPinned = pinnedUserId === 'ai-cohost';
   const pinnedParticipant = participants.find((p) => p.userId === pinnedUserId);
+
+  // Compute effective spotlight participant for Spotlight Focus Mode
+  const effectiveSpotlightParticipant = React.useMemo(() => {
+    if (pinnedParticipant) return pinnedParticipant;
+    if (layoutMode === 'spotlight' && !isCoHostPinned && !pinnedDataTile) {
+      return (
+        sortedParticipants.find((p) => p.userId !== currentUserId && !p.isMuted) ||
+        sortedParticipants.find((p) => p.userId === currentUserId) ||
+        sortedParticipants[0] ||
+        null
+      );
+    }
+    return null;
+  }, [pinnedParticipant, layoutMode, isCoHostPinned, pinnedDataTile, sortedParticipants, currentUserId]);
+
+  // Spotlight Toggle Handler
+  const handleTogglePin = React.useCallback((targetUserId: string) => {
+    if (pinnedUserId === targetUserId) {
+      // Unpin -> return to Grid View
+      setPinnedUserId(null);
+      setLayoutMode('grid');
+      setArrangeToast('Exited Spotlight Focus Mode');
+    } else {
+      // Pin target -> enter Spotlight Focus Mode
+      setPinnedUserId(targetUserId);
+      setLayoutMode('spotlight');
+      if (targetUserId === 'ai-cohost') {
+        setArrangeToast('Spotlight focused on AI Co-Host');
+      } else {
+        const target = participants.find((p) => p.userId === targetUserId);
+        const name = target?.user.displayName || target?.user.username || 'Speaker';
+        setArrangeToast(`Spotlight focused on ${name}`);
+      }
+    }
+    setTimeout(() => setArrangeToast(null), 2500);
+  }, [pinnedUserId, participants]);
+
+  // Layout mode switcher (Grid vs Spotlight)
+  const handleToggleLayoutMode = React.useCallback((mode: 'grid' | 'spotlight') => {
+    setLayoutMode(mode);
+    if (mode === 'grid') {
+      setPinnedUserId(null);
+      setArrangeToast('Switched to Grid View');
+    } else {
+      if (!pinnedUserId) {
+        const topSpeaker =
+          sortedParticipants.find((p) => p.userId !== currentUserId && !p.isMuted) ||
+          sortedParticipants[0];
+        if (topSpeaker) {
+          setPinnedUserId(topSpeaker.userId);
+        }
+      }
+      setArrangeToast('Switched to Spotlight Focus Mode');
+    }
+    setTimeout(() => setArrangeToast(null), 2500);
+  }, [pinnedUserId, sortedParticipants, currentUserId]);
+
+  // Disconnect safety cleanup: if pinned user leaves room, fallback smoothly
+  React.useEffect(() => {
+    if (pinnedUserId && pinnedUserId !== 'ai-cohost') {
+      const exists = participants.some((p) => p.userId === pinnedUserId);
+      if (!exists) {
+        if (participants.length > 0) {
+          const next = participants.find((p) => p.userId !== currentUserId && !p.isMuted) || participants[0];
+          setPinnedUserId(next ? next.userId : null);
+        } else {
+          setPinnedUserId(null);
+          setLayoutMode('grid');
+        }
+      }
+    }
+  }, [participants, pinnedUserId, currentUserId]);
+
+  // Escape key shortcut to return to Grid View
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (layoutMode === 'spotlight' || pinnedUserId !== null)) {
+        setPinnedUserId(null);
+        setLayoutMode('grid');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [layoutMode, pinnedUserId]);
+
+  // Smooth scroll filmstrip
+  const handleScrollFilmstrip = React.useCallback((direction: 'left' | 'right') => {
+    if (filmstripScrollRef.current) {
+      const amount = direction === 'left' ? -260 : 260;
+      filmstripScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  }, []);
 
   // Connect incoming WebRTC remoteStreams to Spatial Audio Engine
   React.useEffect(() => {
@@ -536,6 +797,234 @@ export const MediaStage: React.FC<MediaStageProps> = ({
     setSpatialPositions(newPositions);
   }, [sortedParticipants, isSpatialAudioActive]);
 
+  // Audio Bitrate Dynamic Control Popover (16 - 128 kbps, 32 kbps standard baseline)
+  const renderBitrateControl = () => {
+    const isLowBw = audioBitrateKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
+    return (
+      <div className="relative inline-block" ref={bitrateMenuRef}>
+        <button
+          onClick={() => setIsBitrateMenuOpen((prev) => !prev)}
+          className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+            isBitrateMenuOpen
+              ? 'bg-violet-600/40 border-violet-500/60 text-white ring-2 ring-violet-500/30'
+              : isLowBw
+              ? 'bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/40 text-emerald-300'
+              : 'bg-indigo-600/20 hover:bg-indigo-600/30 border-indigo-500/40 text-indigo-300'
+          }`}
+          title="Configure Dynamic WebRTC Audio Bitrate (16 - 128 kbps) & Low-Bandwidth Optimizations"
+        >
+          {isLowBw ? (
+            <Leaf className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          ) : (
+            <Gauge className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          )}
+          <span>
+            {audioBitrateKbps} kbps{' '}
+            <span className="opacity-75 font-normal">
+              ({audioProfile === 'standard' ? 'Standard' : audioProfile === 'low-bandwidth' ? 'Low-BW' : audioProfile.toUpperCase()})
+            </span>
+          </span>
+          {isLowBw && (
+            <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase font-extrabold">
+              Opt
+            </span>
+          )}
+          <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform ${isBitrateMenuOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isBitrateMenuOpen && (
+          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-[#0f111a]/95 backdrop-blur-xl border border-white/10 shadow-2xl p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white leading-tight">Audio Bitrate & Bandwidth</h4>
+                  <p className="text-[10px] text-zinc-400">WebRTC Opus Dynamic Encoder</p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-300 text-[10px] font-extrabold">
+                {audioBitrateKbps} kbps
+              </span>
+            </div>
+
+            {/* Current status explanation */}
+            <div className="my-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-zinc-200">
+                  Active Mode: <span className="text-violet-300 font-bold capitalize">{audioProfile}</span>
+                </span>
+                {isLowBw ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
+                    <Leaf className="w-3 h-3" /> Low-BW Optimized
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-cyan-400 font-bold">
+                    <Headphones className="w-3 h-3" /> Wideband Stereo
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-zinc-400 leading-relaxed">
+                {isLowBw
+                  ? '32 kbps is the standard conference baseline with mono speech, DTX silence suppression (saves ~70% idle data), and in-band FEC packet recovery.'
+                  : 'High definition stereo transmission active with in-band FEC and DTX for spatial and studio fidelity.'}
+              </p>
+            </div>
+
+            {/* Quick Profile Presets */}
+            <div className="space-y-1.5 mb-3">
+              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Quality Presets</div>
+
+              {/* Low Bandwidth 16k */}
+              <button
+                onClick={() => setAudioProfile('low-bandwidth')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'low-bandwidth' || (audioProfile !== 'adaptive' && audioBitrateKbps === 16)
+                    ? 'bg-emerald-600/25 border-emerald-500/50 text-emerald-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="text-left">
+                    <div>16 kbps · Low Bandwidth</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Cellular & weak signal saver · Mono + DTX</div>
+                  </div>
+                </div>
+                {(audioProfile === 'low-bandwidth' || audioBitrateKbps === 16) && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+              </button>
+
+              {/* Standard 32k [Default / Recommended] */}
+              <button
+                onClick={() => setAudioProfile('standard')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'standard' || (audioProfile !== 'adaptive' && audioBitrateKbps === 32)
+                    ? 'bg-violet-600/30 border-violet-500/50 text-violet-200 font-bold ring-1 ring-violet-500/30'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span>32 kbps · Standard Conference</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 font-semibold">Recommended</span>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Standard baseline · Crystal voice clarity & low bandwidth</div>
+                  </div>
+                </div>
+                {(audioProfile === 'standard' || audioBitrateKbps === 32) && <Check className="w-3.5 h-3.5 text-violet-400" />}
+              </button>
+
+              {/* HD 64k */}
+              <button
+                onClick={() => setAudioProfile('hd')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'hd' || (audioProfile !== 'adaptive' && audioBitrateKbps === 64)
+                    ? 'bg-cyan-600/25 border-cyan-500/50 text-cyan-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Headphones className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="text-left">
+                    <div>64 kbps · HD Audio</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">High-definition wideband stereo speech</div>
+                  </div>
+                </div>
+                {(audioProfile === 'hd' || audioBitrateKbps === 64) && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+              </button>
+
+              {/* Studio 128k */}
+              <button
+                onClick={() => setAudioProfile('studio')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'studio' || (audioProfile !== 'adaptive' && audioBitrateKbps === 128)
+                    ? 'bg-fuchsia-600/25 border-fuchsia-500/50 text-fuchsia-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Gauge className="w-3.5 h-3.5 text-fuchsia-400" />
+                  <div className="text-left">
+                    <div>128 kbps · Studio Fidelity</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Maximum Opus quality · Full stereo music & instruments</div>
+                  </div>
+                </div>
+                {(audioProfile === 'studio' || audioBitrateKbps === 128) && <Check className="w-3.5 h-3.5 text-fuchsia-400" />}
+              </button>
+
+              {/* Adaptive Dynamic */}
+              <button
+                onClick={() => setAudioProfile('adaptive')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                  audioProfile === 'adaptive'
+                    ? 'bg-amber-600/25 border-amber-500/50 text-amber-200 font-bold'
+                    : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="text-left">
+                    <div>Adaptive (16 – 128 kbps)</div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Auto-scales dynamically based on RTT & packet loss</div>
+                  </div>
+                </div>
+                {audioProfile === 'adaptive' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+              </button>
+            </div>
+
+            {/* Manual Slider Fine Tuning */}
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] mb-3">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-300 mb-2">
+                <span>Fine-Tune Bitrate</span>
+                <span className="text-violet-400 font-mono font-bold">{audioBitrateKbps} kbps</span>
+              </div>
+              <input
+                type="range"
+                min={AUDIO_BITRATE_CONSTANTS.MIN_KBPS}
+                max={AUDIO_BITRATE_CONSTANTS.MAX_KBPS}
+                step={4}
+                value={audioBitrateKbps}
+                onChange={(e) => setAudioBitrate(Number(e.target.value))}
+                className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-700 rounded-lg appearance-none"
+              />
+              <div className="flex justify-between text-[9px] text-zinc-500 font-mono mt-1">
+                <span>16k (Low)</span>
+                <span className="text-violet-400 font-semibold">32k (Std)</span>
+                <span>64k (HD)</span>
+                <span>128k (Max)</span>
+              </div>
+            </div>
+
+            {/* Low-Bandwidth Feature Specs */}
+            <div className="grid grid-cols-2 gap-1.5 text-[9px] text-zinc-400 pt-2 border-t border-white/5">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>DTX Silence Suppression</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>In-Band FEC Protection</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>{isLowBw ? 'Mono Speech (100% voice)' : 'Stereo Spatial Audio'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>Real-Time Adaptation</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // VOICE MODE: Real Spatial Voice Huddle Stage with Dynamic Audio Levels
   const renderVoiceStage = () => {
     return (
@@ -552,12 +1041,27 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <h3 className="text-xl font-bold text-[var(--text-primary)] font-display">
               {participants.length} {participants.length === 1 ? 'Speaker' : 'Speakers'} in Stage
             </h3>
+            {isCustomOrdered ? (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold animate-in fade-in">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span>Custom Layout</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold animate-in fade-in">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                <span>Speaker Balanced</span>
+              </span>
+            )}
             <button
               onClick={handleAutoArrange}
-              className="flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] transition-colors"
-              title="Auto-Arrange Speaker Order"
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                isCustomOrdered
+                  ? 'bg-violet-600/30 hover:bg-violet-600/50 border-violet-500/50 text-violet-200 hover:text-white ring-2 ring-violet-500/25'
+                  : 'bg-white/[0.04] border-white/[0.06] text-violet-400 hover:text-violet-300'
+              }`}
+              title="Auto-Arrange Speaker Order (Restores optimal speaker balance)"
             >
-              <LayoutGrid className="w-3 h-3" />
+              <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
               <span>Auto-Arrange</span>
             </button>
             <button
@@ -576,6 +1080,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
               <Headphones className="w-3.5 h-3.5 text-emerald-400" />
               <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
             </button>
+            {renderBitrateControl()}
             <button
               onClick={() =>
                 handleTriggerCoHost(
@@ -668,6 +1173,8 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             const isMe = p.userId === currentUserId;
             const participantMuted = isMe ? isMuted : p.isMuted;
             const isSpeaking = !participantMuted && (isMe ? audioLevel > 5 : true);
+            const isDragging = draggedId === p.userId;
+            const isDragOver = dragOverId === p.userId;
 
             return (
               <div
@@ -675,35 +1182,64 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                 draggable
                 onDragStart={handleDragStart(p.userId)}
                 onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter(p.userId)}
+                onDragLeave={handleDragLeave(p.userId)}
+                onDragEnd={handleDragEnd}
                 onDrop={handleDrop(p.userId)}
-                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border transition-all duration-200 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
-                  isSpeaking
+                className={`relative flex flex-col items-center p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border transition-all duration-300 group w-40 sm:w-44 shadow-lg cursor-grab active:cursor-grabbing ${
+                  isDragging
+                    ? 'opacity-35 scale-[0.97] border-dashed border-violet-400 ring-2 ring-violet-500/40 shadow-none'
+                    : isDragOver
+                    ? 'scale-[1.04] border-violet-400 ring-4 ring-violet-500/60 shadow-2xl shadow-violet-500/30 bg-violet-950/40'
+                    : isSpeaking
                     ? 'border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                     : 'border-[var(--border-subtle)] hover:border-violet-500/30'
                 }`}
               >
-                {/* Voice Card Reorder Arrows */}
-                <div className="absolute top-2 left-2 right-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <button
-                    onClick={(e) => {
+                {/* Drop Target Indicator */}
+                {isDragOver && (
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-violet-950/85 backdrop-blur-xs rounded-3xl border-2 border-dashed border-violet-400 pointer-events-none animate-in fade-in zoom-in-95">
+                    <ArrowLeftRight className="w-4 h-4 text-violet-300 animate-pulse mb-1" />
+                    <span className="text-[10px] font-bold text-white text-center px-2">Drop to Swap</span>
+                  </div>
+                )}
+
+                {/* Voice Card Drag Handle & Quick Reorder Controls */}
+                <div className="absolute top-2 left-2 right-2 flex items-center justify-between opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <div
+                    draggable
+                    onDragStart={(e) => {
                       e.stopPropagation();
-                      handleMoveTile(p.userId, 'left');
+                      handleDragStart(p.userId)(e);
                     }}
-                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
-                    title="Move Left"
+                    onDragEnd={handleDragEnd}
+                    className="p-1 rounded-lg bg-black/60 hover:bg-violet-600/40 text-white/70 hover:text-white transition-all cursor-grab active:cursor-grabbing border border-white/10"
+                    title="Grab handle to reorder tile on the fly"
                   >
-                    <ChevronLeft className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoveTile(p.userId, 'right');
-                    }}
-                    className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer"
-                    title="Move Right"
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
+                    <GripVertical className="w-3 h-3 text-violet-400" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTile(p.userId, 'left');
+                      }}
+                      className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer border border-white/10"
+                      title="Move Left"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTile(p.userId, 'right');
+                      }}
+                      className="p-1 rounded-lg bg-black/60 hover:bg-white/[0.15] text-white/60 hover:text-white transition-all cursor-pointer border border-white/10"
+                      title="Move Right"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -775,8 +1311,15 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   // VIDEO MODE: Grid with Drag & Drop, Host Moderation & Spotlight Pinning
   const renderVideoStage = () => {
+    const activeHeroParticipant = effectiveSpotlightParticipant;
+    const isHeroActive = Boolean(pinnedDataTile || isCoHostPinned || activeHeroParticipant);
+    const heroName = isCoHostPinned
+      ? 'Mivo AI Co-Host'
+      : activeHeroParticipant?.user.displayName || activeHeroParticipant?.user.username || 'Speaker';
+
     return (
-    <div className="flex-1 p-2 sm:p-6 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative">
+      <div className="flex-1 p-2 sm:p-5 pb-28 bg-[var(--bg-canvas)] select-none flex flex-col overflow-hidden relative gap-3">
+        {/* Live Fact Check HUD Alert */}
         <LiveFactCheckHUD
           alert={factCheckAlert}
           onDismiss={() => setFactCheckAlert(null)}
@@ -788,227 +1331,385 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           }}
         />
 
-        {pinnedDataTile ? (
-          // Spotlight Mode: Dominant Pinned AI Data Tile + Attendee Strip
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
-              <AiPinnedDataTile
-                payload={pinnedDataTile}
-                onDismiss={() => {
-                  setPinnedDataTile(null);
-                  const socket = realtime.getSocket();
-                  if (socket && room?.id) {
-                    socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
-                  }
-                }}
-                onOpenTicketsModal={() => openTicketsModal(true)}
-              />
-            </div>
+        {/* Global Video Stage Controls Header Bar */}
+        <div className="flex items-center justify-between px-1 flex-wrap gap-2 flex-shrink-0 z-10">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+              Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
+            </span>
 
-            {/* Bottom attendee filmstrip with Co-Host */}
-            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
-              {isCoHostEnabled && (
-                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
-                  <AiCoHostStageTile
-                    status={coHostStatus}
-                    lastSpeechText={lastSpeechText}
-                    onTriggerCommand={handleTriggerCoHost}
-                  />
-                </div>
-              )}
-              {sortedParticipants.map((p) => {
-                const isMe = p.userId === currentUserId;
-                return (
-                  <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
-                    <LiveVideoTile
-                      user={p.user}
-                      isMe={isMe}
-                      isMuted={isMe ? isMuted : p.isMuted}
-                      isCameraOn={isMe ? isCameraOn : p.isCameraOn}
-                      isPinned={false}
-                      onTogglePin={() => setPinnedUserId(p.userId)}
-                      isHost={isHost}
-                      onHostAction={handleHostAction}
-                      mediaStream={isMe ? localStream : remoteStreams[p.userId]}
-                      audioLevel={isMe ? audioLevel : 0}
-                      spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+            {/* Spotlight Active Indicator Badge */}
+            {isHeroActive && (
+              <span className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-violet-600/20 border border-violet-500/40 text-violet-300 text-[11px] font-extrabold animate-in fade-in">
+                <Pin className="w-3 h-3 fill-current text-amber-300 animate-pulse" />
+                <span>Spotlight: {heroName}</span>
+              </span>
+            )}
+
+            <button
+              onClick={() => {
+                const next = !isSpatialAudioActive;
+                setIsSpatialAudioActive(next);
+                spatialAudio.setEnabled(next);
+              }}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
+                isSpatialAudioActive
+                  ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+              }`}
+              title="Toggle 3D Positional Stereo Spatial Audio"
+            >
+              <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+              <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {renderBitrateControl()}
+
+            <button
+              onClick={() =>
+                handleTriggerCoHost(
+                  'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
+              title="Trigger Mivo AI Stage Co-Host"
+            >
+              <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>@mivo Sprint Blockers</span>
+            </button>
+
+            <button
+              onClick={() =>
+                handleExtractVoiceTicket(
+                  "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
+                )
+              }
+              className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
+              title="Simulate Voice-to-Ticket Detection"
+            >
+              <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Voice-to-Ticket Demo</span>
+            </button>
           </div>
-        ) : pinnedParticipant ? (
-          // Spotlight Mode: Dominant Pinned Tile + Attendee Strip
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto w-full aspect-video">
-              <LiveVideoTile
-                user={pinnedParticipant.user}
-                isMe={pinnedParticipant.userId === currentUserId}
-                isMuted={pinnedParticipant.userId === currentUserId ? isMuted : pinnedParticipant.isMuted}
-                isCameraOn={pinnedParticipant.userId === currentUserId ? isCameraOn : pinnedParticipant.isCameraOn}
-                isPinned={true}
-                onTogglePin={() => setPinnedUserId(null)}
-                isHost={isHost}
-                onHostAction={handleHostAction}
-                mediaStream={pinnedParticipant.userId === currentUserId ? localStream : remoteStreams[pinnedParticipant.userId]}
-                audioLevel={pinnedParticipant.userId === currentUserId ? audioLevel : 0}
-                spatialPanLabel={isSpatialAudioActive && spatialPositions[pinnedParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[pinnedParticipant.userId].pan) : undefined}
-              />
-            </div>
 
-            {/* Bottom attendee filmstrip */}
-            <div className="h-32 flex items-center gap-3 overflow-x-auto py-1">
-              {isCoHostEnabled && (
-                <div className="w-48 aspect-video flex-shrink-0 flex items-center">
-                  <AiCoHostStageTile
-                    status={coHostStatus}
-                    lastSpeechText={lastSpeechText}
-                    onTriggerCommand={handleTriggerCoHost}
-                  />
-                </div>
-              )}
-              {sortedParticipants
-                .filter((p) => p.userId !== pinnedUserId)
-                .map((p) => {
-                  const isMe = p.userId === currentUserId;
-                  return (
-                    <div key={p.id} className="w-48 aspect-video flex-shrink-0 flex items-center">
-                      <LiveVideoTile
-                        user={p.user}
-                        isMe={isMe}
-                        isMuted={isMe ? isMuted : p.isMuted}
-                        isCameraOn={isMe ? isCameraOn : p.isCameraOn}
-                        isPinned={false}
-                        onTogglePin={() => setPinnedUserId(p.userId)}
-                        isHost={isHost}
-                        onHostAction={handleHostAction}
-                        mediaStream={isMe ? localStream : remoteStreams[p.userId]}
-                        audioLevel={isMe ? audioLevel : 0}
-                        spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                      />
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        ) : (
-          // Standard Equal Auto-Adjusting Grid with Drag & Drop
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between mb-3 px-1 flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                  Live Video Stage ({participants.length + (isCoHostEnabled ? 1 : 0)} Active)
-                </span>
-                <button
-                  onClick={() => {
-                    const next = !isSpatialAudioActive;
-                    setIsSpatialAudioActive(next);
-                    spatialAudio.setEnabled(next);
-                  }}
-                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-md ${
-                    isSpatialAudioActive
-                      ? 'bg-emerald-600/25 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
-                  }`}
-                  title="Toggle 3D Positional Stereo Spatial Audio"
-                >
-                  <Headphones className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>3D Spatial: {isSpatialAudioActive ? 'ON' : 'OFF'}</span>
-                </button>
-                <button
-                  onClick={() =>
-                    handleTriggerCoHost(
-                      'Mivo, pull up our last 3 sprint tickets and summarize blockers on screen.'
-                    )
-                  }
-                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-xl bg-violet-600/30 border border-violet-500/40 hover:bg-violet-600/50 transition-all shadow-md cursor-pointer"
-                  title="Trigger Mivo AI Stage Co-Host"
-                >
-                  <Bot className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                  <span>@mivo Sprint Blockers</span>
-                </button>
-                <button
-                  onClick={() =>
-                    handleExtractVoiceTicket(
-                      "Sarah, let's file a high priority ticket to optimize the Redis pub/sub adapter by Friday"
-                    )
-                  }
-                  className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-300 hover:text-amber-200 px-3 py-1 rounded-xl bg-amber-600/25 border border-amber-500/40 hover:bg-amber-600/40 transition-all shadow-md cursor-pointer"
-                  title="Simulate Voice-to-Ticket Detection"
-                >
-                  <Ticket className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Voice-to-Ticket Demo</span>
-                </button>
-              </div>
-
+          <div className="flex items-center gap-2">
+            {/* View Mode Switcher: Grid View vs Spotlight View */}
+            <div className="flex items-center p-0.5 rounded-xl bg-black/40 border border-white/10 shadow-inner">
               <button
-                onClick={handleAutoArrange}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-violet-400 hover:text-violet-300 px-3 py-1 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors"
-                title="Reset to Auto-Arranged Grid"
+                onClick={() => handleToggleLayoutMode('grid')}
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  !isHeroActive
+                    ? 'bg-violet-600 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                }`}
+                title="Switch to Equal Responsive Grid View"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Auto-Arrange Grid</span>
+                <span>Grid</span>
+              </button>
+              <button
+                onClick={() => handleToggleLayoutMode('spotlight')}
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  isHeroActive
+                    ? 'bg-violet-600 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                }`}
+                title="Switch to Spotlight Focus Mode (Dominant 16:9 Hero Stage + Attendee Filmstrip)"
+              >
+                <Pin className="w-3.5 h-3.5" />
+                <span>Spotlight</span>
               </button>
             </div>
 
-            {/* Voice-to-Ticket Interactive Confirmation Card */}
-            {voiceTicketProposal && (
-              <div className="w-full max-w-xl mx-auto mb-4 z-30">
-                <VoiceTicketConfirmationCard
-                  proposal={voiceTicketProposal}
-                  roomId={room?.id}
-                  onConfirm={handleConfirmVoiceTicket}
-                  onDismiss={() => setVoiceTicketProposal(null)}
-                />
-              </div>
+            {/* Custom Layout indicator & reset for Grid View */}
+            {!isHeroActive && (
+              <>
+                {isCustomOrdered ? (
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold animate-in fade-in">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Custom Layout</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold animate-in fade-in">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <span>Speaker Balanced</span>
+                  </span>
+                )}
+                <button
+                  onClick={handleAutoArrange}
+                  className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                    isCustomOrdered
+                      ? 'bg-violet-600/30 hover:bg-violet-600/50 border-violet-500/50 text-violet-200 hover:text-white ring-2 ring-violet-500/25'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-violet-400 hover:text-violet-300 hover:bg-[var(--bg-surface-2)]'
+                  }`}
+                  title="Reset to Auto-Arranged Grid (Restores optimal speaker balance)"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Auto-Arrange</span>
+                </button>
+              </>
             )}
 
-            <div
-              className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center ${
-                sortedParticipants.length === 1 && !isCoHostEnabled
-                  ? 'grid-cols-1 max-w-2xl mx-auto w-full my-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
-              }`}
-            >
-              {/* Co-Host Stage Tile */}
-              {isCoHostEnabled && (
-                <AiCoHostStageTile
-                  status={coHostStatus}
-                  lastSpeechText={lastSpeechText}
-                  onTriggerCommand={handleTriggerCoHost}
-                />
-              )}
+            {/* Exit Spotlight button when in Spotlight Mode */}
+            {isHeroActive && (
+              <button
+                onClick={() => handleToggleLayoutMode('grid')}
+                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl bg-white/[0.06] hover:bg-rose-950/60 hover:text-rose-200 border border-white/10 hover:border-rose-500/40 text-zinc-300 transition-all cursor-pointer shadow-sm"
+                title="Exit Spotlight Focus Mode (Return to Grid)"
+              >
+                <PinOff className="w-3.5 h-3.5 text-violet-400" />
+                <span>Exit Spotlight</span>
+              </button>
+            )}
+          </div>
+        </div>
 
-              {sortedParticipants.map((p) => {
-                const isMe = p.userId === currentUserId;
-                const camOn = isMe ? isCameraOn : p.isCameraOn;
-                const participantMuted = isMe ? isMuted : p.isMuted;
-                const participantStream = isMe ? localStream : remoteStreams[p.userId];
+        {/* Voice-to-Ticket Interactive Confirmation Card */}
+        {voiceTicketProposal && (
+          <div className="w-full max-w-xl mx-auto mb-2 z-30 flex-shrink-0">
+            <VoiceTicketConfirmationCard
+              proposal={voiceTicketProposal}
+              roomId={room?.id}
+              onConfirm={handleConfirmVoiceTicket}
+              onDismiss={() => setVoiceTicketProposal(null)}
+            />
+          </div>
+        )}
 
-                return (
+        {/* STAGE CONTENT: Spotlight Mode vs Grid Mode */}
+        {isHeroActive ? (
+          /* Spotlight Focus Mode: Dominant 16:9 Hero Stage + Attendee Filmstrip */
+          <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+            {/* 1. Dominant 16:9 Hero Stage Container */}
+            <div className="flex-1 min-h-0 flex items-center justify-center relative p-1 sm:p-2">
+              <div className="w-full max-w-5xl xl:max-w-6xl max-h-full aspect-video mx-auto relative flex items-center justify-center">
+                {/* Atmospheric Ambient Halo Backlight */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-violet-600/30 via-indigo-600/20 to-purple-600/30 rounded-3xl blur-2xl opacity-75 pointer-events-none" />
+
+                {/* Top Overlay Banner on Hero Stage */}
+                <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-none">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/90 text-white text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-xl border border-violet-400/40">
+                    <Pin className="w-3.5 h-3.5 fill-current text-amber-300 animate-pulse" />
+                    <span>Spotlight Focus Mode</span>
+                  </div>
+                  <span className="text-[11px] text-white/80 font-bold bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 hidden sm:inline-block">
+                    16:9 Hero Stage
+                  </span>
+                </div>
+
+                {/* Top Right Exit Spotlight button on Hero Stage */}
+                <button
+                  onClick={() => handleToggleLayoutMode('grid')}
+                  className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 hover:bg-black text-zinc-300 hover:text-white text-xs font-bold backdrop-blur-md border border-white/15 hover:border-violet-400/50 shadow-xl transition-all cursor-pointer"
+                  title="Exit Spotlight Focus Mode"
+                >
+                  <PinOff className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Exit Spotlight</span>
+                </button>
+
+                {/* Hero Stage Content */}
+                {pinnedDataTile ? (
+                  <AiPinnedDataTile
+                    payload={pinnedDataTile}
+                    onDismiss={() => {
+                      setPinnedDataTile(null);
+                      const socket = realtime.getSocket();
+                      if (socket && room?.id) {
+                        socket.emit(REALTIME_EVENTS.ROOM_AI_DISMISS_TILE, { roomId: room.id });
+                      }
+                    }}
+                    onOpenTicketsModal={() => openTicketsModal(true)}
+                  />
+                ) : isCoHostPinned ? (
+                  <AiCoHostStageTile
+                    status={coHostStatus}
+                    lastSpeechText={lastSpeechText}
+                    onTriggerCommand={handleTriggerCoHost}
+                    isPinned={true}
+                    onTogglePin={() => handleTogglePin('ai-cohost')}
+                    isSpotlightHero={true}
+                  />
+                ) : activeHeroParticipant ? (
                   <LiveVideoTile
-                    key={p.id}
-                    user={p.user}
-                    isMe={isMe}
-                    isMuted={participantMuted}
-                    isCameraOn={camOn}
-                    isPinned={false}
-                    onTogglePin={() => setPinnedUserId(p.userId)}
+                    user={activeHeroParticipant.user}
+                    isMe={activeHeroParticipant.userId === currentUserId}
+                    isMuted={activeHeroParticipant.userId === currentUserId ? isMuted : activeHeroParticipant.isMuted}
+                    isCameraOn={activeHeroParticipant.userId === currentUserId ? isCameraOn : activeHeroParticipant.isCameraOn}
+                    isPinned={true}
+                    onTogglePin={() => handleTogglePin(activeHeroParticipant.userId)}
                     isHost={isHost}
                     onHostAction={handleHostAction}
-                    mediaStream={participantStream}
-                    audioLevel={isMe ? audioLevel : 0}
-                    spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
-                    onDragStart={handleDragStart(p.userId)}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop(p.userId)}
-                    onMoveLeft={() => handleMoveTile(p.userId, 'left')}
-                    onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                    mediaStream={activeHeroParticipant.userId === currentUserId ? localStream : remoteStreams[activeHeroParticipant.userId]}
+                    audioLevel={activeHeroParticipant.userId === currentUserId ? audioLevel : 0}
+                    spatialPanLabel={isSpatialAudioActive && spatialPositions[activeHeroParticipant.userId] ? spatialAudio.formatPanLabel(spatialPositions[activeHeroParticipant.userId].pan) : undefined}
+                    isSpotlightHero={true}
                   />
-                );
-              })}
+                ) : null}
+              </div>
             </div>
+
+            {/* 2. Attendee Filmstrip Below */}
+            <div className="flex-shrink-0 w-full pt-2 pb-1 border-t border-white/[0.08] bg-black/30 backdrop-blur-md rounded-2xl px-3 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-violet-400" />
+                    Attendee Filmstrip ({
+                      (sortedParticipants.filter((p) => p.userId !== activeHeroParticipant?.userId).length) +
+                      (isCoHostEnabled && !isCoHostPinned ? 1 : 0)
+                    })
+                  </span>
+                  <span className="text-[10px] text-zinc-500 hidden sm:inline-block">
+                    • Click any attendee to switch spotlight
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleScrollFilmstrip('left')}
+                    className="p-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-all cursor-pointer"
+                    title="Scroll filmstrip left"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScrollFilmstrip('right')}
+                    className="p-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-all cursor-pointer"
+                    title="Scroll filmstrip right"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Filmstrip Horizontal Track */}
+              <div
+                ref={filmstripScrollRef}
+                className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scroll-smooth min-h-[90px]"
+              >
+                {/* AI Co-Host Tile in Filmstrip (if enabled and not currently the hero) */}
+                {isCoHostEnabled && !isCoHostPinned && (
+                  <div
+                    className="w-44 sm:w-52 aspect-video flex-shrink-0 flex items-center relative group/strip cursor-pointer rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-violet-500/60"
+                    onClick={() => handleTogglePin('ai-cohost')}
+                  >
+                    <AiCoHostStageTile
+                      status={coHostStatus}
+                      lastSpeechText={lastSpeechText}
+                      onTriggerCommand={handleTriggerCoHost}
+                      isPinned={false}
+                      onTogglePin={() => handleTogglePin('ai-cohost')}
+                      filmstripMode={true}
+                    />
+                  </div>
+                )}
+
+                {/* Attendee Tiles in Filmstrip */}
+                {sortedParticipants
+                  .filter((p) => p.userId !== activeHeroParticipant?.userId)
+                  .map((p) => {
+                    const isMe = p.userId === currentUserId;
+                    const camOn = isMe ? isCameraOn : p.isCameraOn;
+                    const participantMuted = isMe ? isMuted : p.isMuted;
+                    const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+                    return (
+                      <div
+                        key={p.id}
+                        className="w-44 sm:w-52 aspect-video flex-shrink-0 flex items-center relative group/strip cursor-pointer rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-violet-500/60"
+                        onClick={() => handleTogglePin(p.userId)}
+                      >
+                        <LiveVideoTile
+                          user={p.user}
+                          isMe={isMe}
+                          isMuted={participantMuted}
+                          isCameraOn={camOn}
+                          isPinned={false}
+                          onTogglePin={() => handleTogglePin(p.userId)}
+                          isHost={isHost}
+                          onHostAction={handleHostAction}
+                          mediaStream={participantStream}
+                          audioLevel={isMe ? audioLevel : 0}
+                          spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                          filmstripMode={true}
+                          onClick={() => handleTogglePin(p.userId)}
+                          onDragStart={handleDragStart(p.userId)}
+                          onDragOver={handleDragOver}
+                          onDragEnter={handleDragEnter(p.userId)}
+                          onDragLeave={handleDragLeave(p.userId)}
+                          onDragEnd={handleDragEnd}
+                          onDrop={handleDrop(p.userId)}
+                          isDragging={draggedId === p.userId}
+                          isDragOver={dragOverId === p.userId}
+                          onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                          onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                        />
+                      </div>
+                    );
+                  })}
+
+                {/* Fallback when no other attendees are in the filmstrip */}
+                {sortedParticipants.filter((p) => p.userId !== activeHeroParticipant?.userId).length === 0 && !isCoHostEnabled && (
+                  <div className="h-20 w-full flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-xs text-zinc-400 gap-2 px-4">
+                    <Users className="w-4 h-4 text-violet-400" />
+                    <span>Spotlight Focus active. As other participants join, they will appear in this attendee filmstrip.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Standard Equal Auto-Adjusting Grid with Drag & Drop */
+          <div
+            className={`grid gap-4 sm:gap-5 h-full min-h-[340px] overflow-y-auto items-center transition-all duration-300 ${
+              getDynamicGridClass(sortedParticipants.length + (isCoHostEnabled ? 1 : 0))
+            }`}
+          >
+            {/* Co-Host Stage Tile */}
+            {isCoHostEnabled && (
+              <AiCoHostStageTile
+                status={coHostStatus}
+                lastSpeechText={lastSpeechText}
+                onTriggerCommand={handleTriggerCoHost}
+                isPinned={false}
+                onTogglePin={() => handleTogglePin('ai-cohost')}
+                onClick={() => handleTogglePin('ai-cohost')}
+              />
+            )}
+
+            {sortedParticipants.map((p) => {
+              const isMe = p.userId === currentUserId;
+              const camOn = isMe ? isCameraOn : p.isCameraOn;
+              const participantMuted = isMe ? isMuted : p.isMuted;
+              const participantStream = isMe ? localStream : remoteStreams[p.userId];
+
+              return (
+                <LiveVideoTile
+                  key={p.id}
+                  user={p.user}
+                  isMe={isMe}
+                  isMuted={participantMuted}
+                  isCameraOn={camOn}
+                  isPinned={false}
+                  onTogglePin={() => handleTogglePin(p.userId)}
+                  isHost={isHost}
+                  onHostAction={handleHostAction}
+                  mediaStream={participantStream}
+                  audioLevel={isMe ? audioLevel : 0}
+                  spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
+                  onDragStart={handleDragStart(p.userId)}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter(p.userId)}
+                  onDragLeave={handleDragLeave(p.userId)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop(p.userId)}
+                  isDragging={draggedId === p.userId}
+                  isDragOver={dragOverId === p.userId}
+                  onMoveLeft={() => handleMoveTile(p.userId, 'left')}
+                  onMoveRight={() => handleMoveTile(p.userId, 'right')}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -1060,6 +1761,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
           {/* Right: Stage View Controls */}
           <div className="flex items-center gap-1.5">
+            {renderBitrateControl()}
             {isScreenActive && (
               <button
                 onClick={() => setScreenFitMode(screenFitMode === 'contain' ? 'cover' : 'contain')}
@@ -1139,14 +1841,20 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <div className="max-w-xl w-full z-10 flex flex-col items-center text-center">
               {/* Monogram / Icon */}
               <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-200 mb-3 shadow-sm">
-                <Monitor className="w-6 h-6 text-slate-200" />
+                {mode === 'STREAM' ? (
+                  <Radio className="w-6 h-6 text-cyan-400 animate-pulse" />
+                ) : (
+                  <Monitor className="w-6 h-6 text-slate-200" />
+                )}
               </div>
 
               <h3 className="text-xl font-semibold text-white tracking-tight">
-                Broadcast Your Screen
+                {mode === 'STREAM' ? 'Live Stream Broadcaster' : 'Broadcast Your Screen'}
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md">
-                Share live code, application windows, slides, or your entire desktop directly with this meeting.
+                {mode === 'STREAM'
+                  ? 'Broadcast ultra-low latency interactive audio, video, and screen streams to all room members in real-time.'
+                  : 'Share live code, application windows, slides, or your entire desktop directly with this meeting.'}
               </p>
 
               {/* 3 Source Selector Cards */}
@@ -1221,8 +1929,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   onClick={handleToggleScreen}
                   className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.98]"
                 >
-                  <Share2 className="w-4 h-4 text-slate-900" />
-                  <span>Start Screen Sharing</span>
+                  {mode === 'STREAM' ? (
+                    <Radio className="w-4 h-4 text-cyan-600" />
+                  ) : (
+                    <Share2 className="w-4 h-4 text-slate-900" />
+                  )}
+                  <span>{mode === 'STREAM' ? 'Go Live / Start Broadcast' : 'Start Screen Sharing'}</span>
                 </button>
 
                 <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-colors">
@@ -1282,12 +1994,28 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                   <span>{isCoHostEnabled ? 'AI Co-Host (On)' : '+ AI Assistant'}</span>
                 </button>
 
+                {isCustomOrdered ? (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Custom</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <span>Balanced</span>
+                  </span>
+                )}
+
                 <button
                   onClick={handleAutoArrange}
-                  className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
-                  title="Auto-Arrange Video Strip"
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    isCustomOrdered
+                      ? 'bg-violet-600/25 text-violet-200 border-violet-500/40 hover:bg-violet-600/40'
+                      : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)]'
+                  }`}
+                  title="Auto-Arrange Video Strip (Restores optimal speaker balance)"
                 >
-                  <LayoutGrid className="w-3 h-3" />
+                  <LayoutGrid className="w-3 h-3 text-violet-400" />
                   <span>Auto-Arrange</span>
                 </button>
 
@@ -1329,7 +2057,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       isMuted={participantMuted}
                       isCameraOn={camOn}
                       isPinned={pinnedUserId === p.userId}
-                      onTogglePin={() => setPinnedUserId(pinnedUserId === p.userId ? null : p.userId)}
+                      onTogglePin={() => handleTogglePin(p.userId)}
                       isHost={isHost}
                       onHostAction={handleHostAction}
                       mediaStream={participantStream}
@@ -1337,7 +2065,12 @@ export const MediaStage: React.FC<MediaStageProps> = ({
                       spatialPanLabel={isSpatialAudioActive && spatialPositions[p.userId] ? spatialAudio.formatPanLabel(spatialPositions[p.userId].pan) : undefined}
                       onDragStart={handleDragStart(p.userId)}
                       onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter(p.userId)}
+                      onDragLeave={handleDragLeave(p.userId)}
+                      onDragEnd={handleDragEnd}
                       onDrop={handleDrop(p.userId)}
+                      isDragging={draggedId === p.userId}
+                      isDragOver={dragOverId === p.userId}
                       onMoveLeft={() => handleMoveTile(p.userId, 'left')}
                       onMoveRight={() => handleMoveTile(p.userId, 'right')}
                     />
@@ -1378,6 +2111,14 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--bg-canvas)]">
+      {/* Auto-Arrange / Reorder Feedback Toast */}
+      {arrangeToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-violet-950/95 border border-violet-500/50 text-violet-200 text-xs font-bold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 backdrop-blur-md pointer-events-none">
+          <CheckCircle2 className="w-4 h-4 text-violet-400" />
+          <span>{arrangeToast}</span>
+        </div>
+      )}
+
       {/* ── Real-Time Chat Stream (Kept hot in DOM: 0ms instant switch, zero re-fetching or scroll loss) ── */}
       <div
         className={`flex-1 flex flex-col h-full w-full ${

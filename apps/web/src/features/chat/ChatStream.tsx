@@ -8,6 +8,7 @@ import { usePresenceStore } from '@/stores/presenceStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Avatar, Badge } from '@mivo/ui';
 import { MessageComposer } from './MessageComposer';
+import { ThreadSidebar } from './ThreadSidebar';
 import {
   MessageSquare,
   Sparkles,
@@ -26,7 +27,16 @@ import {
   X,
   Eye,
   Bot,
+  CornerUpLeft,
+  MessageSquareReply,
+  MessageSquareText,
+  ChevronRight,
+  Languages,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { translationManager, SUPPORTED_LANGUAGES } from '@/lib/translation-manager';
+import { LanguageSelectorPopover } from './LanguageSelectorPopover';
 import { storageClient } from '@/lib/storage-client';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
 import { GraphicalReaction } from '@/features/reactions';
@@ -65,7 +75,74 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   const [messageReactions, setMessageReactions] = React.useState<Record<string, Record<string, number>>>({});
   const [typingUsers, setTypingUsers] = React.useState<Record<string, string>>({});
   const [activeViewerFile, setActiveViewerFile] = React.useState<FileViewerItem | null>(null);
+  const [replyingTo, setReplyingTo] = React.useState<MessageDTO | null>(null);
+  const [activeThreadRoot, setActiveThreadRoot] = React.useState<MessageDTO | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
   const scrollBottomRef = React.useRef<HTMLDivElement>(null);
+
+  // Multilingual AI Translation & Native Audio Playback (TTS) state
+  const [targetLang, setTargetLang] = React.useState<string>('es');
+  const [translatedMap, setTranslatedMap] = React.useState<
+    Record<string, { translatedText: string; langCode: string; isLoading?: boolean }>
+  >({});
+  const [speakingMsgId, setSpeakingMsgId] = React.useState<string | null>(null);
+
+  const handleTranslateMessage = async (msgId: string, text: string, langToUse?: string) => {
+    const lang = langToUse || targetLang;
+    if (!text?.trim()) return;
+
+    setTranslatedMap((prev) => ({
+      ...prev,
+      [msgId]: { translatedText: '', langCode: lang, isLoading: true },
+    }));
+
+    try {
+      const userKey =
+        typeof localStorage !== 'undefined'
+          ? localStorage.getItem('mivo_gemini_api_key') || undefined
+          : undefined;
+      const res = await api.post<{ translatedText: string; engine: string }>('/api/v1/ai/translate', {
+        text: text.trim(),
+        targetLanguage: lang,
+        apiKey: userKey,
+      });
+
+      const translated =
+        res.data?.translatedText || (await translationManager.translateText(text.trim(), lang));
+      setTranslatedMap((prev) => ({
+        ...prev,
+        [msgId]: { translatedText: translated, langCode: lang, isLoading: false },
+      }));
+    } catch {
+      const fallback = await translationManager.translateText(text.trim(), lang);
+      setTranslatedMap((prev) => ({
+        ...prev,
+        [msgId]: { translatedText: fallback, langCode: lang, isLoading: false },
+      }));
+    }
+  };
+
+  const handleSpeakText = (msgId: string, text: string, langCode: string) => {
+    if (speakingMsgId === msgId) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setSpeakingMsgId(null);
+      return;
+    }
+    setSpeakingMsgId(msgId);
+    translationManager.speakText(text, langCode, () => {
+      setSpeakingMsgId(null);
+    });
+  };
+
+  const handleDismissTranslation = (msgId: string) => {
+    setTranslatedMap((prev) => {
+      const copy = { ...prev };
+      delete copy[msgId];
+      return copy;
+    });
+  };
 
   // 1. Fetch historical messages for the room
   React.useEffect(() => {
@@ -169,7 +246,22 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
       }
     };
 
+    const handleThreadUpdated = (data: { roomId: string; threadId: string; threadMeta: any }) => {
+      if (data.roomId === room.id) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === data.threadId ? { ...m, threadMeta: data.threadMeta } : m))
+        );
+        setActiveThreadRoot((prev) => {
+          if (prev && prev.id === data.threadId) {
+            return { ...prev, threadMeta: data.threadMeta };
+          }
+          return prev;
+        });
+      }
+    };
+
     realtime.on(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
+    realtime.on(REALTIME_EVENTS.CHAT_THREAD_UPDATED, handleThreadUpdated);
     realtime.on(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
     realtime.on(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
     realtime.on(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
@@ -177,12 +269,25 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
     return () => {
       realtime.off(REALTIME_EVENTS.CHAT_NEW_MESSAGE, handleNewMessage);
+      realtime.off(REALTIME_EVENTS.CHAT_THREAD_UPDATED, handleThreadUpdated);
       realtime.off(REALTIME_EVENTS.CHAT_TYPING, handleTyping);
       realtime.off(REALTIME_EVENTS.CHAT_STOP_TYPING, handleStopTyping);
       realtime.off(REALTIME_EVENTS.CHAT_REACTION_ADDED, handleReactionAdded);
       realtime.off(REALTIME_EVENTS.ROOM_AI_AGENT_RESPONSE, handleAiAgentResponse);
     };
   }, [room.id, room.name, room.channelId]);
+
+  // Jump smoothly to quoted message (WhatsApp style)
+  const handleJumpToMessage = (messageId: string) => {
+    const el = document.getElementById(`msg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => {
+        setHighlightedMessageId((curr) => (curr === messageId ? null : curr));
+      }, 2000);
+    }
+  };
 
   // 3. Auto-scroll on new messages
   React.useEffect(() => {
@@ -236,9 +341,28 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   const typingNames = Object.values(typingUsers);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] relative overflow-hidden select-none">
-      {/* Message History Scroller */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-4 space-y-3 sm:space-y-4 custom-scrollbar">
+    <div className="flex-1 flex h-full overflow-hidden select-none">
+      <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] relative overflow-hidden select-none min-w-0">
+        {/* Multilingual AI Instant Translation Control Bar */}
+        <div className="h-10 px-3 sm:px-6 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs z-10 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-violet-600/15 text-violet-600 dark:text-violet-300 font-bold text-[11px] border border-violet-500/25">
+              <Languages className="w-3.5 h-3.5" />
+              <span>AI Translation</span>
+            </span>
+            <span className="text-[11px] text-[var(--text-muted)] font-semibold hidden sm:inline">Target:</span>
+            <LanguageSelectorPopover
+              value={targetLang}
+              onChange={(code) => setTargetLang(code)}
+            />
+          </div>
+          <span className="text-[10px] text-[var(--text-muted)] font-mono hidden md:inline">
+            12+ Languages • Whisper AI & Native Audio TTS
+          </span>
+        </div>
+
+        {/* Message History Scroller */}
+        <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-4 space-y-3 sm:space-y-4 custom-scrollbar">
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-48 space-y-3 text-[var(--text-muted)]">
             <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
@@ -270,10 +394,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
           const senderStatus = senderPresence?.status || msg.sender?.status || 'ONLINE';
           const senderCustomStatus = senderPresence?.customStatus !== undefined ? senderPresence.customStatus : msg.sender?.customStatus;
 
+          const isHighlighted = highlightedMessageId === msg.id;
+
           return (
             <div
               key={msg.id}
-              className="flex items-start gap-2.5 sm:gap-3 group px-2 py-1.5 rounded-2xl hover:bg-black/[0.02] transition-colors"
+              id={`msg-${msg.id}`}
+              className={`flex items-start gap-2.5 sm:gap-3 group px-2 py-1.5 rounded-2xl transition-all duration-300 ${
+                isHighlighted
+                  ? 'ring-2 ring-emerald-500/70 bg-emerald-500/10 shadow-md'
+                  : 'hover:bg-black/[0.02]'
+              }`}
             >
               <div className="relative shrink-0">
                 <Avatar
@@ -309,8 +440,26 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     </span>
                   </div>
 
-                  {/* Quick Action Bar */}
+                  {/* Quick Action Bar (WhatsApp Reply + Slack Thread + Reactions) */}
                   <div className="flex items-center gap-0.5 sm:gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-surface-0)] px-1.5 sm:px-2 py-0.5 rounded-[12px] border border-[var(--border-subtle)] shadow-lg backdrop-blur-xl flex-shrink-0">
+                    {/* WhatsApp Reply Button */}
+                    <button
+                      onClick={() => setReplyingTo(msg)}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-emerald-600"
+                      title="Reply (WhatsApp quote)"
+                    >
+                      <CornerUpLeft className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Slack Reply in Thread Button */}
+                    <button
+                      onClick={() => setActiveThreadRoot(msg)}
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-red-600"
+                      title="Reply in thread (Slack style)"
+                    >
+                      <MessageSquareReply className="w-3.5 h-3.5" />
+                    </button>
+
                     <button
                       onClick={() => handleAddReaction(msg.id, 'heart')}
                       className="p-1 hover:scale-125 transition-transform cursor-pointer"
@@ -339,8 +488,70 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     >
                       <GraphicalReaction name="party" size="sm" />
                     </button>
+
+                    <div className="w-px h-3.5 bg-[var(--border-subtle)] mx-0.5" />
+
+                    {/* Multilingual Instant Translate Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateMessage(msg.id, msg.content, targetLang)}
+                      className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
+                        translatedMap[msg.id]
+                          ? 'text-violet-600 dark:text-violet-400 font-bold'
+                          : 'text-[#71717A] hover:text-violet-600'
+                      }`}
+                      title={`Instant Translate to ${SUPPORTED_LANGUAGES.find((l) => l.code === targetLang)?.name || 'Target Language'}`}
+                    >
+                      <Languages className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Native Speech Synthesis (TTS) Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleSpeakText(msg.id, msg.content, 'en')}
+                      className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
+                        speakingMsgId === msg.id
+                          ? 'text-emerald-500 animate-pulse'
+                          : 'text-[#71717A] hover:text-emerald-500'
+                      }`}
+                      title={speakingMsgId === msg.id ? 'Stop Speech Playback' : 'Listen with Native Speech TTS'}
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
+
+                {/* Slack-style "Replied to a thread" indicator */}
+                {msg.isThreadBroadcast && (
+                  <div
+                    onClick={() => {
+                      const root = messages.find((m) => m.id === msg.threadId) || msg;
+                      setActiveThreadRoot(root);
+                    }}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-red-600 hover:underline cursor-pointer mb-1 select-none"
+                    title="View original thread"
+                  >
+                    <MessageSquareText className="w-3.5 h-3.5" />
+                    <span>Replied to a thread</span>
+                  </div>
+                )}
+
+                {/* WhatsApp-style Quoted Message Box */}
+                {msg.replyTo && (
+                  <div
+                    onClick={() => handleJumpToMessage(msg.replyTo!.id)}
+                    className="mb-1.5 p-2 px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border-l-[3.5px] border-emerald-500 hover:bg-black/[0.07] dark:hover:bg-white/[0.09] transition-all cursor-pointer group/quote max-w-lg select-none"
+                    title="Click to jump to quoted message"
+                  >
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
+                      <CornerUpLeft className="w-3 h-3 group-hover/quote:-translate-x-0.5 transition-transform" />
+                      <span>{msg.replyTo.sender?.displayName || msg.replyTo.sender?.username || 'User'}</span>
+                    </div>
+                    <div className="text-xs text-[var(--text-muted)] line-clamp-2">
+                      {msg.replyTo.content || (msg.replyTo.attachments?.length ? 'Shared attachment' : 'Message')}
+                    </div>
+                  </div>
+                )}
 
                 {/* Original Message Text + YouTube Link Previews */}
                 {(() => {
@@ -355,6 +566,66 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
                         {cleaned}
                       </div>
+
+                      {/* Multilingual AI Translated Sub-Card with Native Audio Playback */}
+                      {translatedMap[msg.id] && (
+                        <div className="mt-2.5 p-3 rounded-2xl bg-gradient-to-r from-violet-600/10 via-purple-600/5 to-transparent border border-violet-500/25 shadow-sm space-y-2 animate-fadeIn select-text">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-md bg-violet-600/20 text-violet-400 font-mono font-bold text-[10px] uppercase border border-violet-500/30">
+                                {translatedMap[msg.id].langCode.toUpperCase()}
+                              </span>
+                              <span className="text-[11px] font-bold text-violet-300">
+                                {SUPPORTED_LANGUAGES.find((l) => l.code === translatedMap[msg.id].langCode)?.name || 'Translated'}
+                              </span>
+                              <span className="text-[10px] text-[var(--text-muted)] hidden sm:inline">• Mivo AI Translation</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {!translatedMap[msg.id].isLoading && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSpeakText(
+                                      `trans-${msg.id}`,
+                                      translatedMap[msg.id].translatedText,
+                                      translatedMap[msg.id].langCode
+                                    )
+                                  }
+                                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                    speakingMsgId === `trans-${msg.id}`
+                                      ? 'bg-emerald-600 text-white shadow-md animate-pulse'
+                                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-violet-300 hover:text-white border border-white/10'
+                                  }`}
+                                  title="Listen to translation with Native Speech (TTS)"
+                                >
+                                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-[10px]">
+                                    {speakingMsgId === `trans-${msg.id}` ? 'Playing...' : 'Listen'}
+                                  </span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDismissTranslation(msg.id)}
+                                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                                title="Dismiss translation"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          {translatedMap[msg.id].isLoading ? (
+                            <div className="flex items-center gap-2 text-xs text-violet-300 py-1">
+                              <div className="w-3.5 h-3.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                              <span>Translating with Mivo AI across 12+ languages...</span>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-[var(--text-primary)] leading-relaxed font-medium">
+                              {translatedMap[msg.id].translatedText}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* AI Twin Out of Office Indicator & Quick Callback Scheduler */}
                       {((msg as any).isAiTwin || msg.content.includes('AI Twin')) && (
@@ -575,6 +846,41 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     ))}
                   </div>
                 )}
+
+                {/* Slack-style Thread Footer Button */}
+                {msg.threadMeta && msg.threadMeta.replyCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveThreadRoot(msg)}
+                    className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-red-400 transition-all text-xs group/thread shadow-sm cursor-pointer"
+                  >
+                    {msg.threadMeta.participantAvatars && msg.threadMeta.participantAvatars.length > 0 && (
+                      <div className="flex items-center -space-x-1.5 overflow-hidden">
+                        {msg.threadMeta.participantAvatars.slice(0, 3).map((av, avIdx) => (
+                          <Avatar
+                            key={avIdx}
+                            src={av || undefined}
+                            fallbackText="U"
+                            className="w-4 h-4 rounded-md ring-1 ring-white dark:ring-black"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <span className="font-bold text-red-600 dark:text-red-400 group-hover/thread:underline">
+                      {msg.threadMeta.replyCount} {msg.threadMeta.replyCount === 1 ? 'reply' : 'replies'}
+                    </span>
+                    {msg.threadMeta.lastReplyAt && (
+                      <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                        Last reply{' '}
+                        {new Date(msg.threadMeta.lastReplyAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    )}
+                    <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover/thread:translate-x-0.5 transition-transform" />
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -604,6 +910,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
         roomId={room.id}
         roomName={room.name}
         onMessageSent={handleMessageSent}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
       />
 
       {/* Universal Read-Only File Viewer Modal */}
@@ -612,6 +920,23 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
         isOpen={!!activeViewerFile}
         onClose={() => setActiveViewerFile(null)}
       />
+      </div>
+
+      {/* Slack-style Thread Sidebar Drawer */}
+      {activeThreadRoot && (
+        <ThreadSidebar
+          roomId={room.id}
+          roomName={room.name}
+          rootMessage={activeThreadRoot}
+          onClose={() => setActiveThreadRoot(null)}
+          onScrollToMessage={handleJumpToMessage}
+          onReplyAdded={(reply) => {
+            if (reply.isThreadBroadcast) {
+              setMessages((prev) => (prev.some((m) => m.id === reply.id) ? prev : [...prev, reply as MessageDTO]));
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
