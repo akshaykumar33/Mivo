@@ -54,6 +54,7 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
   const { user } = useAuthStore();
   const activeRoom = useRoomStore((state) => state.activeRoom);
   const participants = useRoomStore((state) => state.participants);
+  const hostUserId = useRoomStore((state) => state.hostUserId);
   const joinRoom = useRoomStore((state) => state.joinRoom);
   const leaveRoom = useRoomStore((state) => state.leaveRoom);
 
@@ -250,7 +251,11 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
     router.push(`/communities/${communityId}`);
   };
 
-  const isHost = user?.email === 'dev@mivo.app' || user?.email === 'alex@mivo.app';
+  const isHost =
+    Boolean(user?.id && hostUserId && user.id === hostUserId) ||
+    user?.email === 'dev@mivo.app' ||
+    user?.email === 'alex@mivo.app' ||
+    Boolean(activeRoom && (activeRoom as any).hostId === user?.id);
 
   const handleToggleRecording = async () => {
     const socket = realtime.getSocket();

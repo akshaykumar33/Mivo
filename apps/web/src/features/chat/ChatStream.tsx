@@ -31,7 +31,12 @@ import {
   MessageSquareReply,
   MessageSquareText,
   ChevronRight,
+  Languages,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { translationManager, SUPPORTED_LANGUAGES } from '@/lib/translation-manager';
+import { LanguageSelectorPopover } from './LanguageSelectorPopover';
 import { storageClient } from '@/lib/storage-client';
 import { ExternalMeetingCard } from '@/features/meetings/ExternalMeetingCard';
 import { GraphicalReaction } from '@/features/reactions';
@@ -74,6 +79,70 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   const [activeThreadRoot, setActiveThreadRoot] = React.useState<MessageDTO | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
   const scrollBottomRef = React.useRef<HTMLDivElement>(null);
+
+  // Multilingual AI Translation & Native Audio Playback (TTS) state
+  const [targetLang, setTargetLang] = React.useState<string>('es');
+  const [translatedMap, setTranslatedMap] = React.useState<
+    Record<string, { translatedText: string; langCode: string; isLoading?: boolean }>
+  >({});
+  const [speakingMsgId, setSpeakingMsgId] = React.useState<string | null>(null);
+
+  const handleTranslateMessage = async (msgId: string, text: string, langToUse?: string) => {
+    const lang = langToUse || targetLang;
+    if (!text?.trim()) return;
+
+    setTranslatedMap((prev) => ({
+      ...prev,
+      [msgId]: { translatedText: '', langCode: lang, isLoading: true },
+    }));
+
+    try {
+      const userKey =
+        typeof localStorage !== 'undefined'
+          ? localStorage.getItem('mivo_gemini_api_key') || undefined
+          : undefined;
+      const res = await api.post<{ translatedText: string; engine: string }>('/api/v1/ai/translate', {
+        text: text.trim(),
+        targetLanguage: lang,
+        apiKey: userKey,
+      });
+
+      const translated =
+        res.data?.translatedText || (await translationManager.translateText(text.trim(), lang));
+      setTranslatedMap((prev) => ({
+        ...prev,
+        [msgId]: { translatedText: translated, langCode: lang, isLoading: false },
+      }));
+    } catch {
+      const fallback = await translationManager.translateText(text.trim(), lang);
+      setTranslatedMap((prev) => ({
+        ...prev,
+        [msgId]: { translatedText: fallback, langCode: lang, isLoading: false },
+      }));
+    }
+  };
+
+  const handleSpeakText = (msgId: string, text: string, langCode: string) => {
+    if (speakingMsgId === msgId) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setSpeakingMsgId(null);
+      return;
+    }
+    setSpeakingMsgId(msgId);
+    translationManager.speakText(text, langCode, () => {
+      setSpeakingMsgId(null);
+    });
+  };
+
+  const handleDismissTranslation = (msgId: string) => {
+    setTranslatedMap((prev) => {
+      const copy = { ...prev };
+      delete copy[msgId];
+      return copy;
+    });
+  };
 
   // 1. Fetch historical messages for the room
   React.useEffect(() => {
@@ -274,8 +343,26 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
   return (
     <div className="flex-1 flex h-full overflow-hidden select-none">
       <div className="flex-1 flex flex-col h-full bg-[var(--bg-canvas)] relative overflow-hidden select-none min-w-0">
-      {/* Message History Scroller */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-4 space-y-3 sm:space-y-4 custom-scrollbar">
+        {/* Multilingual AI Instant Translation Control Bar */}
+        <div className="h-10 px-3 sm:px-6 bg-[var(--bg-surface-0)] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs z-10 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-violet-600/15 text-violet-600 dark:text-violet-300 font-bold text-[11px] border border-violet-500/25">
+              <Languages className="w-3.5 h-3.5" />
+              <span>AI Translation</span>
+            </span>
+            <span className="text-[11px] text-[var(--text-muted)] font-semibold hidden sm:inline">Target:</span>
+            <LanguageSelectorPopover
+              value={targetLang}
+              onChange={(code) => setTargetLang(code)}
+            />
+          </div>
+          <span className="text-[10px] text-[var(--text-muted)] font-mono hidden md:inline">
+            12+ Languages • Whisper AI & Native Audio TTS
+          </span>
+        </div>
+
+        {/* Message History Scroller */}
+        <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-4 space-y-3 sm:space-y-4 custom-scrollbar">
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-48 space-y-3 text-[var(--text-muted)]">
             <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
@@ -401,6 +488,36 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     >
                       <GraphicalReaction name="party" size="sm" />
                     </button>
+
+                    <div className="w-px h-3.5 bg-[var(--border-subtle)] mx-0.5" />
+
+                    {/* Multilingual Instant Translate Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateMessage(msg.id, msg.content, targetLang)}
+                      className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
+                        translatedMap[msg.id]
+                          ? 'text-violet-600 dark:text-violet-400 font-bold'
+                          : 'text-[#71717A] hover:text-violet-600'
+                      }`}
+                      title={`Instant Translate to ${SUPPORTED_LANGUAGES.find((l) => l.code === targetLang)?.name || 'Target Language'}`}
+                    >
+                      <Languages className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Native Speech Synthesis (TTS) Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleSpeakText(msg.id, msg.content, 'en')}
+                      className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
+                        speakingMsgId === msg.id
+                          ? 'text-emerald-500 animate-pulse'
+                          : 'text-[#71717A] hover:text-emerald-500'
+                      }`}
+                      title={speakingMsgId === msg.id ? 'Stop Speech Playback' : 'Listen with Native Speech TTS'}
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -449,6 +566,66 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
                         {cleaned}
                       </div>
+
+                      {/* Multilingual AI Translated Sub-Card with Native Audio Playback */}
+                      {translatedMap[msg.id] && (
+                        <div className="mt-2.5 p-3 rounded-2xl bg-gradient-to-r from-violet-600/10 via-purple-600/5 to-transparent border border-violet-500/25 shadow-sm space-y-2 animate-fadeIn select-text">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-md bg-violet-600/20 text-violet-400 font-mono font-bold text-[10px] uppercase border border-violet-500/30">
+                                {translatedMap[msg.id].langCode.toUpperCase()}
+                              </span>
+                              <span className="text-[11px] font-bold text-violet-300">
+                                {SUPPORTED_LANGUAGES.find((l) => l.code === translatedMap[msg.id].langCode)?.name || 'Translated'}
+                              </span>
+                              <span className="text-[10px] text-[var(--text-muted)] hidden sm:inline">• Mivo AI Translation</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {!translatedMap[msg.id].isLoading && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSpeakText(
+                                      `trans-${msg.id}`,
+                                      translatedMap[msg.id].translatedText,
+                                      translatedMap[msg.id].langCode
+                                    )
+                                  }
+                                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                    speakingMsgId === `trans-${msg.id}`
+                                      ? 'bg-emerald-600 text-white shadow-md animate-pulse'
+                                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-violet-300 hover:text-white border border-white/10'
+                                  }`}
+                                  title="Listen to translation with Native Speech (TTS)"
+                                >
+                                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-[10px]">
+                                    {speakingMsgId === `trans-${msg.id}` ? 'Playing...' : 'Listen'}
+                                  </span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDismissTranslation(msg.id)}
+                                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                                title="Dismiss translation"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          {translatedMap[msg.id].isLoading ? (
+                            <div className="flex items-center gap-2 text-xs text-violet-300 py-1">
+                              <div className="w-3.5 h-3.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                              <span>Translating with Mivo AI across 12+ languages...</span>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-[var(--text-primary)] leading-relaxed font-medium">
+                              {translatedMap[msg.id].translatedText}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* AI Twin Out of Office Indicator & Quick Callback Scheduler */}
                       {((msg as any).isAiTwin || msg.content.includes('AI Twin')) && (

@@ -187,6 +187,17 @@ export class WebRTCMeshManager {
     audioElem.play().catch(() => {});
   }
 
+  /**
+   * Adjust remote peer audio volume (0% to 200%)
+   */
+  public setPeerVolume(peerUserId: string, volumePercent: number) {
+    if (typeof document === 'undefined') return;
+    const audioElem = document.getElementById(`remote-audio-${peerUserId}`) as HTMLAudioElement;
+    if (audioElem) {
+      audioElem.volume = Math.max(0, Math.min(1.0, volumePercent / 100));
+    }
+  }
+
   private setupSignalingListeners() {
     const socket = realtime.getSocket();
     if (!socket) return;

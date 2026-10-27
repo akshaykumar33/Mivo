@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { RoomCommunicationMode } from '@mivo/shared';
-import { MessageSquare, Mic, Video, Monitor, Palette, Code2 } from 'lucide-react';
+import { MessageSquare, Mic, Video, Monitor, Radio, Palette, Code2 } from 'lucide-react';
 
 export interface RoomModeSwitcherProps {
   activeMode: RoomCommunicationMode;
@@ -24,6 +24,7 @@ export const RoomModeSwitcher: React.FC<RoomModeSwitcherProps> = ({
     { id: 'VOICE', label: 'Voice', icon: Mic, color: 'from-[#30D158] to-[#63E6E2]', glow: 'shadow-[0_2px_10px_rgba(48,209,88,0.35)]' },
     { id: 'VIDEO', label: 'Video', icon: Video, color: 'from-[#64D2FF] to-[#0A84FF]', glow: 'shadow-[0_2px_10px_rgba(10,132,255,0.35)]' },
     { id: 'SCREEN_SHARE', label: 'Screen', icon: Monitor, color: 'from-[#5E5CE6] to-[#BF5AF2]', glow: 'shadow-[0_2px_10px_rgba(94,92,230,0.35)]' },
+    { id: 'STREAM', label: 'Stream', icon: Radio, color: 'from-[#FF375F] to-[#FF453A]', glow: 'shadow-[0_2px_10px_rgba(255,55,95,0.35)]' },
     { id: 'CANVAS', label: 'Canvas', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]', glow: 'shadow-[0_2px_10px_rgba(255,159,10,0.35)]' },
     { id: 'CODE', label: 'Code', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]', glow: 'shadow-[0_2px_10px_rgba(48,209,88,0.35)]' },
   ];

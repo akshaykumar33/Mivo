@@ -19,6 +19,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { GuestModeBanner, UpgradeGuestModal } from '@/features/auth';
 import { AnonymousConnectModal } from '@/features/anonymous';
+import { FloatingDocsButton } from '@/features/docs/FloatingDocsButton';
 
 export default function DashboardLayout({
   children,
@@ -134,6 +135,9 @@ export default function DashboardLayout({
       {/* Global Guest & Anonymous Modals */}
       <UpgradeGuestModal />
       <AnonymousConnectModal />
+
+      {/* Floating In-App Interactive Documentation Hub Trigger */}
+      <FloatingDocsButton />
     </div>
   );
 }

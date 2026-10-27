@@ -449,6 +449,36 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const user = client.data?.user;
     if (!user || !data.roomId || !data.targetUserId) return;
 
+    // Zero-Trust Granular Check: Verify user has Host, Admin, or Moderation permissions
+    const isDevAdmin = user.email === 'dev@mivo.app' || user.email === 'alex@mivo.app';
+    if (!isDevAdmin) {
+      const room = await prisma.room.findUnique({
+        where: { id: data.roomId },
+        include: { channel: { include: { community: true } } },
+      });
+      const isCommunityOwner = room?.channel?.community?.ownerId === user.sub;
+      if (!isCommunityOwner && room?.channel?.communityId) {
+        const member = await prisma.communityMember.findUnique({
+          where: {
+            communityId_userId: {
+              communityId: room.channel.communityId,
+              userId: user.sub,
+            },
+          },
+          include: { role: { include: { permissions: { include: { permission: true } } } } },
+        });
+        const perms = member?.role?.permissions.map((p) => p.permission.key) || [];
+        const hasModerationPerms =
+          perms.includes('voice.mute_others') ||
+          perms.includes('member.kick') ||
+          perms.includes('room.manage');
+        if (!hasModerationPerms) {
+          client.emit('error', { message: 'Unauthorized: Host or moderator privileges required' });
+          return;
+        }
+      }
+    }
+
     if (data.action === 'MUTE') {
       await prisma.roomMember.updateMany({
         where: { roomId: data.roomId, userId: data.targetUserId },

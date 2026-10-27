@@ -32,6 +32,7 @@ interface RoomState {
   audioLevel: number;
   audioBitrateKbps: number;
   audioProfile: AudioBitrateProfile;
+  hostUserId: string | null;
   joinRoom: (roomId: string, currentUserId?: string) => Promise<void>;
   leaveRoom: () => void;
   switchMode: (mode: RoomCommunicationMode) => Promise<void>;
@@ -59,6 +60,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   audioLevel: 0,
   audioBitrateKbps: AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS,
   audioProfile: 'standard',
+  hostUserId: null,
 
   simulateBulkParticipants: (count = 100) => {
     const names = [
@@ -219,6 +221,22 @@ export const useRoomStore = create<RoomState>((set, get) => ({
               participants: state.participants.filter((p) => p.userId !== data.userId),
             }));
             webrtcMesh.disconnectPeer(data.userId);
+
+            // Eviction compliance: if current user was kicked by the host, cleanly exit
+            if (currentUserId && data.userId === currentUserId && data.reason?.toLowerCase().includes('host')) {
+              get().leaveRoom();
+              if (typeof window !== 'undefined') {
+                alert('You were removed from this room by the host or moderator.');
+                window.location.href = '/channels';
+              }
+            }
+          }
+        });
+
+        socket.off(REALTIME_EVENTS.ROOM_HOST_TRANSFERRED);
+        socket.on(REALTIME_EVENTS.ROOM_HOST_TRANSFERRED, (data: { roomId: string; newHostUserId: string }) => {
+          if (data.roomId === roomId) {
+            set({ hostUserId: data.newHostUserId });
           }
         });
 
@@ -247,6 +265,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
                   : p
               ),
             }));
+
+            // Remote host mute: if host muted current user, stop mic hardware track
+            if (currentUserId && data.userId === currentUserId && data.isMuted) {
+              mediaManager.stopMicrophone();
+              set({ isMuted: true });
+            }
           }
         });
       }
@@ -280,6 +304,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       audioLevel: 0,
       audioBitrateKbps: AUDIO_BITRATE_CONSTANTS.DEFAULT_KBPS,
       audioProfile: 'standard',
+      hostUserId: null,
     });
   },
 

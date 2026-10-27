@@ -22,6 +22,8 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 import { UserSummaryDTO } from '@mivo/shared';
+import { spatialAudio } from '../audio/SpatialAudioEngine';
+import { webrtcMesh } from '@/lib/webrtc-mesh';
 
 export interface LiveVideoTileProps {
   user: UserSummaryDTO;
@@ -77,10 +79,25 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
   filmstripMode = false,
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = React.useState(100);
+  const [volume, setVolume] = React.useState<number>(() => {
+    return typeof window !== 'undefined' ? spatialAudio.getPeerVolume(user.id) : 100;
+  });
   const [showVolumeSlider, setShowVolumeSlider] = React.useState(false);
   const [showHostMenu, setShowHostMenu] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleVolumeChange = React.useCallback(
+    (newVol: number) => {
+      const clamped = Math.max(0, Math.min(200, newVol));
+      setVolume(clamped);
+      spatialAudio.setPeerVolume(user.id, clamped);
+      webrtcMesh.setPeerVolume(user.id, clamped);
+      if (videoRef.current) {
+        videoRef.current.volume = Math.max(0, Math.min(1.0, clamped / 100));
+      }
+    },
+    [user.id]
+  );
 
   React.useEffect(() => {
     if (videoRef.current && mediaStream && isCameraOn) {
@@ -301,20 +318,45 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
             {showVolumeSlider && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-9 p-3 rounded-2xl bg-[#090B10]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl z-30 w-36 space-y-1.5"
+                className="absolute right-0 top-9 p-3 rounded-2xl bg-[#090B10]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl z-30 w-40 space-y-2"
               >
                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                   <span>User Volume</span>
-                  <span className="text-violet-400">{volume}%</span>
+                  <span className={volume > 100 ? 'text-emerald-400 font-mono font-extrabold' : 'text-violet-400 font-mono font-bold'}>
+                    {volume}%
+                  </span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="200"
                   value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
+                  onChange={(e) => handleVolumeChange(Number(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
                 />
+                <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
+                  <button
+                    type="button"
+                    onClick={() => handleVolumeChange(0)}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-rose-500/20 text-rose-400 transition-colors"
+                  >
+                    0%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVolumeChange(100)}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-violet-500/20 text-violet-300 transition-colors"
+                  >
+                    100%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVolumeChange(200)}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.04] hover:bg-emerald-500/20 text-emerald-300 transition-colors"
+                  >
+                    200%
+                  </button>
+                </div>
               </div>
             )}
           </div>
