@@ -144,8 +144,17 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         setIsBitrateMenuOpen(false);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsBitrateMenuOpen(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isBitrateMenuOpen]);
 
   // Speech synthesis for AI Co-Host Duplex Voice
@@ -825,7 +834,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         </button>
 
         {isBitrateMenuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#0f111a]/95 backdrop-blur-xl border border-white/10 shadow-2xl p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150">
+          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-[#0f111a]/95 backdrop-blur-xl border border-white/10 shadow-2xl p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">

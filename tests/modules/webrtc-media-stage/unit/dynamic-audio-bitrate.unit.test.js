@@ -35,9 +35,13 @@ function optimizeAudioSdp(sdp, targetBitrateKbps = AUDIO_BITRATE_CONSTANTS.DEFAU
   if (!opusMatch) return sdp;
   const pt = opusMatch[1];
 
+  const validKbps = typeof targetBitrateKbps === 'number' && !Number.isNaN(targetBitrateKbps)
+    ? targetBitrateKbps
+    : AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
   const clampedKbps = Math.min(
     AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
-    Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(targetBitrateKbps))
+    Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(validKbps))
   );
   const bitrateBps = clampedKbps * 1000;
   const isLowBw = clampedKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // <= 32 kbps
@@ -318,6 +322,79 @@ function evaluateAdaptiveBitrate(currentBitrateKbps, { maxRtt, maxPacketLossRati
   console.log('  ✓ SFU engine audio producer correctly defaulted to 32 kbps\n');
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// TEST 9: NaN, Null, Undefined, and Malformed Input Protection
+// ══════════════════════════════════════════════════════════════════════════
+{
+  console.log('Test 9: Protection against NaN, null, and malformed bitrate inputs');
+  const sampleSdp = 'a=rtpmap:111 opus/48000/2';
+
+  // Passing NaN should safely default to 32 kbps standard baseline
+  const sdpFromNaN = optimizeAudioSdp(sampleSdp, NaN);
+  assert.ok(sdpFromNaN.includes('maxaveragebitrate=32000'), 'NaN input must default to 32000 bps');
+
+  // Passing undefined should safely default to 32 kbps standard baseline
+  const sdpFromUndefined = optimizeAudioSdp(sampleSdp, undefined);
+  assert.ok(sdpFromUndefined.includes('maxaveragebitrate=32000'), 'Undefined input must default to 32000 bps');
+
+  // Passing null should safely default to 32 kbps standard baseline
+  const sdpFromNull = optimizeAudioSdp(sampleSdp, null);
+  assert.ok(sdpFromNull.includes('maxaveragebitrate=32000'), 'Null input must default to 32000 bps');
+
+  console.log('  ✓ Malformed and non-numeric inputs cleanly fallback to 32 kbps standard baseline\n');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TEST 10: Non-Opus SDP and Empty String Handling
+// ══════════════════════════════════════════════════════════════════════════
+{
+  console.log('Test 10: Safe handling of non-Opus SDP and empty strings');
+  assert.equal(optimizeAudioSdp('', 32), '', 'Empty SDP should return empty string');
+  assert.equal(optimizeAudioSdp(null, 32), null, 'Null SDP should return null');
+
+  const pcmuSdp = 'm=audio 9 UDP/TLS/RTP/SAVPF 0\r\na=rtpmap:0 PCMU/8000';
+  const unchangedSdp = optimizeAudioSdp(pcmuSdp, 32);
+  assert.equal(unchangedSdp, pcmuSdp, 'SDP without Opus must remain untouched without throwing errors');
+
+  console.log('  ✓ Non-Opus and empty SDPs pass through safely with zero crashes\n');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TEST 11: Empty/Missing RTCRtpSender Encodings Initialization
+// ══════════════════════════════════════════════════════════════════════════
+{
+  console.log('Test 11: RTCRtpSender empty encodings initialization');
+  const bareSender = {
+    track: { kind: 'audio' },
+    parameters: { encodings: [] },
+    getParameters() {
+      return JSON.parse(JSON.stringify(this.parameters));
+    },
+    async setParameters(newParams) {
+      this.parameters = JSON.parse(JSON.stringify(newParams));
+    },
+  };
+
+  async function applyBitrateWithInit(sender, kbps) {
+    const params = sender.getParameters();
+    if (!params || !params.encodings || params.encodings.length === 0) {
+      params.encodings = [{}];
+    }
+    const validKbps = typeof kbps === 'number' && !Number.isNaN(kbps) ? kbps : 32;
+    params.encodings[0].maxBitrate = validKbps * 1000;
+    params.encodings[0].priority = 'high';
+    params.encodings[0].networkPriority = 'high';
+    await sender.setParameters(params);
+  }
+
+  await applyBitrateWithInit(bareSender, 32);
+  assert.equal(bareSender.parameters.encodings.length, 1);
+  assert.equal(bareSender.parameters.encodings[0].maxBitrate, 32000);
+  assert.equal(bareSender.parameters.encodings[0].networkPriority, 'high');
+
+  console.log('  ✓ Bare RTCRtpSender with empty encodings array safely initialized and configured\n');
+}
+
 console.log('═══════════════════════════════════════════════════════════════');
-console.log('🎉 ALL 8 DYNAMIC AUDIO BITRATE UNIT TESTS PASSED SUCCESSFULLY!');
+console.log('🎉 ALL 11 DYNAMIC AUDIO BITRATE UNIT TESTS PASSED SUCCESSFULLY!');
 console.log('═══════════════════════════════════════════════════════════════\n');

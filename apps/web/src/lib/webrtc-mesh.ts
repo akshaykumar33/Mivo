@@ -261,9 +261,13 @@ export class WebRTCMeshManager {
    * Updates all active RTCRtpSenders immediately without dropping the call.
    */
   public async setAudioBitrate(kbps: number) {
+    const validKbps = typeof kbps === 'number' && !Number.isNaN(kbps)
+      ? kbps
+      : AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
     const clamped = Math.min(
       AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
-      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(kbps))
+      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(validKbps))
     );
     this.currentBitrateKbps = clamped;
 
@@ -276,6 +280,9 @@ export class WebRTCMeshManager {
     } else if (clamped === AUDIO_BITRATE_CONSTANTS.MAX_KBPS) {
       this.currentProfile = 'studio';
     }
+
+    // Stop background polling timer if manually fixed to prevent CPU wastage
+    this.stopAdaptiveBitrateMonitoring();
 
     await this.applyBitrateToAllSenders(clamped);
     this.notifyBitrateChanged();
@@ -294,20 +301,25 @@ export class WebRTCMeshManager {
     switch (profile) {
       case 'low-bandwidth':
         this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.MIN_KBPS; // 16
+        this.stopAdaptiveBitrateMonitoring();
         break;
       case 'standard':
         this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // 32
+        this.stopAdaptiveBitrateMonitoring();
         break;
       case 'hd':
         this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.HD_KBPS; // 64
+        this.stopAdaptiveBitrateMonitoring();
         break;
       case 'studio':
         this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.MAX_KBPS; // 128
+        this.stopAdaptiveBitrateMonitoring();
         break;
       case 'adaptive':
         if (this.currentBitrateKbps < AUDIO_BITRATE_CONSTANTS.MIN_KBPS) {
           this.currentBitrateKbps = AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
         }
+        this.startAdaptiveBitrateMonitoring();
         break;
     }
 
@@ -352,9 +364,13 @@ export class WebRTCMeshManager {
     if (!opusMatch) return sdp;
     const pt = opusMatch[1];
 
+    const validKbps = typeof targetBitrateKbps === 'number' && !Number.isNaN(targetBitrateKbps)
+      ? targetBitrateKbps
+      : AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
     const clampedKbps = Math.min(
       AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
-      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(targetBitrateKbps))
+      Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(validKbps))
     );
     const bitrateBps = clampedKbps * 1000;
     const isLowBw = clampedKbps <= AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS; // <= 32 kbps
@@ -403,12 +419,16 @@ export class WebRTCMeshManager {
     if (sender.track?.kind !== 'audio') return;
     try {
       const params = sender.getParameters();
-      if (!params.encodings || params.encodings.length === 0) {
+      if (!params || !params.encodings || params.encodings.length === 0) {
         params.encodings = [{}];
       }
+      const validKbps = typeof bitrateKbps === 'number' && !Number.isNaN(bitrateKbps)
+        ? bitrateKbps
+        : AUDIO_BITRATE_CONSTANTS.STANDARD_KBPS;
+
       const clampedKbps = Math.min(
         AUDIO_BITRATE_CONSTANTS.MAX_KBPS,
-        Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, bitrateKbps)
+        Math.max(AUDIO_BITRATE_CONSTANTS.MIN_KBPS, Math.round(validKbps))
       );
       params.encodings[0].maxBitrate = clampedKbps * 1000;
       (params.encodings[0] as any).priority = 'high';
