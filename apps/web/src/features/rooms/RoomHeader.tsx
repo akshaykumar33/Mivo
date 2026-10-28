@@ -18,12 +18,11 @@ import {
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { useAuthStore } from '@/stores/authStore';
-import { RoomModeSwitcher } from './RoomModeSwitcher';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
-  activeMode: RoomCommunicationMode;
-  onModeChange: (mode: RoomCommunicationMode) => void;
+  activeMode?: RoomCommunicationMode;
+  onModeChange?: (mode: RoomCommunicationMode) => void;
   participantCount: number;
   isRecording?: boolean;
   isHost?: boolean;
@@ -37,8 +36,6 @@ export interface RoomHeaderProps {
 
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
   room,
-  activeMode,
-  onModeChange,
   participantCount,
   isRecording = false,
   isHost = false,
@@ -136,15 +133,10 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
 
           {room.description && (
-            <span className="hidden 2xl:inline text-xs text-[var(--text-muted)] truncate border-l border-[var(--border-subtle)] pl-3.5">
+            <span className="hidden xl:inline text-xs text-[var(--text-muted)] truncate border-l border-[var(--border-subtle)] pl-3.5 max-w-md">
               {room.description}
             </span>
           )}
-        </div>
-
-        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Canvas, Code) */}
-        <div className="hidden md:flex items-center justify-center flex-1 min-w-0 px-2 overflow-x-auto scrollbar-none">
-          <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
         {/* Right Action Tray */}
@@ -169,7 +161,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           <button
             onClick={onToggleInvite}
             className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#5E5CE6] hover:!text-white bg-[#5E5CE6]/15 hover:bg-[#5E5CE6] border border-[#5E5CE6]/30 transition-all cursor-pointer shadow-sm group"
-            title="Add Users to this Group/Room (Single-Org)"
+            title="Add users to room"
           >
             <UserPlus className="w-3.5 h-3.5 text-[#5E5CE6] group-hover:text-white transition-colors" />
             <span className="hidden 2xl:inline">Add User</span>

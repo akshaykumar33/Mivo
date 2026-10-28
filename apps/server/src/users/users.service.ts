@@ -243,25 +243,65 @@ export class UsersService {
 
   async searchUsers(query?: string, currentUserId?: string): Promise<UserSummaryDTO[]> {
     let isCallerGuest = false;
+    let callerOrgId: string | null = null;
+
     if (currentUserId) {
       const currentUser: any = await prisma.user.findUnique({
         where: { id: currentUserId },
-        select: { isGuest: true, userTier: true } as any,
+        select: {
+          id: true,
+          isGuest: true,
+          userTier: true,
+          memberships: {
+            select: { communityId: true },
+          },
+        } as any,
       });
       isCallerGuest = Boolean(currentUser?.isGuest || currentUser?.userTier === 'GUEST');
+      callerOrgId = currentUser?.memberships?.[0]?.communityId || null;
+    }
+
+    // Guest accounts are restricted from searching users or initiating conversations
+    if (isCallerGuest) {
+      return [];
     }
 
     const trimmed = query?.trim().toLowerCase();
+
+    // Standard exclusion list for guest, autonomous, bot, and automated test accounts
+    const restrictedAccountFilters: any[] = [
+      { isGuest: true },
+      { userTier: 'GUEST' },
+      { username: { startsWith: 'guest_' } },
+      { username: { startsWith: 'gamer_' } },
+      { username: { startsWith: 'test_' } },
+      { username: { startsWith: 'creator_' } },
+      { username: { startsWith: 'bot_' } },
+      { email: { contains: '@guest.mivo.local' } },
+      { email: { contains: '@test.mivo.dev' } },
+      { email: { startsWith: 'test_' } },
+      { email: { startsWith: 'gamer_' } },
+      { email: { startsWith: 'creator_' } },
+      { displayName: { contains: 'Test User' } },
+      { displayName: { contains: 'Non-Org Chess Master' } },
+      { displayName: { contains: 'TestGuestBot' } },
+    ];
+
     const users: any[] = await prisma.user.findMany({
       where: {
         deletedAt: null,
         isGuest: false,
-        // If caller is GUEST: "can view non-org accounts profile"
-        ...(isCallerGuest ? { userTier: 'NON_ORG' } : {}),
-        NOT: [
-          { username: { startsWith: 'guest_' } },
-        ],
+        userTier: { not: 'GUEST' },
         ...(currentUserId && { id: { not: currentUserId } }),
+        // If caller belongs to an enterprise organization, scope directory to their organization members
+        ...(callerOrgId
+          ? {
+              memberships: {
+                some: { communityId: callerOrgId },
+              },
+            }
+          : {}),
+        NOT: restrictedAccountFilters,
         ...(trimmed
           ? {
               OR: [
@@ -271,8 +311,11 @@ export class UsersService {
             }
           : {}),
       },
-      take: 20,
-      orderBy: { createdAt: 'desc' },
+      take: 30,
+      orderBy: [
+        { displayName: 'asc' },
+        { createdAt: 'desc' },
+      ],
       include: {
         memberships: {
           include: {

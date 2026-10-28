@@ -141,7 +141,7 @@ export const ActivityLauncherModal: React.FC<ActivityLauncherModalProps> = ({
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-1)] text-center text-[11px] text-[var(--text-muted)]">
-          Activities run in secure browser sandboxes similar to Discord Activities.
+          Activities run in secure browser sandboxes for real-time collaboration.
         </div>
       </div>
     </div>

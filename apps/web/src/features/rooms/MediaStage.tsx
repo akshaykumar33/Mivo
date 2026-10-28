@@ -1325,7 +1325,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
           onDismiss={() => setFactCheckAlert(null)}
           onClarifyOnStage={(stmt, truth) => {
             handleTriggerCoHost(
-              `Mivo, please clarify this statement on stage: "${stmt}" - what does our database show?`
+              `Mivo, please clarify this statement on stage: "${stmt}" - what do our records show?`
             );
             setFactCheckAlert(null);
           }}
@@ -2100,7 +2100,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
         onDismiss={() => setFactCheckAlert(null)}
         onClarifyOnStage={(stmt, truth) => {
           handleTriggerCoHost(
-            `Mivo, please clarify this statement on stage: "${stmt}" - what does our database show?`
+            `Mivo, please clarify this statement on stage: "${stmt}" - what do our records show?`
           );
           setFactCheckAlert(null);
         }}

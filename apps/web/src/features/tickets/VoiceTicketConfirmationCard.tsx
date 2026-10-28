@@ -212,7 +212,7 @@ export const VoiceTicketConfirmationCard: React.FC<VoiceTicketConfirmationCardPr
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-violet-600/30 transition-all cursor-pointer disabled:opacity-50"
           >
             <Check className="w-3.5 h-3.5" />
-            <span>{isSubmitting ? 'Creating...' : 'Create in PostgreSQL'}</span>
+            <span>{isSubmitting ? 'Creating...' : 'Create Ticket'}</span>
           </button>
         </div>
       </div>

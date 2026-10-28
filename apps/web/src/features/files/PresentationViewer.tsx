@@ -10,7 +10,7 @@ import {
   Minimize2,
   RefreshCw,
 } from 'lucide-react';
-import { getFileExtension } from './fileViewerUtils';
+import { getFileExtension, resolveStorageUrl } from './fileViewerUtils';
 
 interface PresentationViewerProps {
   url: string;
@@ -22,13 +22,14 @@ export const PresentationViewer: React.FC<PresentationViewerProps> = ({
   url,
   fileName = 'presentation.pptx',
 }) => {
-  const ext = getFileExtension(fileName, url);
+  const resolvedUrl = resolveStorageUrl(url);
+  const ext = getFileExtension(fileName, resolvedUrl || url);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [useGoogleFallback, setUseGoogleFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
-  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(resolvedUrl)}`;
+  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(resolvedUrl)}&embedded=true`;
 
   const activeViewerUrl = useGoogleFallback ? googleViewerUrl : officeViewerUrl;
 
@@ -94,7 +95,7 @@ export const PresentationViewer: React.FC<PresentationViewerProps> = ({
           </a>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition-colors shadow-sm"
           >

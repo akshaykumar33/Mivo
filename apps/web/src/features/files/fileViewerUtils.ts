@@ -336,3 +336,27 @@ export function detectCodeLanguage(fileName?: string): string {
   };
   return map[ext] || (ext ? ext.toUpperCase() : 'Code');
 }
+
+/**
+ * Resolves a storage URL or file path against the backend API base when relative.
+ * Converts `/api/v1/storage/files/...` to `http://localhost:4000/api/v1/storage/files/...`
+ */
+export function resolveStorageUrl(url?: string): string {
+  if (!url || typeof url !== 'string') return '';
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:4000'
+      : '');
+  const cleanBase = apiBase.replace(/\/+$/, '');
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  return cleanBase ? `${cleanBase}${cleanPath}` : cleanPath;
+}

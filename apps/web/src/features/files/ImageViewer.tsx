@@ -15,6 +15,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
+import { resolveStorageUrl } from './fileViewerUtils';
 
 interface ImageViewerProps {
   url: string;
@@ -27,6 +28,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   fileName = 'image.png',
   size,
 }) => {
+  const resolvedUrl = resolveStorageUrl(url);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -224,7 +226,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
           {/* Download */}
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors shadow-sm ml-1"
           >
@@ -245,7 +247,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={url}
+          src={resolvedUrl}
           alt={fileName}
           onLoad={(e) => {
             const img = e.currentTarget;

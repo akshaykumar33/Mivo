@@ -20,6 +20,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [customStatus, setCustomStatus] = React.useState(user?.customStatus || '');
   const [avatarUrl, setAvatarUrl] = React.useState(user?.avatarUrl || '');
   const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [isGeneratingStatus, setIsGeneratingStatus] = React.useState(false);
@@ -78,12 +79,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setUploadError(null);
     setIsUploading(true);
     try {
       const uploaded = await storageClient.uploadFile(file, 'avatars');
       setAvatarUrl(uploaded.url);
     } catch (err: any) {
       console.error('Failed to upload avatar:', err);
+      setUploadError(err.message || 'Failed to upload avatar');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -185,8 +188,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               disabled={isUploading}
               className="text-xs font-semibold text-[#64D2FF] hover:underline cursor-pointer disabled:opacity-50"
             >
-              {isUploading ? 'Uploading to Supabase Storage...' : 'Change Avatar (Supabase S3)'}
+              {isUploading ? 'Uploading avatar...' : 'Change Avatar'}
             </button>
+            {uploadError && (
+              <p className="text-[11px] text-red-500 font-medium text-center">{uploadError}</p>
+            )}
           </div>
 
           <div>

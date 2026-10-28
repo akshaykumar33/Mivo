@@ -160,7 +160,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Group & Room Access — #${room.name}`}
-      description={`Add and manage members in this group. Single-org boundaries apply.`}
+      description="Add and manage members in this group."
       maxWidth="lg"
     >
       <div className="space-y-4">
@@ -247,7 +247,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
                   {searchQuery ? 'No matching organization members found.' : 'All organization members are already in this room!'}
                 </p>
                 <p className="text-[11px] text-[var(--text-muted)] max-w-sm mx-auto">
-                  Need to add someone new? Under the single-org tenancy policy, invite them to {organizationName} first.
+                  Need to add someone new? Invite them to {organizationName} first.
                 </p>
                 {onOpenOrgInvite && (
                   <Button

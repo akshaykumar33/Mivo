@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, Download, Table, Lock, RefreshCw } from 'lucide-react';
-import { parseDelimitedText } from './fileViewerUtils';
+import { parseDelimitedText, resolveStorageUrl } from './fileViewerUtils';
 
 interface CsvViewerProps {
   csvText?: string;
@@ -11,6 +11,7 @@ interface CsvViewerProps {
 }
 
 export const CsvViewer: React.FC<CsvViewerProps> = ({ csvText, url, fileName = 'data.csv' }) => {
+  const resolvedUrl = resolveStorageUrl(url);
   const [data, setData] = useState<{ headers: string[]; rows: string[][] } | null>(() => {
     if (csvText) {
       return parseDelimitedText(csvText);
@@ -49,7 +50,7 @@ export const CsvViewer: React.FC<CsvViewerProps> = ({ csvText, url, fileName = '
     setLoading(true);
     setError(null);
 
-    fetch(url)
+    fetch(resolvedUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load file`);
         return res.text();
@@ -70,7 +71,7 @@ export const CsvViewer: React.FC<CsvViewerProps> = ({ csvText, url, fileName = '
     return () => {
       isMounted = false;
     };
-  }, [csvText, url]);
+  }, [csvText, resolvedUrl]);
 
   // Handle column sorting
   const handleSort = (colIndex: number) => {

@@ -128,7 +128,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
         const errorData = res.error as any;
         const msg = errorData?.message || 'Failed to add member to organization.';
         if (typeof msg === 'string' && msg.includes('already belongs to')) {
-          setError(`Single-Org Tenancy Violation: ${msg}`);
+          setError(msg);
         } else {
           setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
         }
@@ -168,7 +168,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Organization Members — ${communityName}`}
-      description="Manage organization access. Strict single-org tenancy is enforced."
+      description="Manage members and team access for your organization."
       maxWidth="lg"
     >
       <div className="space-y-4">
@@ -177,7 +177,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
           <Lock className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
           <div className="space-y-0.5 leading-relaxed">
             <span className="font-semibold block text-amber-500">
-              Single-Organization Tenancy Enforced
+              Organization Membership Policy
             </span>
             <span>
               Each user can belong to <strong>only one organization</strong>. Once added to {communityName}, the user cannot join or belong to any other organization.

@@ -13,7 +13,7 @@ export default function LandingPage() {
 
   React.useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/channels/@me');
+      router.push('/channels');
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -108,7 +108,7 @@ export default function LandingPage() {
       <footer className="h-16 border-t border-slate-800/80 max-w-7xl mx-auto w-full px-6 flex items-center justify-between text-xs text-slate-500">
         <div>&copy; 2026 Mivo Inc. All rights reserved.</div>
         <div className="flex items-center gap-4">
-          <span>PostgreSQL • Redis • WebRTC • Next.js • NestJS</span>
+          <span>Enterprise Real-Time Communication</span>
         </div>
       </footer>
     </div>

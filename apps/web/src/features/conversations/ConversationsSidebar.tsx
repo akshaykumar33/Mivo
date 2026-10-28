@@ -247,7 +247,7 @@ export const ConversationsSidebar: React.FC = () => {
           type="button"
           onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
           className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 -ml-1 rounded-xl transition-all cursor-pointer group flex-1"
-          title="Your Profile, Availability & Status (Slack)"
+          title="Your Profile & Status"
         >
           <div className="relative shrink-0">
             <Avatar

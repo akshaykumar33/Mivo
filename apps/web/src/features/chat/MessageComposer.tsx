@@ -508,7 +508,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={
               isDragging
-                ? 'Drop files to upload to Supabase Storage...'
+                ? 'Drop files to upload...'
                 : `Message #${roomName}... (Press Enter to send)`
             }
             className="flex-1 min-w-0 bg-transparent border-0 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none py-1.5 max-h-32 font-medium"

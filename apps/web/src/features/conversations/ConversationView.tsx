@@ -49,6 +49,7 @@ import {
   YouTubeEmbedCard,
   extractYouTubeUrls,
   FileViewerItem,
+  resolveStorageUrl,
 } from '@/features/files';
 import { GraphicalReaction } from '@/features/reactions';
 
@@ -675,6 +676,7 @@ export const ConversationView: React.FC = () => {
                             );
                           }
 
+                          const fileUrl = resolveStorageUrl(att.url);
                           const isImage =
                             att.type?.startsWith('image/') ||
                             att.url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
@@ -686,7 +688,7 @@ export const ConversationView: React.FC = () => {
                                 onClick={() =>
                                   setActiveViewerFile({
                                     name: att.name,
-                                    url: att.url,
+                                    url: fileUrl,
                                     type: att.type,
                                     size: att.size,
                                   })
@@ -695,7 +697,7 @@ export const ConversationView: React.FC = () => {
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                  src={att.url}
+                                  src={fileUrl}
                                   alt={att.name}
                                   className="w-full h-full object-cover group-hover/img:scale-102 transition-transform duration-200"
                                 />
@@ -716,7 +718,7 @@ export const ConversationView: React.FC = () => {
                               onClick={() =>
                                 setActiveViewerFile({
                                   name: att.name,
-                                  url: att.url,
+                                  url: fileUrl,
                                   type: att.type,
                                   size: att.size,
                                 })
@@ -767,7 +769,7 @@ export const ConversationView: React.FC = () => {
                                   onClick={() =>
                                     setActiveViewerFile({
                                       name: att.name,
-                                      url: att.url,
+                                      url: fileUrl,
                                       type: att.type,
                                       size: att.size,
                                     })
@@ -778,7 +780,7 @@ export const ConversationView: React.FC = () => {
                                   <Eye className="w-3.5 h-3.5" />
                                 </button>
                                 <a
-                                  href={att.url}
+                                  href={fileUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Open in new tab"
@@ -787,7 +789,7 @@ export const ConversationView: React.FC = () => {
                                   <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                                 <a
-                                  href={att.url}
+                                  href={fileUrl}
                                   download={att.name}
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -806,22 +808,22 @@ export const ConversationView: React.FC = () => {
 
                   {/* Reaction & Action Hover Bar */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 bg-[var(--bg-surface-0)] px-2 py-0.5 rounded-xl border border-[var(--border-subtle)] shadow-sm">
-                    {/* WhatsApp Reply Button */}
+                    {/* Reply Quote Button */}
                     <button
                       type="button"
                       onClick={() => setReplyingTo(msg)}
                       className="p-1 rounded-md text-[var(--text-muted)] hover:text-emerald-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
-                      title="Reply (WhatsApp quote)"
+                      title="Reply quote"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />
                     </button>
 
-                    {/* Slack Reply in Thread Button */}
+                    {/* Reply in Thread Button */}
                     <button
                       type="button"
                       onClick={() => setActiveThreadRoot(msg)}
                       className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
-                      title="Reply in thread (Slack style)"
+                      title="Reply in thread"
                     >
                       <MessageSquareReply className="w-3.5 h-3.5" />
                     </button>
