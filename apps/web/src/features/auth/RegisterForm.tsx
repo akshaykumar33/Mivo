@@ -36,7 +36,9 @@ export const RegisterForm: React.FC = () => {
 
     if (res.success && res.data) {
       setAuth(res.data.user, res.data.accessToken);
-      router.push('/channels/@me');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect') || '/channels';
+      router.push(redirect);
     } else {
       setError(res.error?.message || 'Registration failed. Please try again.');
     }

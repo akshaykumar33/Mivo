@@ -283,7 +283,7 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
 
         <button
           onClick={() =>
-            onTriggerCommand('Mivo, audit the conversation and run a live fact-check against database tickets.')
+            onTriggerCommand('Mivo, audit the conversation and run a live fact-check against project tickets.')
           }
           className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/40 border border-cyan-500/30 text-cyan-200 text-[10px] font-bold transition-all hover:scale-105 cursor-pointer shadow-sm"
           title="Audit Live Discussion for Fact Checks"

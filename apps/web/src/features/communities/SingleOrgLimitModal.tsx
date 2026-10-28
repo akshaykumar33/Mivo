@@ -36,7 +36,7 @@ export const SingleOrgLimitModal: React.FC<SingleOrgLimitModalProps> = ({
             One Organization Per User
           </h3>
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-sm mx-auto">
-            Under Mivo&apos;s strict single-organization tenancy architecture, each user account can belong to <strong>only one organization</strong>. You cannot create, join, or hold membership in additional organizations.
+            Each user account can belong to <strong>only one organization</strong> at a time. You cannot create, join, or hold membership in additional organizations with this account.
           </p>
         </div>
 

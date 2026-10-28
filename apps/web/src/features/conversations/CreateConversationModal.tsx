@@ -50,9 +50,26 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
       try {
         const queryParam = searchQuery.trim() ? `?q=${encodeURIComponent(searchQuery.trim())}` : '';
         const res = await api.get<UserSummaryDTO[]>(`/api/v1/users${queryParam}`);
+        const isAutonomousOrGuest = (u: UserSummaryDTO) => {
+          if (u.isGuest || u.userTier === 'GUEST') return true;
+          const uname = (u.username || '').toLowerCase();
+          const dname = (u.displayName || '').toLowerCase();
+          return (
+            uname.startsWith('guest_') ||
+            uname.startsWith('gamer_') ||
+            uname.startsWith('test_') ||
+            uname.startsWith('creator_') ||
+            uname.startsWith('bot_') ||
+            uname.startsWith('user_1') ||
+            dname.includes('test user') ||
+            dname.includes('non-org chess') ||
+            dname.includes('testguestbot')
+          );
+        };
+
         if (res.success && res.data) {
-          // Extra safeguard: exclude any guest accounts
-          setUsers(res.data.filter((u) => !u.isGuest && !u.username.startsWith('guest_')));
+          // Extra safeguard: exclude any guest, autonomous, bot, or test accounts
+          setUsers(res.data.filter((u) => !isAutonomousOrGuest(u)));
         }
       } catch (err) {
         console.error('Failed to search users:', err);
@@ -250,9 +267,15 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <div>
                         <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[#DC2626] transition-colors flex items-center gap-1.5">
                           <span>{u.displayName || u.username}</span>
-                          <span className="px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-600 text-[9px] font-bold">
-                            Dev
-                          </span>
+                          {u.organizationRole ? (
+                            <span className="px-1.5 py-0.2 rounded bg-red-500/10 text-red-600 text-[9px] font-bold">
+                              {u.organizationRole}
+                            </span>
+                          ) : u.userTier === 'ORG' ? (
+                            <span className="px-1.5 py-0.2 rounded bg-indigo-500/10 text-indigo-600 text-[9px] font-bold">
+                              Team
+                            </span>
+                          ) : null}
                         </div>
                         <div className="text-[11px] text-[var(--text-muted)]">
                           @{u.username}
@@ -286,7 +309,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             <div className="space-y-2">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Group Name</label>
               <Input
-                placeholder="e.g. Design Sync, Midnight Gamers, Ops Team"
+                placeholder="e.g. Design Sync, Core Team, Product Review"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
                 required

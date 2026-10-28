@@ -179,7 +179,7 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
                 type="button"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="relative p-0.5 rounded-[16px] hover:scale-110 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-[#DC2626]/40"
-                title="Your Profile, Availability & Status (Slack)"
+                title="Your Profile & Status"
               >
                 <Avatar
                   size="sm"

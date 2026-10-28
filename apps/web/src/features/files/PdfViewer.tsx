@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Download, ExternalLink, FileText, Lock, Maximize2, Minimize2, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import { resolveStorageUrl } from './fileViewerUtils';
 
 interface PdfViewerProps {
   url: string;
@@ -10,6 +11,7 @@ interface PdfViewerProps {
 }
 
 export const PdfViewer: React.FC<PdfViewerProps> = ({ url, fileName = 'document.pdf' }) => {
+  const resolvedUrl = resolveStorageUrl(url);
   const [zoom, setZoom] = useState<number>(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +35,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ url, fileName = 'document.
   const handleResetZoom = () => setZoom(100);
 
   // Construct PDF URL with parameters to disable editing and configure toolbar
-  const pdfEmbedUrl = `${url}#toolbar=1&navpanes=0&view=FitH&zoom=${zoom}`;
+  const pdfEmbedUrl = `${resolvedUrl}#toolbar=1&navpanes=0&view=FitH&zoom=${zoom}`;
 
   return (
     <div
@@ -90,7 +92,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ url, fileName = 'document.
           </button>
 
           <a
-            href={url}
+            href={resolvedUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded-lg bg-black/40 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors"
@@ -100,7 +102,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ url, fileName = 'document.
           </a>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium transition-colors shadow-sm ml-1"
           >

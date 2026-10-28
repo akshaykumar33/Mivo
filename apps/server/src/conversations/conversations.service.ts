@@ -70,17 +70,35 @@ export class ConversationsService {
     return conversations.map((c) => this.mapToDTO(c));
   }
 
+  private isRestrictedAccount(u: { isGuest?: boolean; userTier?: string; username?: string; email?: string }): boolean {
+    if (u.isGuest || u.userTier === 'GUEST') return true;
+    const uname = (u.username || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return (
+      uname.startsWith('guest_') ||
+      uname.startsWith('gamer_') ||
+      uname.startsWith('test_') ||
+      uname.startsWith('creator_') ||
+      uname.startsWith('bot_') ||
+      email.includes('@guest.mivo.local') ||
+      email.includes('@test.mivo.dev') ||
+      email.startsWith('test_') ||
+      email.startsWith('gamer_') ||
+      email.startsWith('creator_')
+    );
+  }
+
   async getOrCreateDirectConversation(userId: string, recipientId: string): Promise<ConversationDTO> {
     if (userId === recipientId) {
       throw new BadRequestException({ code: 'CANNOT_DM_SELF', message: 'Cannot start a direct conversation with yourself' });
     }
 
     const [sender, recipient] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { isGuest: true } }),
-      prisma.user.findUnique({ where: { id: recipientId }, select: { isGuest: true, deletedAt: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { id: true, isGuest: true, userTier: true, username: true, email: true } }),
+      prisma.user.findUnique({ where: { id: recipientId }, select: { id: true, isGuest: true, userTier: true, username: true, email: true, deletedAt: true } }),
     ]);
 
-    if (sender?.isGuest) {
+    if (sender?.isGuest || (sender && this.isRestrictedAccount(sender))) {
       throw new ForbiddenException({
         code: 'GUEST_CANNOT_MESSAGE',
         message: 'Guest accounts cannot message other users or start direct conversations. Please sign up or log in.',
@@ -91,10 +109,10 @@ export class ConversationsService {
       throw new NotFoundException({ code: 'RECIPIENT_NOT_FOUND', message: 'Recipient user not found' });
     }
 
-    if (recipient.isGuest) {
+    if (recipient.isGuest || this.isRestrictedAccount(recipient)) {
       throw new BadRequestException({
         code: 'CANNOT_MESSAGE_GUEST',
-        message: 'Cannot start conversations with guest accounts.',
+        message: 'Cannot start conversations with guest or automated accounts.',
       });
     }
 
@@ -158,9 +176,9 @@ export class ConversationsService {
   async createGroupConversation(creatorId: string, input: CreateGroupConversationInput): Promise<ConversationDTO> {
     const creator = await prisma.user.findUnique({
       where: { id: creatorId },
-      select: { isGuest: true },
+      select: { isGuest: true, userTier: true, username: true, email: true },
     });
-    if (creator?.isGuest) {
+    if (creator?.isGuest || (creator && this.isRestrictedAccount(creator))) {
       throw new ForbiddenException({
         code: 'GUEST_CANNOT_CREATE_GROUP',
         message: 'Guest accounts cannot create group conversations. Please sign up or log in.',
@@ -171,18 +189,18 @@ export class ConversationsService {
 
     const users = await prisma.user.findMany({
       where: { id: { in: uniqueMemberIds }, deletedAt: null },
-      select: { id: true, isGuest: true },
+      select: { id: true, isGuest: true, userTier: true, username: true, email: true },
     });
 
     if (users.length !== uniqueMemberIds.length) {
       throw new BadRequestException({ code: 'INVALID_MEMBERS', message: 'One or more members could not be found' });
     }
 
-    const guestMembers = users.filter((u) => u.isGuest);
-    if (guestMembers.length > 0) {
+    const restrictedMembers = users.filter((u) => this.isRestrictedAccount(u));
+    if (restrictedMembers.length > 0) {
       throw new BadRequestException({
         code: 'CANNOT_ADD_GUEST_TO_GROUP',
-        message: 'Guest accounts cannot participate in group conversations.',
+        message: 'Guest and automated accounts cannot participate in group conversations.',
       });
     }
 

@@ -23,6 +23,7 @@ import {
   detectFileCategory,
   getFileExtension,
   formatFileSize,
+  resolveStorageUrl,
 } from './fileViewerUtils';
 import { CsvViewer } from './CsvViewer';
 import { PdfViewer } from './PdfViewer';
@@ -59,8 +60,9 @@ export const UniversalFileViewerModal: React.FC<UniversalFileViewerModalProps> =
 
   if (!isOpen || !file) return null;
 
-  const category = detectFileCategory(file.name, file.type, file.url);
-  const ext = getFileExtension(file.name, file.url);
+  const resolvedUrl = resolveStorageUrl(file.url);
+  const category = detectFileCategory(file.name, file.type, resolvedUrl || file.url);
+  const ext = getFileExtension(file.name, resolvedUrl || file.url);
 
   // Category Icon & Color
   const getCategoryMeta = () => {
@@ -141,37 +143,44 @@ export const UniversalFileViewerModal: React.FC<UniversalFileViewerModalProps> =
   const renderViewer = () => {
     switch (category) {
       case 'csv':
-        return <CsvViewer url={file.url} fileName={file.name} csvText={file.content} />;
+        return <CsvViewer url={resolvedUrl} fileName={file.name} csvText={file.content} />;
       case 'pdf':
-        return <PdfViewer url={file.url} fileName={file.name} size={file.size} />;
+        return <PdfViewer url={resolvedUrl} fileName={file.name} size={file.size} />;
       case 'image':
-        return <ImageViewer url={file.url} fileName={file.name} size={file.size} />;
+        return <ImageViewer url={resolvedUrl} fileName={file.name} size={file.size} />;
       case 'youtube':
-        return <MediaViewer url={file.url} fileName={file.name} type="youtube" />;
+        return <MediaViewer url={resolvedUrl} fileName={file.name} type="youtube" />;
       case 'video':
         return (
           <MediaViewer
-            url={file.url}
+            url={resolvedUrl}
             fileName={file.name}
             type="video"
-            posterUrl={file.posterUrl}
+            posterUrl={file.posterUrl ? resolveStorageUrl(file.posterUrl) : undefined}
             isOptimized={file.isOptimized}
           />
         );
       case 'audio':
-        return <MediaViewer url={file.url} fileName={file.name} type="audio" />;
+        return <MediaViewer url={resolvedUrl} fileName={file.name} type="audio" />;
       case 'presentation':
-        return <PresentationViewer url={file.url} fileName={file.name} size={file.size} />;
+        return <PresentationViewer url={resolvedUrl} fileName={file.name} size={file.size} />;
       case 'code':
-        return <CodeSnippetViewer url={file.url} code={file.content} fileName={file.name} />;
+        return <CodeSnippetViewer url={resolvedUrl} code={file.content} fileName={file.name} />;
       case 'doc':
-        return <DocViewer url={file.url} fileName={file.name} size={file.size} />;
+        return (
+          <DocViewer
+            url={resolvedUrl}
+            fileName={file.name}
+            size={file.size}
+            content={file.content}
+          />
+        );
       case 'archive':
       case 'generic':
       default:
         return (
           <HexViewer
-            url={file.url}
+            url={resolvedUrl}
             fileName={file.name}
             size={file.size}
             mimeType={file.type}
@@ -231,7 +240,7 @@ export const UniversalFileViewerModal: React.FC<UniversalFileViewerModalProps> =
             {/* Top Action Buttons */}
             <div className="flex items-center gap-2">
               <a
-                href={file.url}
+                href={resolvedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white transition-colors"
@@ -241,7 +250,7 @@ export const UniversalFileViewerModal: React.FC<UniversalFileViewerModalProps> =
               </a>
 
               <a
-                href={file.url}
+                href={resolvedUrl}
                 download={file.name}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold shadow-lg shadow-violet-600/30 transition-all active:scale-98"
                 title="Download original file"

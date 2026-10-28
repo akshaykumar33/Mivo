@@ -290,7 +290,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="relative group p-0.5 rounded-full hover:ring-2 hover:ring-[#DC2626]/40 transition-all cursor-pointer flex-shrink-0"
-              title="Your Profile, Availability & Status (Slack)"
+              title="Your Profile & Status"
             >
               <Avatar
                 size="sm"
@@ -311,7 +311,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-1 text-[10px] text-left truncate text-[var(--text-muted)] hover:text-[#111827] transition-colors cursor-pointer w-full group"
-                title="Set Slack status / availability"
+                title="Set status & availability"
               >
                 {presence.customStatus ? (
                   <span className="text-[#DC2626] font-semibold truncate flex items-center gap-1">
@@ -333,7 +333,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
             <button
               onClick={() => setIsSlackStatusOpen(true)}
               className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-all cursor-pointer"
-              title="Set Availability & Status (like Slack)"
+              title="Set availability & status"
             >
               <Smile className="w-3.5 h-3.5 text-[#DC2626]" />
             </button>
