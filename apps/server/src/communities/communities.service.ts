@@ -570,6 +570,26 @@ export class CommunitiesService {
     const users = await prisma.user.findMany({
       where: {
         id: { notIn: assignedUserIds },
+        deletedAt: null,
+        isGuest: false,
+        userTier: { not: 'GUEST' },
+        NOT: [
+          { isGuest: true },
+          { userTier: 'GUEST' },
+          { username: { startsWith: 'guest_' } },
+          { username: { startsWith: 'gamer_' } },
+          { username: { startsWith: 'test_' } },
+          { username: { startsWith: 'creator_' } },
+          { username: { startsWith: 'bot_' } },
+          { email: { contains: '@guest.mivo.local' } },
+          { email: { contains: '@test.mivo.dev' } },
+          { email: { startsWith: 'test_' } },
+          { email: { startsWith: 'gamer_' } },
+          { email: { startsWith: 'creator_' } },
+          { displayName: { contains: 'Test User' } },
+          { displayName: { contains: 'Non-Org Chess Master' } },
+          { displayName: { contains: 'TestGuestBot' } },
+        ],
         ...(search
           ? {
               OR: [
