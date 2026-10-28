@@ -13,7 +13,7 @@ export default function LandingPage() {
 
   React.useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/channels/@me');
+      router.push('/channels');
     }
   }, [isAuthenticated, isLoading, router]);
 

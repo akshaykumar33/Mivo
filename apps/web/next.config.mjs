@@ -9,6 +9,20 @@ const nextConfig = {
   transpilePackages: ['@mivo/shared', '@mivo/ui'],
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname, '../../'),
+  async redirects() {
+    return [
+      {
+        source: '/channels/@me',
+        destination: '/channels',
+        permanent: false,
+      },
+      {
+        source: '/channels/me',
+        destination: '/channels',
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     return [
