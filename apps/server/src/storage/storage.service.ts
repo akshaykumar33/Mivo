@@ -9,6 +9,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PresignedUrlRequest, PresignedUrlResponseDTO, AttachmentMetaDTO } from '@mivo/shared';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import dotenv from 'dotenv';
 import { VideoOptimizerService } from './video-optimizer.service.js';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    dotenv.config({ override: true });
     const s3Endpoint = process.env.S3_ENDPOINT;
     const s3AccessKey = process.env.S3_ACCESS_KEY;
     const s3SecretKey = process.env.S3_SECRET_KEY;
@@ -46,6 +48,18 @@ export class StorageService implements OnModuleInit {
         });
         this.isS3Configured = true;
         this.logger.log(`Initialized S3 storage client for endpoint: ${s3Endpoint} (bucket: ${this.bucketName})`);
+
+        try {
+          await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucketName }));
+          this.logger.log(`Confirmed S3 bucket '${this.bucketName}' is accessible.`);
+        } catch (headErr: any) {
+          try {
+            await this.s3Client.send(new CreateBucketCommand({ Bucket: this.bucketName }));
+            this.logger.log(`Created S3 bucket '${this.bucketName}'.`);
+          } catch (createErr: any) {
+            this.logger.warn(`S3 bucket check: ${createErr.message}`);
+          }
+        }
       } catch (err: any) {
         this.logger.warn(`Could not initialize S3 client: ${err.message}. Local storage fallback enabled.`);
       }
