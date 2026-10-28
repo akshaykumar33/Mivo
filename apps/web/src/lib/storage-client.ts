@@ -79,17 +79,38 @@ export class StorageClient {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token =
-      api.getAccessToken() ||
-      (typeof window !== 'undefined' ? localStorage.getItem('mivo_access_token') : null);
+    let token = api.getAccessToken();
+    if (!token && typeof window !== 'undefined') {
+      token = localStorage.getItem('mivo_access_token');
+    }
+    if (!token) {
+      token = await api.refreshToken();
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const res = await fetch(`${baseUrl}/api/v1/storage/upload?category=${category}`, {
+    let res = await fetch(`${baseUrl}/api/v1/storage/upload?category=${category}`, {
       method: 'POST',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      credentials: 'include',
       body: formData,
     });
+
+    // If 401 Unauthorized, attempt token refresh and retry once
+    if (res.status === 401) {
+      const refreshedToken = await api.refreshToken();
+      if (refreshedToken) {
+        res = await fetch(`${baseUrl}/api/v1/storage/upload?category=${category}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${refreshedToken}`,
+          },
+          credentials: 'include',
+          body: formData,
+        });
+      }
+    }
 
     if (!res.ok) {
       const errText = await res.text();
