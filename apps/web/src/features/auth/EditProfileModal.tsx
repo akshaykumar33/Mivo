@@ -188,7 +188,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               disabled={isUploading}
               className="text-xs font-semibold text-[#64D2FF] hover:underline cursor-pointer disabled:opacity-50"
             >
-              {isUploading ? 'Uploading to Supabase Storage...' : 'Change Avatar (Supabase S3)'}
+              {isUploading ? 'Uploading avatar...' : 'Change Avatar'}
             </button>
             {uploadError && (
               <p className="text-[11px] text-red-500 font-medium text-center">{uploadError}</p>
