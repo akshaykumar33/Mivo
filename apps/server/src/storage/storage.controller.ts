@@ -166,7 +166,7 @@ export class StorageController {
     const fileSize = stat.size;
     const ext = path.extname(localPath).toLowerCase();
 
-    // Map common media types for optimal playback headers
+    // Map common media and document types for optimal playback & reader headers
     const mimeTypes: Record<string, string> = {
       '.mp4': 'video/mp4',
       '.webm': 'video/webm',
@@ -181,6 +181,20 @@ export class StorageController {
       '.webp': 'image/webp',
       '.svg': 'image/svg+xml',
       '.pdf': 'application/pdf',
+      '.txt': 'text/plain; charset=utf-8',
+      '.md': 'text/markdown; charset=utf-8',
+      '.csv': 'text/csv; charset=utf-8',
+      '.tsv': 'text/tab-separated-values; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.xml': 'application/xml; charset=utf-8',
+      '.log': 'text/plain; charset=utf-8',
+      '.rtf': 'application/rtf',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.ppt': 'application/vnd.ms-powerpoint',
+      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     };
     const contentType = mimeTypes[ext] || 'application/octet-stream';
 

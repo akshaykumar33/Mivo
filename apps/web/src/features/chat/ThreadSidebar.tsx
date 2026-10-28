@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { storageClient } from '@/lib/storage-client';
 import { GraphicalReaction, GRAPHICAL_REACTIONS } from '@/features/reactions';
-import { UniversalFileViewerModal, FileViewerItem, YouTubeEmbedCard, extractYouTubeUrls } from '@/features/files';
+import { UniversalFileViewerModal, FileViewerItem, YouTubeEmbedCard, extractYouTubeUrls, resolveStorageUrl } from '@/features/files';
 
 export interface ThreadSidebarProps {
   roomId?: string;
@@ -283,7 +283,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
                       onClick={() =>
                         setActiveViewerFile({
                           name: att.name,
-                          url: att.url,
+                          url: resolveStorageUrl(att.url),
                           type: att.type,
                           size: att.size,
                         })
@@ -394,7 +394,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
                         onClick={() =>
                           setActiveViewerFile({
                             name: att.name,
-                            url: att.url,
+                            url: resolveStorageUrl(att.url),
                             type: att.type,
                             size: att.size,
                           })

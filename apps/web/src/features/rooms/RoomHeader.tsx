@@ -18,12 +18,11 @@ import {
 import { InteractiveDocsModal } from '@/features/docs/InteractiveDocsModal';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { useAuthStore } from '@/stores/authStore';
-import { RoomModeSwitcher } from './RoomModeSwitcher';
 
 export interface RoomHeaderProps {
   room: RoomDTO;
-  activeMode: RoomCommunicationMode;
-  onModeChange: (mode: RoomCommunicationMode) => void;
+  activeMode?: RoomCommunicationMode;
+  onModeChange?: (mode: RoomCommunicationMode) => void;
   participantCount: number;
   isRecording?: boolean;
   isHost?: boolean;
@@ -37,8 +36,6 @@ export interface RoomHeaderProps {
 
 export const RoomHeader: React.FC<RoomHeaderProps> = ({
   room,
-  activeMode,
-  onModeChange,
   participantCount,
   isRecording = false,
   isHost = false,
@@ -136,15 +133,10 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           )}
 
           {room.description && (
-            <span className="hidden 2xl:inline text-xs text-[var(--text-muted)] truncate border-l border-[var(--border-subtle)] pl-3.5">
+            <span className="hidden xl:inline text-xs text-[var(--text-muted)] truncate border-l border-[var(--border-subtle)] pl-3.5 max-w-md">
               {room.description}
             </span>
           )}
-        </div>
-
-        {/* Center Stage Mode Switcher (All 6 Modes: Text, Voice, Video, Screen, Canvas, Code) */}
-        <div className="hidden md:flex items-center justify-center flex-1 min-w-0 px-2 overflow-x-auto scrollbar-none">
-          <RoomModeSwitcher activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
         {/* Right Action Tray */}

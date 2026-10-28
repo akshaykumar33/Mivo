@@ -12,25 +12,28 @@ import {
   BookOpen,
   Search,
 } from 'lucide-react';
-import { getFileExtension } from './fileViewerUtils';
+import { getFileExtension, resolveStorageUrl } from './fileViewerUtils';
 
 interface DocViewerProps {
   url: string;
   fileName?: string;
   size?: number;
+  content?: string;
 }
 
 export const DocViewer: React.FC<DocViewerProps> = ({
   url,
   fileName = 'document.docx',
   size,
+  content,
 }) => {
-  const ext = getFileExtension(fileName, url);
+  const resolvedUrl = resolveStorageUrl(url);
+  const ext = getFileExtension(fileName, resolvedUrl || url);
   const isBinaryDoc = ['docx', 'doc', 'rtf', 'odt'].includes(ext);
   const isPlainText = ['txt', 'md', 'markdown', 'log', 'text'].includes(ext);
 
-  const [textContent, setTextContent] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(isPlainText);
+  const [textContent, setTextContent] = useState<string | null>(content || null);
+  const [isLoading, setIsLoading] = useState<boolean>(!content && isPlainText);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,12 +41,17 @@ export const DocViewer: React.FC<DocViewerProps> = ({
   // If plain text or markdown, fetch text
   useEffect(() => {
     if (!isPlainText) return;
+    if (content) {
+      setTextContent(content);
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
     setIsLoading(true);
     setError(null);
 
-    fetch(url)
+    fetch(resolvedUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch text`);
         return res.text();
@@ -64,7 +72,7 @@ export const DocViewer: React.FC<DocViewerProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [url, isPlainText]);
+  }, [resolvedUrl, isPlainText, content]);
 
   const handleCopy = () => {
     if (!textContent) return;
@@ -74,8 +82,8 @@ export const DocViewer: React.FC<DocViewerProps> = ({
   };
 
   // For DOCX / DOC: use Office Apps Live Viewer or Google Docs Viewer
-  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
-  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(resolvedUrl)}`;
+  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(resolvedUrl)}&embedded=true`;
 
   if (isBinaryDoc) {
     return (
@@ -104,7 +112,7 @@ export const DocViewer: React.FC<DocViewerProps> = ({
               <span>Office Online</span>
             </a>
             <a
-              href={url}
+              href={resolvedUrl}
               download={fileName}
               className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors shadow-sm"
             >
@@ -178,7 +186,7 @@ export const DocViewer: React.FC<DocViewerProps> = ({
           </button>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors shadow-sm"
           >

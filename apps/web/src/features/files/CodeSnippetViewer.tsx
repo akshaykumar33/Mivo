@@ -13,7 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { detectCodeLanguage } from './fileViewerUtils';
+import { detectCodeLanguage, resolveStorageUrl } from './fileViewerUtils';
 
 interface CodeSnippetViewerProps {
   code?: string;
@@ -60,6 +60,7 @@ export const CodeSnippetViewer: React.FC<CodeSnippetViewerProps> = ({
   url,
   fileName = 'snippet.ts',
 }) => {
+  const resolvedUrl = resolveStorageUrl(url);
   const [content, setContent] = useState<string>(initialCode || '');
   const [isLoading, setIsLoading] = useState<boolean>(!initialCode && !!url);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export const CodeSnippetViewer: React.FC<CodeSnippetViewerProps> = ({
       return;
     }
 
-    if (!url) {
+    if (!resolvedUrl) {
       setError('No source code provided');
       setIsLoading(false);
       return;
@@ -88,7 +89,7 @@ export const CodeSnippetViewer: React.FC<CodeSnippetViewerProps> = ({
     setIsLoading(true);
     setError(null);
 
-    fetch(url)
+    fetch(resolvedUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch source code`);
         return res.text();
@@ -109,7 +110,7 @@ export const CodeSnippetViewer: React.FC<CodeSnippetViewerProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [initialCode, url]);
+  }, [initialCode, resolvedUrl]);
 
   const language = useMemo(() => detectCodeLanguage(fileName), [fileName]);
   const lines = useMemo(() => content.split('\n'), [content]);

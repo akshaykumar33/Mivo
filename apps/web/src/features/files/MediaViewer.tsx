@@ -17,7 +17,7 @@ import {
   RotateCcw,
   RotateCw,
 } from 'lucide-react';
-import { extractYouTubeId } from './fileViewerUtils';
+import { extractYouTubeId, resolveStorageUrl } from './fileViewerUtils';
 import { YouTubeIcon } from './YouTubeIcon';
 
 interface MediaViewerProps {
@@ -38,6 +38,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
   const youtubeId = extractYouTubeId(url);
   const isYouTube = type === 'youtube' || !!youtubeId;
   const isAudio = type === 'audio';
+  const resolvedUrl = isYouTube ? url : resolveStorageUrl(url);
 
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [bufferPercent, setBufferPercent] = useState<number>(0);
@@ -152,7 +153,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           ref={audioRef}
           controls
           preload="metadata"
-          src={url}
+          src={resolvedUrl}
           className="w-full mb-6 accent-violet-500"
         />
 
@@ -177,7 +178,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           </div>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1 text-violet-400 hover:text-violet-300 transition-colors"
           >
@@ -270,7 +271,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           </button>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors shadow-sm"
           >
@@ -288,8 +289,8 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           autoPlay
           preload="metadata"
           playsInline
-          poster={derivedPoster}
-          src={url}
+          poster={derivedPoster ? resolveStorageUrl(derivedPoster) : undefined}
+          src={resolvedUrl}
           onLoadedData={() => setIsLoaded(true)}
           onProgress={handleProgress}
           onTimeUpdate={handleProgress}

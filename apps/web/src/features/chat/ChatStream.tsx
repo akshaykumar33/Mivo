@@ -45,6 +45,7 @@ import {
   YouTubeEmbedCard,
   extractYouTubeUrls,
   FileViewerItem,
+  resolveStorageUrl,
 } from '@/features/files';
 
 function sanitizeChatMessage(content: string, hasMeetingAttachment: boolean): string | null {
@@ -690,6 +691,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                         );
                       }
 
+                      const fileUrl = resolveStorageUrl(att.url);
                       const isImg = storageClient.isImage(att.type);
                       const isVid = storageClient.isVideo(att.type);
                       const isAud = storageClient.isAudio(att.type);
@@ -701,7 +703,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             onClick={() =>
                               setActiveViewerFile({
                                 name: att.name,
-                                url: att.url,
+                                url: fileUrl,
                                 type: att.type,
                                 size: att.size,
                               })
@@ -709,7 +711,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             className="max-w-md max-h-80 rounded-2xl overflow-hidden border border-white/10 hover:border-[#5E5CE6] cursor-pointer group/img transition-all bg-black/40 shadow-md relative"
                           >
                             <img
-                              src={att.url}
+                              src={fileUrl}
                               alt={att.name}
                               className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
                             />
@@ -727,13 +729,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             key={`${att.url}-${attIdx}`}
                             className="max-w-lg rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-md group relative"
                           >
-                            <video controls src={att.url} className="w-full max-h-80" />
+                            <video controls src={fileUrl} className="w-full max-h-80" />
                             <button
                               type="button"
                               onClick={() =>
                                 setActiveViewerFile({
                                   name: att.name,
-                                  url: att.url,
+                                  url: fileUrl,
                                   type: att.type,
                                   size: att.size,
                                 })
@@ -753,13 +755,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             key={`${att.url}-${attIdx}`}
                             className="p-2 rounded-xl bg-white/[0.04] border border-white/10 max-w-sm flex items-center gap-2"
                           >
-                            <audio controls src={att.url} className="w-full h-8 flex-1" />
+                            <audio controls src={fileUrl} className="w-full h-8 flex-1" />
                             <button
                               type="button"
                               onClick={() =>
                                 setActiveViewerFile({
                                   name: att.name,
-                                  url: att.url,
+                                  url: fileUrl,
                                   type: att.type,
                                   size: att.size,
                                 })
@@ -780,7 +782,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                           onClick={() =>
                             setActiveViewerFile({
                               name: att.name,
-                              url: att.url,
+                              url: fileUrl,
                               type: att.type,
                               size: att.size,
                             })
@@ -803,7 +805,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                               onClick={() =>
                                 setActiveViewerFile({
                                   name: att.name,
-                                  url: att.url,
+                                  url: fileUrl,
                                   type: att.type,
                                   size: att.size,
                                 })
@@ -814,7 +816,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                               <Eye className="w-4 h-4" />
                             </button>
                             <a
-                              href={att.url}
+                              href={fileUrl}
                               download={att.name}
                               target="_blank"
                               rel="noopener noreferrer"

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Download, File, Lock, RefreshCw, Terminal, Search, Copy, Check } from 'lucide-react';
-import { formatFileSize, getFileExtension } from './fileViewerUtils';
+import { formatFileSize, getFileExtension, resolveStorageUrl } from './fileViewerUtils';
 
 interface HexViewerProps {
   url: string;
@@ -17,7 +17,8 @@ export const HexViewer: React.FC<HexViewerProps> = ({
   size,
   mimeType,
 }) => {
-  const ext = getFileExtension(fileName, url);
+  const resolvedUrl = resolveStorageUrl(url);
+  const ext = getFileExtension(fileName, resolvedUrl || url);
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,11 +31,11 @@ export const HexViewer: React.FC<HexViewerProps> = ({
     setError(null);
 
     // Fetch first 8KB of the file
-    fetch(url, { headers: { Range: 'bytes=0-8191' } })
+    fetch(resolvedUrl, { headers: { Range: 'bytes=0-8191' } })
       .then((res) => {
         if (!res.ok && res.status !== 206) {
           // If range header not supported, fetch full file up to blob
-          return fetch(url).then((r) => r.arrayBuffer());
+          return fetch(resolvedUrl).then((r) => r.arrayBuffer());
         }
         return res.arrayBuffer();
       })
@@ -158,7 +159,7 @@ export const HexViewer: React.FC<HexViewerProps> = ({
           </button>
 
           <a
-            href={url}
+            href={resolvedUrl}
             download={fileName}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors shadow-sm"
           >

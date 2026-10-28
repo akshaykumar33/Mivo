@@ -287,11 +287,9 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
 
   return (
     <div className="flex-1 h-full flex flex-col bg-[var(--bg-canvas)] overflow-hidden select-none relative">
-      {/* Top Room Header with Mode Switcher & Whisper AI Notes Trigger */}
+      {/* Top Room Header */}
       <RoomHeader
         room={activeRoom}
-        activeMode={activeMode}
-        onModeChange={(mode: RoomCommunicationMode) => switchMode(mode)}
         participantCount={participants.length}
         isRecording={isRecording}
         isHost={isHost}
