@@ -361,7 +361,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
                       type="button"
                       onClick={() => setReplyingToInThread(reply)}
                       className="p-1 hover:scale-110 transition-transform cursor-pointer text-[var(--text-muted)] hover:text-emerald-600"
-                      title="Quote reply in thread (WhatsApp style)"
+                      title="Quote reply in thread"
                     >
                       <CornerUpLeft className="w-3 h-3" />
                     </button>

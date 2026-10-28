@@ -308,12 +308,12 @@ export const UnifiedRoomView: React.FC<UnifiedRoomViewProps> = ({ communityId, r
             <WifiOff className="w-3.5 h-3.5 text-[#FF453A] animate-pulse" />
             <span>
               {!isOnline
-                ? `Offline Mode — Working Locally (${pendingOutboxCount} changes queued via CRDT)`
-                : `Synchronizing ${pendingOutboxCount} local mutations with PostgreSQL...`}
+                ? `Offline Mode — Working locally (${pendingOutboxCount} changes queued)`
+                : `Synchronizing ${pendingOutboxCount} pending changes...`}
             </span>
           </div>
           <span className="font-mono text-[10px] bg-black/40 px-2 py-0.5 rounded border border-[#FF9F0A]/30">
-            0ms Optimistic Latency
+            Offline Saved
           </span>
         </div>
       )}

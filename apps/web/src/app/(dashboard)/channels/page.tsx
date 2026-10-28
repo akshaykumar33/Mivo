@@ -85,7 +85,7 @@ export default function ChannelsHomePage() {
               type="button"
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="flex items-center gap-2.5 min-w-0 text-left hover:bg-black/[0.04] p-1.5 rounded-xl transition-all cursor-pointer group flex-1"
-              title="Set availability & status (like Slack)"
+              title="Your Profile & Status"
             >
               <div className="relative shrink-0">
                 <Avatar

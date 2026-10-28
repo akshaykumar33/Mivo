@@ -447,7 +447,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     <button
                       onClick={() => setReplyingTo(msg)}
                       className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-emerald-600"
-                      title="Reply (WhatsApp quote)"
+                      title="Reply quote"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />
                     </button>
@@ -456,7 +456,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     <button
                       onClick={() => setActiveThreadRoot(msg)}
                       className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-red-600"
-                      title="Reply in thread (Slack style)"
+                      title="Reply in thread"
                     >
                       <MessageSquareReply className="w-3.5 h-3.5" />
                     </button>
@@ -649,7 +649,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                                 communityId: room.channelId,
                               }).then((res) => {
                                 if (res.success) {
-                                  alert('Sync callback successfully registered in PostgreSQL sprint tickets!');
+                                  alert('Sync callback successfully scheduled!');
                                 }
                               });
                             }}

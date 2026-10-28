@@ -53,7 +53,7 @@ export const LiveFactCheckHUD: React.FC<LiveFactCheckHUDProps> = ({
                 </span>
               </div>
               <span className="text-[10px] text-white/50">
-                Discrepancy detected with active database state
+                Discrepancy detected with verified records
               </span>
             </div>
           </div>
@@ -84,7 +84,7 @@ export const LiveFactCheckHUD: React.FC<LiveFactCheckHUDProps> = ({
           <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs">
             <div className="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1 mb-1">
               <Database className="w-3 h-3" />
-              <span>PostgreSQL Truth Record</span>
+              <span>Verified Record</span>
             </div>
             <p className="text-amber-100 font-semibold leading-snug">
               {alert.actualTruth}

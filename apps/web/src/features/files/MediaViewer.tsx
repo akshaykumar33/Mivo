@@ -201,13 +201,13 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             <span>Video Player</span>
           </div>
 
-          {/* FFmpeg FastStart Indicator */}
+          {/* Fast Stream Indicator */}
           <div
             className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium"
-            title="Optimized with FFmpeg MOOV +faststart for instant playback without downloading the whole file"
+            title="Fast streaming enabled for instant playback"
           >
             <Zap className="w-3 h-3 text-emerald-400" />
-            <span>FFmpeg FastStart</span>
+            <span>Fast Stream</span>
           </div>
 
           {bufferPercent > 0 && (

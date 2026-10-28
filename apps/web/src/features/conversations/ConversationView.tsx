@@ -808,22 +808,22 @@ export const ConversationView: React.FC = () => {
 
                   {/* Reaction & Action Hover Bar */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 bg-[var(--bg-surface-0)] px-2 py-0.5 rounded-xl border border-[var(--border-subtle)] shadow-sm">
-                    {/* WhatsApp Reply Button */}
+                    {/* Reply Quote Button */}
                     <button
                       type="button"
                       onClick={() => setReplyingTo(msg)}
                       className="p-1 rounded-md text-[var(--text-muted)] hover:text-emerald-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
-                      title="Reply (WhatsApp quote)"
+                      title="Reply quote"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />
                     </button>
 
-                    {/* Slack Reply in Thread Button */}
+                    {/* Reply in Thread Button */}
                     <button
                       type="button"
                       onClick={() => setActiveThreadRoot(msg)}
                       className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-600 hover:bg-black/5 hover:scale-125 transition-all cursor-pointer"
-                      title="Reply in thread (Slack style)"
+                      title="Reply in thread"
                     >
                       <MessageSquareReply className="w-3.5 h-3.5" />
                     </button>

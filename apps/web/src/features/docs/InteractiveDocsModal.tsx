@@ -57,7 +57,7 @@ export const DOC_ARTICLES: DocArticle[] = [
     content: `
 # Quick Access & Demo Profiles
 
-Welcome to **Mivo** — the next-generation unified real-time communication platform combining the best of Zoom, Google Meet, Discord, and Slack into an ultra-fluid, Apple-inspired experience.
+Welcome to **Mivo** — the next-generation unified real-time communication platform built for ultra-fluid, premium teamwork and real-time collaboration.
 
 ### 1-Click Demo Profiles (Password: \`Password123!\`):
 * **Dev Admin** (\`dev@mivo.app\`): Platform Architect & Community Owner (English [US])
@@ -425,7 +425,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                 </span>
               </div>
               <span className="text-[10px] sm:text-[11px] text-[var(--text-secondary)] font-medium truncate block">
-                Comprehensive guide for Zoom/Meet/Discord-grade real-time collaboration
+                Comprehensive guide for enterprise-grade real-time collaboration
               </span>
             </div>
           </div>

@@ -161,7 +161,7 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
           <button
             onClick={onToggleInvite}
             className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-[12px] text-xs font-semibold text-[#5E5CE6] hover:!text-white bg-[#5E5CE6]/15 hover:bg-[#5E5CE6] border border-[#5E5CE6]/30 transition-all cursor-pointer shadow-sm group"
-            title="Add Users to this Group/Room (Single-Org)"
+            title="Add users to room"
           >
             <UserPlus className="w-3.5 h-3.5 text-[#5E5CE6] group-hover:text-white transition-colors" />
             <span className="hidden 2xl:inline">Add User</span>
