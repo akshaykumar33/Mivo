@@ -1,8 +1,8 @@
-# Mivo Enterprise DevOps & CI/CD Production Architecture Guide
+# Mivo Enterprise DevOps, Security & CI/CD Production Reference Manual
 
-## 1. Executive Summary
+## 1. Architecture & Threat Model Overview
 
-This document defines the production DevOps architecture, Continuous Integration / Continuous Deployment (CI/CD) pipelines, containerization standards, and orchestration policies for the Mivo real-time collaborative platform.
+Mivo operates as a distributed, high-concurrency real-time platform combining WebRTC media SFUs, Socket.io distributed clustering via Redis, RESTful NestJS microservices, and a Next.js 15 standalone frontend.
 
 ```
                           ┌────────────────────────┐
@@ -20,17 +20,20 @@ This document defines the production DevOps architecture, Continuous Integration
               │  Integration (CI) │       │  Delivery (CD)   │
               │  - Lint & Types   │       │  - Docker Buildx │
               │  - Vitest Unit    │       │  - GHCR Publish  │
-              │  - Full Turbo     │       │  - Zero-Downtime │
-              │  - Playwright E2E │       │    Deployment    │
-              │  - Security/Trivy │       │    (Render/K8s)  │
+              │  - Full Turbo     │       │  - Prisma Migrate│
+              │  - Playwright E2E │       │  - Zero-Downtime │
+              │  - Gitleaks Sec   │       │    Deployment    │
+              │  - Trivy Container│       │    (Render/K8s)  │
+              │  - Dep Review     │       │  - Health Verify │
               └───────────────────┘       └─────────┬────────┘
                                                     │
                                   ┌─────────────────▼──────────────┐
                                   │   Production Orchestration     │
-                                  │   (docker-compose.prod.yml)    │
+                                  │   (docker-compose.prod.yml /   │
+                                  │         k8s/ Manifests)        │
                                   │                                │
                                   │   ┌────────────────────────┐   │
-                                  │   │   Nginx Reverse Proxy  │   │
+                                  │   │   Nginx Ingress/Proxy  │   │
                                   │   │  (SSL, Gzip, WS Proxy) │   │
                                   │   └─────┬────────────┬─────┘   │
                                   │         │            │         │
@@ -47,140 +50,108 @@ This document defines the production DevOps architecture, Continuous Integration
 
 ---
 
-## 2. GitHub Actions CI/CD Pipeline Suite
+## 2. Security Infrastructure ("Sec")
 
-All workflows are located in `.github/workflows/`:
+### A. Secret & Credential Scanning (`.github/workflows/secret-scan.yml`)
+* Integrates **Gitleaks** executing across full commit histories on pull requests and nightly scheduled runs.
+* Prevents leaking JWT secrets, API tokens, database URIs, or private keys into git history.
 
-### A. CI Pipeline (`.github/workflows/ci.yml`)
-Triggered automatically on:
-- Every Pull Request targeting `main` or `master`.
-- Every direct commit push to `main`, `master`, `feat/**`, and `fix/**`.
-- Employs **concurrency groups** with `cancel-in-progress: true` on feature branches to optimize runner minutes.
+### B. Dependency Review Gate (`.github/workflows/dependency-review.yml`)
+* Automatically checks pull requests using GitHub's official **Dependency Review Action**.
+* Blocks any pull request introducing:
+  - Critical or High severity CVEs.
+  - Incompatible copyleft licenses (GPL, AGPL, SSPL).
 
-| Job | Description | Command |
+### C. Container CVE Scanner (`.github/workflows/security.yml`)
+* Uses **Aqua Security Trivy** to scan generated Docker containers for OS-level and runtime CVEs, exporting SARIF reports to GitHub's Security dashboard.
+* Integrates **GitHub CodeQL** for automated Static Application Security Testing (SAST).
+
+### D. Application Defense & Hardening
+* **Helmet Security Headers**:
+  - `Content-Security-Policy`: Restricts scripts, objects, and connect sources.
+  - `Strict-Transport-Security`: Enforces HSTS with `maxAge: 31536000`, `includeSubDomains`, and `preload`.
+  - `X-Frame-Options: DENY`: Full protection against UI redressing / clickjacking.
+  - `Cross-Origin-Resource-Policy`: Cross-origin safe media asset delivery.
+* **Rate Limiting Guard** (`apps/server/src/common/rate-limiter.guard.ts`):
+  - Distributed Redis rate limiter with fallback to in-memory sliding window.
+  - Emits standard `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` HTTP headers.
+  - Returns `429 Too Many Requests` on abuse while bypassing `/health` and `/health/live` probes.
+
+---
+
+## 3. Dependency Governance & Audits ("Dependencies & Audit")
+
+* **Vulnerability Remediation (`pnpm.overrides`)**:
+  - Remediates transitive vulnerabilities (Next.js RCE, `proxy-addr` IP spoofing, `tinypool` prototype pollution, `cross-spawn`, `micromatch`, `qs`).
+* **License Compliance Checker (`scripts/check-licenses.mjs`)**:
+  - Audits all monorepo packages to ensure strict adherence to permissive enterprise licenses (MIT, Apache-2.0, BSD).
+* **Automated Package Updates (`.github/dependabot.yml`)**:
+  - Weekly dependency tracking for `npm`, `docker`, and `github-actions`.
+* **Audit CLI Script**:
+  ```bash
+  # Check dependency vulnerabilities
+  pnpm check:audit
+
+  # Audit open source licenses
+  node scripts/check-licenses.mjs
+  ```
+
+---
+
+## 4. Testing & Code Quality Suite ("Tests")
+
+| Test Target | Command | Details |
 |---|---|---|
-| **Lint & Typecheck** | Verifies TypeScript types across all 5 workspace projects (`shared`, `database`, `ui`, `server`, `web`) with Turbo caching. | `pnpm lint`, `pnpm check:types` |
-| **Unit & Integration** | Executes Vitest test suite covering security, tokens, storage, permissions, and health endpoints. | `pnpm test:vitest` |
-| **Monorepo Build** | Compiles all packages and Next.js static pages with Turbo caching. | `pnpm build` |
-| **Playwright E2E** | Spins up native Postgres & Redis containers in CI runner, generates Prisma schema, and runs headless Chromium tests with video/screenshot artifacts. | `pnpm test:e2e` |
-| **Docker Verify** | Validates that multi-stage Dockerfiles for both Server and Web compile without errors using Docker Buildx and GHA caching. | `docker build` check |
-
-### B. CD & Container Publishing Pipeline (`.github/workflows/cd.yml`)
-Triggered on:
-- Git push to `main` / `master`.
-- Semantic Versioning Release Tags (`v*.*.*`).
-- Manual trigger via `workflow_dispatch` with environment selection (`production` / `staging`).
-
-**Features:**
-- Multi-architecture container build using Docker Buildx and QEMU.
-- Authenticates securely via `GITHUB_TOKEN` to GitHub Container Registry (`ghcr.io`).
-- Automatically tags containers with:
-  - `sha-<commit>` (exact immutable commit tracking)
-  - `latest` (default production tag)
-  - `vX.Y.Z` (semver releases)
-- Triggers automated zero-downtime rolling update via Render Webhook (`RENDER_SERVER_DEPLOY_HOOK_URL`, `RENDER_WEB_DEPLOY_HOOK_URL`).
-
-### C. Security & Vulnerability Scanning (`.github/workflows/security.yml`)
-- **CodeQL**: Deep static code analysis for TypeScript/JavaScript to prevent SQL injection, path traversal, and unsafe deserialization.
-- **Dependency Audit**: `pnpm audit --audit-level=high` blocks vulnerable transitive packages.
-- **Aqua Security Trivy**: Scans base Alpine images and dependencies for OS-level CVEs, outputting SARIF alerts to GitHub Security tab.
-
-### D. Automated Dependency Governance (`.github/dependabot.yml`)
-- Automated weekly updates for npm, Docker images, and GitHub Actions.
+| **TypeScript Validation** | `pnpm check:types` | Typechecks all 5 workspace projects (`@mivo/shared`, `@mivo/database`, `@mivo/ui`, `@mivo/server`, `@mivo/web`). |
+| **Linters** | `pnpm lint` | Enforces zero-warning clean code standard. |
+| **Unit & Integration** | `pnpm test:vitest` | 36 test files, 147 test cases covering crypto, tokens, storage, chat, WebRTC, and health probes. |
+| **Test Coverage** | `pnpm test:coverage` | Generates v8 code coverage reports in `coverage/`. |
+| **Security Auditing** | `vitest run tests/vitest/12-security-and-compliance` | Verifies rate limiting, timing-safe equality, and XSS sanitization. |
+| **E2E Browser Testing** | `pnpm test:e2e` | Playwright multi-page E2E testing against real Chromium browser instances. |
+| **All-in-One** | `pnpm test:all` | Sequentially validates types, lint, and all test suites. |
 
 ---
 
-## 3. Production Docker Architecture & Hardening
+## 5. Enterprise Kubernetes Deployment ("Deployment Everything")
 
-Both Server and Web Docker images follow the highest security, performance, and containerization standards:
+Production Kubernetes manifests are organized under [`k8s/`](file:///c:/Wysbryx/Mivo/k8s):
 
-### Server Container (`Dockerfile`)
-1. **Multi-Stage Build**: Separates builder tools (`python3`, `make`, `g++`) from the slim runtime layer (`node:20-alpine`).
-2. **Non-Root Execution**: Runs under unprivileged user `mivo` (UID 1001, GID 1001), satisfying CIS Docker Benchmark 4.1.
-3. **Signal Forwarding**: Utilizes `dumb-init` as PID 1 to properly intercept and forward `SIGTERM` / `SIGINT` to Node.js, ensuring clean graceful shutdown without zombie processes.
-4. **Active Health Check**:
-   ```dockerfile
-   HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-     CMD wget -qO- http://localhost:4000/health || exit 1
-   ```
-
-### Web Frontend Container (`apps/web/Dockerfile`)
-1. **Next.js 15 Standalone Mode**: Configured with `output: 'standalone'` in `next.config.mjs`, producing a self-contained runtime (~150MB) without shipping `node_modules`.
-2. **Non-Root Execution**: Runs under unprivileged user `nextjs` (UID 1001, GID 1001).
-3. **Static File Optimization**: Public assets and `.next/static` are served directly.
-4. **Active Health Check**: Probes `/api/health`.
-
----
-
-## 4. Reverse Proxy & Network Architecture (`docker/nginx/nginx.conf`)
-
-In production environments running on virtual machines or bare-metal instances, Nginx acts as the perimeter gateway:
-- **WebSocket Gateway (`/socket.io/`)**: Configured with `Upgrade $http_upgrade`, `Connection "upgrade"`, and `proxy_buffering off` for zero-latency Socket.io transport.
-- **REST APIs (`/api/`)**: Proxies to NestJS backend with `client_max_body_size 50M` for file uploads.
-- **Web App (`/`)**: Proxies to Next.js with HTTP/1.1 keepalive pools.
-- **Gzip Acceleration**: Compresses JSON, JavaScript, CSS, HTML, and SVG on the fly.
-- **Security Headers**: Injects `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, and `Referrer-Policy`.
-
----
-
-## 5. Health Monitoring & Observability Endpoints
-
-The server includes production-ready health monitoring endpoints:
-
-### `GET /health` (Full Diagnostic)
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-10-29T17:05:00.000Z",
-  "uptime": 3600.45,
-  "environment": "production",
-  "version": "1.0.0",
-  "system": {
-    "memory": {
-      "heapUsedMb": 54.2,
-      "heapTotalMb": 92.4,
-      "rssMb": 112.8
-    }
-  },
-  "services": {
-    "database": {
-      "status": "up",
-      "responseTimeMs": 3
-    },
-    "redis": {
-      "status": "up",
-      "responseTimeMs": 1
-    }
-  }
-}
+```
+k8s/
+├── 00-namespace.yaml          # mivo-prod namespace with Baseline security profile
+├── 01-configmap.yaml          # Global environment variables
+├── 02-secret.yaml             # Secret references (JWT, DB, Redis, S3)
+├── 03-postgres.yaml           # StatefulSet + Headless Service + 20Gi PVC
+├── 04-redis.yaml              # Deployment + ClusterIP Service (volatile-lru)
+├── 05-server-deployment.yaml  # 3-replica Server Deployment with Anti-Affinity & Probes
+├── 06-web-deployment.yaml     # 3-replica Next.js Standalone Deployment
+├── 07-ingress.yaml            # Ingress with cert-manager SSL & WebSocket proxying
+├── 08-hpa.yaml                # Autoscaling 3-10 replicas on CPU/Memory thresholds
+└── kustomization.yaml         # Kustomize manifest for single-command deploy
 ```
 
-### `GET /health/live` (Kubernetes Liveness Probe)
-Returns `200 OK` `{ "status": "alive" }` to prove the event loop is active.
-
-### `GET /health/ready` (Kubernetes Readiness Probe)
-Executes `SELECT 1` against PostgreSQL to confirm the pod is ready to accept user traffic.
-
----
-
-## 6. How to Deploy
-
-### Local / Single-Server Production Setup
+### Deploy to Kubernetes
 ```bash
-# 1. Copy environment template
-cp .env.example .env
+# Apply entire production cluster with Kustomize
+kubectl apply -k k8s/
 
-# 2. Build and launch all production containers
-docker compose -f docker-compose.prod.yml up -d --build
-
-# 3. Check health status
-curl http://localhost/health
+# Monitor deployment rollout status
+kubectl rollout status deployment/mivo-server -n mivo-prod
+kubectl rollout status deployment/mivo-web -n mivo-prod
 ```
 
-### Cloud Platform (Render Blueprint)
-1. Push to GitHub.
-2. In Render Dashboard, choose **New > Blueprint**.
-3. Point to this repository; `render.yaml` will automatically configure:
-   - `mivo-server`: Docker Web Service on port 4000 with healthcheck `/health`.
-   - `mivo-web`: Docker Web Service on port 3000 with healthcheck `/api/health`.
+---
 
+## 6. Continuous Delivery Automation (`.github/workflows/cd.yml`)
+
+1. **Docker Multi-Arch Build & Push**:
+   - Compiles Server and Web containers using Docker Buildx and QEMU.
+   - Pushes to GitHub Container Registry (`ghcr.io/wysbryx/mivo/server` and `web`).
+2. **Automated Database Migration**:
+   - Executes `prisma migrate deploy` prior to updating application containers to guarantee zero-downtime database backward compatibility.
+3. **Zero-Downtime Rolling Update**:
+   - Triggers production webhooks (e.g. Render Deploy Hooks).
+4. **Automated Health Gate**:
+   - Verifies the live `/health` endpoint after deployment (polls up to 12 times with 10s backoff) before declaring success.
+5. **Release & SBOM Generation** (`.github/workflows/release.yml`):
+   - Generates CycloneDX and SPDX Software Bill of Materials on every `v*.*.*` tag release.

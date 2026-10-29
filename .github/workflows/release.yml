@@ -1,0 +1,49 @@
+name: Production Release & SBOM Automation
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: Release Packaging & Software Bill of Materials (SBOM)
+  # ----------------------------------------------------------------------------
+  release:
+    name: Create GitHub Release & Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Generate CycloneDX SBOM for Monorepo
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: 'cyclonedx-json'
+          output-file: 'mivo-monorepo-sbom.cyclonedx.json'
+
+      - name: Generate SPDX SBOM for Monorepo
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: 'spdx-json'
+          output-file: 'mivo-monorepo-sbom.spdx.json'
+
+      - name: Create Production GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            mivo-monorepo-sbom.cyclonedx.json
+            mivo-monorepo-sbom.spdx.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

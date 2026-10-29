@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
+import { RateLimiterGuard } from './common/rate-limiter.guard.js';
 import { RedisIoAdapter } from './realtime/redis-io.adapter.js';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -9,14 +10,39 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Production Graceful Shutdown
+  // Production Graceful Shutdown Hooks
   app.enableShutdownHooks();
 
-  // Security Middlewares
-  app.use(helmet());
+  // Advanced Security Headers via Helmet
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+          connectSrc: ["'self'", 'ws:', 'wss:', 'https:'],
+          mediaSrc: ["'self'", 'blob:', 'https:'],
+          objectSrc: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+      frameguard: {
+        action: 'deny',
+      },
+    })
+  );
+
   app.use(cookieParser());
 
-  // CORS
+  // CORS Hardening
   app.enableCors({
     origin: (origin, callback) => {
       if (
@@ -32,8 +58,11 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
   });
+
+  // Global Rate Limiting Guard
+  app.useGlobalGuards(new RateLimiterGuard());
 
   // Global Exception Filter
   app.useGlobalFilters(new HttpExceptionFilter());

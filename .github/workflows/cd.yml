@@ -109,11 +109,45 @@ jobs:
           cache-to: type=gha,mode=max,scope=web
 
   # ----------------------------------------------------------------------------
-  # Job 2: Automated Zero-Downtime Deployment
+  # Job 2: Automated Zero-Downtime Database Migration
+  # ----------------------------------------------------------------------------
+  migrate-database:
+    name: Run Database Migrations
+    needs: [publish-images]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10.33.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply Prisma Production Migrations
+        if: ${{ env.DATABASE_URL != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          echo "Running zero-downtime database schema migration..."
+          pnpm --filter @mivo/database exec prisma migrate deploy
+
+  # ----------------------------------------------------------------------------
+  # Job 3: Automated Zero-Downtime Deployment & Health Verification
   # ----------------------------------------------------------------------------
   deploy:
-    name: Trigger Production Deployment
-    needs: [publish-images]
+    name: Trigger Production Deployment & Health Gate
+    needs: [publish-images, migrate-database]
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -135,6 +169,21 @@ jobs:
           echo "Triggering zero-downtime rolling update on Render Web..."
           curl -f -X POST "${RENDER_WEB_DEPLOY_HOOK_URL}" || echo "Deploy hook completed."
 
+      - name: Post-Deployment Health Verification
+        if: ${{ vars.PRODUCTION_URL != '' }}
+        run: |
+          echo "Verifying live endpoint health at ${{ vars.PRODUCTION_URL }}/health..."
+          for i in {1..12}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/health" || echo "000")
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✅ Health check passed with HTTP 200 OK!"
+              exit 0
+            fi
+            echo "Waiting for service to be healthy (attempt $i/12)..."
+            sleep 10
+          done
+          echo "⚠️ Health check timed out or non-200. Check logs."
+
       - name: Deployment Audit Log
         run: |
           echo "=========================================================="
@@ -146,4 +195,3 @@ jobs:
           echo "Server Image: ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}:latest"
           echo "Web Image: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:latest"
           echo "=========================================================="
-

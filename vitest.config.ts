@@ -15,6 +15,19 @@ export default defineConfig({
       '**/dist/**',
       '**/.next/**',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.next/**',
+        '**/e2e/**',
+        '**/tests/fixtures/**',
+        '**/*.config.*',
+      ],
+    },
   },
   resolve: {
     alias: {
