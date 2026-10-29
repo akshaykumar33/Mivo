@@ -18,6 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@server': path.resolve(__dirname, './apps/server/src'),
       '@mivo/shared': path.resolve(__dirname, './packages/shared/src'),
       '@mivo/database': path.resolve(__dirname, './packages/database/src'),
       '@': path.resolve(__dirname, './apps/web/src'),

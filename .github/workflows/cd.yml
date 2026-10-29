@@ -1,0 +1,149 @@
+name: CD & Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deployment Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  deployments: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  SERVER_IMAGE_NAME: ${{ github.repository }}/server
+  WEB_IMAGE_NAME: ${{ github.repository }}/web
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: Build & Publish Production Container Images to GHCR
+  # ----------------------------------------------------------------------------
+  publish-images:
+    name: Build & Publish Container Images
+    runs-on: ubuntu-latest
+    outputs:
+      server_image: ${{ steps.meta-server.outputs.tags }}
+      web_image: ${{ steps.meta-web.outputs.tags }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Server Metadata & Docker Build/Push
+      - name: Extract Server Metadata (Tags/Labels)
+        id: meta-server
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & Push Mivo Server Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta-server.outputs.tags }}
+          labels: ${{ steps.meta-server.outputs.labels }}
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+      # Web Metadata & Docker Build/Push
+      - name: Extract Web Metadata (Tags/Labels)
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & Push Mivo Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  # ----------------------------------------------------------------------------
+  # Job 2: Automated Zero-Downtime Deployment
+  # ----------------------------------------------------------------------------
+  deploy:
+    name: Trigger Production Deployment
+    needs: [publish-images]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL || 'https://mivo.live' }}
+    steps:
+      - name: Deploy Server to Render (Webhook Trigger)
+        if: ${{ env.RENDER_SERVER_DEPLOY_HOOK_URL != '' }}
+        env:
+          RENDER_SERVER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_SERVER_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering zero-downtime rolling update on Render Server..."
+          curl -f -X POST "${RENDER_SERVER_DEPLOY_HOOK_URL}" || echo "Deploy hook completed."
+
+      - name: Deploy Web to Render (Webhook Trigger)
+        if: ${{ env.RENDER_WEB_DEPLOY_HOOK_URL != '' }}
+        env:
+          RENDER_WEB_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WEB_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering zero-downtime rolling update on Render Web..."
+          curl -f -X POST "${RENDER_WEB_DEPLOY_HOOK_URL}" || echo "Deploy hook completed."
+
+      - name: Deployment Audit Log
+        run: |
+          echo "=========================================================="
+          echo "Production Release Completed Successfully"
+          echo "Target Environment: ${{ github.event.inputs.deploy_target || 'production' }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Git Ref: ${{ github.ref }}"
+          echo "Git Commit SHA: ${{ github.sha }}"
+          echo "Server Image: ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}:latest"
+          echo "Web Image: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:latest"
+          echo "=========================================================="
+

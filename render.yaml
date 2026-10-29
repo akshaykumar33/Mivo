@@ -1,16 +1,22 @@
 services:
+  # ==============================================================================
+  # Mivo Backend API & Real-Time Gateway Service
+  # ==============================================================================
   - type: web
     name: mivo-server
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: free
+    plan: starter
     region: oregon
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 4000
       - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
         sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
@@ -22,3 +28,39 @@ services:
         value: 7d
       - key: CORS_ORIGIN
         value: "*"
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET_NAME
+        sync: false
+      - key: S3_REGION
+        value: us-east-1
+
+  # ==============================================================================
+  # Mivo Frontend Web Application (Next.js 15 Standalone)
+  # ==============================================================================
+  - type: web
+    name: mivo-web
+    runtime: docker
+    dockerfilePath: ./apps/web/Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: mivo-server
+          property: host
+      - key: NEXT_PUBLIC_WS_URL
+        fromService:
+          type: web
+          name: mivo-server
+          property: host

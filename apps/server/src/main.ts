@@ -9,6 +9,9 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Production Graceful Shutdown
+  app.enableShutdownHooks();
+
   // Security Middlewares
   app.use(helmet());
   app.use(cookieParser());
