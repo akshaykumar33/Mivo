@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Unified Real-Time Communication & Social Platform",
   "scripts": {
+    "preinstall": "only-allow pnpm",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -17,10 +18,20 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "only-allow": "^1.2.2",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },
   "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "argon2",
+      "esbuild",
+      "prisma"
+    ]
+  },
   "dependencies": {
     "@neon/config": "^1.8.4",
     "@neon/env": "^1.5.1"
