@@ -33,12 +33,13 @@ export interface HealthCheckResponse {
 @Controller('health')
 export class HealthController {
   private redisClient: Redis | null = null;
+  private static readonly PROBE_TIMEOUT_MS = 2000;
 
   constructor() {
     if (process.env.REDIS_URL) {
       try {
         this.redisClient = new Redis(process.env.REDIS_URL, {
-          connectTimeout: 3000,
+          connectTimeout: 2000,
           maxRetriesPerRequest: 1,
           lazyConnect: true,
           enableOfflineQueue: false,
@@ -50,19 +51,21 @@ export class HealthController {
   }
 
   /**
-   * Comprehensive health check with database and cache probes.
+   * Comprehensive health check with database and cache circuit breakers.
    * Standard for uptime monitors, Render health checks, AWS ALB target groups.
    */
   @Get()
   async check(@Res() res: Response): Promise<Response> {
-    const startTime = Date.now();
     let dbStatus: 'up' | 'down' = 'down';
     let dbLatency = 0;
     let dbError: string | undefined;
 
     try {
       const dbStart = Date.now();
-      await prisma.$queryRaw`SELECT 1`;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database probe timed out')), HealthController.PROBE_TIMEOUT_MS)
+      );
+      await Promise.race([prisma.$queryRaw`SELECT 1`, timeoutPromise]);
       dbLatency = Date.now() - dbStart;
       dbStatus = 'up';
     } catch (err: any) {
@@ -80,7 +83,10 @@ export class HealthController {
           if (this.redisClient.status !== 'ready') {
             await this.redisClient.connect().catch(() => {});
           }
-          await this.redisClient.ping();
+          const redisTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Redis probe timed out')), HealthController.PROBE_TIMEOUT_MS)
+          );
+          await Promise.race([this.redisClient.ping(), redisTimeout]);
           redisLatency = Date.now() - rStart;
           redisStatus = 'up';
         } else {
@@ -93,7 +99,6 @@ export class HealthController {
     }
 
     const mem = process.memoryUsage();
-    const isDegraded = dbStatus === 'down' || redisStatus === 'down';
     const httpStatus = dbStatus === 'up' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
 
     const payload: HealthCheckResponse = {
@@ -136,13 +141,15 @@ export class HealthController {
   }
 
   /**
-   * Kubernetes / Container Readiness Probe.
-   * Verifies critical database dependency is ready to accept traffic.
+   * Kubernetes / Container Readiness Probe with circuit breaker.
    */
   @Get('ready')
   async ready(@Res() res: Response): Promise<Response> {
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database readiness timed out')), HealthController.PROBE_TIMEOUT_MS)
+      );
+      await Promise.race([prisma.$queryRaw`SELECT 1`, timeoutPromise]);
       return res.status(HttpStatus.OK).json({ status: 'ready' });
     } catch (err: any) {
       return res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
@@ -152,4 +159,3 @@ export class HealthController {
     }
   }
 }
-

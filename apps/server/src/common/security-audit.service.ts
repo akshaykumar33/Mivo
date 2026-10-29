@@ -41,6 +41,16 @@ export class SecurityAuditService {
     'cookie',
   ]);
 
+  private static readonly SENSITIVE_SUBSTRINGS = [
+    'password',
+    'secret',
+    'token',
+    'privatekey',
+    'apikey',
+    'credential',
+    'bearer',
+  ];
+
   /**
    * Records a security-relevant event for SOC2/ISO 27001 SIEM log aggregation.
    */
@@ -80,7 +90,11 @@ export class SecurityAuditService {
     const sanitized: Record<string, any> = {};
     for (const [key, value] of Object.entries(data)) {
       const normalizedKey = key.toLowerCase().replace(/[^a-z]/g, '');
-      if (SecurityAuditService.SENSITIVE_KEYS.has(normalizedKey)) {
+      const isSensitive =
+        SecurityAuditService.SENSITIVE_KEYS.has(normalizedKey) ||
+        SecurityAuditService.SENSITIVE_SUBSTRINGS.some((sub) => normalizedKey.includes(sub));
+
+      if (isSensitive) {
         sanitized[key] = '***REDACTED***';
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key] = this.sanitizeMetadata(value);
@@ -91,4 +105,3 @@ export class SecurityAuditService {
     return sanitized;
   }
 }
-

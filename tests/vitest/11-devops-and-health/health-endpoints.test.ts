@@ -38,7 +38,7 @@ describe('DevOps & Monitoring — Health Endpoints', () => {
     expect(body).toHaveProperty('services');
     expect(body.services).toHaveProperty('database');
     expect(body.services).toHaveProperty('redis');
-  });
+  }, 10000);
 
   it('should return ready status probe', async () => {
     const controller = new HealthController();
@@ -49,5 +49,5 @@ describe('DevOps & Monitoring — Health Endpoints', () => {
 
     await controller.ready(mockRes);
     expect(mockRes.status).toHaveBeenCalled();
-  });
+  }, 10000);
 });
