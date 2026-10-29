@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module.js';
 import { TicketsModule } from './tickets/tickets.module.js';
 import { SandboxModule } from './sandbox/sandbox.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
+import { SecurityAuditService } from './common/security-audit.service.js';
 
 @Module({
   imports: [
@@ -37,5 +38,7 @@ import { ProjectsModule } from './projects/projects.module.js';
     SandboxModule,
     ProjectsModule,
   ],
+  providers: [SecurityAuditService],
+  exports: [SecurityAuditService],
 })
 export class AppModule {}

@@ -17,6 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "check:audit": "pnpm audit --audit-level=high",
+    "check:secops": "node scripts/secops-scan.mjs",
     "check:infra": "node scripts/check-services.mjs",
     "docker:prod:build": "docker compose -f docker-compose.prod.yml build",
     "docker:prod:up": "docker compose -f docker-compose.prod.yml up -d",

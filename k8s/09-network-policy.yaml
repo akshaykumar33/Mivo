@@ -1,0 +1,166 @@
+# ==============================================================================
+# Mivo SecOps Zero-Trust Kubernetes Network Policies
+# Enforces micro-segmentation: Default Deny All + Explicit Pod-to-Pod Whitelisting
+# ==============================================================================
+
+# 1. Default Deny All Traffic (Ingress and Egress)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: mivo-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# 2. Allow Core DNS Egress for all Pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-core-dns
+  namespace: mivo-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# 3. Web Frontend Network Policy (Next.js 15)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-network-policy
+  namespace: mivo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: mivo-web
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Accept traffic on port 3000 from Ingress controller
+    - ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Egress to Mivo Backend Server on port 4000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: mivo-server
+      ports:
+        - protocol: TCP
+          port: 4000
+---
+# 4. Backend Server Network Policy (NestJS API & Gateway)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: server-network-policy
+  namespace: mivo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: mivo-server
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Accept HTTP/WebSocket on port 4000 from Ingress or Web Frontend
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mivo-web
+      ports:
+        - protocol: TCP
+          port: 4000
+    - ports:
+        - protocol: TCP
+          port: 4000
+  egress:
+    # Connect to PostgreSQL on port 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Connect to Redis on port 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Connect to External HTTPS (Gemini AI, Cloud Object Storage, SMTP)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+---
+# 5. PostgreSQL Network Policy (Isolated Persistence)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-network-policy
+  namespace: mivo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only allow connections from mivo-server on port 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mivo-server
+      ports:
+        - protocol: TCP
+          port: 5432
+  egress: [] # Block all egress from database
+---
+# 6. Redis Network Policy (Isolated Cache)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-network-policy
+  namespace: mivo-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only allow connections from mivo-server on port 6379
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mivo-server
+      ports:
+        - protocol: TCP
+          port: 6379
+  egress: [] # Block all egress from cache
+

@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { RateLimiterGuard } from './common/rate-limiter.guard.js';
+import { SecurityAuditService } from './common/security-audit.service.js';
+import { SecurityAuditInterceptor } from './common/security-audit.interceptor.js';
 import { RedisIoAdapter } from './realtime/redis-io.adapter.js';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -63,6 +65,10 @@ async function bootstrap() {
 
   // Global Rate Limiting Guard
   app.useGlobalGuards(new RateLimiterGuard());
+
+  // Global SecOps Audit Interceptor
+  const auditService = app.get(SecurityAuditService);
+  app.useGlobalInterceptors(new SecurityAuditInterceptor(auditService));
 
   // Global Exception Filter
   app.useGlobalFilters(new HttpExceptionFilter());

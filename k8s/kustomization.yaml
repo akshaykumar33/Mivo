@@ -13,4 +13,4 @@ resources:
   - 06-web-deployment.yaml
   - 07-ingress.yaml
   - 08-hpa.yaml
-
+  - 09-network-policy.yaml

@@ -1,0 +1,112 @@
+name: DevSecOps & Shift-Left Security Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 3 * * 2' # Weekly comprehensive SecOps scan at 03:00 UTC on Tuesdays
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: SAST - Semgrep Static Application Security Testing
+  # ----------------------------------------------------------------------------
+  semgrep-sast:
+    name: Semgrep SAST (OWASP Top 10)
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Security Rules
+        run: |
+          semgrep scan --config auto --config .semgrep.yml --error --sarif --output semgrep.sarif || true
+
+      - name: Upload Semgrep SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+        continue-on-error: true
+
+  # ----------------------------------------------------------------------------
+  # Job 2: Hadolint - Dockerfile Security Linter
+  # ----------------------------------------------------------------------------
+  hadolint-docker:
+    name: Hadolint Dockerfile Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Lint Backend Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile
+          failure-threshold: warning
+          ignore: DL3018,DL3003 # Alpine cache and WORKDIR specifics
+
+      - name: Lint Web Frontend Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./apps/web/Dockerfile
+          failure-threshold: warning
+          ignore: DL3018,DL3003
+
+  # ----------------------------------------------------------------------------
+  # Job 3: IaC Security - Kubernetes & Compose Manifest Audit
+  # ----------------------------------------------------------------------------
+  iac-security:
+    name: Kubernetes & IaC Security Audit (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy IaC Configuration Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-iac.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: Upload IaC SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-iac.sarif
+        continue-on-error: true
+
+  # ----------------------------------------------------------------------------
+  # Job 4: Custom Gitleaks Audit
+  # ----------------------------------------------------------------------------
+  gitleaks-scan:
+    name: Advanced Gitleaks Secrets Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks with Mivo Rules
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
