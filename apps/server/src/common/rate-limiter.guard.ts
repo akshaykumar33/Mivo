@@ -20,9 +20,9 @@ export class RateLimiterGuard implements CanActivate {
   private memoryStore = new Map<string, RateLimitRecord>();
   private redisClient: Redis | null = null;
 
-  // Configurable thresholds (defaults: 1000 requests per 60 seconds per IP)
+  // Configurable thresholds (defaults: 100 requests per 60 seconds per IP)
   private readonly windowMs: number = 60 * 1000;
-  private readonly maxRequests: number = parseInt(process.env.RATE_LIMIT_MAX || '1000', 10);
+  private readonly maxRequests: number = parseInt(process.env.RATE_LIMIT_MAX || '100', 10);
 
   constructor() {
     if (process.env.REDIS_URL) {
@@ -43,9 +43,8 @@ export class RateLimiterGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const res = context.switchToHttp().getResponse<Response>();
 
-    // Skip rate limiting for internal health checks or during automated test executions
+    // Skip rate limiting for internal health checks or when explicitly disabled
     if (
-      process.env.NODE_ENV === 'test' ||
       process.env.RATE_LIMIT_DISABLED === 'true' ||
       req.path.startsWith('/health') ||
       req.path === '/api/health'
@@ -122,4 +121,3 @@ export class RateLimiterGuard implements CanActivate {
     return record.count;
   }
 }
-
