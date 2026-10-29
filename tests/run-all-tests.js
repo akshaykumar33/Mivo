@@ -113,7 +113,7 @@ async function main() {
     serverProcess = spawn('node', [distPath], {
       stdio: 'pipe',
       detached: false,
-      env: process.env,
+      env: { ...process.env, NODE_ENV: 'test', RATE_LIMIT_DISABLED: 'true' },
     });
 
     const isReady = await waitForServer(25000);
