@@ -43,11 +43,11 @@ export const SingleOrgLimitModal: React.FC<SingleOrgLimitModalProps> = ({
         {activeCommunity && (
           <div className="p-3 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#DC2626]/10 border border-[#DC2626]/25 flex items-center justify-center text-[#DC2626]">
+              <div className="w-9 h-9 rounded-xl bg-[var(--brand-primary,#dc2626)]/10 border border-[var(--brand-primary,#dc2626)]/25 flex items-center justify-center text-[var(--brand-primary,#dc2626)]">
                 <Building2 className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider block">
+                <span className="text-[10px] text-[var(--text-muted)] font-medium block">
                   Current Assigned Organization
                 </span>
                 <span className="text-xs font-bold text-[var(--text-primary)]">
@@ -66,7 +66,7 @@ export const SingleOrgLimitModal: React.FC<SingleOrgLimitModalProps> = ({
           <Button
             type="button"
             onClick={onClose}
-            className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white"
+            className="w-full"
           >
             Understood
           </Button>

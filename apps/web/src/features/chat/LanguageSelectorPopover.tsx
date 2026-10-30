@@ -48,7 +48,7 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 rounded-[18px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] py-1.5 z-50 animate-slide-up overflow-hidden ring-1 ring-black/[0.05]">
           {label && (
-            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-subtle)] mb-1">
+            <div className="px-3 py-1 text-[11px] font-medium text-[var(--text-muted)] border-b border-[var(--border-subtle)] mb-1">
               {label}
             </div>
           )}
@@ -66,7 +66,7 @@ export const LanguageSelectorPopover: React.FC<LanguageSelectorPopoverProps> = (
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-[10px] text-xs transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white font-bold shadow-sm'
+                      ? 'bg-[var(--brand-primary,#6366f1)] text-white font-medium shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/[0.04]'
                   }`}
                 >

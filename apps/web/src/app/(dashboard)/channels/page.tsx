@@ -58,9 +58,9 @@ export default function ChannelsHomePage() {
       {/* Direct Messages Sub-Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] p-4 flex-col justify-between flex-shrink-0">
         <div className="space-y-5">
-          <div className="h-8 px-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <div className="h-8 px-2 flex items-center justify-between text-xs font-medium text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5 text-red-600" />
+              <MessageSquare className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
               <span>Direct Messages</span>
             </span>
           </div>
@@ -70,13 +70,13 @@ export default function ChannelsHomePage() {
               href="/conversations"
               className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] font-semibold text-xs border border-[var(--border-subtle)] shadow-xs transition-all cursor-pointer"
             >
-              <MessageSquare className="w-4 h-4 text-red-600" />
+              <MessageSquare className="w-4 h-4 text-[var(--brand-primary,#dc2626)]" />
               <span>Direct & Group Chats</span>
             </Link>
           </div>
 
           <div className="pt-2">
-            <div className="px-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
+            <div className="px-2 text-xs font-medium text-[var(--text-muted)] mb-3">
               Workspaces ({communities.length})
             </div>
             <div className="space-y-1">
@@ -86,7 +86,7 @@ export default function ChannelsHomePage() {
                   href={`/communities/${c.id}`}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface-1)] hover:text-[var(--text-primary)] transition-all"
                 >
-                  <span className="w-2 h-2 rounded-full bg-red-600" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--brand-primary,#dc2626)]" />
                   <span className="truncate">{c.name}</span>
                 </Link>
               ))}

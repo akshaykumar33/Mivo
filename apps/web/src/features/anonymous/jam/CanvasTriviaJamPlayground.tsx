@@ -255,17 +255,17 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
   return (
     <div className="flex flex-col h-full bg-[#080912] border-l border-white/10 overflow-hidden relative font-sans">
       {/* Top Banner: Arena Header & Scoreboard */}
-      <div className="px-3 sm:px-4 py-2.5 bg-gradient-to-r from-[#0F1224] to-[#141832] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
+      <div className="px-3 sm:px-4 py-2.5 bg-[var(--bg-surface-0,#0e111d)] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 via-amber-500 to-indigo-500 flex items-center justify-center text-white shadow-md">
-            <Sparkles className="w-4 h-4 animate-spin" />
+          <div className="w-8 h-8 rounded-xl bg-[var(--brand-primary,#6366f1)] flex items-center justify-center text-white shadow-xs">
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-black tracking-tight text-white font-display">
+              <span className="text-xs sm:text-sm font-bold tracking-tight text-white font-display">
                 Co-Op Canvas &amp; Trivia Jam
               </span>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Live Sync
               </span>
@@ -329,7 +329,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
               sounds.playPop();
               onRegisterPrivateRoom?.(roomCode);
             }}
-            className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-extrabold text-xs flex items-center gap-1 shadow-md transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl bg-[var(--brand-primary,#6366f1)] hover:opacity-90 active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-1 shadow-xs transition-all cursor-pointer"
             title="Invite 2nd Player (Room Code & Link)"
           >
             <Share2 className="w-3.5 h-3.5" />
@@ -400,10 +400,10 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
 
       {/* Confetti Visual Celebration */}
       {showConfetti && (
-        <div className="absolute inset-x-0 top-16 flex justify-center pointer-events-none z-30 animate-bounce">
-          <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500 text-white font-extrabold text-xs shadow-xl flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-yellow-300 animate-spin" />
-            <span>SPECTACULAR MOVE! +PTS</span>
+        <div className="absolute inset-x-0 top-16 flex justify-center pointer-events-none z-30 animate-fade-in">
+          <div className="px-4 py-1.5 rounded-full bg-[var(--brand-primary,#6366f1)] text-white font-semibold text-xs shadow-lg flex items-center gap-2 border border-white/20">
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Spectacular move! +pts</span>
           </div>
         </div>
       )}
@@ -528,15 +528,15 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
 
       {/* Invite 2nd Player Modal */}
       {inviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="invite-title">
           <div className="w-full max-w-md bg-[#0D1022] border border-white/15 rounded-3xl p-5 sm:p-6 shadow-2xl text-white space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-500 flex items-center justify-center text-white shadow-md">
+                <div className="w-9 h-9 rounded-2xl bg-[var(--brand-primary,#6366f1)] flex items-center justify-center text-white shadow-xs">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black font-display text-white">
+                  <h3 id="invite-title" className="text-base font-bold font-display text-white">
                     Invite 2nd Player
                   </h3>
                   <p className="text-xs text-gray-400">
@@ -549,6 +549,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
                 type="button"
                 onClick={() => setInviteModalOpen(false)}
                 className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -556,14 +557,14 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
 
             {/* Room Code Callout */}
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-indigo-400 font-extrabold block">
+              <span className="text-xs font-mono text-indigo-300 font-semibold block">
                 Jam Room Code
               </span>
-              <div className="text-3xl font-black font-mono tracking-widest text-white">
+              <div className="text-3xl font-bold font-mono tracking-wider text-white">
                 {roomCode}
               </div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Room Active on Server • Waiting for Player 2</span>
               </div>
               <p className="text-[11px] text-gray-400">
@@ -573,7 +574,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
 
             {/* Direct Link Share */}
             <div>
-              <label className="block text-xs font-bold text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 Direct Invite Link
               </label>
               <div className="flex items-center gap-2">
@@ -586,7 +587,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
                 <button
                   type="button"
                   onClick={handleCopyInvite}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                     copiedLink
                       ? 'bg-emerald-600 text-white'
                       : 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs'
@@ -607,7 +608,7 @@ export const CanvasTriviaJamPlayground: React.FC<CanvasTriviaJamPlaygroundProps>
                   window.open(inviteLink, '_blank');
                   setInviteModalOpen(false);
                 }}
-                className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-2xl bg-[var(--brand-primary,#6366f1)] hover:opacity-90 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-[0.98]"
               >
                 <ExternalLink className="w-4 h-4" />
                 <span>Open in 2nd Browser Tab (Test Live Multiplayer)</span>

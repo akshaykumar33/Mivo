@@ -903,11 +903,11 @@ export const ConversationView: React.FC = () => {
 
       {/* Typing Indicator */}
       {currentTyping.length > 0 && (
-        <div className="px-6 py-1 text-[11px] text-[#DC2626] font-medium flex items-center gap-2">
+        <div className="px-6 py-1.5 text-[11px] text-[var(--text-muted)] font-medium flex items-center gap-2">
           <span className="flex gap-1 items-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce [animation-delay:0.2s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] animate-bounce [animation-delay:0.4s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse [animation-delay:200ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse [animation-delay:400ms]" />
           </span>
           <span>{currentTyping.join(', ')} is typing...</span>
         </div>
@@ -915,8 +915,8 @@ export const ConversationView: React.FC = () => {
 
       {/* Uploading Status Banner */}
       {isUploading && (
-        <div className="px-6 py-2 bg-red-600/10 border-t border-red-500/20 text-xs text-[#DC2626] flex items-center gap-2 animate-pulse">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DC2626]" />
+        <div className="px-6 py-2 bg-[var(--brand-primary,#6366f1)]/10 border-t border-[var(--brand-primary,#6366f1)]/20 text-xs text-[var(--brand-primary,#6366f1)] flex items-center gap-2 animate-pulse">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
           <span>{uploadStatus || 'Uploading file...'}</span>
         </div>
       )}

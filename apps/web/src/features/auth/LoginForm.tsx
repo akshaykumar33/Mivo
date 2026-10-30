@@ -160,8 +160,8 @@ export const LoginForm: React.FC = () => {
 
       {/* 1-Click Demo Profiles */}
       <div className="mt-5 pt-4 border-t border-[var(--border-subtle)] relative z-10">
-        <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-          <span className="flex items-center gap-1.5 text-red-600 font-semibold">
+        <div className="flex items-center justify-between text-xs font-medium text-[var(--text-secondary)] mb-3">
+          <span className="flex items-center gap-1.5 text-[var(--brand-primary,#dc2626)] font-semibold">
             <span>Demo Team Profiles</span>
           </span>
           <span className="text-[10px] text-[var(--text-muted)] font-mono bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-2 py-0.5 rounded font-medium">

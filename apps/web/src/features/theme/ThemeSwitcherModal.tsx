@@ -37,22 +37,19 @@ export const ThemeSwitcherModal: React.FC = () => {
       onClick={() => setIsThemeModalOpen(false)}
     >
       <div
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-4 sm:p-6 shadow-2xl backdrop-blur-2xl text-[var(--text-primary)] relative ring-1 ring-black/[0.05] custom-scrollbar"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] p-4 sm:p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] text-[var(--text-primary)] relative custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glow Accent */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-red-600/20 via-rose-500/15 to-amber-500/20 blur-3xl pointer-events-none" />
-
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-subtle)] relative z-10 gap-2">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-lg shadow-red-600/25 flex-shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] flex items-center justify-center shadow-sm flex-shrink-0">
               <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-lg font-bold font-display text-[var(--text-primary)] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span>Visual Themes</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--brand-primary,#dc2626)]/10 text-[var(--brand-primary,#dc2626)] border border-[var(--brand-primary,#dc2626)]/20">
                   Multi-Theme Engine
                 </span>
               </h2>
@@ -64,7 +61,8 @@ export const ThemeSwitcherModal: React.FC = () => {
 
           <button
             onClick={() => setIsThemeModalOpen(false)}
-            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors cursor-pointer flex-shrink-0"
+            aria-label="Close dialog"
+            className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer flex-shrink-0"
             title="Close [ESC]"
           >
             <X className="w-5 h-5" />
@@ -83,13 +81,13 @@ export const ThemeSwitcherModal: React.FC = () => {
                 onClick={() => setTheme(t.id)}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition-all duration-200 cursor-pointer relative group ${
                   isActive
-                    ? 'border-[#DC2626] bg-[var(--bg-surface-2)] ring-2 ring-[#DC2626]/30 shadow-[0_8px_24px_rgba(220,38,38,0.18)]'
-                    : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] hover:border-[#DC2626]/40'
+                    ? 'border-[var(--brand-primary,#dc2626)] bg-[var(--bg-surface-2)] ring-2 ring-[var(--brand-primary,#dc2626)]/30 shadow-[0_4px_16px_rgba(220,38,38,0.12)]'
+                    : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] hover:border-[var(--brand-primary,#dc2626)]/40'
                 }`}
               >
                 {/* Active Selection Checkmark */}
                 {isActive && (
-                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#DC2626] flex items-center justify-center shadow-md">
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[var(--brand-primary,#dc2626)] flex items-center justify-center shadow-sm">
                     <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
                   </div>
                 )}

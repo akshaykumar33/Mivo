@@ -418,11 +418,11 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
         {/* Victory Overlay */}
         {gameOver && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center space-y-3 animate-fade-in z-20">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center shadow-xl">
-              <Trophy className="w-8 h-8 animate-bounce" />
+            <div className="w-14 h-14 rounded-2xl bg-[var(--brand-primary,#6366f1)] text-white flex items-center justify-center shadow-lg">
+              <Trophy className="w-8 h-8 text-amber-300" />
             </div>
             <div>
-              <h4 className="text-xl font-black font-display text-white">
+              <h4 className="text-xl font-bold font-display text-white">
                 {winner} Triumphs!
               </h4>
               <p className="text-xs text-amber-300 font-mono mt-0.5">
@@ -435,7 +435,7 @@ export const RetroPongGame: React.FC<RetroPongGameProps> = ({
                 sendAction('PONG_RESET', {});
                 sounds.playFanfare();
               }}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[var(--brand-primary,#6366f1)] hover:opacity-90 active:scale-[0.98] text-white font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               Play Rematch
             </button>

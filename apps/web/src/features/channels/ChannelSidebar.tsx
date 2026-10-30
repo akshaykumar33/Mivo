@@ -200,15 +200,15 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
 
         {/* Scrollable Tree View */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 scrollbar-thin">
-          <div className="flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          <div className="flex items-center justify-between px-2 text-[11px] font-medium text-[var(--text-secondary)]">
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-[#DC2626]" />
+              <Sparkles className="w-3 h-3 text-[var(--brand-primary,#dc2626)]" />
               <span>Spaces & Channels</span>
             </span>
             {isOwnerOrAdmin && (
               <button
                 onClick={() => setIsCreateChannelOpen(true)}
-                className="p-1 rounded-md text-[var(--text-muted)] hover:text-[#DC2626] hover:bg-black/[0.04] transition-colors cursor-pointer"
+                className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--brand-primary,#dc2626)] hover:bg-black/[0.04] transition-colors cursor-pointer"
                 title="Create Space"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

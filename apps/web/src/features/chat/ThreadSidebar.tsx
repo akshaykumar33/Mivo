@@ -303,7 +303,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
         {/* Slack-style Replies Divider */}
         <div className="flex items-center gap-3 my-2">
           <div className="flex-1 h-px bg-[var(--border-subtle)]" />
-          <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider shrink-0 font-mono">
+          <span className="text-xs font-medium text-[var(--text-muted)] shrink-0">
             {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
           </span>
           <div className="flex-1 h-px bg-[var(--border-subtle)]" />
@@ -312,7 +312,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
         {/* Loading Spinner */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-8 space-y-2 text-[var(--text-muted)]">
-            <Loader2 className="w-5 h-5 animate-spin text-red-600" />
+            <Loader2 className="w-5 h-5 animate-spin text-[var(--brand-primary,#dc2626)]" />
             <p className="text-xs">Loading thread replies...</p>
           </div>
         )}

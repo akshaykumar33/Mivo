@@ -203,13 +203,13 @@ export default function LandingPage() {
                   <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
                     <div className="space-y-4 max-w-sm">
                       <div className="flex items-center justify-center gap-3">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-700 p-0.5 ring-4 ring-red-500/20 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-14 h-14 rounded-2xl bg-[var(--brand-primary,#dc2626)] ring-2 ring-red-500/20 flex items-center justify-center text-white font-bold text-lg shadow-xs">
                           AR
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-bold text-lg flex items-center justify-center shadow-xs">
                           DA
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-bold text-lg flex items-center justify-center shadow-xs">
                           SC
                         </div>
                       </div>

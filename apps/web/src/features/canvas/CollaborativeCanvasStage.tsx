@@ -624,8 +624,8 @@ export const CollaborativeCanvasStage: React.FC<CollaborativeCanvasStageProps> =
 
       {/* Quick Prompt Chips */}
       <div className="px-4 py-2 bg-zinc-950/40 border-b border-white/[0.04] flex items-center gap-2 overflow-x-auto z-10">
-        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider flex-shrink-0">
-          AI Architecture Seeds:
+        <span className="text-[11px] font-medium text-zinc-400 flex-shrink-0">
+          Architecture templates:
         </span>
         {quickChips.map((chip, idx) => (
           <button

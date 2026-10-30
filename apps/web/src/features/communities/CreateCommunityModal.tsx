@@ -92,7 +92,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
               onClose();
               setUpgradeModalOpen(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.985] text-white font-semibold text-xs shadow-sm transition-all cursor-pointer"
           >
             Claim Full Account
           </button>
@@ -100,7 +100,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
       ) : (
         <>
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
               {error}
             </div>
           )}
@@ -164,7 +164,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
         />
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <label className="block text-xs font-medium text-[var(--text-secondary)]">
             Description
           </label>
           <textarea
@@ -172,7 +172,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
             placeholder="Tell members what this community is all about..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            className="w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--brand-primary,#dc2626)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary,#dc2626)]/20 shadow-xs"
           />
         </div>
 

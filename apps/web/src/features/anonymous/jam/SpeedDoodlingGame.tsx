@@ -400,9 +400,9 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
 
       {/* Secret Word Display for Guesser (Blanks with Hints) */}
       {!isDrawer && (
-        <div className="py-2.5 px-4 my-2 rounded-2xl bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-500/30 flex items-center justify-between shrink-0">
+        <div className="py-2.5 px-4 my-2 rounded-2xl bg-[var(--bg-surface-1,#121626)] border border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-xs text-indigo-300">
-            <Lightbulb className="w-4 h-4 text-amber-400 animate-bounce" />
+            <Lightbulb className="w-4 h-4 text-amber-400" />
             <span>Hint: {activeWordObj.hint}</span>
           </div>
 
@@ -440,8 +440,8 @@ export const SpeedDoodlingGame: React.FC<SpeedDoodlingGameProps> = ({
         {/* Floating Success Celebration Overlay */}
         {roundSolved && (
           <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center space-y-3 animate-fade-in z-20">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-rose-500 text-white flex items-center justify-center shadow-xl">
-              <Trophy className="w-8 h-8 animate-bounce" />
+            <div className="w-14 h-14 rounded-2xl bg-[var(--brand-primary,#6366f1)] text-white flex items-center justify-center shadow-lg">
+              <Trophy className="w-8 h-8 text-amber-300" />
             </div>
             <div>
               <h4 className="text-lg font-black font-display text-white">

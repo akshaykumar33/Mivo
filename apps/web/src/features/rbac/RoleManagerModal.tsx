@@ -49,7 +49,7 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
       <div className="flex flex-col sm:flex-row gap-4 min-h-[380px]">
         {/* Role List Sidebar */}
         <div className="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)] pb-3 sm:pb-0 sm:pr-3 space-y-1.5 overflow-y-auto max-h-[140px] sm:max-h-[360px]">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+          <div className="text-xs font-medium text-[var(--text-secondary)] mb-2">
             Hierarchy
           </div>
           {roles.map((role) => (
@@ -58,19 +58,19 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
               onClick={() => setSelectedRole(role)}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 selectedRole?.id === role.id
-                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/40 font-semibold'
+                  ? 'bg-[var(--brand-primary,#6366f1)]/15 text-[var(--brand-primary,#6366f1)] border border-[var(--brand-primary,#6366f1)]/30 font-semibold'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-1)] hover:text-[var(--text-primary)]'
               }`}
             >
               <div className="flex items-center gap-2 truncate">
                 <span
                   className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: role.color || '#7C3AED' }}
+                  style={{ backgroundColor: role.color || '#6366f1' }}
                 />
                 <span className="truncate">{role.name}</span>
               </div>
               {role.isSystem && (
-                <span className="text-[9px] uppercase px-1 py-0.5 rounded bg-[var(--bg-surface-1)] text-[var(--text-muted)] font-bold">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-surface-1)] text-[var(--text-muted)] font-medium">
                   System
                 </span>
               )}
@@ -84,10 +84,10 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
                 <div>
-                  <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
                     <span
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: selectedRole.color || '#7C3AED' }}
+                      style={{ backgroundColor: selectedRole.color || '#6366f1' }}
                     />
                     {selectedRole.name} Role
                   </h4>
@@ -98,7 +98,7 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
               </div>
 
               <div className="mt-3 space-y-2">
-                <div className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">
                   Assigned Capabilities
                 </div>
                 <div className="grid grid-cols-1 gap-1.5">
@@ -112,7 +112,7 @@ export const RoleManagerModal: React.FC<RoleManagerModalProps> = ({
                         key={key}
                         className={`flex items-center justify-between p-2 rounded-lg border text-xs ${
                           isGranted
-                            ? 'bg-violet-950/20 border-violet-800/40 text-[var(--text-primary)]'
+                            ? 'bg-[var(--brand-primary,#6366f1)]/10 border-[var(--brand-primary,#6366f1)]/25 text-[var(--text-primary)]'
                             : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-muted)] opacity-60'
                         }`}
                       >

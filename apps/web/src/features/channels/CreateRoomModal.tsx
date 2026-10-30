@@ -64,7 +64,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create Unified Room" description="Create a room with dynamic communication modes.">
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+        <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
           {error}
         </div>
       )}
@@ -72,7 +72,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Initial Mode Selector */}
         <div className="space-y-2">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <label className="block text-xs font-medium text-[var(--text-secondary)]">
             Initial Mode
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
@@ -84,13 +84,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => setActiveMode(item.id as RoomCommunicationMode)}
-                  className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border transition-all text-[10px] sm:text-xs font-semibold cursor-pointer ${
+                  className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border transition-all text-[10px] sm:text-xs font-medium cursor-pointer ${
                     isSelected
-                      ? 'bg-red-500/15 border-red-500 text-red-700 shadow-sm shadow-red-500/10'
-                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-red-400 hover:text-[var(--text-primary)]'
+                      ? 'bg-[var(--brand-primary,#dc2626)]/15 border-[var(--brand-primary,#dc2626)] text-[var(--brand-primary,#dc2626)] shadow-xs'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--border-strong,rgba(255,255,255,0.18))] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mb-1 ${isSelected ? 'text-red-600' : 'text-[var(--text-muted)]'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mb-1 ${isSelected ? 'text-[var(--brand-primary,#dc2626)]' : 'text-[var(--text-muted)]'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );

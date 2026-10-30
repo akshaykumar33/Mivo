@@ -284,14 +284,14 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
 
       {/* 5. Slack Quick 1-Click Status Presets */}
       <div className="border-t border-[var(--border-subtle)] pt-2 mb-2">
-        <div className="px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 flex items-center justify-between">
+        <div className="px-1 text-[10px] font-medium text-[var(--text-muted)] mb-1 flex items-center justify-between">
           <span>Quick Status</span>
           <button
             onClick={() => {
               onClose();
               onOpenFullModal();
             }}
-            className="text-[10px] text-[#DC2626] hover:underline cursor-pointer lowercase font-normal"
+            className="text-[10px] text-[var(--brand-primary,#dc2626)] hover:underline cursor-pointer font-normal"
           >
             more options...
           </button>

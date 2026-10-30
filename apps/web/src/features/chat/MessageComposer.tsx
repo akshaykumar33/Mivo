@@ -447,7 +447,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
             {isMeetingMenuOpen && (
               <div className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                <div className="px-2 py-1.5 text-[11px] font-medium text-[var(--text-muted)]">
                   External Meeting Hub
                 </div>
 

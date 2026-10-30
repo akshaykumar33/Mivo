@@ -176,8 +176,8 @@ export const LiveVideoTile: React.FC<LiveVideoTileProps> = ({
       {/* Active Dragging Indicator Overlay */}
       {isDragging && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-xs rounded-3xl pointer-events-none">
-          <span className="text-xs font-bold text-violet-300 flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-950/80 border border-violet-500/40">
-            <GripVertical className="w-3.5 h-3.5 animate-bounce" />
+          <span className="text-xs font-semibold text-white flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-xs">
+            <GripVertical className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
             Reordering Tile...
           </span>
         </div>

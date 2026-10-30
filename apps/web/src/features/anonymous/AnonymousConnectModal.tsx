@@ -548,27 +548,24 @@ export const AnonymousConnectModal: React.FC = () => {
             : 'max-w-2xl max-h-[92vh]'
         } bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-[var(--text-primary)] relative transition-all duration-200`}
       >
-        {/* Ambient Top Glow Bar */}
-        <div className="h-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500 w-full shrink-0" />
-
         {/* Modal Header */}
         <div className="p-3.5 sm:p-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-3 bg-[var(--bg-surface-1)] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] text-white flex items-center justify-center shadow-xs">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-extrabold tracking-tight font-display">
+                <h2 className="text-base sm:text-lg font-bold tracking-tight font-display">
                   Co-Op "Canvas &amp; Trivia Jam"
                 </h2>
                 {state === 'CONNECTED' ? (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Split-Screen Live
                   </span>
                 ) : isGuest ? (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                     Guest Mode
                   </span>
                 ) : null}
@@ -586,10 +583,10 @@ export const AnonymousConnectModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setRulesModalOpen(true)}
-              className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               title="Read Game Rules & Guide"
             >
-              <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+              <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span className="hidden sm:inline">How to Play</span>
             </button>
 
@@ -597,7 +594,7 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsTheaterMode(!isTheaterMode)}
-                className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
                 title={isTheaterMode ? 'Exit Theater Mode' : 'Expand Theater Mode'}
               >
                 {isTheaterMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -609,7 +606,8 @@ export const AnonymousConnectModal: React.FC = () => {
                 handleEndChat();
                 setAnonConnectModalOpen(false);
               }}
-              className="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              aria-label="Close dialog"
+              className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -620,14 +618,14 @@ export const AnonymousConnectModal: React.FC = () => {
         {state === 'IDLE' && (
           <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
             {/* 3 Main Connection Modes */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-100 p-1.5 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2 bg-[var(--bg-surface-1)] p-1.5 rounded-2xl border border-[var(--border-subtle)]">
               <button
                 type="button"
                 onClick={() => setMatchTab('DISCOVERY')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
+                className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
                   matchTab === 'DISCOVERY'
-                    ? 'bg-white text-gray-900 shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[var(--bg-surface-0)] text-[var(--text-primary)] shadow-xs border border-[var(--border-subtle)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Radio className="w-3.5 h-3.5 shrink-0" />
@@ -637,10 +635,10 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMatchTab('PRIVATE')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
+                className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
                   matchTab === 'PRIVATE'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Users className="w-3.5 h-3.5 shrink-0" />
@@ -650,40 +648,40 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLaunchDemoJam}
-                className="py-2 px-3 rounded-xl text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
+                className="py-2 px-3 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
               >
-                <Gamepad2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <Gamepad2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span className="truncate">Solo / Practice</span>
               </button>
             </div>
 
             {/* TAB 1: PRIVATE ROOM / INVITE 2ND PLAYER DIRECTLY */}
             {matchTab === 'PRIVATE' && (
-              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-950/90 via-purple-950/90 to-indigo-950/90 border border-rose-500/30 text-white space-y-4 shadow-xl">
+              <div className="p-4 sm:p-5 rounded-3xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[var(--text-primary)] space-y-4 shadow-sm">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-sm">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--brand-primary,#dc2626)] text-white shadow-xs">
                       2-Player Direct Room
                     </span>
-                    <span className="text-xs text-rose-300 font-mono">No Queue Waiting</span>
+                    <span className="text-xs text-[var(--text-secondary)] font-mono">No Queue Waiting</span>
                   </div>
-                  <h3 className="text-base font-black font-display tracking-tight text-white mt-1">
+                  <h3 className="text-base font-bold font-display tracking-tight text-[var(--text-primary)] mt-1">
                     Invite a Friend or Open in a 2nd Browser Tab
                   </h3>
-                  <p className="text-xs text-gray-300">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     Create a private room to get a shareable link/code, or enter your friend's code to connect immediately!
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   {/* Option A: Create Private Room */}
-                  <div className="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-3 flex flex-col justify-between">
+                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] space-y-3 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-2 font-bold text-xs text-white">
-                        <KeyRound className="w-4 h-4 text-amber-400" />
+                      <div className="flex items-center gap-2 font-semibold text-xs text-[var(--text-primary)]">
+                        <KeyRound className="w-4 h-4 text-amber-500" />
                         <span>Create New Room</span>
                       </div>
-                      <p className="text-[11px] text-gray-300 mt-1">
+                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">
                         Generates a 5-letter Room Code and direct invite URL for your friend.
                       </p>
                     </div>
@@ -691,7 +689,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCreatePrivateJam}
-                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-500 hover:to-rose-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full py-2.5 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] text-white font-semibold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Share2 className="w-4 h-4" />
                       <span>Create Private Room Code</span>
@@ -699,13 +697,13 @@ export const AnonymousConnectModal: React.FC = () => {
                   </div>
 
                   {/* Option B: Join with Code */}
-                  <div className="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-3 flex flex-col justify-between">
+                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] space-y-3 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-2 font-bold text-xs text-white">
-                        <Users className="w-4 h-4 text-cyan-400" />
+                      <div className="flex items-center gap-2 font-semibold text-xs text-[var(--text-primary)]">
+                        <Users className="w-4 h-4 text-blue-500" />
                         <span>Join Friend's Room</span>
                       </div>
-                      <p className="text-[11px] text-gray-300 mt-1">
+                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">
                         Have a code from a friend? Enter it below to join their split screen.
                       </p>
                     </div>
@@ -716,13 +714,13 @@ export const AnonymousConnectModal: React.FC = () => {
                         value={roomCodeInput}
                         onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                         placeholder="e.g. JAM88"
-                        className="flex-1 px-3 py-2 text-xs rounded-xl bg-black/50 border border-white/20 text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50 uppercase"
+                        className="flex-1 px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-mono font-bold focus:outline-none focus:border-[var(--brand-primary,#dc2626)] uppercase"
                       />
                       <button
                         type="button"
                         disabled={!roomCodeInput.trim()}
                         onClick={() => handleJoinPrivateJam()}
-                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-40 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer shrink-0"
+                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer shrink-0"
                       >
                         Join!
                       </button>
@@ -756,7 +754,7 @@ export const AnonymousConnectModal: React.FC = () => {
 
                 {/* Mode Selection */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
                     Choose Connection Mode
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -765,20 +763,20 @@ export const AnonymousConnectModal: React.FC = () => {
                       onClick={() => setMode('TEXT')}
                       className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
                         mode === 'TEXT'
-                          ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
-                          : 'bg-white border-gray-200 hover:border-gray-300'
+                          ? 'bg-rose-500/10 border-rose-500/30 ring-1 ring-rose-500/20 shadow-xs'
+                          : 'bg-[var(--bg-surface-0)] border-[var(--border-subtle)] hover:border-black/20 dark:hover:border-white/20'
                       }`}
                     >
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                          mode === 'TEXT' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
+                          mode === 'TEXT' ? 'bg-[var(--brand-primary,#dc2626)] text-white' : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)]'
                         }`}
                       >
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-gray-900">Text &amp; Canvas Jam</div>
-                        <div className="text-[11px] text-gray-500">Live chat + interactive playground</div>
+                        <div className="text-xs font-semibold text-[var(--text-primary)]">Text &amp; Canvas Jam</div>
+                        <div className="text-[11px] text-[var(--text-secondary)]">Live chat + interactive playground</div>
                       </div>
                     </button>
 
@@ -787,20 +785,20 @@ export const AnonymousConnectModal: React.FC = () => {
                       onClick={() => setMode('VIDEO')}
                       className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
                         mode === 'VIDEO'
-                          ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
-                          : 'bg-white border-gray-200 hover:border-gray-300'
+                          ? 'bg-rose-500/10 border-rose-500/30 ring-1 ring-rose-500/20 shadow-xs'
+                          : 'bg-[var(--bg-surface-0)] border-[var(--border-subtle)] hover:border-black/20 dark:hover:border-white/20'
                       }`}
                     >
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                          mode === 'VIDEO' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600'
+                          mode === 'VIDEO' ? 'bg-[var(--brand-primary,#dc2626)] text-white' : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)]'
                         }`}
                       >
                         <Video className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-gray-900">Video + Audio Jam</div>
-                        <div className="text-[11px] text-gray-500">WebRTC camera + interactive playground</div>
+                        <div className="text-xs font-semibold text-[var(--text-primary)]">Video + Audio Jam</div>
+                        <div className="text-[11px] text-[var(--text-secondary)]">WebRTC camera + interactive playground</div>
                       </div>
                     </button>
                   </div>
@@ -809,11 +807,11 @@ export const AnonymousConnectModal: React.FC = () => {
                 {/* Pseudonym Field */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-gray-700">Your Incognito Alias</label>
+                    <label className="text-xs font-medium text-[var(--text-secondary)]">Your Incognito Alias</label>
                     <button
                       type="button"
                       onClick={rerollPseudonym}
-                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-semibold text-[var(--brand-primary,#dc2626)] hover:brightness-110 flex items-center gap-1 cursor-pointer"
                     >
                       <Dice5 className="w-3.5 h-3.5" />
                       <span>Reroll Alias</span>
@@ -823,13 +821,13 @@ export const AnonymousConnectModal: React.FC = () => {
                     type="text"
                     value={pseudonym}
                     onChange={(e) => setPseudonym(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-xs font-semibold text-gray-900 bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] text-xs font-semibold text-[var(--text-primary)] bg-[var(--bg-surface-0)] shadow-xs"
                   />
                 </div>
 
                 {/* Shared Interests Tags */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
                     Pairing Interests &amp; Tags
                   </label>
                   <div className="flex flex-wrap gap-1.5 mb-2.5">
@@ -842,8 +840,8 @@ export const AnonymousConnectModal: React.FC = () => {
                           onClick={() => toggleTag(tag)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-rose-600 text-white shadow-xs'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
+                              : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                           }`}
                         >
                           #{tag}
@@ -858,13 +856,13 @@ export const AnonymousConnectModal: React.FC = () => {
                     onChange={(e) => setCustomTagInput(e.target.value)}
                     onKeyDown={handleAddCustomTag}
                     placeholder="Type a custom interest and press Enter (e.g. Anime, Science)..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-gray-50 text-gray-900"
+                    className="w-full px-3.5 py-2 rounded-xl border border-[var(--border-subtle)] text-xs focus:outline-none focus:border-[var(--brand-primary,#dc2626)] bg-[var(--bg-surface-0)] text-[var(--text-primary)] placeholder:[var(--text-muted)] shadow-xs"
                   />
                 </div>
 
                 {/* Queue Counter & Join Button */}
                 <div className="pt-2 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+                  <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] px-1">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <span>{queueCount} active peers waiting in match pool</span>
@@ -905,28 +903,28 @@ export const AnonymousConnectModal: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                     <span>Connecting to Private Jam Room</span>
                   </div>
-                  <h3 className="text-xl font-black text-gray-900 font-display">
-                    Room Code: <span className="text-rose-600 font-mono tracking-wider">{activeRoomCode}</span>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] font-display">
+                    Room Code: <span className="text-[var(--brand-primary,#dc2626)] font-mono tracking-wider">{activeRoomCode}</span>
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
                     Connecting to your partner or waiting for 2nd player to enter the room...
                   </p>
                 </div>
 
                 {/* Direct Share Link & 2nd Tab Button */}
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-left space-y-2.5">
-                  <label className="text-[11px] font-bold text-gray-700 block">Share Invite Link with Friend:</label>
+                <div className="p-3.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-left space-y-2.5">
+                  <label className="text-xs font-medium text-[var(--text-secondary)] block">Share Invite Link with Friend:</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       readOnly
                       value={directShareLink}
-                      className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-white border border-gray-300 font-mono text-gray-700 select-all"
+                      className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] font-mono text-[var(--text-primary)] select-all"
                     />
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] text-white text-xs font-semibold transition-colors shrink-0 flex items-center gap-1 cursor-pointer shadow-xs"
                     >
                       {copiedInvite ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedInvite ? 'Copied!' : 'Copy'}</span>
@@ -937,7 +935,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleJoinPrivateJam(activeRoomCode)}
-                      className="w-full py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Re-sync / Connect Now</span>
@@ -946,7 +944,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => window.open(directShareLink, '_blank')}
-                      className="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-0)] text-[var(--text-primary)] font-medium text-xs border border-[var(--border-subtle)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>Open 2nd Browser Tab</span>
@@ -956,10 +954,10 @@ export const AnonymousConnectModal: React.FC = () => {
               </div>
             ) : (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 font-display">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] font-display">
                   Matching with an Anonymous Peer...
                 </h3>
-                <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-sm">
                   Pairing you with another guest or anonymous user interested in{' '}
                   {selectedTags.length ? selectedTags.map((t) => `#${t}`).join(', ') : 'anything'}.
                 </p>
@@ -970,7 +968,7 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLaunchDemoJam}
-                className="py-2 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors cursor-pointer"
+                className="py-2 px-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold text-xs border border-purple-500/20 transition-colors cursor-pointer"
               >
                 Launch with AI Partner Immediately
               </button>
@@ -978,7 +976,7 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCancelSearch}
-                className="py-2 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition-colors cursor-pointer"
+                className="py-2 px-5 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] font-medium text-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -994,10 +992,10 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMobileTab('PLAYGROUND')}
-                className={`flex-1 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                   mobileTab === 'PLAYGROUND'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Gamepad2 className="w-4 h-4" />
@@ -1007,10 +1005,10 @@ export const AnonymousConnectModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMobileTab('CHAT')}
-                className={`flex-1 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                   mobileTab === 'CHAT'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
@@ -1030,31 +1028,31 @@ export const AnonymousConnectModal: React.FC = () => {
                 <div className="px-3.5 py-2.5 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between gap-2 shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-bold text-xs flex items-center justify-center shrink-0">
                         {activePartner.pseudonym.charAt(0)}
                       </div>
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[var(--bg-surface-0)]" />
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-gray-900 truncate">
+                        <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                           {activePartner.pseudonym}
                         </span>
                         {activePartner.isGuest ? (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-700 border border-amber-300">
+                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/25">
                             Guest
                           </span>
                         ) : (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-700 border border-purple-300">
+                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-md bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/25">
                             Anon
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                      <div className="text-[10px] text-[var(--text-secondary)] flex items-center gap-1">
                         <span>Synced 1-on-1</span>
                         <span>•</span>
-                        <span className="text-rose-600 font-semibold">{mode}</span>
+                        <span className="text-[var(--brand-primary,#dc2626)] font-semibold">{mode}</span>
                       </div>
                     </div>
                   </div>
@@ -1066,10 +1064,10 @@ export const AnonymousConnectModal: React.FC = () => {
                       onClick={handleRequestReveal}
                       className={`px-2 py-1 rounded-xl text-[11px] font-semibold border flex items-center gap-1 transition-colors cursor-pointer ${
                         revealedUsers
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                          ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
                           : revealRequested
-                          ? 'bg-amber-50 text-amber-700 border-amber-300 animate-pulse'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                          ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30 animate-pulse'
+                          : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)]'
                       }`}
                       title="Request Mutual Identity Reveal"
                     >
@@ -1080,7 +1078,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleNextMatch}
-                      className="px-2 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/20 font-semibold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                       title="Skip to next partner"
                     >
                       <FastForward className="w-3 h-3" />
@@ -1090,7 +1088,7 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleEndChat}
-                      className="p-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors cursor-pointer"
+                      className="p-1 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                       title="End conversation"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -1100,8 +1098,8 @@ export const AnonymousConnectModal: React.FC = () => {
 
                 {/* Voice / Audio Presence Bar or Video Grid */}
                 {mode === 'VIDEO' ? (
-                  <div className="p-2.5 bg-gray-900 grid grid-cols-2 gap-2 h-36 shrink-0">
-                    <div className="relative rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-white/10">
+                  <div className="p-2.5 bg-black grid grid-cols-2 gap-2 h-36 shrink-0">
+                    <div className="relative rounded-2xl overflow-hidden bg-[var(--bg-surface-1)] flex items-center justify-center border border-[var(--border-subtle)]">
                       <video
                         ref={localVideoRef}
                         autoPlay
@@ -1114,8 +1112,8 @@ export const AnonymousConnectModal: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="relative rounded-2xl overflow-hidden bg-gray-800 flex items-center justify-center border border-white/10">
-                      <div className="text-center p-2 text-white/70">
+                    <div className="relative rounded-2xl overflow-hidden bg-[var(--bg-surface-1)] flex items-center justify-center border border-[var(--border-subtle)]">
+                      <div className="text-center p-2 text-[var(--text-secondary)]">
                         <Video className="w-6 h-6 mx-auto mb-1 opacity-50" />
                         <div className="text-[11px] font-semibold">{activePartner.pseudonym}</div>
                       </div>
@@ -1125,30 +1123,30 @@ export const AnonymousConnectModal: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gradient-to-r from-gray-50 to-rose-50/30 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2 shrink-0">
+                  <div className="px-3 py-2 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between gap-2 shrink-0">
                     <div className="flex items-center gap-2 text-xs">
                       <div
                         className={`w-7 h-7 rounded-xl flex items-center justify-center ${
                           isMicMuted
-                            ? 'bg-gray-200 text-gray-500'
-                            : 'bg-rose-500/20 text-rose-600 animate-pulse'
+                            ? 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)]'
+                            : 'bg-red-500/15 text-[var(--brand-primary,#dc2626)] animate-pulse'
                         }`}
                       >
                         {isMicMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
                       </div>
 
                       <div>
-                        <div className="text-[11px] font-bold text-gray-900 flex items-center gap-1.5">
+                        <div className="text-[11px] font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                           <span>Live Voice Channel</span>
                           {!isMicMuted && (
                             <span className="flex items-center gap-0.5">
-                              <span className="w-1 h-2 bg-emerald-500 rounded-full animate-bounce" />
-                              <span className="w-1 h-3 bg-emerald-500 rounded-full animate-bounce delay-100" />
-                              <span className="w-1 h-1.5 bg-emerald-500 rounded-full animate-bounce delay-200" />
+                              <span className="w-1 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                              <span className="w-1 h-3 bg-emerald-500 rounded-full animate-pulse delay-100" />
+                              <span className="w-1 h-1.5 bg-emerald-500 rounded-full animate-pulse delay-200" />
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-gray-500">
+                        <div className="text-[10px] text-[var(--text-secondary)]">
                           {isMicMuted ? 'Mic is muted' : 'Voice connected with peer'}
                         </div>
                       </div>
@@ -1157,10 +1155,10 @@ export const AnonymousConnectModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsMicMuted(!isMicMuted)}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-colors cursor-pointer ${
                         isMicMuted
-                          ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                          : 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                          ? 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)]'
+                          : 'bg-[var(--brand-primary,#dc2626)] text-white border-[var(--brand-primary,#dc2626)] shadow-xs'
                       }`}
                     >
                       {isMicMuted ? 'Unmute' : 'Mute Mic'}
@@ -1175,7 +1173,7 @@ export const AnonymousConnectModal: React.FC = () => {
                       return (
                         <div
                           key={m.id}
-                          className="p-2 rounded-xl bg-purple-50/70 border border-purple-200/50 text-purple-900 text-[11px] text-center my-1"
+                          className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-800 dark:text-purple-300 text-[11px] text-center my-1"
                         >
                           {m.content}
                         </div>
@@ -1187,14 +1185,14 @@ export const AnonymousConnectModal: React.FC = () => {
                         key={m.id}
                         className={`flex flex-col ${m.isSelf ? 'items-end' : 'items-start'}`}
                       >
-                        <div className="text-[10px] text-gray-400 mb-0.5 px-1">
+                        <div className="text-[10px] text-[var(--text-muted)] mb-0.5 px-1">
                           {m.sender} • {m.time}
                         </div>
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-xs font-medium break-words ${
                             m.isSelf
-                              ? 'bg-rose-600 text-white rounded-tr-none'
-                              : 'bg-gray-100 text-gray-900 rounded-tl-none border border-gray-200'
+                              ? 'bg-[var(--brand-primary,#dc2626)] text-white rounded-tr-none shadow-xs'
+                              : 'bg-[var(--bg-surface-1)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-subtle)]'
                           }`}
                         >
                           {m.content}
@@ -1204,7 +1202,7 @@ export const AnonymousConnectModal: React.FC = () => {
                   })}
 
                   {partnerTyping && (
-                    <div className="text-[11px] text-gray-400 italic">
+                    <div className="text-[11px] text-[var(--text-muted)] italic">
                       {activePartner.pseudonym} is typing...
                     </div>
                   )}
@@ -1214,13 +1212,13 @@ export const AnonymousConnectModal: React.FC = () => {
 
                 {/* Quick Icebreakers Prompt Bar */}
                 <div className="px-3 py-1.5 bg-[var(--bg-surface-1)] border-t border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                  <span className="text-[10px] font-bold text-gray-400 shrink-0">Ask:</span>
+                  <span className="text-[10px] font-semibold text-[var(--text-muted)] shrink-0">Ask:</span>
                   {QUICK_ICEBREAKERS.map((prompt, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => handleSendMessage(undefined, prompt)}
-                      className="text-[10px] font-semibold text-gray-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-2 py-1 rounded-lg border border-gray-200 transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs"
+                      className="text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--brand-primary,#dc2626)] bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-2)] px-2 py-1 rounded-lg border border-[var(--border-subtle)] transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-xs"
                     >
                       {prompt}
                     </button>
@@ -1237,12 +1235,12 @@ export const AnonymousConnectModal: React.FC = () => {
                     value={inputMessage}
                     onChange={handleInputChange}
                     placeholder={`Message ${activePartner.pseudonym}...`}
-                    className="flex-1 px-3 py-2 text-xs rounded-xl bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-gray-900 shadow-2xs"
+                    className="flex-1 px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] text-[var(--text-primary)] shadow-xs"
                   />
                   <button
                     type="submit"
                     disabled={!inputMessage.trim()}
-                    className="p-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white transition-colors cursor-pointer shrink-0 shadow-xs"
+                    className="p-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] disabled:opacity-40 text-white transition-colors cursor-pointer shrink-0 shadow-xs"
                   >
                     <Send className="w-4 h-4" />
                   </button>

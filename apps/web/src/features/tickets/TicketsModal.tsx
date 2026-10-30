@@ -39,6 +39,19 @@ export const TicketsModal: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
+  // Close on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+      }
+    };
+    if (isModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, setIsModalOpen]);
+
   React.useEffect(() => {
     if (isModalOpen) {
       fetchTickets();
@@ -90,31 +103,36 @@ export const TicketsModal: React.FC = () => {
   const getPriorityBadge = (p: TicketPriority) => {
     switch (p) {
       case 'URGENT':
-        return 'bg-[#FF453A]/20 text-[#FF453A] border-[#FF453A]/30';
+        return 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30';
       case 'HIGH':
-        return 'bg-[#FF9F0A]/20 text-[#FF9F0A] border-[#FF9F0A]/30';
+        return 'bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/30';
       case 'MEDIUM':
-        return 'bg-[#0A84FF]/20 text-[#0A84FF] border-[#0A84FF]/30';
+        return 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30';
       case 'LOW':
-        return 'bg-[#30D158]/20 text-[#30D158] border-[#30D158]/30';
+        return 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-emerald-500/30';
     }
   };
 
   const getStatusBadge = (s: TicketStatus) => {
     switch (s) {
       case 'OPEN':
-        return 'bg-[#0A84FF]/15 text-[#0A84FF] border-[#0A84FF]/25';
+        return 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/25';
       case 'IN_PROGRESS':
-        return 'bg-[#BF5AF2]/15 text-[#BF5AF2] border-[#BF5AF2]/25';
+        return 'bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/25';
       case 'RESOLVED':
-        return 'bg-[#30D158]/15 text-[#30D158] border-[#30D158]/25';
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/25';
       case 'CLOSED':
-        return 'bg-white/10 text-[var(--text-secondary)] border-white/10';
+        return 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] border-[var(--border-subtle)]';
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in select-none">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tickets-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in select-none"
+    >
       {/* Backdrop */}
       <div
         onClick={() => setIsModalOpen(false)}
@@ -122,15 +140,15 @@ export const TicketsModal: React.FC = () => {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
+      <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[var(--border-subtle)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#F59E0B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.35)] flex-shrink-0">
-              <Ticket className="w-5 h-5 text-white stroke-[2.2]" />
+            <div className="w-10 h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] flex items-center justify-center shadow-xs flex-shrink-0 text-white">
+              <Ticket className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight truncate">
+              <h2 id="tickets-modal-title" className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight truncate">
                 Support & Issues Hub
               </h2>
               <p className="text-xs text-[var(--text-secondary)] truncate">
@@ -140,12 +158,12 @@ export const TicketsModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-black/5 rounded-xl p-1 border border-[var(--border-subtle)]">
+            <div className="flex items-center bg-[var(--bg-surface-1)] rounded-xl p-1 border border-[var(--border-subtle)]">
               <button
                 onClick={() => setActiveTab('LIST')}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'LIST'
-                    ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-sm'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -155,7 +173,7 @@ export const TicketsModal: React.FC = () => {
                 onClick={() => setActiveTab('CREATE')}
                 className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'CREATE'
-                    ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-sm'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -166,7 +184,8 @@ export const TicketsModal: React.FC = () => {
 
             <button
               onClick={() => setIsModalOpen(false)}
-              className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              aria-label="Close dialog"
+              className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -177,13 +196,13 @@ export const TicketsModal: React.FC = () => {
         {activeTab === 'CREATE' ? (
           <form onSubmit={handleCreate} className="p-6 space-y-4 overflow-y-auto">
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-xs text-[#DC2626]">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-400">
                 {errorMsg}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
                 Ticket Title
               </label>
               <input
@@ -191,20 +210,20 @@ export const TicketsModal: React.FC = () => {
                 placeholder="e.g. Realtime audio drops on Safari or New Room feature"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 transition-all shadow-xs"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
                   Category
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#DC2626] cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] cursor-pointer"
                 >
                   <option value="Technical">Technical Bug</option>
                   <option value="Feature">Feature Request</option>
@@ -215,13 +234,13 @@ export const TicketsModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
                   Priority
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#DC2626] cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] cursor-pointer"
                 >
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -232,7 +251,7 @@ export const TicketsModal: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
                 Description & Reproduction Steps
               </label>
               <textarea
@@ -240,7 +259,7 @@ export const TicketsModal: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 resize-none transition-all shadow-xs"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 resize-none transition-all shadow-xs"
                 required
               />
             </div>
@@ -256,7 +275,7 @@ export const TicketsModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#991B1B] text-white text-xs font-semibold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSubmitting ? 'Submitting...' : 'Submit Ticket'}</span>
@@ -273,7 +292,7 @@ export const TicketsModal: React.FC = () => {
                   onClick={() => setFilterStatus(st)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     filterStatus === st
-                      ? 'bg-[#DC2626] text-white shadow-xs'
+                      ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
@@ -286,12 +305,12 @@ export const TicketsModal: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-2.5 scrollbar-thin">
               {isLoading && tickets.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 border-2 border-[#DC2626] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[var(--brand-primary,#dc2626)] border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs text-[var(--text-secondary)]">Loading tickets...</span>
                 </div>
               ) : filteredTickets.length === 0 ? (
                 <div className="py-16 flex flex-col items-center justify-center text-center px-4">
-                  <div className="w-14 h-14 rounded-2xl bg-black/5 border border-[var(--border-subtle)] flex items-center justify-center mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-[var(--border-subtle)] flex items-center justify-center mb-3">
                     <Ticket className="w-7 h-7 text-[var(--text-secondary)]/50" />
                   </div>
                   <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
@@ -302,7 +321,7 @@ export const TicketsModal: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setActiveTab('CREATE')}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-[#DC2626] border border-red-500/30 text-xs font-semibold transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-[var(--brand-primary,#dc2626)] border border-red-500/20 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Create Ticket

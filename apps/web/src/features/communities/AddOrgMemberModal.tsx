@@ -192,7 +192,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
             onClick={() => setActiveTab('ADD')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'ADD'
-                ? 'bg-[#DC2626] text-white shadow-sm'
+                ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-1)]'
             }`}
           >
@@ -204,7 +204,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
             onClick={() => setActiveTab('MEMBERS')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'MEMBERS'
-                ? 'bg-[#DC2626] text-white shadow-sm'
+                ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-1)]'
             }`}
           >
@@ -242,7 +242,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
                   placeholder="e.g. alex@wysbryx.com or alex"
                   value={identifier}
                   onChange={(e) => handleIdentifierChange(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 font-medium"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 font-medium shadow-xs"
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
             {/* Candidate Autocomplete Pill List */}
             {eligibleUsers.length > 0 && (
               <div className="space-y-1.5">
-                <span className="text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-wider block">
+                <span className="text-[11px] font-medium text-[var(--text-muted)] block">
                   Available Users (Not in any Org)
                 </span>
                 <div className="flex flex-wrap gap-1.5 max-h-[110px] overflow-y-auto p-1.5 rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)]">
@@ -259,11 +259,11 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
                       type="button"
                       key={u.id}
                       onClick={() => selectCandidate(u)}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--bg-surface-0)] hover:bg-[#DC2626]/10 hover:border-[#DC2626]/40 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] transition-all cursor-pointer group"
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--bg-surface-0)] hover:bg-[var(--brand-primary,#dc2626)]/10 hover:border-[var(--brand-primary,#dc2626)]/40 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] transition-all cursor-pointer group"
                     >
-                      <UserCheck className="w-3 h-3 text-[#DC2626]" />
+                      <UserCheck className="w-3 h-3 text-[var(--brand-primary,#dc2626)]" />
                       <span className="font-medium">{u.displayName || u.username}</span>
-                      <span className="text-[10px] text-[var(--text-muted)] group-hover:text-[#DC2626]">
+                      <span className="text-[10px] text-[var(--text-muted)] group-hover:text-[var(--brand-primary,#dc2626)]">
                         ({u.email})
                       </span>
                     </button>
@@ -283,12 +283,12 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
                   onClick={() => setSelectedRole('Member')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     selectedRole === 'Member'
-                      ? 'border-[#DC2626] bg-[#DC2626]/10 text-[var(--text-primary)] ring-1 ring-[#DC2626]/30'
+                      ? 'border-[var(--brand-primary,#dc2626)] bg-[var(--brand-primary,#dc2626)]/10 text-[var(--text-primary)] ring-1 ring-[var(--brand-primary,#dc2626)]/30'
                       : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-semibold text-xs mb-1">
-                    <Users className="w-3.5 h-3.5 text-[#DC2626]" />
+                    <Users className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
                     <span>Member</span>
                   </div>
                   <span className="text-[11px] text-[var(--text-muted)] block">
@@ -301,12 +301,12 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
                   onClick={() => setSelectedRole('Admin')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     selectedRole === 'Admin'
-                      ? 'border-[#DC2626] bg-[#DC2626]/10 text-[var(--text-primary)] ring-1 ring-[#DC2626]/30'
+                      ? 'border-[var(--brand-primary,#dc2626)] bg-[var(--brand-primary,#dc2626)]/10 text-[var(--text-primary)] ring-1 ring-[var(--brand-primary,#dc2626)]/30'
                       : 'border-[var(--border-subtle)] bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-semibold text-xs mb-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#DC2626]" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
                     <span>Admin</span>
                   </div>
                   <span className="text-[11px] text-[var(--text-muted)] block">
@@ -323,7 +323,6 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting || !identifier.trim()}
-                className="bg-[#DC2626] hover:bg-[#B91C1C] text-white"
               >
                 {isSubmitting ? (
                   <>
@@ -346,7 +345,7 @@ export const AddOrgMemberModal: React.FC<AddOrgMemberModalProps> = ({
           <div className="space-y-2">
             {isLoadingMembers ? (
               <div className="py-12 flex flex-col items-center justify-center text-[var(--text-muted)]">
-                <Loader2 className="w-6 h-6 animate-spin text-[#DC2626] mb-2" />
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-primary,#dc2626)] mb-2" />
                 <span className="text-xs">Loading organization members...</span>
               </div>
             ) : members.length === 0 ? (

@@ -85,6 +85,19 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
     }
   }, [isOpen, roomName, conversationName]);
 
+  // Close on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleGenerate = async () => {
@@ -143,18 +156,23 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-xl rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="meeting-hub-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in"
+    >
+      <div className="relative w-full max-w-xl rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden flex flex-col max-h-[92vh]">
         {/* Top Header */}
         <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2 sm:gap-4 bg-[var(--bg-surface-1)]">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#EF4444] p-2 flex items-center justify-center shadow-md shadow-red-600/30 flex-shrink-0 text-white">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] p-2 flex items-center justify-center shadow-xs flex-shrink-0 text-white">
               <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-bold text-[var(--text-primary)] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2 font-display">
+              <h3 id="meeting-hub-title" className="text-sm sm:text-base font-bold text-[var(--text-primary)] tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2 font-display">
                 <span>Meeting Hub</span>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/25">
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/25">
                   Google & Teams
                 </span>
               </h3>
@@ -166,6 +184,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
 
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1.5 sm:p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-colors cursor-pointer flex-shrink-0"
           >
             <X className="w-5 h-5" />
@@ -178,11 +197,11 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             onClick={() => setActiveTab('instant')}
             className={`py-2.5 sm:py-3 px-2.5 sm:px-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer flex-shrink-0 ${
               activeTab === 'instant'
-                ? 'border-[#DC2626] text-red-600 font-bold'
+                ? 'border-[var(--brand-primary,#dc2626)] text-[var(--brand-primary,#dc2626)] font-semibold'
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-red-600" />
+            <Sparkles className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
             <span>Instant Launcher</span>
           </button>
 
@@ -190,11 +209,11 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             onClick={() => setActiveTab('active')}
             className={`py-3 px-3 border-b-2 flex items-center gap-2 transition-all cursor-pointer relative ${
               activeTab === 'active'
-                ? 'border-[#DC2626] text-red-600 font-bold'
+                ? 'border-[var(--brand-primary,#dc2626)] text-[var(--brand-primary,#dc2626)] font-semibold'
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Radio className="w-3.5 h-3.5 text-emerald-600" />
+            <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Active Bridge</span>
             {activeBridge && (
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -205,7 +224,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             onClick={() => setActiveTab('settings')}
             className={`py-3 px-3 border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'settings'
-                ? 'border-[#DC2626] text-red-600 font-bold'
+                ? 'border-[var(--brand-primary,#dc2626)] text-[var(--brand-primary,#dc2626)] font-semibold'
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
@@ -220,7 +239,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
             <>
               {/* Provider Selection */}
               <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2.5">
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2.5">
                   1. Select Platform
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -264,7 +283,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
 
               {/* Title Input */}
               <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
                   2. Meeting Title
                 </label>
                 <input
@@ -272,7 +291,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Sprint Sync with Engineering"
-                  className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-sm text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]/20 transition-all font-medium shadow-xs"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-sm text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 transition-all font-medium shadow-xs"
                 />
 
                 {/* Quick Topic Chips */}
@@ -282,7 +301,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       key={topic}
                       type="button"
                       onClick={() => setTitle(topic)}
-                      className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-2)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                     >
                       {topic}
                     </button>
@@ -335,7 +354,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   type="button"
                   onClick={handleGenerate}
                   disabled={!title.trim() || isGenerating}
-                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] disabled:opacity-50 text-white font-bold text-sm shadow-md shadow-red-600/30 border border-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full h-12 rounded-2xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] disabled:opacity-50 text-white font-semibold text-sm shadow-sm border border-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isGenerating ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -443,7 +462,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                     <button
                       type="button"
                       onClick={handleRemoveBridge}
-                      className="px-3 h-9 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors cursor-pointer"
+                      className="px-3 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/25 text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Disconnect Bridge
                     </button>
@@ -452,7 +471,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-center">
                   <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] flex items-center justify-center mb-3 text-[var(--text-muted)] shadow-xs">
-                    <Radio className="w-6 h-6 text-red-600" />
+                    <Radio className="w-6 h-6 text-[var(--brand-primary,#dc2626)]" />
                   </div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 font-display">No Active Meeting Bridge</h4>
                   <p className="text-xs text-[var(--text-muted)] max-w-xs mb-4">
@@ -460,7 +479,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   </p>
                   <button
                     onClick={() => setActiveTab('instant')}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] text-white text-xs font-semibold hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
                   >
                     Launch a Meeting Now
                   </button>

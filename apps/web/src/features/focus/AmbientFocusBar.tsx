@@ -148,11 +148,11 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
   );
 
   return (
-    <div className="absolute top-16 right-4 z-40 w-80 sm:w-96 bg-[var(--bg-surface-0)]/95 backdrop-blur-2xl border border-[var(--border-subtle)] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fadeIn select-none">
+    <div className="absolute top-16 right-4 z-40 w-80 sm:w-96 bg-[var(--bg-surface-0)]/95 backdrop-blur-2xl border border-[var(--border-subtle)] rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden flex flex-col animate-fadeIn select-none">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#BF5AF2] to-[#FF375F] flex items-center justify-center text-white shadow-sm">
+          <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary,#dc2626)] flex items-center justify-center text-white shadow-xs">
             <Headphones className="w-4 h-4" />
           </div>
           <div>
@@ -174,10 +174,10 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
 
       <div className="p-4 space-y-4">
         {/* Pomodoro Timer Hero Card */}
-        <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#1E2235]/60 to-[#141622]/80 border border-[#2B304A] flex items-center justify-between">
+        <div className="p-3.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center justify-between">
           <div>
             <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 mb-0.5 ${
-              pomodoro.state === 'SHORT_BREAK' ? 'text-[#30D158]' : 'text-[#BF5AF2]'
+              pomodoro.state === 'SHORT_BREAK' ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--brand-primary,#dc2626)]'
             }`}>
               {pomodoro.state === 'SHORT_BREAK' ? (
                 <>
@@ -191,7 +191,7 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
                 </>
               )}
             </span>
-            <div className="text-3xl font-mono font-bold text-white tracking-tight">
+            <div className="text-3xl font-mono font-bold text-[var(--text-primary)] tracking-tight">
               {timeFormatted}
             </div>
             <span className="text-[10px] text-[var(--text-muted)]">
@@ -202,10 +202,10 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePomodoroAction(pomodoro.isRunning ? 'PAUSE' : 'START')}
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 cursor-pointer ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer ${
                 pomodoro.isRunning
-                  ? 'bg-[#FF9F0A] text-black'
-                  : 'bg-[#5E5CE6] text-white hover:bg-[#5E5CE6]/90'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-[var(--brand-primary,#dc2626)] text-white hover:brightness-105'
               }`}
               title={pomodoro.isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
             >
@@ -213,7 +213,7 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
             </button>
             <button
               onClick={() => handlePomodoroAction('RESET')}
-              className="p-2.5 rounded-full bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-white transition-colors cursor-pointer"
+              className="p-2.5 rounded-full bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               title="Reset Timer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
 
         {/* Ambient Track Selector */}
         <div>
-          <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-2">
+          <span className="text-xs font-medium text-[var(--text-secondary)] block mb-2">
             Ambient Sound Engine
           </span>
           <div className="grid grid-cols-2 gap-2">
@@ -236,7 +236,7 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
                   onClick={() => handleSelectTrack(t.id)}
                   className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)] border-[#5E5CE6] shadow-sm'
+                      ? 'bg-[var(--bg-surface-2)] text-[var(--text-primary)] border-[var(--brand-primary,#dc2626)] shadow-xs'
                       : 'bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)]'
                   }`}
                 >
@@ -257,7 +257,7 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
         <div className="space-y-2.5 pt-1 border-t border-[var(--border-subtle)] text-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5 text-[#5E5CE6]" />
+              <Volume2 className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
               <span>Ambient Volume</span>
             </span>
             <span className="font-mono text-[11px] text-[var(--text-muted)]">
@@ -271,12 +271,12 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
             step="0.05"
             value={volume}
             onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-[var(--bg-surface-2)] rounded-lg appearance-none cursor-pointer accent-[#5E5CE6]"
+            className="w-full h-1.5 bg-[var(--bg-surface-2)] rounded-lg appearance-none cursor-pointer accent-[var(--brand-primary,#dc2626)]"
           />
 
           <div className="flex items-center justify-between pt-1">
             <span className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5 text-[#30D158]" />
+              <Sliders className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>3D Spatial Pan</span>
             </span>
             <span className="font-mono text-[11px] text-[var(--text-muted)]">
@@ -290,17 +290,17 @@ export const AmbientFocusBar: React.FC<AmbientFocusBarProps> = ({ roomId, isOpen
             step="0.1"
             value={spatialPan}
             onChange={(e) => handleSpatialChange(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-[var(--bg-surface-2)] rounded-lg appearance-none cursor-pointer accent-[#30D158]"
+            className="w-full h-1.5 bg-[var(--bg-surface-2)] rounded-lg appearance-none cursor-pointer accent-emerald-500"
           />
         </div>
 
         {/* Play / Mute Sound Toggle Button */}
         <button
           onClick={handleToggleSound}
-          className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
+          className={`w-full py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer ${
             isPlayingSound
-              ? 'bg-[#FF453A]/20 text-[#FF453A] border border-[#FF453A]/30 hover:bg-[#FF453A]/30'
-              : 'bg-[#5E5CE6] text-white hover:bg-[#5E5CE6]/90'
+              ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/25 hover:bg-rose-500/20'
+              : 'bg-[var(--brand-primary,#dc2626)] text-white hover:brightness-105 active:scale-[0.98]'
           }`}
         >
           {isPlayingSound ? (

@@ -117,12 +117,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-2xl flex flex-col">
+      <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
         {/* Banner Area */}
-        <div className="h-28 bg-gradient-to-r from-red-950 via-zinc-900 to-cyan-950 relative">
+        <div className="h-28 bg-[var(--bg-surface-2)] border-b border-[var(--border-subtle)] relative">
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white/80 hover:text-white transition-colors cursor-pointer"
+            aria-label="Close profile"
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -132,12 +133,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         <div className="px-6 pb-6 pt-0 relative flex-1">
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[var(--brand-primary,#dc2626)] border-t-transparent rounded-full animate-spin" />
               <span className="text-xs text-[var(--text-secondary)] font-display">Loading profile...</span>
             </div>
           ) : error ? (
             <div className="py-12 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 mb-3">
                 <Lock className="w-6 h-6 stroke-[1.8]" />
               </div>
               <h4 className="text-sm font-bold text-[var(--text-primary)]">Restricted Profile Access</h4>
@@ -150,7 +151,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     onClose();
                     setUpgradeModalOpen(true);
                   }}
-                  className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                  className="mt-4 px-4 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.985] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
                 >
                   Claim Permanent Developer Account
                 </button>
@@ -168,7 +169,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       className="w-20 h-20 rounded-2xl border-4 border-[var(--bg-surface-0)] object-cover shadow-xl"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl border-4 border-[var(--bg-surface-0)] bg-gradient-to-br from-[#DC2626] to-[#991B1B] text-white text-2xl font-bold flex items-center justify-center shadow-xl">
+                    <div className="w-20 h-20 rounded-2xl border-4 border-[var(--bg-surface-0)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] text-2xl font-bold flex items-center justify-center shadow-xl border border-[var(--border-subtle)]">
                       {profile.displayName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -189,17 +190,17 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 {/* Tier Badge */}
                 <div>
                   {profile.userTier === 'ORG' ? (
-                    <span className="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                    <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 shadow-xs">
                       <Building2 className="w-3.5 h-3.5" />
                       <span>{profile.organizationName || 'Enterprise Org'}</span>
                     </span>
                   ) : profile.userTier === 'NON_ORG' ? (
-                    <span className="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-700 dark:text-cyan-300 text-xs font-semibold flex items-center gap-1.5 shadow-xs">
                       <Shield className="w-3.5 h-3.5" />
                       <span>Independent Creator • Dev</span>
                     </span>
                   ) : (
-                    <span className="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-1.5 shadow-xs">
                       <User className="w-3.5 h-3.5" />
                       <span>Guest User</span>
                     </span>
@@ -329,7 +330,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       onClose();
                       setUpgradeModalOpen(true);
                     }}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Shield className="w-3.5 h-3.5" />
                     <span>Upgrade to Contact Dev</span>

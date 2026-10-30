@@ -71,8 +71,8 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
       <div
         className={`px-4 py-3 flex items-start justify-between gap-3 border-b ${
           isGoogle
-            ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/15'
-            : 'bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent border-indigo-500/15'
+            ? 'bg-emerald-500/10 border-emerald-500/20'
+            : 'bg-indigo-500/10 border-indigo-500/20'
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -138,7 +138,7 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
         {/* Meeting Code Badge & Creator */}
         <div className="flex items-center justify-between text-xs text-[var(--text-muted)] flex-wrap gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Meeting Code:</span>
+            <span className="text-xs font-medium text-[var(--text-muted)]">Meeting Code:</span>
             <span className="font-mono font-bold text-xs text-[var(--text-primary)] bg-[var(--bg-surface-1)] px-2.5 py-0.5 rounded-lg border border-[var(--border-subtle)]">
               {meeting.meetingCode}
             </span>

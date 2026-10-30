@@ -52,13 +52,13 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
       />
 
       <aside className="fixed sm:relative inset-y-0 right-0 w-full sm:w-72 h-full bg-[var(--bg-surface-0)] border-l border-[var(--border-subtle)] backdrop-blur-2xl p-4 flex flex-col select-none z-50 sm:z-20 shadow-2xl sm:shadow-none animate-slide-left transition-all">
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center justify-between">
+        <div className="text-xs font-medium text-[var(--text-muted)] mb-3 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
-            <Users className="w-3.5 h-3.5 text-[#5E5CE6]" />
+            <Users className="w-3.5 h-3.5 text-[var(--brand-primary,#6366f1)]" />
             <span>Stage Members</span>
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="px-2 py-0.5 rounded-full bg-[#5E5CE6]/20 text-[#5E5CE6] border border-[#5E5CE6]/30 text-[10px] font-bold">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--brand-primary,#6366f1)]/15 text-[var(--brand-primary,#6366f1)] border border-[var(--brand-primary,#6366f1)]/25 text-[10px] font-semibold">
               {participants.length}
             </span>
             {onClose && (
@@ -180,7 +180,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
               {/* Host Action Dropdown */}
               {isMenuOpen && (
                 <div className="absolute right-2 top-10 p-2 rounded-[16px] bg-[var(--bg-surface-0)] backdrop-blur-2xl border border-[var(--border-subtle)] shadow-2xl z-40 w-44 space-y-1">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
+                  <div className="px-2 py-1 text-[11px] font-medium text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
                     Host Controls
                   </div>
                   <button
@@ -190,7 +190,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                     }}
                     className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-[var(--text-primary)] text-left transition-colors cursor-pointer"
                   >
-                    <MicOff className="w-3.5 h-3.5 text-[#FF9F0A]" />
+                    <MicOff className="w-3.5 h-3.5 text-amber-500" />
                     <span>Mute Participant</span>
                   </button>
                   <button
@@ -200,7 +200,7 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                     }}
                     className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/[0.06] hover:text-[var(--text-primary)] text-left transition-colors cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-[#BF5AF2]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--brand-primary,#6366f1)]" />
                     <span>Change Host</span>
                   </button>
                   <button
@@ -208,9 +208,9 @@ export const ParticipantTray: React.FC<ParticipantTrayProps> = ({
                       onHostAction?.('KICK', p.userId);
                       setActiveMenuUserId(null);
                     }}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[#FF453A] hover:bg-[#FF453A]/15 hover:text-white text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 text-left transition-colors cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5 text-[#FF453A]" />
+                    <X className="w-3.5 h-3.5 text-rose-500" />
                     <span>Remove from Room</span>
                   </button>
                 </div>

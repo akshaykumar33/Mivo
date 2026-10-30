@@ -53,23 +53,20 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
   const urgentCount = tickets.filter((t) => t.priority === 'URGENT').length;
 
   return (
-    <div className="w-full h-full min-h-[300px] rounded-3xl bg-gradient-to-b from-[#131627] via-[#0E101A] to-[#0A0C14] border-2 border-violet-500/40 shadow-2xl shadow-violet-950/40 relative flex flex-col overflow-hidden animate-scale-in">
-      {/* Ambient Top Glow */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/50" />
-
+    <div className="w-full h-full min-h-[300px] rounded-3xl bg-[var(--bg-surface-0,#10131e)] border border-[var(--border-subtle,rgba(255,255,255,0.1))] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] relative flex flex-col overflow-hidden animate-scale-in">
       {/* Header Bar */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-white/[0.08] bg-white/[0.02] backdrop-blur-md z-10">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-xl bg-violet-600/30 text-violet-300 border border-violet-500/30 shadow-inner">
-            <Bot className="w-4 h-4 text-cyan-400 animate-pulse" />
+          <div className="p-1.5 rounded-xl bg-[var(--brand-primary,#6366f1)]/10 text-[var(--brand-primary,#6366f1)] border border-[var(--brand-primary,#6366f1)]/20">
+            <Bot className="w-4 h-4 text-cyan-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-xs sm:text-sm font-extrabold text-white tracking-wide font-display">
+              <h4 className="text-xs sm:text-sm font-semibold text-white tracking-wide font-display">
                 {payload.title}
               </h4>
-              <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-black tracking-wider uppercase">
-                {payload.badge || 'LIVE STAGE SYNC'}
+              <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[10px] font-medium">
+                {payload.badge || 'Live Stage Sync'}
               </span>
             </div>
             <p className="text-[11px] text-white/50 truncate max-w-xs sm:max-w-md">
@@ -163,9 +160,9 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
                     {/* Blocker Callout Box */}
                     {t.isBlocker && t.blockerReason && (
                       <div className="mt-2 p-2 rounded-xl bg-black/40 border border-rose-500/30 text-[11px] text-rose-200/90 leading-relaxed font-sans">
-                        <strong className="text-rose-400 font-bold uppercase tracking-wider text-[9px] flex items-center gap-1 mb-0.5">
+                        <strong className="text-rose-400 font-semibold text-[10px] flex items-center gap-1 mb-0.5">
                           <AlertTriangle className="w-3 h-3 text-rose-400" />
-                          <span>Active Blocker Summary</span>
+                          <span>Active blocker summary</span>
                         </strong>
                         {t.blockerReason}
                       </div>
@@ -176,9 +173,9 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
                 {/* Priority & Assignee Badges */}
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                       isUrgent
-                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/40 animate-pulse'
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                         : isHigh
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                         : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
@@ -189,7 +186,7 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
 
                   <div className="flex items-center gap-1 text-[11px] text-white/70 bg-white/[0.05] px-2 py-0.5 rounded-lg border border-white/[0.06]">
                     <User className="w-3 h-3 text-cyan-400" />
-                    <span className="font-semibold truncate max-w-[90px]">
+                    <span className="font-medium truncate max-w-[90px]">
                       {t.assignee}
                     </span>
                   </div>
@@ -216,7 +213,7 @@ export const AiPinnedDataTile: React.FC<AiPinnedDataTileProps> = ({
         {onOpenTicketsModal && (
           <button
             onClick={onOpenTicketsModal}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-[11px] shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--brand-primary,#6366f1)] hover:opacity-90 active:scale-[0.98] text-white font-semibold text-[11px] shadow-xs transition-all cursor-pointer"
           >
             <span>Open Tickets Hub</span>
             <ExternalLink className="w-3 h-3" />

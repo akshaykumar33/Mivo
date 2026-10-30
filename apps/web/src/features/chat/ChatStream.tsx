@@ -893,11 +893,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
       {/* Typing Indicator Bar */}
       {typingNames.length > 0 && (
-        <div className="px-4 py-1 flex items-center gap-2 text-[11px] text-red-600 bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] flex-shrink-0 animate-fade-in font-medium">
+        <div className="px-4 py-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)] bg-[var(--bg-surface-0)] border-t border-[var(--border-subtle)] flex-shrink-0 animate-fade-in font-medium">
           <div className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-bounce" />
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-bounce [animation-delay:0.2s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-bounce [animation-delay:0.4s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse [animation-delay:200ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-pulse [animation-delay:400ms]" />
           </div>
           <span>
             {typingNames.length === 1

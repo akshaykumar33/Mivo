@@ -36,6 +36,18 @@ export const NotificationCenterModal: React.FC = () => {
   const { setIsModalOpen: setIsTicketModalOpen } = useTicketStore();
 
   React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCenterOpen(false);
+      }
+    };
+    if (isCenterOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCenterOpen, setIsCenterOpen]);
+
+  React.useEffect(() => {
     if (isCenterOpen) {
       fetchNotifications();
     }
@@ -61,30 +73,30 @@ export const NotificationCenterModal: React.FC = () => {
   const getCategoryIcon = (type: string) => {
     switch (type) {
       case 'MESSAGE':
-        return <MessageSquare className="w-4 h-4 text-[#0A84FF]" />;
+        return <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
       case 'CALL':
-        return <PhoneCall className="w-4 h-4 text-[#30D158]" />;
+        return <PhoneCall className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
       case 'MEETING':
-        return <Video className="w-4 h-4 text-[#BF5AF2]" />;
+        return <Video className="w-4 h-4 text-purple-600 dark:text-purple-400" />;
       case 'TICKET':
-        return <Ticket className="w-4 h-4 text-[#FF9F0A]" />;
+        return <Ticket className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
       default:
-        return <Bell className="w-4 h-4 text-[#64D2FF]" />;
+        return <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
     }
   };
 
   const getCategoryBg = (type: string) => {
     switch (type) {
       case 'MESSAGE':
-        return 'bg-[#0A84FF]/10 border-[#0A84FF]/25';
+        return 'bg-blue-500/10 border-blue-500/20';
       case 'CALL':
-        return 'bg-[#30D158]/10 border-[#30D158]/25';
+        return 'bg-emerald-500/10 border-emerald-500/20';
       case 'MEETING':
-        return 'bg-[#BF5AF2]/10 border-[#BF5AF2]/25';
+        return 'bg-purple-500/10 border-purple-500/20';
       case 'TICKET':
-        return 'bg-[#FF9F0A]/10 border-[#FF9F0A]/25';
+        return 'bg-amber-500/10 border-amber-500/20';
       default:
-        return 'bg-[#64D2FF]/10 border-[#64D2FF]/25';
+        return 'bg-sky-500/10 border-sky-500/20';
     }
   };
 
@@ -122,7 +134,12 @@ export const NotificationCenterModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in select-none">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="notification-center-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in select-none"
+    >
       {/* Backdrop */}
       <div
         onClick={() => setIsCenterOpen(false)}
@@ -130,18 +147,18 @@ export const NotificationCenterModal: React.FC = () => {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
+      <div className="relative w-full max-w-xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl flex flex-col overflow-hidden z-10 animate-scale-up">
         {/* Top Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-[0_4px_16px_rgba(220,38,38,0.4)]">
-              <Bell className="w-5 h-5 text-white stroke-[2.2]" />
+            <div className="w-10 h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] flex items-center justify-center shadow-xs text-white">
+              <Bell className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight flex items-center gap-2">
+              <h2 id="notification-center-title" className="text-base font-bold text-[var(--text-primary)] font-display tracking-tight flex items-center gap-2">
                 Notifications Hub
                 {counts.ALL > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-[#DC2626] border border-red-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-[var(--brand-primary,#dc2626)] border border-red-500/20">
                     {counts.ALL} unread
                   </span>
                 )}
@@ -159,12 +176,13 @@ export const NotificationCenterModal: React.FC = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                 title="Mark all as read"
               >
-                <CheckCheck className="w-3.5 h-3.5 text-[#059669]" />
+                <CheckCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span className="hidden sm:inline">Mark all read</span>
               </button>
             )}
             <button
               onClick={() => setIsCenterOpen(false)}
+              aria-label="Close dialog"
               className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -191,7 +209,7 @@ export const NotificationCenterModal: React.FC = () => {
                 onClick={() => setFilter(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                   active
-                    ? 'bg-gradient-to-r from-[#DC2626] to-[#991B1B] text-white shadow-md'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
                     : 'bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -200,7 +218,7 @@ export const NotificationCenterModal: React.FC = () => {
                 {count > 0 && (
                   <span
                     className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      active ? 'bg-white/30 text-white' : 'bg-red-500/20 text-[#DC2626]'
+                      active ? 'bg-white/30 text-white' : 'bg-red-500/20 text-[var(--brand-primary,#dc2626)]'
                     }`}
                   >
                     {count}
@@ -256,8 +274,8 @@ export const NotificationCenterModal: React.FC = () => {
                   onClick={() => handleAction(n)}
                   className={`group relative p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 ${
                     n.isRead
-                      ? 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] hover:border-black/10'
-                      : 'bg-gradient-to-r from-red-500/10 via-amber-500/5 to-transparent border-red-500/30 shadow-xs hover:border-red-500/50'
+                      ? 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] hover:bg-[var(--bg-surface-2)] hover:border-black/10 dark:hover:border-white/10'
+                      : 'bg-red-500/5 dark:bg-red-500/10 border-red-500/25 shadow-xs hover:border-red-500/40'
                   }`}
                 >
                   {/* Category Icon Badge */}

@@ -111,7 +111,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
             <button
               type="button"
               onClick={() => setIsCustomizing(false)}
-              className="py-2 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition-colors cursor-pointer"
+              className="py-2 px-3 rounded-xl bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-1)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] font-medium text-xs transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -123,7 +123,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
             type="button"
             onClick={() => handleGuestLogin()}
             disabled={isLoading}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="flex-1 py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -138,7 +138,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
           <button
             type="button"
             onClick={() => setIsCustomizing(true)}
-            className="py-2.5 px-3 rounded-xl bg-white hover:bg-amber-50 border border-amber-300/80 text-amber-800 text-xs font-semibold transition-colors cursor-pointer"
+            className="py-2.5 px-3 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
             title="Set custom nickname"
           >
             Customize
@@ -147,7 +147,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
       )}
 
       {/* Guest Mode Restrictions Summary */}
-      <div className="mt-3 pt-2.5 border-t border-amber-500/15 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-amber-800/80 font-medium">
+      <div className="mt-3 pt-2.5 border-t border-amber-500/15 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-amber-800 dark:text-amber-400 font-medium">
         <span className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
           2MB File Upload Limit
