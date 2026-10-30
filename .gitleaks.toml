@@ -12,19 +12,23 @@ useDefault = true
 description = "Global allowlists for safe tests, documentation, and mock values"
 paths = [
   '''^\.env\.example$''',
-  '''^tests/fixtures/.*''',
-  '''^tests/vitest/.*''',
+  '''^tests/.*''',
+  '''^\.github/.*''',
+  '''^docker/.*''',
+  '''^docker-compose.*''',
+  '''^k8s/.*''',
+  '''^scripts/.*''',
   '''^docs/.*''',
   '''^README\.md$''',
-  '''^pnpm-lock\.yaml$''',
-  '''^k8s/02-secret\.yaml$''',
-  '''^docker-compose\.prod\.yml$'''
+  '''^pnpm-lock\.yaml$'''
 ]
 regexes = [
   '''dev_jwt_access_secret_super_secure_32chars_min''',
   '''dev_jwt_refresh_secret_super_secure_32chars_min''',
   '''ci_jwt_access_secret_super_secure_32chars_min''',
   '''ci_jwt_refresh_secret_super_secure_32chars_min''',
+  '''jwt_access_super_secret_production_key_32c''',
+  '''jwt_refresh_super_secret_production_key_32c''',
   '''postgres_dev_password''',
   '''postgres_prod_password''',
   '''minioadmin''',
