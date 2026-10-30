@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UsersModule } from './users/users.module.js';
 import { CommunitiesModule } from './communities/communities.module.js';
@@ -11,14 +12,15 @@ import { AiModule } from './ai/ai.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { ConversationsModule } from './conversations/conversations.module.js';
 import { MeetingsModule } from './meetings/meetings.module.js';
-
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { TicketsModule } from './tickets/tickets.module.js';
 import { SandboxModule } from './sandbox/sandbox.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
+import { SecurityAuditService } from './common/security-audit.service.js';
 
 @Module({
   imports: [
+    HealthModule,
     AuthModule,
     UsersModule,
     RbacModule,
@@ -36,5 +38,7 @@ import { ProjectsModule } from './projects/projects.module.js';
     SandboxModule,
     ProjectsModule,
   ],
+  providers: [SecurityAuditService],
+  exports: [SecurityAuditService],
 })
 export class AppModule {}
