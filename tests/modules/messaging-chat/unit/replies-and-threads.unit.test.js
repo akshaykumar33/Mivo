@@ -15,21 +15,21 @@ console.log('══════════════════════�
 console.log('1. Validating SendMessageSchema with WhatsApp quote reply...');
 const validReply = SendMessageSchema.safeParse({
   content: 'Replying to your comment about Redis queues',
-  replyToId: '11111111-2222-3333-4444-555555555555',
+  replyToId: '11111111-2222-4333-8444-555555555555',
 });
 assert.equal(validReply.success, true, 'Valid reply should parse successfully');
-assert.equal(validReply.data.replyToId, '11111111-2222-3333-4444-555555555555');
+assert.equal(validReply.data.replyToId, '11111111-2222-4333-8444-555555555555');
 console.log('   ✅ Valid replyToId parsed in SendMessageSchema');
 
 // 2. Slack Thread Reply Schema Validation
 console.log('2. Validating SendMessageSchema with Slack thread reply & broadcast...');
 const validThreadReply = SendMessageSchema.safeParse({
   content: 'Here is the detailed thread explanation',
-  threadId: '99999999-8888-7777-6666-555555555555',
+  threadId: '99999999-8888-4777-8666-555555555555',
   isThreadBroadcast: true,
 });
 assert.equal(validThreadReply.success, true, 'Valid thread reply should parse successfully');
-assert.equal(validThreadReply.data.threadId, '99999999-8888-7777-6666-555555555555');
+assert.equal(validThreadReply.data.threadId, '99999999-8888-4777-8666-555555555555');
 assert.equal(validThreadReply.data.isThreadBroadcast, true);
 console.log('   ✅ Valid threadId and isThreadBroadcast parsed in SendMessageSchema');
 
@@ -37,13 +37,13 @@ console.log('   ✅ Valid threadId and isThreadBroadcast parsed in SendMessageSc
 console.log('3. Validating SendDirectMessageSchema for 1-on-1 & Group DMs...');
 const validDmThread = SendDirectMessageSchema.safeParse({
   content: 'Direct message thread response',
-  replyToId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-  threadId: 'ffffffff-0000-1111-2222-333333333333',
+  replyToId: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+  threadId: 'ffffffff-0000-4111-8222-333333333333',
   isThreadBroadcast: false,
 });
 assert.equal(validDmThread.success, true, 'DM thread should parse successfully');
-assert.equal(validDmThread.data.replyToId, 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
-assert.equal(validDmThread.data.threadId, 'ffffffff-0000-1111-2222-333333333333');
+assert.equal(validDmThread.data.replyToId, 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee');
+assert.equal(validDmThread.data.threadId, 'ffffffff-0000-4111-8222-333333333333');
 assert.equal(validDmThread.data.isThreadBroadcast, false);
 console.log('   ✅ Valid SendDirectMessageSchema verified');
 

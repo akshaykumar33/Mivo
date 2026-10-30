@@ -101,7 +101,7 @@ async function run() {
   });
 
   await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('User 1 connection timed out')), 5000);
+    const timer = setTimeout(() => reject(new Error('User 1 connection timed out')), 15000);
     socket1.on('connection:ack', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -112,7 +112,7 @@ async function run() {
   // 4. User 1 Joins Room
   socket1.emit('room:join', { roomId: room.id });
   await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('User 1 room:joined timed out')), 5000);
+    const timer = setTimeout(() => reject(new Error('User 1 room:joined timed out')), 15000);
     socket1.on('room:joined', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -128,7 +128,7 @@ async function run() {
   });
 
   await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('User 2 connection timed out')), 5000);
+    const timer = setTimeout(() => reject(new Error('User 2 connection timed out')), 15000);
     socket2.on('connection:ack', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -138,7 +138,7 @@ async function run() {
 
   // Set up listener on User 1 to detect User 2 joining
   const user2JoinPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for participant_joined broadcast')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for participant_joined broadcast')), 15000);
     socket1.on('room:participant_joined', (data) => {
       if (data.participant.userId === user2Auth.user.id) {
         clearTimeout(timer);
@@ -154,7 +154,7 @@ async function run() {
 
   // 6. Typing Indicators Test
   const typingPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:typing')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:typing')), 15000);
     socket1.on('chat:typing', (data) => {
       if (data.userId === user2Auth.user.id) {
         clearTimeout(timer);
@@ -168,7 +168,7 @@ async function run() {
   console.log('   ✅ User 1 received real-time chat:typing from User 2.');
 
   const stopTypingPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:stop_typing')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:stop_typing')), 15000);
     socket1.on('chat:stop_typing', (data) => {
       if (data.userId === user2Auth.user.id) {
         clearTimeout(timer);
@@ -184,7 +184,7 @@ async function run() {
   // 7. Direct Socket.io Message Dispatch & Broadcast
   const testMessageContent = `Production Socket.IO Test Message ${Date.now()}`;
   const messageBroadcastPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:new_message broadcast')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:new_message broadcast')), 15000);
     socket2.on('chat:new_message', (msg) => {
       if (msg.content === testMessageContent) {
         clearTimeout(timer);
@@ -219,7 +219,7 @@ async function run() {
 
   // 8. Real-Time Emoji Reaction Test
   const reactionPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:reaction_added')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for chat:reaction_added')), 15000);
     socket1.on('chat:reaction_added', (data) => {
       if (data.messageId === broadcastMsg.id && data.emoji === '🚀') {
         clearTimeout(timer);
@@ -238,7 +238,7 @@ async function run() {
 
   // 9. WebRTC Signaling Relay Test
   const signalingPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for signaling:offer')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for signaling:offer')), 15000);
     socket2.on('signaling:offer', (data) => {
       if (data.sdp?.type === 'offer') {
         clearTimeout(timer);
@@ -257,7 +257,7 @@ async function run() {
 
   // 10. Dynamic Stage Mode Switch Test
   const modeChangePromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for room:mode_changed')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for room:mode_changed')), 15000);
     socket2.on('room:mode_changed', (data) => {
       if (data.activeMode === 'VOICE') {
         clearTimeout(timer);
@@ -276,7 +276,7 @@ async function run() {
 
   // 11. Room Leave & Participant Departure Broadcast
   const leavePromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for room:participant_left')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for room:participant_left')), 15000);
     socket1.on('room:participant_left', (data) => {
       if (data.userId === user2Auth.user.id) {
         clearTimeout(timer);

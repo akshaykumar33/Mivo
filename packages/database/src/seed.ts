@@ -215,7 +215,7 @@ export async function seed() {
       PERMISSIONS.VIDEO_PUBLISH,
       PERMISSIONS.SCREEN_SHARE,
     ];
-    for (const perm of allPermissions.filter((p) => memberPermKeys.includes(p.key as any))) {
+    for (const perm of allPermissions.filter((p: any) => memberPermKeys.includes(p.key as any))) {
       await prisma.rolePermission.upsert({
         where: { roleId_permissionId: { roleId: memberRole.id, permissionId: perm.id } },
         update: {},

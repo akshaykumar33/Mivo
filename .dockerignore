@@ -1,0 +1,43 @@
+# Version control & IDEs
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Dependencies & Build Caches
+node_modules
+.pnpm-store
+.turbo
+.next
+dist
+build
+*.tsbuildinfo
+
+# Test Artifacts & Logs
+coverage
+playwright-report
+test-results
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & Secrets (Never bake into images)
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+
+# Local media, uploads, scratch
+uploads/
+tmp/
+temp/
+docs/
+prompts/
+tests/
+e2e/
+scripts/test-*
+

@@ -42,13 +42,13 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @mivo/server start:prod',
-      url: 'http://localhost:4000/api/v1/auth/me',
+      url: 'http://localhost:4000/health',
       reuseExistingServer: true,
       timeout: 120000,
     },
     {
       command: 'pnpm --filter @mivo/web start',
-      url: 'http://localhost:3000',
+      url: 'http://localhost:3000/api/health',
       reuseExistingServer: true,
       timeout: 120000,
     },
