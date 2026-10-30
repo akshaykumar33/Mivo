@@ -28,8 +28,11 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_URL="http://localhost:4000"
 ENV NEXT_PUBLIC_WS_URL="http://localhost:4000"
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/mivo"
+ENV DIRECT_URL="postgresql://dummy:dummy@localhost:5432/mivo"
 
-# Build dependencies and web application
+# Ensure public folder exists and build dependencies and web application
+RUN mkdir -p /app/apps/web/public
 RUN pnpm --filter @mivo/shared run build
 RUN pnpm --filter @mivo/ui run build
 RUN pnpm --filter @mivo/web run build

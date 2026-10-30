@@ -25,6 +25,7 @@ env:
   NODE_VERSION: '20'
   PNPM_VERSION: '10.33.0'
   TURBO_TELEMETRY_DISABLED: '1'
+  DIRECT_URL: 'postgresql://postgres:postgres_dev_password@localhost:5433/mivo_dev?schema=public'
 
 jobs:
   # ----------------------------------------------------------------------------
@@ -244,6 +245,7 @@ jobs:
       CI: 'true'
       PORT: '4000'
       DATABASE_URL: 'postgresql://postgres:postgres_dev_password@localhost:5433/mivo_dev?schema=public'
+      DIRECT_URL: 'postgresql://postgres:postgres_dev_password@localhost:5433/mivo_dev?schema=public'
       REDIS_URL: 'redis://localhost:6379'
       JWT_ACCESS_SECRET: 'ci_jwt_access_secret_super_secure_32chars_min'
       JWT_REFRESH_SECRET: 'ci_jwt_refresh_secret_super_secure_32chars_min'
