@@ -172,8 +172,8 @@ export const UpgradeGuestModal: React.FC = () => {
               </div>
 
               {/* What You Unlock Feature Highlights */}
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200/60 text-[11px] text-[#4B5563] space-y-1 mt-2">
-                <div className="font-bold text-[#111827] text-xs mb-1 flex items-center gap-1.5">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200/60 text-[11px] text-[var(--text-secondary)] space-y-1 mt-2">
+                <div className="font-bold text-[var(--text-primary)] text-xs mb-1 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
                   What you unlock:
                 </div>

@@ -94,13 +94,13 @@ export const ConversationsSidebar: React.FC = () => {
             <button
               type="button"
               onClick={toggleMobileSidebar}
-              className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
+              className="md:hidden p-1.5 -ml-1 rounded-xl bg-black/5 hover:bg-black/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer mr-0.5 flex-shrink-0"
               title="Open workspaces menu"
             >
               <Menu className="w-4 h-4" />
             </button>
             <MessageSquare className="w-4 h-4 text-[#DC2626] flex-shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#111827] font-display">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] font-display">
               Conversations
             </span>
           </div>
@@ -124,7 +124,7 @@ export const ConversationsSidebar: React.FC = () => {
               placeholder="Find or start conversation..."
               value={filterQuery}
               onChange={(e) => setFilterQuery(e.target.value)}
-              className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+              className="w-full bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
             />
           </div>
         </div>
@@ -136,7 +136,7 @@ export const ConversationsSidebar: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3 text-amber-600">
                 <Users className="w-5 h-5" />
               </div>
-              <p className="text-xs font-bold text-[#111827] mb-1">Guest Mode Active</p>
+              <p className="text-xs font-bold text-[var(--text-primary)] mb-1">Guest Mode Active</p>
               <p className="text-[11px] text-[var(--text-muted)] mb-3 leading-relaxed">
                 Guest accounts cannot message others or participate in calls. Upgrade to connect directly.
               </p>
@@ -186,8 +186,8 @@ export const ConversationsSidebar: React.FC = () => {
                   onClick={() => selectConversation(c.id)}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer ${
                     isActive
-                      ? 'bg-[#DC2626]/10 border border-[#DC2626]/30 text-[#111827] shadow-sm font-semibold'
-                      : 'hover:bg-black/[0.04] text-[var(--text-secondary)] hover:text-[#111827] border border-transparent'
+                      ? 'bg-[#DC2626]/10 border border-[#DC2626]/30 text-[var(--text-primary)] shadow-sm font-semibold'
+                      : 'hover:bg-black/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -214,7 +214,7 @@ export const ConversationsSidebar: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-xs font-bold truncate text-[#111827]">{title}</span>
+                        <span className="text-xs font-bold truncate text-[var(--text-primary)]">{title}</span>
                         {!isGroup && otherCustomStatus && (
                           <span
                             className="text-[10px] text-[#DC2626] bg-red-500/10 px-1 rounded truncate max-w-[90px] font-semibold"
@@ -259,7 +259,7 @@ export const ConversationsSidebar: React.FC = () => {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-[#111827] truncate group-hover:text-[#DC2626] transition-colors">
+            <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-[#DC2626] transition-colors">
               {user?.displayName || user?.username}
             </div>
             <div className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">

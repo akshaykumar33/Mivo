@@ -483,7 +483,7 @@ export const ConversationView: React.FC = () => {
             className={`gap-1.5 sm:gap-2 transition-all duration-200 text-xs px-2.5 sm:px-3 ${
               activeBridge
                 ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 border-emerald-500/40 shadow-[0_0_15px_rgba(48,209,88,0.25)]'
-                : 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border-[var(--border-subtle)]'
+                : 'bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border-[var(--border-subtle)]'
             }`}
             title={isGuest ? 'Guest accounts cannot launch meetings. Upgrade account.' : 'Start or manage Google Meet / Microsoft Teams meeting'}
           >
@@ -532,7 +532,7 @@ export const ConversationView: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#DC2626]/20 to-[#991B1B]/20 border border-[#DC2626]/30 flex items-center justify-center text-[#DC2626] mb-3">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-bold text-[#111827] mb-1">No messages yet</h4>
+            <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1">No messages yet</h4>
             <p className="text-xs text-[var(--text-muted)] max-w-xs">
               This is the beginning of your conversation with{' '}
               <span className="text-[#DC2626] font-semibold">{title}</span>. Share messages, attachments, and documents!
@@ -573,7 +573,7 @@ export const ConversationView: React.FC = () => {
                       isMe ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {!isMe && <span className="font-semibold text-[#111827]">{senderName}</span>}
+                    {!isMe && <span className="font-semibold text-[var(--text-primary)]">{senderName}</span>}
                     <span>{formattedTime}</span>
                   </div>
 
@@ -597,7 +597,7 @@ export const ConversationView: React.FC = () => {
                     className={`rounded-2xl p-3 text-xs leading-relaxed transition-all shadow-md ${
                       isMe
                         ? 'bg-gradient-to-r from-[#DC2626] via-[#B91C1C] to-[#991B1B] text-white shadow-[0_4px_16px_rgba(220,38,38,0.25)] rounded-tr-xs'
-                        : 'bg-[var(--bg-surface-0)] text-[#111827] border border-[var(--border-subtle)] shadow-sm rounded-tl-xs'
+                        : 'bg-[var(--bg-surface-0)] text-[var(--text-primary)] border border-[var(--border-subtle)] shadow-sm rounded-tl-xs'
                     }`}
                   >
                     {/* WhatsApp-style Quoted Message Box */}
@@ -607,7 +607,7 @@ export const ConversationView: React.FC = () => {
                         className={`mb-2 p-2 px-3 rounded-xl border-l-[3.5px] border-emerald-500 transition-all cursor-pointer select-none text-left ${
                           isMe
                             ? 'bg-black/20 text-white hover:bg-black/30'
-                            : 'bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] text-[#111827] dark:text-gray-100'
+                            : 'bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] text-[var(--text-primary)] dark:text-gray-100'
                         }`}
                         title="Click to jump to quoted message"
                       >
@@ -742,7 +742,7 @@ export const ConversationView: React.FC = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
                                   <span
-                                    className="text-xs font-semibold text-[#111827] truncate max-w-[170px]"
+                                    className="text-xs font-semibold text-[var(--text-primary)] truncate max-w-[170px]"
                                     title={att.name}
                                   >
                                     {att.name}
@@ -784,7 +784,7 @@ export const ConversationView: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Open in new tab"
-                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[#111827] transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
@@ -794,7 +794,7 @@ export const ConversationView: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Download Document"
-                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[#111827] transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-black/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                   <Download className="w-3.5 h-3.5" />
                                 </a>
@@ -888,7 +888,7 @@ export const ConversationView: React.FC = () => {
                           className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-[var(--border-subtle)] shadow-xs hover:border-red-400 hover:scale-105 transition-all cursor-pointer"
                         >
                           <GraphicalReaction name={emoji} size="xs" />
-                          <span className="text-[10px] font-mono text-[#71717A] font-bold">{count}</span>
+                          <span className="text-[10px] font-mono text-[var(--text-muted)] font-bold">{count}</span>
                         </button>
                       ))}
                     </div>
@@ -929,7 +929,7 @@ export const ConversationView: React.FC = () => {
             return (
               <div
                 key={att.url || att.name}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-[#111827] text-xs shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-[var(--text-primary)] text-xs shadow-sm"
               >
                 <div className={`p-1 rounded-lg border ${docInfo.color}`}>
                   <FileText className="w-3 h-3" />
@@ -975,7 +975,7 @@ export const ConversationView: React.FC = () => {
               <div className="min-w-0 text-xs">
                 <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1.5">
                   <span>Replying to</span>
-                  <span className="text-[#111827] dark:text-white">
+                  <span className="text-[var(--text-primary)] dark:text-white">
                     {replyingTo.sender?.displayName || replyingTo.sender?.username || 'User'}
                   </span>
                 </p>
@@ -987,7 +987,7 @@ export const ConversationView: React.FC = () => {
             <button
               type="button"
               onClick={() => setReplyingTo(null)}
-              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
               title="Cancel reply (Esc)"
             >
               <X className="w-4 h-4" />
@@ -1002,7 +1002,7 @@ export const ConversationView: React.FC = () => {
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <div className="font-bold text-[#111827]">Guest Account Restriction</div>
+                <div className="font-bold text-[var(--text-primary)]">Guest Account Restriction</div>
                 <div className="text-[11px] text-[var(--text-muted)]">
                   Guest accounts cannot message others or make calls. Create a free account to unlock full messaging.
                 </div>
@@ -1032,7 +1032,7 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => docInputRef.current?.click()}
-            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs flex-shrink-0"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-xs flex-shrink-0"
             title="Send Document (PDF, Word, Excel, Zip...)"
           >
             <FilePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DC2626]" />
@@ -1052,7 +1052,7 @@ export const ConversationView: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => mediaInputRef.current?.click()}
-            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs flex-shrink-0"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-xs flex-shrink-0"
             title="Attach Image or Video"
           >
             <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D97706]" />
@@ -1062,7 +1062,7 @@ export const ConversationView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsMeetingHubOpen(true)}
-            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs group relative flex-shrink-0"
+            className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-xs group relative flex-shrink-0"
             title="Start Google Meet or Microsoft Teams session"
           >
             <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#059669] group-hover:scale-110 transition-transform" />
@@ -1073,7 +1073,7 @@ export const ConversationView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] transition-all cursor-pointer shadow-xs"
+              className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-xs"
               title="Add emoji"
             >
               <Smile className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DC2626]" />
@@ -1105,7 +1105,7 @@ export const ConversationView: React.FC = () => {
             placeholder={`Message ${title}...`}
             value={inputContent}
             onChange={handleInputChange}
-            className="min-w-0 flex-1 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs text-[#111827] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+            className="min-w-0 flex-1 bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
           />
 
           {/* Send Button */}

@@ -209,7 +209,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Settings2 className="w-3.5 h-3.5 text-[#71717A]" />
+            <Settings2 className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             <span>Enterprise Settings</span>
           </button>
         </div>
@@ -264,7 +264,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
 
               {/* Title Input */}
               <div>
-                <label className="block text-xs font-bold text-[#71717A] uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                   2. Meeting Title
                 </label>
                 <input
@@ -272,7 +272,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Sprint Sync with Engineering"
-                  className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-sm text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]/20 transition-all font-medium shadow-xs"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] text-sm text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]/20 transition-all font-medium shadow-xs"
                 />
 
                 {/* Quick Topic Chips */}
@@ -282,7 +282,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       key={topic}
                       type="button"
                       onClick={() => setTitle(topic)}
-                      className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-2)] text-[#71717A] hover:text-[#111827] border border-[var(--border-subtle)] transition-colors cursor-pointer"
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--bg-surface-0)] hover:bg-[var(--bg-surface-2)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
                     >
                       {topic}
                     </button>
@@ -301,10 +301,10 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
                     />
                     <div className="text-xs">
-                      <span className="font-bold text-[#111827]">
+                      <span className="font-bold text-[var(--text-primary)]">
                         {roomId ? 'Post invitation card to Room Chat' : 'Post invitation card to Group Chat'}
                       </span>
-                      <p className="text-[11px] text-[#71717A]">
+                      <p className="text-[11px] text-[var(--text-muted)]">
                         Automatically broadcasts an interactive join card into the conversation for all members.
                       </p>
                     </div>
@@ -318,10 +318,10 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                       className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
                     />
                     <div className="text-xs">
-                      <span className="font-bold text-[#111827]">
+                      <span className="font-bold text-[var(--text-primary)]">
                         {roomId ? 'Bridge directly to Room Stage banner' : 'Bridge directly to Group Header banner'}
                       </span>
-                      <p className="text-[11px] text-[#71717A]">
+                      <p className="text-[11px] text-[var(--text-muted)]">
                         Pins this external call to the top banner so everyone in the group can join with 1 click.
                       </p>
                     </div>
@@ -358,12 +358,12 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                         Session Ready!
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono text-[#71717A] bg-black/[0.04] px-2 py-0.5 rounded-md font-semibold">
+                    <span className="text-[11px] font-mono text-[var(--text-muted)] bg-black/[0.04] px-2 py-0.5 rounded-md font-semibold">
                       {generatedMeeting.meetingCode}
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-mono text-[#111827] break-all select-all font-semibold">
+                  <div className="p-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] break-all select-all font-semibold">
                     {generatedMeeting.meetingUrl}
                   </div>
 
@@ -381,7 +381,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                     <button
                       type="button"
                       onClick={() => handleCopyLink(generatedMeeting.meetingUrl)}
-                      className="px-4 h-10 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border border-[var(--border-subtle)] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      className="px-4 h-10 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border border-[var(--border-subtle)] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                       <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -406,10 +406,10 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                         )}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-[#111827]">{activeBridge.meeting.title}</div>
-                        <div className="text-xs text-[#71717A]">
+                        <div className="text-sm font-bold text-[var(--text-primary)]">{activeBridge.meeting.title}</div>
+                        <div className="text-xs text-[var(--text-muted)]">
                           {activeBridge.meeting.provider === 'GOOGLE_MEET' ? 'Google Meet' : 'Microsoft Teams'} • Code:{' '}
-                          <span className="font-mono text-[#111827] font-bold">{activeBridge.meeting.meetingCode}</span>
+                          <span className="font-mono text-[var(--text-primary)] font-bold">{activeBridge.meeting.meetingCode}</span>
                         </div>
                       </div>
                     </div>
@@ -434,7 +434,7 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                     <button
                       type="button"
                       onClick={() => handleCopyLink(activeBridge.meeting.meetingUrl)}
-                      className="px-3 h-9 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border border-[var(--border-subtle)] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      className="px-3 h-9 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border border-[var(--border-subtle)] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -451,11 +451,11 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                 </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] flex items-center justify-center mb-3 text-[#71717A] shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] flex items-center justify-center mb-3 text-[var(--text-muted)] shadow-xs">
                     <Radio className="w-6 h-6 text-red-600" />
                   </div>
-                  <h4 className="text-sm font-bold text-[#111827] mb-1 font-display">No Active Meeting Bridge</h4>
-                  <p className="text-xs text-[#71717A] max-w-xs mb-4">
+                  <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 font-display">No Active Meeting Bridge</h4>
+                  <p className="text-xs text-[var(--text-muted)] max-w-xs mb-4">
                     Bridge a Google Meet or Microsoft Teams session to this room to display a persistent banner and allow 1-click cross-platform entry.
                   </p>
                   <button
@@ -472,11 +472,11 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
           {activeTab === 'settings' && (
             <div className="space-y-4">
               <div className="p-4 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] space-y-3 shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#111827]">
+                <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   <span>Hybrid Mode Architecture</span>
                 </div>
-                <p className="text-xs text-[#71717A] leading-relaxed">
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                   Mivo operates in <strong>Hybrid Instant Mode</strong> out-of-the-box. Instant Google Meet and Microsoft Teams join URLs are generated immediately with zero cloud account friction.
                 </p>
               </div>
@@ -487,13 +487,13 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   <div className="flex items-center gap-3">
                     <GoogleMeetIcon className="w-5 h-5" />
                     <div>
-                      <div className="text-xs font-bold text-[#111827]">Google Meet & Calendar</div>
-                      <div className="text-[11px] text-[#71717A]">
+                      <div className="text-xs font-bold text-[var(--text-primary)]">Google Meet & Calendar</div>
+                      <div className="text-[11px] text-[var(--text-muted)]">
                         Status: <span className="text-emerald-700 font-semibold">Hybrid Instant Active</span>
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-[#71717A] bg-black/[0.04] px-2 py-0.5 rounded-lg font-semibold">
+                  <span className="text-[10px] font-mono text-[var(--text-muted)] bg-black/[0.04] px-2 py-0.5 rounded-lg font-semibold">
                     {config?.google.mode || 'HYBRID_INSTANT'}
                   </span>
                 </div>
@@ -502,13 +502,13 @@ export const ExternalMeetingHubModal: React.FC<ExternalMeetingHubModalProps> = (
                   <div className="flex items-center gap-3">
                     <MicrosoftTeamsIcon className="w-5 h-5" />
                     <div>
-                      <div className="text-xs font-bold text-[#111827]">Microsoft Teams & Graph</div>
-                      <div className="text-[11px] text-[#71717A]">
+                      <div className="text-xs font-bold text-[var(--text-primary)]">Microsoft Teams & Graph</div>
+                      <div className="text-[11px] text-[var(--text-muted)]">
                         Status: <span className="text-indigo-700 font-semibold">Hybrid Instant Active</span>
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-[#71717A] bg-black/[0.04] px-2 py-0.5 rounded-lg font-semibold">
+                  <span className="text-[10px] font-mono text-[var(--text-muted)] bg-black/[0.04] px-2 py-0.5 rounded-lg font-semibold">
                     {config?.teams.mode || 'HYBRID_INSTANT'}
                   </span>
                 </div>

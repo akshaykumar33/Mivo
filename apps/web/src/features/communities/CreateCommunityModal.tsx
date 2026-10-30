@@ -81,8 +81,8 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#111827]">Full Account Required</h3>
-            <p className="text-xs text-[#71717A] mt-1 max-w-sm mx-auto">
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Full Account Required</h3>
+            <p className="text-xs text-[var(--text-muted)] mt-1 max-w-sm mx-auto">
               Guest users have restricted privileges and cannot create organizations. Upgrade your guest account to a permanent account to create communities.
             </p>
           </div>
@@ -126,8 +126,8 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({ isOp
           </div>
 
           <div className="min-w-0">
-            <p className="text-xs font-bold text-[#111827] font-display">Community Icon</p>
-            <p className="text-[11px] text-[#71717A]">Upload an avatar for your space</p>
+            <p className="text-xs font-bold text-[var(--text-primary)] font-display">Community Icon</p>
+            <p className="text-[11px] text-[var(--text-muted)]">Upload an avatar for your space</p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}

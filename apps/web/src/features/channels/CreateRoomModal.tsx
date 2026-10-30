@@ -87,10 +87,10 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                   className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border transition-all text-[10px] sm:text-xs font-semibold cursor-pointer ${
                     isSelected
                       ? 'bg-red-500/15 border-red-500 text-red-700 shadow-sm shadow-red-500/10'
-                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[#4B5563] hover:border-red-400 hover:text-[#111827]'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-red-400 hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mb-1 ${isSelected ? 'text-red-600' : 'text-[#71717A]'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mb-1 ${isSelected ? 'text-red-600' : 'text-[var(--text-muted)]'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );

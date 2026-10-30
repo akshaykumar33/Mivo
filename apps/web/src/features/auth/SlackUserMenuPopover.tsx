@@ -143,7 +143,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-[#111827] truncate flex items-center gap-1.5">
+          <div className="text-xs font-bold text-[var(--text-primary)] truncate flex items-center gap-1.5">
             <span>{user.displayName || user.username}</span>
             {user.isGuest && (
               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30">
@@ -227,7 +227,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
             <Smile className="w-3.5 h-3.5 text-[#DC2626]" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-[#111827] group-hover:text-[#DC2626] transition-colors">
+            <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[#DC2626] transition-colors">
               Set a status
             </div>
             <div className="text-[10px] text-[var(--text-muted)] truncate">
@@ -240,7 +240,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
       {/* 3. Slack Quick 1-Click Toggle: Set as away / Set as active */}
       <button
         onClick={handleToggleAway}
-        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-medium text-[#111827] mb-1.5"
+        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-medium text-[var(--text-primary)] mb-1.5"
       >
         <div className="flex items-center gap-2">
           <span
@@ -270,7 +270,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
               onClick={() => handleSelectStatus(item.id as UserStatus)}
               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-red-500/10 border border-red-500/30 text-[#111827]'
+                  ? 'bg-red-500/10 border border-red-500/30 text-[var(--text-primary)]'
                   : 'hover:bg-black/[0.04] text-[var(--text-secondary)] border border-transparent'
               }`}
             >
@@ -309,7 +309,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
               <button
                 key={preset.text}
                 onClick={() => handleApplyQuickPreset(preset.text, preset.mins)}
-                className="w-full flex items-center justify-between px-2 py-1 rounded-lg hover:bg-black/[0.04] text-left transition-colors cursor-pointer group text-xs text-[#111827]"
+                className="w-full flex items-center justify-between px-2 py-1 rounded-lg hover:bg-black/[0.04] text-left transition-colors cursor-pointer group text-xs text-[var(--text-primary)]"
               >
                 <div className="flex items-center gap-2 truncate">
                   <Icon className={`w-3.5 h-3.5 shrink-0 ${preset.color}`} />
@@ -333,7 +333,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
             onClose();
             onOpenEditProfile();
           }}
-          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[#111827]"
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[var(--text-primary)]"
         >
           <User className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           <span>Edit Profile & Avatar</span>
@@ -357,7 +357,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
             onClose();
             setAnonConnectModalOpen(true);
           }}
-          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[#111827]"
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[var(--text-primary)]"
         >
           <Sparkles className="w-3.5 h-3.5 text-rose-600 shrink-0" />
           <span>Anonymous Speed Connect</span>
@@ -369,7 +369,7 @@ export const SlackUserMenuPopover: React.FC<SlackUserMenuPopoverProps> = ({
               onClose();
               onOpenThemeModal();
             }}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[#111827]"
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer text-xs font-semibold text-[var(--text-primary)]"
           >
             <Palette className="w-3.5 h-3.5 text-[#DC2626]" />
             <span>Theme & Colors</span>

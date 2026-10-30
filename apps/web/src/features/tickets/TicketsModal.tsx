@@ -146,7 +146,7 @@ export const TicketsModal: React.FC = () => {
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'LIST'
                     ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-sm'
-                    : 'text-[var(--text-secondary)] hover:text-[#111827]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 Tickets ({tickets.length})
@@ -156,7 +156,7 @@ export const TicketsModal: React.FC = () => {
                 className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'CREATE'
                     ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-sm'
-                    : 'text-[var(--text-secondary)] hover:text-[#111827]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Plus className="w-3 h-3" />
@@ -166,7 +166,7 @@ export const TicketsModal: React.FC = () => {
 
             <button
               onClick={() => setIsModalOpen(false)}
-              className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[#111827] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -274,7 +274,7 @@ export const TicketsModal: React.FC = () => {
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     filterStatus === st
                       ? 'bg-[#DC2626] text-white shadow-xs'
-                      : 'text-[var(--text-secondary)] hover:text-[#111827]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {st.replace('_', ' ')}

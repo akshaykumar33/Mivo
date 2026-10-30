@@ -42,7 +42,7 @@ export const ActiveCallOverlay: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:bottom-6 sm:right-6 z-40 max-w-full sm:max-w-md animate-in slide-in-from-bottom-6 duration-300">
-      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 bg-[var(--bg-surface-0)]/95 backdrop-blur-xl border border-red-500/30 p-2.5 sm:p-3.5 rounded-2xl shadow-2xl shadow-red-950/20 text-[#111827]">
+      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 bg-[var(--bg-surface-0)]/95 backdrop-blur-xl border border-red-500/30 p-2.5 sm:p-3.5 rounded-2xl shadow-2xl shadow-red-950/20 text-[var(--text-primary)]">
         {/* Call Info & Pulsing Indicator */}
         <div className="flex items-center gap-2 sm:gap-3 pr-2 border-r border-[var(--border-subtle)] min-w-0 flex-1 sm:flex-initial">
           <div className="relative flex-shrink-0">
@@ -57,14 +57,14 @@ export const ActiveCallOverlay: React.FC = () => {
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-xs font-bold text-[#111827] max-w-[100px] sm:max-w-[140px] truncate">
+              <span className="text-xs font-bold text-[var(--text-primary)] max-w-[100px] sm:max-w-[140px] truncate">
                 {activeCall.isGroup ? activeCall.groupName || 'Group Call' : 'Direct Audio Call'}
               </span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-600 border border-red-500/25 flex-shrink-0">
                 {activeCall.status === 'dialing' ? 'Dialing...' : formatTimer(duration)}
               </span>
             </div>
-            <div className="text-[10px] sm:text-[11px] text-[#4B5563] flex items-center gap-1.5 mt-0.5 truncate">
+            <div className="text-[10px] sm:text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5 mt-0.5 truncate">
               <span>{callParticipants.length} user{callParticipants.length === 1 ? '' : 's'}</span>
               <span>•</span>
               <span className="text-emerald-600 font-semibold">WebRTC</span>
@@ -82,7 +82,7 @@ export const ActiveCallOverlay: React.FC = () => {
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
               isCallMuted
                 ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/40'
-                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[#4B5563] hover:text-[#111827]'
+                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             {isCallMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -96,7 +96,7 @@ export const ActiveCallOverlay: React.FC = () => {
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
               isCallDeafened
                 ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/40'
-                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[#4B5563] hover:text-[#111827]'
+                : 'bg-black/[0.05] hover:bg-black/[0.1] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             {isCallDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

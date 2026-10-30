@@ -237,11 +237,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           ref={emojiPickerRef}
           className="absolute bottom-20 sm:bottom-24 right-2 sm:right-6 p-3 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] z-50 animate-slide-up w-72 max-w-[90vw] ring-1 ring-black/[0.06]"
         >
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[#111827] font-display">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] font-display">
             <span>Reactions & Emojis</span>
             <button
               onClick={() => setIsEmojiPickerOpen(false)}
-              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -275,7 +275,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               <div className="min-w-0 text-xs">
                 <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1.5">
                   <span>Replying to</span>
-                  <span className="text-[#111827] dark:text-white">
+                  <span className="text-[var(--text-primary)] dark:text-white">
                     {replyingTo.sender?.displayName || replyingTo.sender?.username || 'User'}
                   </span>
                 </p>
@@ -287,7 +287,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             <button
               type="button"
               onClick={onCancelReply}
-              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-2"
               title="Cancel reply (Esc)"
             >
               <X className="w-4 h-4" />
@@ -378,7 +378,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <div className="font-bold text-[#111827]">Guest Account Restriction</div>
+                <div className="font-bold text-[var(--text-primary)]">Guest Account Restriction</div>
                 <div className="text-[11px] text-[var(--text-muted)]">
                   Guest accounts cannot send messages or participate in calls. Upgrade to chat with members.
                 </div>
@@ -447,7 +447,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
             {isMeetingMenuOpen && (
               <div className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2 py-1.5 text-[10px] font-bold text-[#71717A] uppercase tracking-wider">
+                <div className="px-2 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
                   External Meeting Hub
                 </div>
 
@@ -460,8 +460,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                     <GoogleMeetIcon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-[#111827] group-hover:text-emerald-700">Google Meet</div>
-                    <div className="text-[10px] text-[#71717A]">1-click create & share</div>
+                    <div className="text-xs font-bold text-[var(--text-primary)] group-hover:text-emerald-700">Google Meet</div>
+                    <div className="text-[10px] text-[var(--text-muted)]">1-click create & share</div>
                   </div>
                 </button>
 
@@ -474,8 +474,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                     <MicrosoftTeamsIcon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-[#111827] group-hover:text-indigo-700">Microsoft Teams</div>
-                    <div className="text-[10px] text-[#71717A]">1-click create & share</div>
+                    <div className="text-xs font-bold text-[var(--text-primary)] group-hover:text-indigo-700">Microsoft Teams</div>
+                    <div className="text-[10px] text-[var(--text-muted)]">1-click create & share</div>
                   </div>
                 </button>
 
@@ -534,7 +534,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             className={`p-1.5 sm:p-2 rounded-[12px] transition-all duration-200 cursor-pointer flex-shrink-0 ${
               (content.trim() || stagedAttachments.length > 0) && !isSending && !isUploading
                 ? 'bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#DC2626] hover:scale-105 text-white shadow-md shadow-red-600/30'
-                : 'bg-black/[0.05] text-[#71717A]/40 cursor-not-allowed'
+                : 'bg-black/[0.05] text-[var(--text-muted)]/40 cursor-not-allowed'
             }`}
             title="Send Message"
           >

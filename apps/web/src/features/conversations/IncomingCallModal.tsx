@@ -46,17 +46,17 @@ export const IncomingCallModal: React.FC = () => {
           )}
         </div>
 
-        <h3 className="text-lg font-bold text-[#111827] font-display">
+        <h3 className="text-lg font-bold text-[var(--text-primary)] font-display">
           {incomingCall.isGroup ? incomingCall.groupName || 'Group Call' : incomingCall.callerName}
         </h3>
 
         {incomingCall.isGroup && (
-          <p className="text-xs text-[#4B5563] mt-0.5">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Initiated by <span className="text-red-600 font-semibold">{incomingCall.callerName}</span>
           </p>
         )}
 
-        <p className="text-xs text-[#71717A] mt-2">Ringing audio session...</p>
+        <p className="text-xs text-[var(--text-muted)] mt-2">Ringing audio session...</p>
 
         {/* Action Buttons: Accept / Decline */}
         <div className="flex items-center gap-6 mt-8 w-full justify-center">

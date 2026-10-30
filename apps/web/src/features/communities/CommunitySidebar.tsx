@@ -61,12 +61,15 @@ export const CommunitySidebar: React.FC<CommunitySidebarProps> = ({ onNavigate }
   return (
     <>
       <aside className="w-[72px] h-full bg-[var(--bg-surface-0)] border-r border-[var(--border-subtle)] backdrop-blur-2xl flex flex-col items-center pt-3 pb-3.5 space-y-2.5 z-30 select-none flex-shrink-0">
-        {/* macOS Style Traffic Light Control Dots */}
-        <div className="flex items-center gap-1.5 pb-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] shadow-[0_0_8px_rgba(255,95,86,0.6)] cursor-pointer hover:scale-110 transition-transform" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] shadow-[0_0_8px_rgba(255,189,46,0.6)] cursor-pointer hover:scale-110 transition-transform" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F] shadow-[0_0_8px_rgba(39,201,63,0.6)] cursor-pointer hover:scale-110 transition-transform" />
-        </div>
+        {/* Brand Home Mark */}
+        <Link
+          href="/channels"
+          onClick={() => onNavigate?.()}
+          className="w-10 h-10 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] flex items-center justify-center font-extrabold text-base text-white shadow-[0_2px_8px_rgba(220,38,38,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] border border-red-500/40 transition-transform active:scale-95 cursor-pointer mb-1"
+          title="Mivo Home"
+        >
+          M
+        </Link>
 
         {/* Direct Messages / Overview Home App Icon */}
         <div className="relative group flex items-center justify-center w-full">

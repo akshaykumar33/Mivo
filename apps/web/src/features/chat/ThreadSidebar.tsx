@@ -230,7 +230,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <MessageSquareReply className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
-            <h3 className="text-sm font-bold text-[#111827] dark:text-white font-display truncate">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] dark:text-white font-display truncate">
               Thread
             </h3>
           </div>
@@ -239,7 +239,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
 
         <button
           onClick={onClose}
-          className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+          className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
           title="Close Thread"
         >
           <X className="w-4 h-4" />
@@ -258,7 +258,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-xs font-bold text-[#111827] dark:text-white truncate">
+                <span className="text-xs font-bold text-[var(--text-primary)] dark:text-white truncate">
                   {rootMessage.sender?.displayName || rootMessage.sender?.username}
                 </span>
                 <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">
@@ -270,7 +270,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
               </div>
 
               {/* Root Content */}
-              <div className="text-xs text-[#111827] dark:text-gray-100 leading-relaxed break-words select-text">
+              <div className="text-xs text-[var(--text-primary)] dark:text-gray-100 leading-relaxed break-words select-text">
                 {rootMessage.content}
               </div>
 
@@ -321,7 +321,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
         {!isLoading && replies.length === 0 && (
           <div className="py-8 text-center text-[var(--text-muted)] space-y-1">
             <MessageSquareText className="w-8 h-8 mx-auto text-red-500/40 mb-2" />
-            <p className="text-xs font-semibold text-[#111827] dark:text-white">No replies yet</p>
+            <p className="text-xs font-semibold text-[var(--text-primary)] dark:text-white">No replies yet</p>
             <p className="text-[11px]">Start the conversation below.</p>
           </div>
         )}
@@ -347,7 +347,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1 mb-0.5">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-xs font-bold text-[#111827] dark:text-white truncate">
+                    <span className="text-xs font-bold text-[var(--text-primary)] dark:text-white truncate">
                       {reply.sender?.displayName || reply.sender?.username}
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">
@@ -381,7 +381,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
                 )}
 
                 {/* Reply Content */}
-                <div className="text-xs text-[#111827] dark:text-gray-200 leading-relaxed break-words select-text">
+                <div className="text-xs text-[var(--text-primary)] dark:text-gray-200 leading-relaxed break-words select-text">
                   {reply.content}
                 </div>
 
@@ -425,7 +425,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
               <div className="min-w-0 text-xs">
                 <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate">
                   Replying to{' '}
-                  <span className="text-[#111827] dark:text-white">
+                  <span className="text-[var(--text-primary)] dark:text-white">
                     {replyingToInThread.sender?.displayName || replyingToInThread.sender?.username}
                   </span>
                 </p>
@@ -437,7 +437,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
             <button
               type="button"
               onClick={() => setReplyingToInThread(null)}
-              className="p-1 rounded-md text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white"
+              className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -475,7 +475,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Reply in thread..."
             rows={2}
-            className="w-full bg-transparent resize-none border-none outline-none text-xs text-[#111827] dark:text-gray-100 placeholder:text-[var(--text-muted)] custom-scrollbar"
+            className="w-full bg-transparent resize-none border-none outline-none text-xs text-[var(--text-primary)] dark:text-gray-100 placeholder:text-[var(--text-muted)] custom-scrollbar"
           />
 
           <div className="flex items-center justify-between pt-1 border-t border-[var(--border-subtle)] mt-1">
@@ -490,7 +490,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
                 title="Attach file"
               >
                 <Paperclip className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
-                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
                 title="Insert emoji"
               >
                 <Smile className="w-3.5 h-3.5" />
@@ -518,7 +518,7 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({
         </div>
 
         {/* Slack-style "Also send to #channel" checkbox */}
-        <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-[var(--text-muted)] hover:text-[#111827] dark:hover:text-gray-200 transition-colors pt-0.5">
+        <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] dark:hover:text-gray-200 transition-colors pt-0.5">
           <input
             type="checkbox"
             checked={alsoSendToChannel}

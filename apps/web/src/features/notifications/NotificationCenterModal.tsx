@@ -318,7 +318,7 @@ export const NotificationCenterModal: React.FC = () => {
           <span>Realtime event sync active</span>
           <button
             onClick={() => setIsCenterOpen(false)}
-            className="px-4 py-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#111827] border border-[var(--border-subtle)] font-medium transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border border-[var(--border-subtle)] font-medium transition-colors cursor-pointer"
           >
             Close
           </button>

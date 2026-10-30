@@ -110,7 +110,7 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
               )}
             </div>
 
-            <h4 className="text-sm font-bold text-[#111827] mt-1 truncate tracking-tight font-display">
+            <h4 className="text-sm font-bold text-[var(--text-primary)] mt-1 truncate tracking-tight font-display">
               {meeting.title}
             </h4>
           </div>
@@ -119,7 +119,7 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
         {/* Copy Invite Link Button */}
         <button
           onClick={handleCopy}
-          className="p-2 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[#71717A] hover:text-[#111827] border border-[var(--border-subtle)] transition-all cursor-pointer flex-shrink-0 group shadow-xs"
+          className="p-2 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-all cursor-pointer flex-shrink-0 group shadow-xs"
           title="Copy Meeting Link"
         >
           {copied ? (
@@ -136,19 +136,19 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
       {/* Body Details */}
       <div className="p-4 pt-3 space-y-3">
         {/* Meeting Code Badge & Creator */}
-        <div className="flex items-center justify-between text-xs text-[#71717A] flex-wrap gap-2">
+        <div className="flex items-center justify-between text-xs text-[var(--text-muted)] flex-wrap gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-[#71717A] uppercase tracking-wider">Meeting Code:</span>
-            <span className="font-mono font-bold text-xs text-[#111827] bg-[var(--bg-surface-1)] px-2.5 py-0.5 rounded-lg border border-[var(--border-subtle)]">
+            <span className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Meeting Code:</span>
+            <span className="font-mono font-bold text-xs text-[var(--text-primary)] bg-[var(--bg-surface-1)] px-2.5 py-0.5 rounded-lg border border-[var(--border-subtle)]">
               {meeting.meetingCode}
             </span>
           </div>
 
           {meeting.createdBy && (
-            <span className="text-[11px] text-[#71717A] truncate max-w-[180px] flex items-center gap-1">
-              <User className="w-3 h-3 text-[#71717A]" />
+            <span className="text-[11px] text-[var(--text-muted)] truncate max-w-[180px] flex items-center gap-1">
+              <User className="w-3 h-3 text-[var(--text-muted)]" />
               <span>Host:</span>
-              <span className="text-[#111827] font-semibold">{meeting.createdBy.displayName}</span>
+              <span className="text-[var(--text-primary)] font-semibold">{meeting.createdBy.displayName}</span>
             </span>
           )}
         </div>
@@ -190,7 +190,7 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
           <div className="pt-1 border-t border-[var(--border-subtle)]">
             <button
               onClick={() => setShowDialIn(!showDialIn)}
-              className="text-[11px] text-[#71717A] hover:text-[#111827] flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
               <Phone className="w-3 h-3 text-red-600" />
               <span>Dial-in phone information</span>
@@ -198,12 +198,12 @@ export const ExternalMeetingCard: React.FC<ExternalMeetingCardProps> = ({
             </button>
 
             {showDialIn && (
-              <div className="mt-2 p-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-mono text-[#111827] space-y-1 animate-fade-in shadow-xs">
-                <div className="text-[#71717A] text-[10px] uppercase font-bold tracking-wider">Toll-free audio dial-in</div>
+              <div className="mt-2 p-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] space-y-1 animate-fade-in shadow-xs">
+                <div className="text-[var(--text-muted)] text-[10px] uppercase font-bold tracking-wider">Toll-free audio dial-in</div>
                 <div className="font-bold">{meeting.dialIn}</div>
                 {meeting.passcode && (
-                  <div className="text-[11px] text-[#71717A]">
-                    Passcode: <span className="text-[#111827] font-bold">{meeting.passcode}</span>
+                  <div className="text-[11px] text-[var(--text-muted)]">
+                    Passcode: <span className="text-[var(--text-primary)] font-bold">{meeting.passcode}</span>
                   </div>
                 )}
               </div>

@@ -367,7 +367,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-48 space-y-3 text-[var(--text-muted)]">
             <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-[#71717A]">Loading secure message history...</p>
+            <p className="text-xs text-[var(--text-muted)]">Loading secure message history...</p>
           </div>
         )}
 
@@ -376,8 +376,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
             <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600 mb-3 shadow-sm">
               <MessageSquare className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-bold text-[#111827] font-display">Welcome to #{room.name}</h4>
-            <p className="text-xs text-[#4B5563] max-w-sm mt-1">
+            <h4 className="text-sm font-bold text-[var(--text-primary)] font-display">Welcome to #{room.name}</h4>
+            <p className="text-xs text-[var(--text-secondary)] max-w-sm mt-1">
               This is the start of the #{room.name} channel stream. Send messages, drag and drop attachments, or start speaking.
             </p>
           </div>
@@ -419,7 +419,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
                   <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap">
-                    <span className="text-xs font-bold text-[#111827] hover:underline cursor-pointer truncate">
+                    <span className="text-xs font-bold text-[var(--text-primary)] hover:underline cursor-pointer truncate">
                       {msg.sender?.displayName || msg.sender?.username}
                     </span>
                     {(msg.sender?.isGuest || msg.sender?.username?.startsWith('guest_')) && (
@@ -435,7 +435,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                         {senderCustomStatus}
                       </span>
                     )}
-                    <span className="text-[10px] text-[#71717A] font-mono flex-shrink-0">{timestamp}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono flex-shrink-0">{timestamp}</span>
                     <span title="Delivered & Read" className="flex-shrink-0">
                       <CheckCheck className="w-3.5 h-3.5 text-red-600" />
                     </span>
@@ -446,7 +446,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     {/* WhatsApp Reply Button */}
                     <button
                       onClick={() => setReplyingTo(msg)}
-                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-emerald-600"
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[var(--text-muted)] hover:text-emerald-600"
                       title="Reply quote"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />
@@ -455,7 +455,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                     {/* Slack Reply in Thread Button */}
                     <button
                       onClick={() => setActiveThreadRoot(msg)}
-                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[#71717A] hover:text-red-600"
+                      className="p-1 hover:scale-125 transition-transform cursor-pointer text-[var(--text-muted)] hover:text-red-600"
                       title="Reply in thread"
                     >
                       <MessageSquareReply className="w-3.5 h-3.5" />
@@ -499,7 +499,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
                         translatedMap[msg.id]
                           ? 'text-violet-600 dark:text-violet-400 font-bold'
-                          : 'text-[#71717A] hover:text-violet-600'
+                          : 'text-[var(--text-muted)] hover:text-violet-600'
                       }`}
                       title={`Instant Translate to ${SUPPORTED_LANGUAGES.find((l) => l.code === targetLang)?.name || 'Target Language'}`}
                     >
@@ -513,7 +513,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                       className={`p-1 hover:scale-125 transition-transform cursor-pointer ${
                         speakingMsgId === msg.id
                           ? 'text-emerald-500 animate-pulse'
-                          : 'text-[#71717A] hover:text-emerald-500'
+                          : 'text-[var(--text-muted)] hover:text-emerald-500'
                       }`}
                       title={speakingMsgId === msg.id ? 'Stop Speech Playback' : 'Listen with Native Speech TTS'}
                     >
@@ -564,7 +564,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
 
                   return (
                     <div>
-                      <div className="text-sm text-[#111827] leading-relaxed break-words select-text font-normal">
+                      <div className="text-sm text-[var(--text-primary)] leading-relaxed break-words select-text font-normal">
                         {cleaned}
                       </div>
 
@@ -636,7 +636,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                               <Bot className="w-3 h-3" />
                               AI Twin • Out of Office
                             </span>
-                            <span className="text-[11px] text-[#71717A] hidden sm:inline">
+                            <span className="text-[11px] text-[var(--text-muted)] hidden sm:inline">
                               Auto-replied from indexed project notes
                             </span>
                           </div>
@@ -793,8 +793,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                             <FileText className="w-5 h-5 text-red-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-[#111827] truncate">{att.name}</p>
-                            <p className="text-[10px] text-[#71717A]">{storageClient.formatBytes(att.size)}</p>
+                            <p className="text-xs font-semibold text-[var(--text-primary)] truncate">{att.name}</p>
+                            <p className="text-[10px] text-[var(--text-muted)]">{storageClient.formatBytes(att.size)}</p>
                           </div>
                           <div
                             className="flex items-center gap-1"
@@ -810,7 +810,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                                   size: att.size,
                                 })
                               }
-                              className="p-1.5 rounded-lg text-[#71717A] hover:text-red-600 hover:bg-black/[0.05] transition-colors"
+                              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-600 hover:bg-black/[0.05] transition-colors"
                               title="View Document (Read-Only)"
                             >
                               <Eye className="w-4 h-4" />
@@ -820,7 +820,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                               download={att.name}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg text-[#71717A] hover:text-[#111827] hover:bg-black/[0.05] transition-colors"
+                              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors"
                               title="Download File"
                             >
                               <Download className="w-4 h-4" />
@@ -843,7 +843,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({ room }) => {
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[var(--border-subtle)] shadow-sm hover:border-red-400 hover:scale-105 transition-all cursor-pointer"
                       >
                         <GraphicalReaction name={emoji} size="xs" />
-                        <span className="text-[11px] font-mono text-[#71717A] font-bold">{count}</span>
+                        <span className="text-[11px] font-mono text-[var(--text-muted)] font-bold">{count}</span>
                       </button>
                     ))}
                   </div>

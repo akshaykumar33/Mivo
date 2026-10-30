@@ -72,7 +72,7 @@ export const GuestLoginCard: React.FC<GuestLoginCardProps> = ({ onSuccess }) => 
       </div>
 
       {error && (
-        <div className="mb-3 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+        <div className="mb-3 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
           <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
           <span>{error}</span>
         </div>

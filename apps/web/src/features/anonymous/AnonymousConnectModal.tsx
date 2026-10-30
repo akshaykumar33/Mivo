@@ -546,7 +546,7 @@ export const AnonymousConnectModal: React.FC = () => {
               ? 'fixed inset-2 z-50 max-w-none h-[98vh]'
               : 'max-w-6xl xl:max-w-7xl h-[88vh]'
             : 'max-w-2xl max-h-[92vh]'
-        } bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-[#111827] relative transition-all duration-200`}
+        } bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-[var(--text-primary)] relative transition-all duration-200`}
       >
         {/* Ambient Top Glow Bar */}
         <div className="h-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500 w-full shrink-0" />
@@ -573,7 +573,7 @@ export const AnonymousConnectModal: React.FC = () => {
                   </span>
                 ) : null}
               </div>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-xs text-[var(--text-muted)]">
                 {state === 'CONNECTED'
                   ? 'Real-time collaborative playground: Live chat on the left, interactive minigames on the right.'
                   : 'Speed connect with strangers or invite a 2nd player for 60s speed doodling, retro Pong & dilemma trivia!'}

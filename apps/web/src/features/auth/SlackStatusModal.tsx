@@ -276,7 +276,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[#111827] hover:bg-black/[0.05] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.05] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -324,7 +324,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
               isAway
                 ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/25'
-                : 'bg-black/[0.04] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[#111827] hover:bg-black/[0.08]'
+                : 'bg-black/[0.04] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)] hover:bg-black/[0.08]'
             }`}
           >
             {isAway ? 'Set as active' : 'Set as away'}
@@ -351,8 +351,8 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                   onClick={() => setSelectedStatus(st.id as UserStatus)}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-red-500/10 border-red-500/40 text-[#111827] shadow-xs ring-1 ring-red-500/20'
-                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[#111827] hover:bg-[var(--bg-surface-2)]'
+                      ? 'bg-red-500/10 border-red-500/40 text-[var(--text-primary)] shadow-xs ring-1 ring-red-500/20'
+                      : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${st.dot} flex-shrink-0`} />
@@ -394,7 +394,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                   value={statusText}
                   onChange={(e) => setStatusText(e.target.value)}
                   placeholder="What's your status? (e.g. In an architecture sync)"
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[#111827] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:[var(--text-muted)] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/20 transition-all shadow-xs"
                   maxLength={100}
                 />
               </div>
@@ -413,7 +413,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
               <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Colleagues see you as
               </div>
-              <div className="text-xs font-bold text-[#111827] flex items-center gap-1.5 truncate">
+              <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5 truncate">
                 <span>{user?.displayName || user?.username}</span>
                 {statusText.trim() ? (
                   <span className="text-[#DC2626] font-semibold truncate bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 text-[11px]">
@@ -447,7 +447,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                       <div className={`w-6 h-6 rounded-lg bg-black/[0.04] flex items-center justify-center shrink-0 ${p.color}`}>
                         <IconComponent className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-xs text-[#111827] group-hover:text-[#DC2626] truncate font-medium">
+                      <span className="text-xs text-[var(--text-primary)] group-hover:text-[#DC2626] truncate font-medium">
                         {p.text}
                       </span>
                     </div>
@@ -471,7 +471,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
             <button
               type="button"
               onClick={() => setIsDurationOpen((prev) => !prev)}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-[#DC2626]/40 text-xs text-[#111827] flex items-center justify-between transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] hover:border-[#DC2626]/40 text-xs text-[var(--text-primary)] flex items-center justify-between transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20"
             >
               <div className="flex items-center gap-2 font-medium">
                 <Clock className="w-3.5 h-3.5 text-[#DC2626]" />
@@ -506,7 +506,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
                         className={`w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between text-left transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-red-500/10 text-[#DC2626] font-bold border border-red-500/25 shadow-xs'
-                            : 'text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] hover:text-[#111827]'
+                            : 'text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -550,7 +550,7 @@ export const SlackStatusModal: React.FC<SlackStatusModalProps> = ({ isOpen, onCl
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/[0.05] hover:text-[#111827] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-black/[0.05] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 Cancel
               </button>

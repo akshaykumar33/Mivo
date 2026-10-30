@@ -249,8 +249,8 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
                         onClick={() => closeMobileSidebar()}
                         className={`flex items-center justify-between px-2.5 py-1.5 rounded-[12px] text-xs font-medium transition-all duration-150 group cursor-pointer ${
                           isRoomActive
-                            ? 'bg-[#DC2626]/10 text-[#111827] font-bold border border-[#DC2626]/30 shadow-xs'
-                            : 'text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[#111827]'
+                            ? 'bg-[#DC2626]/10 text-[var(--text-primary)] font-bold border border-[#DC2626]/30 shadow-xs'
+                            : 'text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate min-w-0">
@@ -303,14 +303,14 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
             <div className="min-w-0 flex-1">
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="text-xs font-bold text-[#111827] truncate hover:text-[#DC2626] transition-colors cursor-pointer"
+                className="text-xs font-bold text-[var(--text-primary)] truncate hover:text-[#DC2626] transition-colors cursor-pointer"
                 title="Open user availability & status menu"
               >
                 {user?.displayName || user?.username}
               </div>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-1 text-[10px] text-left truncate text-[var(--text-muted)] hover:text-[#111827] transition-colors cursor-pointer w-full group"
+                className="flex items-center gap-1 text-[10px] text-left truncate text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer w-full group"
                 title="Set status & availability"
               >
                 {presence.customStatus ? (
@@ -343,7 +343,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
               className={`p-1.5 rounded-[10px] transition-all cursor-pointer ${
                 isMuted
                   ? 'text-[#DC2626] bg-red-500/15 border border-red-500/30 shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[#111827] hover:bg-black/[0.04]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.04]'
               }`}
               title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
             >
@@ -355,7 +355,7 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({ communityId, cla
               className={`p-1.5 rounded-[10px] transition-all cursor-pointer ${
                 isDeafened
                   ? 'text-[#DC2626] bg-red-500/15 border border-red-500/30 shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[#111827] hover:bg-black/[0.04]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/[0.04]'
               }`}
               title={isDeafened ? 'Undeafen' : 'Deafen'}
             >

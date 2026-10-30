@@ -148,7 +148,7 @@ export const ThemeSwitcherModal: React.FC = () => {
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-[var(--text-muted)]">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-[#4B5563]">Theme persists automatically in your local browser settings</span>
+            <span className="text-[var(--text-secondary)]">Theme persists automatically in your local browser settings</span>
           </div>
           <button
             onClick={() => setIsThemeModalOpen(false)}
