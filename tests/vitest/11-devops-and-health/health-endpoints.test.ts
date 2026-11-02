@@ -50,4 +50,21 @@ describe('DevOps & Monitoring — Health Endpoints', () => {
     await controller.ready(mockRes);
     expect(mockRes.status).toHaveBeenCalled();
   }, 10000);
+
+  it('should return keepalive response with service statuses', async () => {
+    const controller = new HealthController();
+    const mockRes: any = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockImplementation((val) => val),
+    };
+
+    await controller.keepalive(mockRes);
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    const calls = mockRes.json.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const body = calls[0][0];
+
+    expect(body).toHaveProperty('status', 'ok');
+    expect(body).toHaveProperty('services');
+  }, 10000);
 });
