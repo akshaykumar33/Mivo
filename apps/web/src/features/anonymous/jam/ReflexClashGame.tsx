@@ -268,7 +268,7 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
 
         {state === 'WAITING' && (
           <div className="text-center space-y-2 pointer-events-none">
-            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto animate-bounce">
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto animate-pulse">
               <Octagon className="w-7 h-7 text-rose-500 fill-rose-500/20" />
             </div>
             <h2 className="text-2xl font-black text-white tracking-widest font-mono">
@@ -291,8 +291,8 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
 
         {state === 'EARLY_PENALTY' && (
           <div className="text-center space-y-2 pointer-events-none">
-            <AlertTriangle className="w-12 h-12 text-rose-400 mx-auto animate-bounce" />
-            <h2 className="text-lg font-black text-rose-300">FALSE START!</h2>
+            <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto" />
+            <h2 className="text-lg font-bold text-rose-300">False Start!</h2>
             <p className="text-xs text-rose-400">You tapped before the screen turned green.</p>
           </div>
         )}
@@ -335,8 +335,8 @@ export const ReflexClashGame: React.FC<ReflexClashGameProps> = ({
               </button>
             ) : (
               <div className="pointer-events-auto p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-center space-y-2">
-                <Trophy className="w-8 h-8 text-amber-400 mx-auto animate-bounce" />
-                <h3 className="text-base font-black text-white">
+                <Trophy className="w-8 h-8 text-amber-400 mx-auto" />
+                <h3 className="text-base font-bold text-white">
                   {myWins > partnerWins
                     ? 'Champion of the Quick-Draw!'
                     : `${partnerPseudonym} Takes the Belt!`}

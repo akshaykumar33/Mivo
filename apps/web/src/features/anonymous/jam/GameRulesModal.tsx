@@ -197,19 +197,24 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
   const Icon = activeData.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-2xl bg-[#0C0F1E] border border-white/15 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-white relative">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="game-rules-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-fade-in"
+    >
+      <div className="w-full max-w-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden flex flex-col max-h-[90vh] text-[var(--text-primary)] relative">
         {/* Top Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-3 bg-[#11162B] shrink-0">
+        <div className="p-4 sm:p-5 border-b border-[var(--border-subtle)] flex items-center justify-between gap-3 bg-[var(--bg-surface-1)] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-rose-500 text-white flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)] text-white flex items-center justify-center shadow-xs">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black tracking-tight font-display text-white">
+              <h2 id="game-rules-title" className="text-base sm:text-lg font-bold tracking-tight font-display text-[var(--text-primary)]">
                 Game Rules &amp; How to Play
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Master all 8 games in the Co-Op Canvas &amp; Trivia Jam Playground
               </p>
             </div>
@@ -217,14 +222,15 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Close dialog"
+            className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Game Navigation Pills */}
-        <div className="px-3 py-2 bg-[#090C19] border-b border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+        <div className="px-3 py-2 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
           {(Object.keys(GAME_RULES_DATA) as JamGameType[]).map((key) => {
             const item = GAME_RULES_DATA[key];
             const ItemIcon = item.icon;
@@ -234,10 +240,10 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
                 key={key}
                 type="button"
                 onClick={() => setSelectedGame(key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   isSel
-                    ? `bg-gradient-to-r ${item.color} text-white shadow-md scale-102`
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    ? 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs'
+                    : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                 }`}
               >
                 <ItemIcon className="w-3.5 h-3.5" />
@@ -250,41 +256,41 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
         {/* Rules Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
           {/* Active Game Hero */}
-          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)]">
             <div
-              className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${activeData.color} flex items-center justify-center text-white shadow-lg shrink-0`}
+              className="w-12 h-12 rounded-2xl bg-[var(--brand-primary,#dc2626)] flex items-center justify-center text-white shadow-xs shrink-0"
             >
               <Icon className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-white font-display">
+              <h3 className="text-base font-bold text-[var(--text-primary)] font-display">
                 {activeData.title}
               </h3>
-              <p className="text-xs text-gray-300 mt-0.5">{activeData.summary}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">{activeData.summary}</p>
             </div>
           </div>
 
           {/* Objective */}
           <div>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-400 mb-1.5 flex items-center gap-1.5">
-              <Trophy className="w-4 h-4" />
+            <h4 className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-amber-500" />
               <span>Objective</span>
             </h4>
-            <p className="text-xs text-gray-200 leading-relaxed bg-[#0E1224] p-3 rounded-xl border border-white/5">
+            <p className="text-xs text-[var(--text-primary)] leading-relaxed bg-[var(--bg-surface-1)] p-3 rounded-xl border border-[var(--border-subtle)]">
               {activeData.objective}
             </p>
           </div>
 
           {/* Controls & How to Play */}
           <div>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
-              <Gamepad2 className="w-4 h-4" />
+            <h4 className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+              <Gamepad2 className="w-4 h-4 text-blue-500" />
               <span>How to Play &amp; Controls</span>
             </h4>
-            <div className="space-y-1.5 bg-[#0E1224] p-3 rounded-xl border border-white/5">
+            <div className="space-y-1.5 bg-[var(--bg-surface-1)] p-3 rounded-xl border border-[var(--border-subtle)]">
               {activeData.controls.map((ctrl, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-gray-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 shrink-0" />
+                <div key={i} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                   <span>{ctrl}</span>
                 </div>
               ))}
@@ -293,14 +299,14 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
 
           {/* Points & Scoring */}
           <div>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-1.5 flex items-center gap-1.5">
-              <Zap className="w-4 h-4" />
+            <h4 className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-amber-500" />
               <span>Scoring &amp; Rewards</span>
             </h4>
-            <div className="space-y-1.5 bg-[#0E1224] p-3 rounded-xl border border-white/5">
+            <div className="space-y-1.5 bg-[var(--bg-surface-1)] p-3 rounded-xl border border-[var(--border-subtle)]">
               {activeData.scoring.map((sc, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-gray-200">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <div key={i} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <span>{sc}</span>
                 </div>
               ))}
@@ -308,24 +314,24 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({
           </div>
 
           {/* Pro Tip */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2.5">
-            <Flame className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+            <Flame className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <strong className="text-amber-300 block font-bold">Pro-Tip for Strangers:</strong>
+              <strong className="text-amber-800 dark:text-amber-200 block font-semibold">Pro-Tip for Strangers:</strong>
               <span>{activeData.proTip}</span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-3.5 sm:p-4 border-t border-white/10 bg-[#0E1224] flex items-center justify-between shrink-0">
-          <span className="text-[11px] text-gray-400">
+        <div className="p-3.5 sm:p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-1)] flex items-center justify-between shrink-0">
+          <span className="text-[11px] text-[var(--text-secondary)]">
             Click any game pill above to read its rules.
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md cursor-pointer transition-transform hover:scale-105"
+            className="px-5 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.98] text-white font-semibold text-xs shadow-xs cursor-pointer transition-all"
           >
             Got It! Let's Jam
           </button>

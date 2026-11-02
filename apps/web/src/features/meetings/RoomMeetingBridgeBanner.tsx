@@ -84,13 +84,13 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
             </span>
           </div>
 
-          <span className="text-[#71717A]/40 hidden sm:inline">•</span>
+          <span className="text-[var(--text-muted)]/40 hidden sm:inline">•</span>
 
-          <span className="font-bold text-[#111827] truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+          <span className="font-bold text-[var(--text-primary)] truncate max-w-[200px] sm:max-w-xs md:max-w-md">
             {meeting.title}
           </span>
 
-          <span className="font-mono text-[11px] text-[#71717A] bg-black/[0.04] border border-black/[0.06] px-2 py-0.5 rounded-md hidden md:inline font-semibold">
+          <span className="font-mono text-[11px] text-[var(--text-muted)] bg-black/[0.04] border border-black/[0.06] px-2 py-0.5 rounded-md hidden md:inline font-semibold">
             {meeting.meetingCode}
           </span>
         </div>
@@ -101,7 +101,7 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
         {/* Copy Invite Link */}
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[#71717A] hover:text-[#111827] transition-all cursor-pointer font-semibold shadow-xs"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--bg-surface-1)] hover:bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all cursor-pointer font-semibold shadow-xs"
           title="Copy external meeting invite link"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -127,7 +127,7 @@ export const RoomMeetingBridgeBanner: React.FC<RoomMeetingBridgeBannerProps> = (
         <button
           onClick={handleDisconnect}
           disabled={isRemoving}
-          className="p-1 rounded-lg text-[#71717A] hover:text-rose-600 hover:bg-black/[0.05] transition-colors cursor-pointer ml-1"
+          className="p-1 rounded-lg text-[var(--text-muted)] hover:text-rose-600 hover:bg-black/[0.05] transition-colors cursor-pointer ml-1"
           title="Disconnect external meeting bridge from stage"
         >
           <X className="w-4 h-4" />

@@ -15,12 +15,12 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const variants = {
-    default: 'bg-slate-800 text-slate-300 border-slate-700',
-    primary: 'bg-violet-950/60 text-violet-300 border-violet-800/60',
-    success: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60',
-    warning: 'bg-amber-950/60 text-amber-300 border-amber-800/60',
-    danger: 'bg-rose-950/60 text-rose-300 border-rose-800/60',
-    outline: 'bg-transparent text-slate-300 border-slate-700',
+    default: 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] border-[var(--border-subtle)]',
+    primary: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/25',
+    success: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
+    warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25',
+    danger: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25',
+    outline: 'bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]',
   };
 
   const customStyles = customColor

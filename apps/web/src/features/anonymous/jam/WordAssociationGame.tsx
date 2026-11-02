@@ -256,7 +256,7 @@ export const WordAssociationGame: React.FC<WordAssociationGameProps> = ({
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-mono font-bold text-xs ${
               timeLeft <= 4
-                ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-bounce'
+                ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
                 : 'bg-white/5 border-white/10 text-white'
             }`}
           >

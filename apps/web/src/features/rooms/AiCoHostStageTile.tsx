@@ -224,12 +224,12 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
           )}
 
           <div
-            className={`w-14 sm:w-16 h-14 sm:h-16 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 ${
+            className={`w-14 sm:w-16 h-14 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
               isSpeaking
-                ? 'bg-gradient-to-tr from-emerald-600 to-cyan-500 text-white shadow-emerald-500/40 scale-105'
+                ? 'bg-emerald-600 text-white shadow-emerald-600/30 scale-105'
                 : isThinking
-                ? 'bg-gradient-to-tr from-amber-600 to-violet-600 text-white shadow-amber-500/40'
-                : 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-violet-600/40'
+                ? 'bg-amber-600 text-white shadow-amber-600/30'
+                : 'bg-[var(--brand-primary,#6366f1)] text-white shadow-indigo-600/20'
             }`}
           >
             <Bot className="w-7 sm:w-8 h-7 sm:h-8" />
@@ -237,21 +237,21 @@ export const AiCoHostStageTile: React.FC<AiCoHostStageTileProps> = ({
         </div>
 
         <div className="mt-2 text-center">
-          <div className="text-xs sm:text-sm font-extrabold text-white tracking-wide font-display flex items-center justify-center gap-1.5">
+          <div className="text-xs sm:text-sm font-semibold text-white tracking-wide font-display flex items-center justify-center gap-1.5">
             <span>Mivo AI</span>
-            <span className="px-1.5 py-0.2 rounded-md bg-violet-500/30 text-violet-300 text-[9px] font-bold">
-              STAGE BOT
+            <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-white/90 text-[10px] font-medium border border-white/10">
+              Stage Bot
             </span>
           </div>
 
           {/* Soundwave Bars */}
           {isSpeaking ? (
             <div className="flex items-center justify-center gap-1 mt-1.5 h-3.5">
-              <span className="w-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.3s] h-3" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.15s] h-4" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-bounce h-2.5" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.2s] h-3.5" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.1s] h-2" />
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3" />
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse [animation-delay:150ms] h-4" />
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse [animation-delay:300ms] h-2.5" />
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse [animation-delay:450ms] h-3.5" />
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse [animation-delay:200ms] h-2" />
             </div>
           ) : (
             <span className="text-[10px] text-white/50 block mt-0.5">

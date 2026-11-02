@@ -287,9 +287,9 @@ export const EmojiDecoderGame: React.FC<EmojiDecoderGameProps> = ({
 
         {/* Victory Notification */}
         {solved && (
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-400/50 text-center space-y-2 animate-fade-in">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-lg">
-              <Trophy className="w-5 h-5 animate-bounce" />
+          <div className="p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-2 animate-fade-in">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-xs">
+              <Trophy className="w-5 h-5 text-amber-300" />
             </div>
             <div className="text-sm font-black text-white font-display">
               {winnerName} Solved It!

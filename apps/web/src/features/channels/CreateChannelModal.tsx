@@ -45,7 +45,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({ communit
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create Space" description="Organize your community with collaborative spaces.">
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+        <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
           {error}
         </div>
       )}

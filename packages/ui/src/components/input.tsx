@@ -13,7 +13,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <label htmlFor={inputId} className="block text-xs font-medium text-[var(--text-secondary)]">
             {label}
           </label>
         )}
@@ -22,8 +22,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            'w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all duration-150',
-            'focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20',
+            'w-full rounded-lg bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all duration-150 shadow-xs',
+            'hover:border-[var(--border-strong,rgba(255,255,255,0.16))] focus:border-[var(--brand-primary,#dc2626)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary,#dc2626)]/20',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20',
             className

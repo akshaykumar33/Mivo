@@ -130,26 +130,29 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-4 sm:p-6 shadow-2xl relative ring-1 ring-white/10 custom-scrollbar">
-        {/* Glow Accent */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#5E5CE6]/20 to-[#0A84FF]/20 blur-3xl pointer-events-none" />
-
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-profile-title"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in"
+    >
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] rounded-3xl p-4 sm:p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] relative custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)] mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#5E5CE6]/15 border border-[#5E5CE6]/30 flex items-center justify-center text-[#64D2FF]">
+            <div className="w-8 h-8 rounded-xl bg-[var(--brand-primary,#dc2626)]/15 border border-[var(--brand-primary,#dc2626)]/30 flex items-center justify-center text-[var(--brand-primary,#dc2626)]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[var(--text-primary)] font-display">Edit Profile</h3>
+              <h3 id="edit-profile-title" className="text-base font-bold text-[var(--text-primary)] font-display">Edit Profile</h3>
               <p className="text-[11px] text-[var(--text-muted)]">Custom avatar, display name & status</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-white hover:bg-white/[0.08] transition-colors"
+            aria-label="Close dialog"
+            className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -163,11 +166,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 size="lg"
                 src={avatarUrl || undefined}
                 fallbackText={displayName || user?.username}
-                className="w-20 h-20 rounded-2xl ring-2 ring-[#5E5CE6]/40 shadow-lg object-cover"
+                className="w-20 h-20 rounded-2xl ring-2 ring-[var(--border-subtle)] shadow-lg object-cover"
               />
               <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                 {isUploading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-[#64D2FF]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
                 ) : (
                   <Camera className="w-6 h-6" />
                 )}
@@ -186,17 +189,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="text-xs font-semibold text-[#64D2FF] hover:underline cursor-pointer disabled:opacity-50"
+              className="text-xs font-semibold text-[var(--brand-primary,#dc2626)] hover:underline cursor-pointer disabled:opacity-50"
             >
               {isUploading ? 'Uploading avatar...' : 'Change Avatar'}
             </button>
             {uploadError && (
-              <p className="text-[11px] text-red-500 font-medium text-center">{uploadError}</p>
+              <p className="text-[11px] text-rose-500 font-medium text-center">{uploadError}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Display Name
             </label>
             <input
@@ -204,13 +207,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Alex Rivera"
-              className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6]"
+              className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 shadow-xs"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Custom Status
             </label>
             <div className="flex items-center gap-2">
@@ -219,29 +222,29 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 value={customStatus}
                 onChange={(e) => setCustomStatus(e.target.value)}
                 placeholder="e.g. In an architecture sync"
-                className="flex-1 px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6]"
+                className="flex-1 px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 shadow-xs"
               />
               <button
                 type="button"
                 onClick={handleGenerateStatus}
                 disabled={isGeneratingStatus}
                 title="Generate status with AI"
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/15 via-red-500/20 to-amber-500/15 hover:from-red-500/25 hover:to-amber-500/25 border border-red-500/30 text-[#DC2626] flex items-center gap-1.5 flex-shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer group disabled:opacity-60 disabled:hover:scale-100 shadow-xs"
+                className="px-3 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)]/10 hover:bg-[var(--brand-primary,#dc2626)]/15 border border-[var(--brand-primary,#dc2626)]/25 text-[var(--brand-primary,#dc2626)] flex items-center gap-1.5 flex-shrink-0 active:scale-95 transition-all cursor-pointer group disabled:opacity-60 shadow-xs"
               >
                 {isGeneratingStatus ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DC2626]" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-primary,#dc2626)]" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-[#DC2626] group-hover:rotate-12 transition-transform" />
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--brand-primary,#dc2626)]" />
                 )}
-                <span className="text-xs font-bold hidden sm:inline">
-                  {isGeneratingStatus ? 'Generating...' : 'Generate'}
+                <span className="text-xs font-semibold hidden sm:inline">
+                  {isGeneratingStatus ? 'Generating...' : 'Suggest'}
                 </span>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Bio
             </label>
             <textarea
@@ -249,7 +252,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               onChange={(e) => setBio(e.target.value)}
               rows={2}
               placeholder="Tell others what you are working on..."
-              className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#5E5CE6] resize-none"
+              className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 resize-none shadow-xs"
             />
           </div>
 
@@ -257,7 +260,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -265,7 +268,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             <button
               type="submit"
               disabled={isSaving || isUploading}
-              className="px-5 py-2 rounded-xl bg-gradient-to-tr from-[#5E5CE6] to-[#0A84FF] text-white text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.985] text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? (
                 <>

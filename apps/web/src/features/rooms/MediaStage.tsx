@@ -876,7 +876,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
 
             {/* Quick Profile Presets */}
             <div className="space-y-1.5 mb-3">
-              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Quality Presets</div>
+              <div className="text-xs font-medium text-zinc-400 px-1">Quality Presets</div>
 
               {/* Low Bandwidth 16k */}
               <button
@@ -1483,16 +1483,13 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             {/* 1. Dominant 16:9 Hero Stage Container */}
             <div className="flex-1 min-h-0 flex items-center justify-center relative p-1 sm:p-2">
               <div className="w-full max-w-5xl xl:max-w-6xl max-h-full aspect-video mx-auto relative flex items-center justify-center">
-                {/* Atmospheric Ambient Halo Backlight */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-violet-600/30 via-indigo-600/20 to-purple-600/30 rounded-3xl blur-2xl opacity-75 pointer-events-none" />
-
                 {/* Top Overlay Banner on Hero Stage */}
                 <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-none">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/90 text-white text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-xl border border-violet-400/40">
-                    <Pin className="w-3.5 h-3.5 fill-current text-amber-300 animate-pulse" />
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-primary,#dc2626)] text-white text-xs font-semibold backdrop-blur-md shadow-sm border border-white/20">
+                    <Pin className="w-3.5 h-3.5 fill-current text-white animate-pulse" />
                     <span>Spotlight Focus Mode</span>
                   </div>
-                  <span className="text-[11px] text-white/80 font-bold bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 hidden sm:inline-block">
+                  <span className="text-[11px] text-white/80 font-medium bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 hidden sm:inline-block">
                     16:9 Hero Stage
                   </span>
                 </div>
@@ -1552,7 +1549,7 @@ export const MediaStage: React.FC<MediaStageProps> = ({
             <div className="flex-shrink-0 w-full pt-2 pb-1 border-t border-white/[0.08] bg-black/30 backdrop-blur-md rounded-2xl px-3 flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs px-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-violet-400" />
                     Attendee Filmstrip ({
                       (sortedParticipants.filter((p) => p.userId !== activeHeroParticipant?.userId).length) +

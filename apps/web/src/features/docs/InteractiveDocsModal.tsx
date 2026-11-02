@@ -447,7 +447,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
           <aside className="w-full md:w-80 max-h-48 md:max-h-none bg-[var(--bg-sidebar)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)] flex flex-col p-3 sm:p-4 space-y-3 flex-shrink-0">
             {/* Search Input with Icon */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#71717A] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search articles & guides..."
@@ -467,13 +467,13 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                   <div key={categoryName} className="space-y-1">
                     <button
                       onClick={() => toggleCategory(categoryName)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[#4B5563] hover:text-[var(--text-primary)] hover:bg-black/[0.04] transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/[0.04] transition-colors"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isExpanded ? (
                           <FolderOpen className="w-3.5 h-3.5 text-red-600" />
                         ) : (
-                          <Folder className="w-3.5 h-3.5 text-[#71717A]" />
+                          <Folder className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                         )}
                         <span className="truncate">{categoryName}</span>
                       </span>
@@ -493,14 +493,14 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                               className={`w-full flex flex-col gap-0.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
                                   ? 'bg-red-500/10 border border-red-500/30 text-red-700 shadow-sm'
-                                  : 'text-[#4B5563] hover:bg-black/[0.04] hover:text-[var(--text-primary)]'
+                                  : 'text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[var(--text-primary)]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate">
-                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-red-600' : 'text-[#71717A]'}`} />
+                                <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-red-600' : 'text-[var(--text-muted)]'}`} />
                                 <span className="truncate text-xs font-semibold">{art.title}</span>
                               </div>
-                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-[#71717A]">
+                              <div className="flex items-center gap-2 pl-5.5 text-[10px] text-[var(--text-muted)]">
                                 <span>{art.readTime}</span>
                               </div>
                             </button>
@@ -519,7 +519,7 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Article Meta Bar */}
               <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2 text-xs text-[#71717A]">
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                   <Compass className="w-3.5 h-3.5 text-red-600" />
                   <span>{activeArticle.category}</span>
                   <span>/</span>
@@ -544,14 +544,14 @@ export const InteractiveDocsModal: React.FC<InteractiveDocsModalProps> = ({ isOp
                 {/* Code Block if Present */}
                 {activeArticle.codeSnippet && (
                   <div className="rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] overflow-hidden my-5 shadow-lg">
-                    <div className="px-4 py-2.5 bg-black/[0.02] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[#71717A]">
+                    <div className="px-4 py-2.5 bg-black/[0.02] border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)]">
                       <div className="flex items-center gap-2">
                         <Terminal className="w-3.5 h-3.5 text-red-600" />
                         <span className="font-mono text-[11px] uppercase tracking-wider font-semibold text-[var(--text-primary)]">{activeArticle.codeSnippet.lang}</span>
                       </div>
                       <button
                         onClick={() => handleCopyCode(activeArticle.codeSnippet!.code)}
-                        className="flex items-center gap-1.5 text-[11px] text-[#4B5563] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                       >
                         {copiedSnippet ? (
                           <>

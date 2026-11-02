@@ -61,54 +61,60 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Frosted Glass Backdrop */}
-      <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity" />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gemini-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+    >
+      {/* Backdrop */}
+      <div onClick={onClose} className="fixed inset-0 cursor-pointer" />
 
-      {/* Apple Vision Pro Modal Card */}
-      <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-[28px] bg-[#0A0C14]/95 border border-white/[0.14] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-4 sm:p-6 space-y-5 select-none animate-slide-up z-10 custom-scrollbar">
+      {/* Modal Dialog Card */}
+      <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] p-5 sm:p-6 space-y-5 select-none z-10 custom-scrollbar text-[var(--text-primary)]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#BF5AF2] via-[#5E5CE6] to-[#0A84FF] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(191,90,242,0.4)]">
-              <Sparkles className="w-5 h-5 stroke-[2.5]" />
+            <div className="w-10 h-10 rounded-2xl bg-[var(--brand-primary,#dc2626)]/15 border border-[var(--brand-primary,#dc2626)]/30 flex items-center justify-center text-[var(--brand-primary,#dc2626)] shadow-sm">
+              <Sparkles className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white font-display">Gemini AI Configuration</h3>
-              <p className="text-xs text-white/50">Gemini 3.7 / 2.5 Pro & Flash Integration</p>
+              <h3 id="gemini-modal-title" className="text-sm font-bold text-[var(--text-primary)] font-display">Gemini AI Configuration</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Gemini 3.7 / 2.5 Pro & Flash Integration</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-[10px] text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            aria-label="Close dialog"
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Info Banner */}
-        <div className="p-3.5 rounded-[18px] bg-gradient-to-r from-[#5E5CE6]/10 via-[#BF5AF2]/10 to-transparent border border-[#5E5CE6]/20 flex items-start gap-3">
-          <Cpu className="w-4 h-4 text-[#BF5AF2] flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-white/80 leading-relaxed">
+        <div className="p-3.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-start gap-3">
+          <Cpu className="w-4 h-4 text-[var(--brand-primary,#dc2626)] flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
             Mivo utilizes <strong>Google Gemini AI</strong> for real-time translation, automated Meeting Minutes (MOM), and in-call Copilot assistance.
           </div>
         </div>
 
         {/* API Key Input Field */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-white/70 flex items-center justify-between">
+          <label className="text-xs font-medium text-[var(--text-secondary)] flex items-center justify-between">
             <span>Gemini API Key (Optional)</span>
-            <span className="text-[10px] text-[#30D158] font-mono font-bold">Stored Locally & Securely</span>
+            <span className="text-[10px] text-emerald-500 font-mono font-medium">Stored Locally</span>
           </label>
           <div className="relative flex items-center">
-            <Key className="w-4 h-4 text-white/40 absolute left-3.5" />
+            <Key className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5" />
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-white/[0.04] border border-white/[0.09] text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#5E5CE6] font-mono tracking-wider transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#dc2626)] focus:ring-1 focus:ring-[var(--brand-primary,#dc2626)]/20 font-mono tracking-wider transition-all shadow-xs"
             />
           </div>
         </div>
@@ -116,12 +122,12 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
         {/* Status Feedback */}
         {statusMessage && (
           <div
-            className={`p-3 rounded-[14px] border text-xs font-semibold flex items-center gap-2 ${
+            className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
               status === 'VALID'
-                ? 'bg-[#30D158]/15 border-[#30D158]/40 text-[#30D158]'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
                 : status === 'INVALID'
-                ? 'bg-[#FF453A]/15 border-[#FF453A]/40 text-[#FF453A]'
-                : 'bg-white/[0.04] border-white/[0.08] text-white/70'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                : 'bg-[var(--bg-surface-1)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
             }`}
           >
             {status === 'VALID' ? (
@@ -136,17 +142,17 @@ export const GeminiSettingsModal: React.FC<GeminiSettingsModalProps> = ({ isOpen
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/[0.08]">
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-[12px] text-xs font-semibold text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors cursor-pointer"
           >
             Close
           </button>
           <button
             onClick={handleTestAndSaveKey}
             disabled={status === 'TESTING'}
-            className="px-5 py-2 rounded-[12px] bg-gradient-to-r from-[#5E5CE6] to-[#0A84FF] text-white text-xs font-bold shadow-[0_4px_16px_rgba(94,92,230,0.4)] hover:scale-102 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-105 active:scale-[0.985] text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {status === 'TESTING' ? (
               <>

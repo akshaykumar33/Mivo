@@ -308,7 +308,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
                 } disabled:cursor-not-allowed`}
               >
                 {hoverCol === col && isMyTurn && (
-                  <span className="text-[10px] text-cyan-400 animate-bounce">▼</span>
+                  <span className="text-[10px] text-cyan-400">▼</span>
                 )}
               </button>
             ))}
@@ -329,15 +329,15 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
                   >
                     {cell === 1 && (
                       <div
-                        className={`w-full h-full rounded-full bg-gradient-to-tr from-cyan-600 to-cyan-300 shadow-[0_0_12px_#06b6d4] ${
-                          isWinCell ? 'ring-4 ring-white animate-bounce' : 'animate-drop-in'
+                        className={`w-full h-full rounded-full bg-cyan-500 shadow-xs ${
+                          isWinCell ? 'ring-4 ring-white animate-pulse' : 'animate-drop-in'
                         }`}
                       />
                     )}
                     {cell === 2 && (
                       <div
-                        className={`w-full h-full rounded-full bg-gradient-to-tr from-rose-600 to-rose-400 shadow-[0_0_12px_#f43f5e] ${
-                          isWinCell ? 'ring-4 ring-white animate-bounce' : 'animate-drop-in'
+                        className={`w-full h-full rounded-full bg-rose-500 shadow-xs ${
+                          isWinCell ? 'ring-4 ring-white animate-pulse' : 'animate-drop-in'
                         }`}
                       />
                     )}
@@ -351,8 +351,8 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({
         {/* Victory Popup */}
         {winner && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center space-y-3 rounded-2xl animate-fade-in z-20">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-400 to-indigo-500 text-white flex items-center justify-center shadow-xl">
-              <Trophy className="w-8 h-8 animate-bounce" />
+            <div className="w-14 h-14 rounded-2xl bg-[var(--brand-primary,#6366f1)] text-white flex items-center justify-center shadow-lg">
+              <Trophy className="w-8 h-8 text-amber-300" />
             </div>
             <div>
               <h4 className="text-xl font-black font-display text-white">

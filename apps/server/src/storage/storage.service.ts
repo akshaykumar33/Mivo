@@ -285,4 +285,66 @@ export class StorageService implements OnModuleInit {
     }
     return null;
   }
+
+  /**
+   * Health and connectivity check for S3 / Supabase Storage.
+   * Sends a lightweight probe to keep the storage service and S3 gateway active,
+   * preventing inactivity pauses.
+   */
+  async checkHealth(): Promise<{ status: 'up' | 'down'; responseTimeMs: number; error?: string }> {
+    const start = Date.now();
+
+    // 1. S3 HeadBucket / Gateway probe
+    if (this.isS3Configured && this.s3Client) {
+      try {
+        await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucketName }));
+        return { status: 'up', responseTimeMs: Date.now() - start };
+      } catch (err: any) {
+        const latency = Date.now() - start;
+        const statusCode = err.$metadata?.httpStatusCode;
+        if (statusCode === 200 || statusCode === 403 || statusCode === 404 || err.name === 'NotFound') {
+          return { status: 'up', responseTimeMs: latency };
+        }
+      }
+    }
+
+    // 2. Direct Supabase Storage REST endpoint probe
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (supabaseUrl && anonKey) {
+      try {
+        const res = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+          headers: {
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+          },
+          signal: AbortSignal.timeout(3000),
+        });
+        const latency = Date.now() - start;
+        if (res.ok || res.status === 401 || res.status === 403) {
+          return { status: 'up', responseTimeMs: latency };
+        }
+      } catch {
+        // Fall through to next check
+      }
+    }
+
+    // 3. Raw S3_ENDPOINT reachability probe
+    const s3Endpoint = process.env.S3_ENDPOINT;
+    if (s3Endpoint) {
+      try {
+        await fetch(s3Endpoint, { signal: AbortSignal.timeout(3000) });
+        const latency = Date.now() - start;
+        return { status: 'up', responseTimeMs: latency };
+      } catch (err: any) {
+        return { status: 'down', responseTimeMs: Date.now() - start, error: err.message };
+      }
+    }
+
+    return {
+      status: 'down',
+      responseTimeMs: 0,
+      error: 'S3 / Supabase Storage credentials not configured',
+    };
+  }
 }

@@ -45,22 +45,26 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-6 sm:p-8 rounded-[28px] bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-[0_20px_60px_rgba(220,38,38,0.08)] relative overflow-hidden text-[var(--text-primary)]">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#DC2626] to-[#991B1B] text-white font-extrabold text-xl shadow-[0_8px_24px_rgba(220,38,38,0.35)] mb-3 border border-white/40">
+    <div className="w-full max-w-md p-6 sm:p-8 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden text-[var(--text-primary)]">
+      <div className="text-center mb-7">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#DC2626] text-white font-extrabold text-xl shadow-[0_2px_8px_rgba(220,38,38,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] mb-3 border border-red-500/40 font-display">
           M
         </div>
-        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight font-display">Create an Account</h1>
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 font-medium">Join the next-gen communication platform</p>
+        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight font-display">
+          Create an Account
+        </h1>
+        <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">
+          Create your profile to join rooms and workspaces
+        </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+        <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-semibold">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         <Input
           label="Email Address"
           type="email"
@@ -97,7 +101,7 @@ export const RegisterForm: React.FC = () => {
           required
         />
 
-        <Button type="submit" className="w-full mt-2" isLoading={isLoading}>
+        <Button type="submit" size="md" className="w-full mt-2 font-semibold" isLoading={isLoading}>
           Create Account
         </Button>
       </form>
@@ -107,9 +111,9 @@ export const RegisterForm: React.FC = () => {
         <GuestLoginCard />
       </div>
 
-      <div className="mt-6 text-center text-xs text-[#71717A]">
+      <div className="mt-6 text-center text-xs text-[var(--text-secondary)]">
         Already have an account?{' '}
-        <Link href="/login" className="text-red-600 hover:text-red-700 font-bold hover:underline">
+        <Link href="/login" className="text-red-600 hover:text-red-700 font-semibold hover:underline transition-colors">
           Log in
         </Link>
       </div>

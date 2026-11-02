@@ -443,7 +443,7 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
         <div
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
-          className="h-11 px-3.5 bg-gradient-to-r from-violet-600/30 via-indigo-600/20 to-transparent border-b border-[var(--border-subtle)] flex items-center justify-between cursor-grab active:cursor-grabbing"
+          className="h-11 px-3.5 bg-[var(--bg-surface-1)] border-b border-[var(--border-subtle)] flex items-center justify-between cursor-grab active:cursor-grabbing"
         >
           <div className="flex items-center gap-2 min-w-0">
             <GripHorizontal className="w-3.5 h-3.5 text-white/50 flex-shrink-0" />
@@ -562,9 +562,9 @@ export const FloatingPiPOverlay: React.FC<FloatingPiPOverlayProps> = ({
           <div className="p-3 space-y-2.5 max-h-[460px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
             {/* Active Presentation Banner (Slides, Code or Screen) */}
             {isPresenting && (
-              <div className="p-2.5 rounded-2xl bg-gradient-to-r from-violet-950/60 via-indigo-950/40 to-slate-900/60 border border-violet-500/30 flex items-center justify-between gap-2 shadow-inner">
+              <div className="p-2.5 rounded-2xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] flex items-center justify-between gap-2 shadow-inner">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="p-1.5 rounded-xl bg-violet-600 text-white shadow flex-shrink-0">
+                  <div className="p-1.5 rounded-xl bg-[var(--brand-primary,#dc2626)] text-white shadow-xs flex-shrink-0">
                     {activeMode === 'CODE' ? (
                       <Code className="w-3.5 h-3.5" />
                     ) : activeMode === 'CANVAS' ? (

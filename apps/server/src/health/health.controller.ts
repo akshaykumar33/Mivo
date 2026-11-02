@@ -1,7 +1,9 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res, Optional, Inject } from '@nestjs/common';
 import { Response } from 'express';
 import { prisma } from '@mivo/database';
 import Redis from 'ioredis';
+import { StorageService } from '../storage/storage.service.js';
+import { KeepAliveService } from './keep-alive.service.js';
 
 export interface HealthCheckResponse {
   status: 'ok' | 'degraded' | 'down';
@@ -27,15 +29,24 @@ export interface HealthCheckResponse {
       responseTimeMs?: number;
       error?: string;
     };
+    storage?: {
+      status: 'up' | 'down' | 'unconfigured';
+      responseTimeMs?: number;
+      error?: string;
+    };
   };
 }
 
 @Controller('health')
 export class HealthController {
   private redisClient: Redis | null = null;
-  private static readonly PROBE_TIMEOUT_MS = 2000;
+  // Calibrated for serverless databases (Neon) which require TLS handshake & compute spin-up
+  private static readonly PROBE_TIMEOUT_MS = Number(process.env.DB_PROBE_TIMEOUT_MS) || 8000;
 
-  constructor() {
+  constructor(
+    @Optional() private readonly keepAliveService?: KeepAliveService,
+    @Optional() private readonly storageService?: StorageService
+  ) {
     if (process.env.REDIS_URL) {
       try {
         this.redisClient = new Redis(process.env.REDIS_URL, {
@@ -51,7 +62,7 @@ export class HealthController {
   }
 
   /**
-   * Comprehensive health check with database and cache circuit breakers.
+   * Comprehensive health check with database, cache, and storage circuit breakers.
    * Standard for uptime monitors, Render health checks, AWS ALB target groups.
    */
   @Get()
@@ -98,6 +109,22 @@ export class HealthController {
       }
     }
 
+    let storageStatus: 'up' | 'down' | 'unconfigured' = 'unconfigured';
+    let storageLatency = 0;
+    let storageError: string | undefined;
+
+    if (this.storageService) {
+      try {
+        const storageRes = await this.storageService.checkHealth();
+        storageStatus = storageRes.status;
+        storageLatency = storageRes.responseTimeMs;
+        storageError = storageRes.error;
+      } catch (err: any) {
+        storageStatus = 'down';
+        storageError = err.message || 'Storage check failed';
+      }
+    }
+
     const mem = process.memoryUsage();
     const httpStatus = dbStatus === 'up' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
 
@@ -125,10 +152,71 @@ export class HealthController {
           responseTimeMs: redisLatency,
           ...(redisError ? { error: redisError } : {}),
         },
+        storage: {
+          status: storageStatus,
+          responseTimeMs: storageLatency,
+          ...(storageError ? { error: storageError } : {}),
+        },
       },
     };
 
     return res.status(httpStatus).json(payload);
+  }
+
+  /**
+   * Dedicated Keep-Alive endpoint for external monitors (Render, GitHub Actions, UptimeRobot, cron-job.org).
+   * Simultaneously touches:
+   * 1. Render HTTP ingress (resets 15-minute spin-down timer)
+   * 2. Neon PostgreSQL (executes SELECT 1, resetting 5-minute compute sleep)
+   * 3. Upstash Redis (executes PING, resetting 30-day inactivity archive)
+   * 4. Supabase S3 (executes bucket probe, resetting 7-day project pause)
+   */
+  @Get('keepalive')
+  async keepalive(@Res() res: Response): Promise<Response> {
+    if (this.keepAliveService) {
+      const report = await this.keepAliveService.executePulse();
+      return res.status(HttpStatus.OK).json({
+        status: 'ok',
+        message: 'Keep-alive pulse executed across all connected services.',
+        report,
+      });
+    }
+
+    // Direct fallback if KeepAliveService is not injected
+    const start = Date.now();
+    let dbStatus = 'down';
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      dbStatus = 'up';
+    } catch {}
+
+    let redisStatus = 'unconfigured';
+    if (this.redisClient) {
+      try {
+        await this.redisClient.ping();
+        redisStatus = 'up';
+      } catch {
+        redisStatus = 'down';
+      }
+    }
+
+    let storageStatus = 'unconfigured';
+    if (this.storageService) {
+      const sRes = await this.storageService.checkHealth();
+      storageStatus = sRes.status;
+    }
+
+    return res.status(HttpStatus.OK).json({
+      status: 'ok',
+      message: 'Keep-alive fallback probe executed.',
+      timestamp: new Date().toISOString(),
+      durationMs: Date.now() - start,
+      services: {
+        neon: { status: dbStatus, inactivityLimit: '5 minutes' },
+        upstashRedis: { status: redisStatus, inactivityLimit: '30 days' },
+        supabaseS3: { status: storageStatus, inactivityLimit: '7 days' },
+      },
+    });
   }
 
   /**

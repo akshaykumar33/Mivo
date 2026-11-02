@@ -108,12 +108,11 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
     id: RoomCommunicationMode;
     label: string;
     icon: any;
-    color: string;
-    glow: string;
+    activeStyle: string;
   }> = [
-    { id: 'TEXT', label: 'Chat', icon: MessageSquare, color: 'from-[#0A84FF] to-[#5E5CE6]', glow: 'shadow-[0_2px_10px_rgba(10,132,255,0.35)]' },
-    { id: 'CANVAS', label: 'Canvas', icon: Palette, color: 'from-[#FF9F0A] to-[#FFD60A]', glow: 'shadow-[0_2px_10px_rgba(255,159,10,0.35)]' },
-    { id: 'CODE', label: 'Code', icon: Code2, color: 'from-[#30D158] to-[#0A84FF]', glow: 'shadow-[0_2px_10px_rgba(48,209,88,0.35)]' },
+    { id: 'TEXT', label: 'Chat', icon: MessageSquare, activeStyle: 'bg-[var(--brand-primary,#dc2626)] text-white shadow-xs' },
+    { id: 'CANVAS', label: 'Canvas', icon: Palette, activeStyle: 'bg-amber-600 dark:bg-amber-500 text-white shadow-xs' },
+    { id: 'CODE', label: 'Code', icon: Code2, activeStyle: 'bg-blue-600 dark:bg-blue-500 text-white shadow-xs' },
   ];
 
   const reactionList = ['heart', 'thumbs_up', 'fire', 'party', 'laugh', 'rocket', 'hundred', 'sparkles', 'clap'];
@@ -169,65 +168,65 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
           ref={moreMenuRef}
           className="absolute bottom-16 right-0 mb-1 w-52 rounded-2xl bg-[var(--bg-surface-0)] border border-[var(--border-subtle)] backdrop-blur-3xl shadow-2xl py-1.5 z-50 animate-slide-up"
         >
-          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
+          <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] border-b border-[var(--border-subtle)]">
             Stage Preferences
           </div>
           {isHost && isInCall && (
             <button
               onClick={() => { onToggleRecording(); setIsMoreMenuOpen(false); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
             >
-              <CircleDot className={`w-4 h-4 ${isRecording ? 'text-white' : 'text-[#FF453A]'}`} />
+              <CircleDot className={`w-4 h-4 ${isRecording ? 'text-white' : 'text-rose-500'}`} />
               <span>{isRecording ? 'Stop Recording' : 'Record Stage'}</span>
             </button>
           )}
           <button
             onClick={() => { onTogglePiP(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <PictureInPicture2 className={`w-4 h-4 ${isPiPOpen ? 'text-[#FF9F0A]' : 'text-[var(--text-muted)]'}`} />
+            <PictureInPicture2 className={`w-4 h-4 ${isPiPOpen ? 'text-amber-500' : 'text-[var(--text-muted)]'}`} />
             <span>{isPiPOpen ? 'Close PiP' : 'Picture-in-Picture'}</span>
           </button>
           <button
             onClick={() => { onToggleDocs(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <BookOpen className="w-4 h-4 text-[#5E5CE6]" />
+            <BookOpen className="w-4 h-4 text-blue-500" />
             <span>Documentation Hub</span>
           </button>
           <button
             onClick={() => { setIsThemeModalOpen(true); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <Palette className="w-4 h-4 text-[#BF5AF2]" />
+            <Palette className="w-4 h-4 text-purple-500" />
             <span>Switch Visual Theme</span>
           </button>
           <button
             onClick={() => { onOpenFocusBar?.(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <Headphones className="w-4 h-4 text-[#FF9F0A]" />
+            <Headphones className="w-4 h-4 text-amber-500" />
             <span>Focus & Ambient Sounds</span>
           </button>
           <button
             onClick={() => { onOpenActivityLauncher?.(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <Gamepad2 className="w-4 h-4 text-[#30D158]" />
+            <Gamepad2 className="w-4 h-4 text-emerald-500" />
             <span>Activities & Sandbox</span>
           </button>
           <button
             onClick={() => { onOpenE2EE?.(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <ShieldCheck className="w-4 h-4 text-[#30D158]" />
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Zero-Trust E2EE Room</span>
           </button>
           <button
             onClick={() => { onOpenAiTwin?.(); setIsMoreMenuOpen(false); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)] transition-colors text-left cursor-pointer"
           >
-            <Bot className="w-4 h-4 text-[#BF5AF2]" />
+            <Bot className="w-4 h-4 text-purple-500" />
             <span>AI Twin Settings</span>
           </button>
         </div>
@@ -250,9 +249,9 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
               <button
                 key={mode.id}
                 onClick={() => onModeChange(mode.id)}
-                className={`relative group/btn flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[10px] text-xs font-bold transition-all duration-150 cursor-pointer ${
+                className={`relative group/btn flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[10px] text-xs font-semibold transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? `bg-gradient-to-r ${mode.color} !text-white shadow-md ${mode.glow} border border-white/30 scale-[1.02]`
+                    ? `${mode.activeStyle} scale-[1.02]`
                     : 'text-stone-700 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10'
                 }`}
               >
@@ -364,8 +363,8 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             onClick={onToggleWhisper}
             className={`relative group/ai p-2 sm:p-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
               isWhisperOpen
-                ? 'bg-gradient-to-r from-[#BF5AF2] to-[#5E5CE6] !text-white shadow-[0_0_16px_rgba(191,90,242,0.5)] border border-white/20'
-                : 'bg-[#BF5AF2]/15 text-[#9333ea] dark:text-[#BF5AF2] border border-[#BF5AF2]/30 hover:bg-[#BF5AF2] hover:!text-white'
+                ? 'bg-[var(--brand-primary,#dc2626)] !text-white shadow-xs border border-white/20'
+                : 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 hover:bg-purple-500/20'
             }`}
           >
             <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
@@ -381,7 +380,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
                 : 'bg-black/[0.04] dark:bg-white/[0.06] text-stone-700 dark:text-stone-300 border border-black/[0.08] dark:border-white/10 hover:bg-black/[0.08] dark:hover:bg-white/[0.12] hover:text-stone-950 dark:hover:text-white'
             }`}
           >
-            <Users className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#5E5CE6]" />
+            <Users className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[var(--brand-primary,#dc2626)]" />
             <span className="text-[10px] sm:text-[11px] font-bold font-mono">{participantCount}</span>
             <Tip text={`${participantCount} Online`} groupClass="group-hover/ppl:opacity-100" />
           </button>
@@ -406,7 +405,7 @@ export const FloatingCyberDock: React.FC<FloatingCyberDockProps> = ({
             <div className="w-px h-5 sm:h-6 bg-[var(--border-subtle)] flex-shrink-0" />
             <button
               onClick={onDisconnect}
-              className="relative group/leave p-2 sm:p-2.5 rounded-xl bg-[#FF453A] hover:bg-[#FF2D20] !text-white shadow-[0_4px_16px_rgba(255,69,58,0.4)] hover:scale-105 transition-all cursor-pointer flex-shrink-0"
+              className="relative group/leave p-2 sm:p-2.5 rounded-xl bg-[var(--brand-primary,#dc2626)] hover:brightness-110 !text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer flex-shrink-0"
             >
               <PhoneOff className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
               <Tip text="Leave Call" groupClass="group-hover/leave:opacity-100" />

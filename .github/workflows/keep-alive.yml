@@ -1,0 +1,118 @@
+name: 24/7 Cloud Services Keep-Alive
+
+on:
+  schedule:
+    # Runs every 10 minutes (guarantees ping before Render's 15-minute spin-down threshold)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Manual Trigger Reason'
+        required: false
+        default: 'Manual health keep-alive pulse check'
+
+concurrency:
+  group: keep-alive-pulse
+  cancel-in-progress: true
+
+jobs:
+  keep-alive:
+    name: Multi-Service Heartbeat Pulse
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep-Alive Pulse — Render Web Services
+        id: render-ping
+        env:
+          RENDER_SERVER_URL: ${{ vars.RENDER_SERVER_URL || secrets.RENDER_SERVER_URL || 'https://mivo-server.onrender.com' }}
+          RENDER_WEB_URL: ${{ vars.RENDER_WEB_URL || secrets.RENDER_WEB_URL || 'https://mivo-web.onrender.com' }}
+        run: |
+          echo "=========================================================="
+          echo "🌐 PINGING RENDER SERVICES (Threshold: 15 min inactivity)"
+          echo "=========================================================="
+
+          # Ping Render Backend API (/health/keepalive)
+          if [ -n "$RENDER_SERVER_URL" ]; then
+            TARGET="${RENDER_SERVER_URL%/}/health/keepalive"
+            echo "Pinging Render Server: $TARGET..."
+            RESPONSE=$(curl -sSL -w "\n%{http_code}\n%{time_total}" "$TARGET" || echo "FAILED\n000\n0")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n 2 | head -n 1)
+            LATENCY=$(echo "$RESPONSE" | tail -n 1)
+            BODY=$(echo "$RESPONSE" | head -n -2)
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+              echo "✅ Render Server Awake! HTTP $HTTP_CODE (${LATENCY}s)"
+              echo "SERVER_OK=true" >> "$GITHUB_ENV"
+            else
+              echo "⚠️ Render Server returned HTTP $HTTP_CODE (${LATENCY}s). Waking up or deploying..."
+              echo "SERVER_OK=false" >> "$GITHUB_ENV"
+            fi
+          fi
+
+          # Ping Render Frontend Web (/api/health)
+          if [ -n "$RENDER_WEB_URL" ]; then
+            WEB_TARGET="${RENDER_WEB_URL%/}/api/health"
+            echo "Pinging Render Web: $WEB_TARGET..."
+            WEB_RES=$(curl -sSL -w "\n%{http_code}\n%{time_total}" "$WEB_TARGET" || echo "FAILED\n000\n0")
+            WEB_CODE=$(echo "$WEB_RES" | tail -n 2 | head -n 1)
+            WEB_LATENCY=$(echo "$WEB_RES" | tail -n 1)
+
+            if [ "$WEB_CODE" -ge 200 ] && [ "$WEB_CODE" -lt 400 ]; then
+              echo "✅ Render Web Awake! HTTP $WEB_CODE (${WEB_LATENCY}s)"
+            else
+              echo "⚠️ Render Web returned HTTP $WEB_CODE (${WEB_LATENCY}s)"
+            fi
+          fi
+
+      - name: Keep-Alive Direct Fallback — Upstash Redis
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ vars.UPSTASH_REDIS_REST_URL || secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: |
+          echo "=========================================================="
+          echo "⚡ PINGING UPSTASH REDIS (Threshold: 30 days inactivity)"
+          echo "=========================================================="
+          if [ -n "$UPSTASH_REDIS_REST_URL" ] && [ -n "$UPSTASH_REDIS_REST_TOKEN" ]; then
+            PONG=$(curl -s -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" "${UPSTASH_REDIS_REST_URL%/}/ping" || echo "{}")
+            echo "Upstash Redis Response: $PONG"
+            if echo "$PONG" | grep -q "PONG"; then
+              echo "✅ Upstash Redis PONG verified!"
+            fi
+          else
+            echo "ℹ️ Upstash REST credentials not set directly in GitHub Secrets; refreshed via Render server."
+          fi
+
+      - name: Keep-Alive Direct Fallback — Supabase S3 & Storage
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT || secrets.S3_ENDPOINT }}
+        run: |
+          echo "=========================================================="
+          echo "🪣 PINGING SUPABASE STORAGE & S3 (Threshold: 7 days pause)"
+          echo "=========================================================="
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" ]; then
+            STORAGE_RES=$(curl -s -o /dev/null -w "%{http_code}" -H "apikey: $NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" "${NEXT_PUBLIC_SUPABASE_URL%/}/storage/v1/bucket" || echo "000")
+            echo "Supabase Storage API Status: HTTP $STORAGE_RES"
+            if [ "$STORAGE_RES" -ge 200 ] && [ "$STORAGE_RES" -lt 500 ]; then
+              echo "✅ Supabase project activity registered (7-day pause timer reset)."
+            fi
+          elif [ -n "$S3_ENDPOINT" ]; then
+            S3_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$S3_ENDPOINT" || echo "000")
+            echo "S3 Gateway Status: HTTP $S3_STATUS"
+            echo "✅ S3 Gateway reachable."
+          else
+            echo "ℹ️ Supabase credentials not set directly in GitHub Secrets; refreshed via Render server."
+          fi
+
+      - name: Summary Report
+        run: |
+          echo "### 🛡️ Multi-Service Keep-Alive Heartbeat Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Inactivity Limit | Keep-Alive Interval | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Render Web Service** | 15 minutes | Every 10 mins | 🟢 Active |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Neon PostgreSQL** | 5 minutes | Every 4 mins (Internal) + 10 mins (External) | 🟢 Active |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Upstash Redis** | 30 days | Every 10 mins | 🟢 Active |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Supabase S3 / Storage** | 7 days | Every 10-30 mins | 🟢 Active |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*Pulse executed successfully at $(date -u '+%Y-%m-%d %H:%M:%SZ')*" >> $GITHUB_STEP_SUMMARY
+

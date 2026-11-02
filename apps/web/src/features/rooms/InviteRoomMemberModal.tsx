@@ -184,7 +184,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
             onClick={() => setActiveTab('ADD')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'ADD'
-                ? 'bg-[#5E5CE6] text-white shadow-sm'
+                ? 'bg-[var(--brand-primary,#6366f1)] text-white shadow-xs'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-1)]'
             }`}
           >
@@ -196,7 +196,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
             onClick={() => setActiveTab('MEMBERS')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'MEMBERS'
-                ? 'bg-[#5E5CE6] text-white shadow-sm'
+                ? 'bg-[var(--brand-primary,#6366f1)] text-white shadow-xs'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-1)]'
             }`}
           >
@@ -231,18 +231,18 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
                 placeholder={`Search ${organizationName} members...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#5E5CE6] focus:ring-1 focus:ring-[#5E5CE6]/20 font-medium"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary,#6366f1)] focus:ring-1 focus:ring-[var(--brand-primary,#6366f1)]/20 font-medium"
               />
             </div>
 
             {isLoadingEligible ? (
               <div className="py-12 flex flex-col items-center justify-center text-[var(--text-muted)]">
-                <Loader2 className="w-6 h-6 animate-spin text-[#5E5CE6] mb-2" />
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-primary,#6366f1)] mb-2" />
                 <span className="text-xs">Finding available members...</span>
               </div>
             ) : filteredEligible.length === 0 ? (
               <div className="py-8 px-4 rounded-xl bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] text-center space-y-2">
-                <UserCheck className="w-8 h-8 text-[#30D158] mx-auto" />
+                <UserCheck className="w-8 h-8 text-emerald-500 mx-auto" />
                 <p className="text-xs font-semibold text-[var(--text-primary)]">
                   {searchQuery ? 'No matching organization members found.' : 'All organization members are already in this room!'}
                 </p>
@@ -296,7 +296,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20">
                           {candidate.roleName}
                         </span>
 
@@ -305,7 +305,7 @@ export const InviteRoomMemberModal: React.FC<InviteRoomMemberModalProps> = ({
                           size="sm"
                           disabled={isAdding}
                           onClick={() => handleAddMember(candidate)}
-                          className="bg-[#5E5CE6] hover:bg-[#4E4CD4] text-white text-xs h-7 px-2.5"
+                          className="bg-[var(--brand-primary,#6366f1)] hover:opacity-90 active:scale-[0.98] text-white text-xs h-7 px-2.5"
                         >
                           {isAdding ? (
                             <Loader2 className="w-3 h-3 animate-spin" />

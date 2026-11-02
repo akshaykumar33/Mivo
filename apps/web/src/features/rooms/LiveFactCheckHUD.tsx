@@ -34,25 +34,22 @@ export const LiveFactCheckHUD: React.FC<LiveFactCheckHUDProps> = ({
 
   return (
     <div className="fixed top-20 right-4 sm:right-8 z-50 max-w-sm sm:max-w-md w-full animate-slide-in-right select-none shadow-2xl">
-      <div className="rounded-3xl bg-[#0F121C]/95 backdrop-blur-xl border-2 border-amber-500/50 p-4 shadow-2xl shadow-amber-950/50 relative overflow-hidden">
-        {/* Glow Accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-rose-500 to-amber-400 shadow-md shadow-amber-500/50" />
-
+      <div className="rounded-3xl bg-[var(--bg-surface-0)]/95 backdrop-blur-xl border border-amber-500/40 p-4 shadow-2xl relative overflow-hidden text-[var(--text-primary)]">
         <div className="flex items-start justify-between gap-3 mb-2.5">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              <ShieldAlert className="w-4 h-4 animate-bounce" />
+            <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+              <ShieldAlert className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase tracking-wider text-amber-400">
-                  AI Silent Fact-Check
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 font-display">
+                  Silent Fact-Check Notice
                 </span>
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold">
-                  LIVE AUDIT
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 text-[10px] font-semibold">
+                  Live Audit
                 </span>
               </div>
-              <span className="text-[10px] text-white/50">
+              <span className="text-[11px] text-[var(--text-secondary)]">
                 Discrepancy detected with verified records
               </span>
             </div>
@@ -93,10 +90,10 @@ export const LiveFactCheckHUD: React.FC<LiveFactCheckHUDProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border-subtle)]">
           <button
             onClick={onDismiss}
-            className="text-[11px] font-semibold text-white/50 hover:text-white transition-colors cursor-pointer"
+            className="text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
           >
             Ignore & Dismiss
           </button>
@@ -104,7 +101,7 @@ export const LiveFactCheckHUD: React.FC<LiveFactCheckHUDProps> = ({
           {onClarifyOnStage && (
             <button
               onClick={() => onClarifyOnStage(alert.statement || '', alert.actualTruth || '')}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-[11px] shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Volume2 className="w-3 h-3" />
               <span>Broadcast Correction</span>

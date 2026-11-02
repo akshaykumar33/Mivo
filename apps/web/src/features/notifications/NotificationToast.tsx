@@ -46,7 +46,7 @@ export const NotificationToast: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-5 right-5 z-[100] max-w-sm w-full animate-bounce-in">
+    <div className="fixed top-5 right-5 z-[100] max-w-sm w-full animate-slide-down">
       <div
         onClick={handleClick}
         className="flex items-start gap-3 p-3.5 bg-[var(--bg-surface-0)]/90 backdrop-blur-2xl border border-[var(--border-subtle)] hover:border-white/20 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] cursor-pointer transition-all duration-200 group"

@@ -58,7 +58,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     <div
       className={cn(
         'relative inline-flex flex-shrink-0 items-center justify-center rounded-full select-none transition-all duration-200',
-        isSpeaking && 'ring-3 ring-emerald-500 ring-offset-2 ring-offset-[#0B0E14] shadow-lg shadow-emerald-500/40 animate-speaking',
+        isSpeaking && 'ring-3 ring-emerald-500 ring-offset-2 ring-offset-[var(--bg-surface-0)] shadow-lg shadow-emerald-500/40 animate-speaking',
         sizes[size],
         className
       )}
@@ -72,7 +72,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           className="w-full h-full rounded-full object-cover"
         />
       ) : (
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-violet-600 to-indigo-800 flex items-center justify-center font-semibold text-white shadow-inner">
+        <div className="w-full h-full rounded-full bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] flex items-center justify-center font-semibold text-[var(--text-primary)] shadow-inner">
           {initials}
         </div>
       )}
