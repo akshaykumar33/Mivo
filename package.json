@@ -5,22 +5,64 @@
   "type": "module",
   "description": "Unified Real-Time Communication & Social Platform",
   "scripts": {
+    "preinstall": "only-allow pnpm",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check:types": "turbo run check:types",
     "test": "turbo run test",
+    "test:all": "turbo run check:types && turbo run lint && vitest run",
     "test:suites": "node tests/run-all-tests.js",
     "test:vitest": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "check:audit": "pnpm audit --audit-level=high",
+    "check:secops": "node scripts/secops-scan.mjs",
+    "check:infra": "node scripts/check-services.mjs",
+    "docker:prod:build": "docker compose -f docker-compose.prod.yml build",
+    "docker:prod:up": "docker compose -f docker-compose.prod.yml up -d",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
     "clean": "turbo run clean"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "^3.0.7",
+    "only-allow": "^1.2.2",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },
   "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "argon2",
+      "esbuild",
+      "prisma"
+    ],
+    "overrides": {
+      "next": ">=15.5.28",
+      "postcss": ">=8.5.12",
+      "proxy-addr": ">=2.0.8",
+      "qs": ">=6.16.1",
+      "tinypool": ">=2.1.1",
+      "cross-spawn": ">=7.0.6",
+      "micromatch": ">=4.0.8",
+      "fast-uri": ">=3.1.9",
+      "braces": ">=3.0.3",
+      "ws": ">=8.18.1",
+      "handlebars": ">=4.7.10",
+      "multer": ">=2.5.0",
+      "body-parser": ">=2.4.0",
+      "engine.io": ">=6.6.10",
+      "source-map-js": ">=1.2.2",
+      "vite": ">=7.3.7",
+      "deepmerge-ts": ">=8.0.0",
+      "brace-expansion": ">=1.1.20",
+      "minimatch>brace-expansion": ">=5.0.11",
+      "zod": ">=4.6.7"
+    }
+  },
   "dependencies": {
     "@neon/config": "^1.8.4",
     "@neon/env": "^1.5.1"

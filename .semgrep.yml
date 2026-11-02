@@ -1,0 +1,62 @@
+# ==============================================================================
+# Mivo DevSecOps Semgrep SAST Rules (.semgrep.yml)
+# Static Application Security Testing for TypeScript, NestJS, Next.js, and Prisma
+# ==============================================================================
+
+rules:
+  - id: mivo-no-eval-or-function-constructor
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: new Function(...)
+    message: "Critical SecOps Alert: eval() or Function() constructor creates Remote Code Execution (RCE) attack surface."
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp: "A03:2021 - Injection"
+
+  - id: mivo-no-exec-without-sanitization
+    patterns:
+      - pattern: child_process.exec($CMD, ...)
+      - pattern-not: child_process.execFile(...)
+    message: "Security Alert: child_process.exec can lead to command injection. Use execFile or spawn with fixed arguments."
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-78: Improper Neutralization of Special Elements used in an OS Command"
+      owasp: "A03:2021 - Injection"
+
+  - id: mivo-prisma-no-raw-sql-concatenation
+    patterns:
+      - pattern-either:
+          - pattern: $PRISMA.$queryRawUnsafe(`...${$VAR}...`)
+          - pattern: $PRISMA.$executeRawUnsafe(`...${$VAR}...`)
+          - pattern: $PRISMA.$queryRawUnsafe($QUERY + $VAR)
+    message: "Critical SecOps Alert: Detected unparameterized raw SQL concatenation in Prisma. Use parameterized tagged template literals ($queryRaw`...`) instead."
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+
+  - id: mivo-no-disabled-tls-verification
+    patterns:
+      - pattern: rejectUnauthorized: false
+    message: "Security Warning: Disabling TLS verification (rejectUnauthorized: false) allows Man-in-the-Middle (MitM) attacks."
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-295: Improper Certificate Validation"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+
+  - id: mivo-no-insecure-cookie-flags
+    patterns:
+      - pattern: res.cookie($NAME, $VAL, { ..., secure: false, ... })
+    message: "Security Warning: Cookies containing session tokens or sensitive data must enforce secure: true in production."
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-614: Sensitive Cookie in HTTPS Session Without 'Secure' Attribute"
+      owasp: "A05:2021 - Security Misconfiguration"
+

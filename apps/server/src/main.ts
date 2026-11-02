@@ -3,6 +3,9 @@ dotenv.config({ override: true });
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
+import { RateLimiterGuard } from './common/rate-limiter.guard.js';
+import { SecurityAuditService } from './common/security-audit.service.js';
+import { SecurityAuditInterceptor } from './common/security-audit.interceptor.js';
 import { RedisIoAdapter } from './realtime/redis-io.adapter.js';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -10,11 +13,39 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security Middlewares
-  app.use(helmet());
+  // Production Graceful Shutdown Hooks
+  app.enableShutdownHooks();
+
+  // Advanced Security Headers via Helmet
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+          connectSrc: ["'self'", 'ws:', 'wss:', 'https:'],
+          mediaSrc: ["'self'", 'blob:', 'https:'],
+          objectSrc: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+      frameguard: {
+        action: 'deny',
+      },
+    })
+  );
+
   app.use(cookieParser());
 
-  // CORS
+  // CORS Hardening
   app.enableCors({
     origin: (origin, callback) => {
       if (
@@ -30,8 +61,15 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
   });
+
+  // Global Rate Limiting Guard
+  app.useGlobalGuards(new RateLimiterGuard());
+
+  // Global SecOps Audit Interceptor
+  const auditService = app.get(SecurityAuditService);
+  app.useGlobalInterceptors(new SecurityAuditInterceptor(auditService));
 
   // Global Exception Filter
   app.useGlobalFilters(new HttpExceptionFilter());

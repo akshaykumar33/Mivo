@@ -1,9 +1,13 @@
 /**
  * Master Modular Test Runner for Mivo Platform
- * Traverses all 7 module directories executing unit, integration, and e2e suites.
+ * Traverses all module directories executing unit, integration, and e2e suites.
+ * Automatically checks and manages backend server lifecycle if not running.
  */
 
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
 
 const MODULE_TESTS = [
   // 1. Auth & Identity Module
@@ -69,32 +73,103 @@ const MODULE_TESTS = [
   { module: 'hyper-architectural-features', file: 'tests/modules/hyper-architectural-features/hyper-architectural-features.integration.test.js' },
 ];
 
-console.log('═══════════════════════════════════════════════════════════════');
-console.log('🧪 MIVO PLATFORM — MASTER MODULAR TEST RUNNER');
-console.log('═══════════════════════════════════════════════════════════════\n');
+function checkServerLive() {
+  return new Promise((resolve) => {
+    const req = http.get('http://127.0.0.1:4000/health/live', (res) => {
+      resolve(res.statusCode === 200);
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(1200, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
 
-let passedCount = 0;
-let failedCount = 0;
+async function waitForServer(timeoutMs = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (await checkServerLive()) return true;
+    await new Promise((r) => setTimeout(r, 600));
+  }
+  return false;
+}
 
-for (const test of MODULE_TESTS) {
+async function main() {
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log('🧪 MIVO PLATFORM — MASTER MODULAR TEST RUNNER');
+  console.log('═══════════════════════════════════════════════════════════════\n');
+
+  let serverProcess = null;
+  const isRunning = await checkServerLive();
+
+  if (!isRunning) {
+    console.log('⚡ Server is offline. Booting Mivo backend server...');
+    const distPath = path.resolve('apps/server/dist/main.js');
+    if (!fs.existsSync(distPath)) {
+      console.log('🔨 Building @mivo/server...');
+      execSync('pnpm --filter @mivo/server build', { stdio: 'inherit' });
+    }
+    serverProcess = spawn('node', [distPath], {
+      stdio: 'pipe',
+      detached: false,
+      env: { ...process.env, NODE_ENV: 'test', RATE_LIMIT_DISABLED: 'true' },
+    });
+
+    const isReady = await waitForServer(25000);
+    if (!isReady) {
+      console.error('❌ Failed to start Mivo backend server within timeout.');
+      if (serverProcess) {
+        try { process.kill(serverProcess.pid); } catch {}
+      }
+      process.exit(1);
+    }
+    console.log('✅ Server online and healthy on http://127.0.0.1:4000\n');
+  } else {
+    console.log('📡 Connected to active Mivo backend server on http://127.0.0.1:4000\n');
+  }
+
+  let passedCount = 0;
+  let failedCount = 0;
+
   try {
-    execSync(`node --experimental-strip-types ${test.file}`, { stdio: 'inherit' });
-    passedCount++;
-  } catch (err) {
-    console.error(`❌ Test Failed: ${test.file}`);
-    failedCount++;
+    for (const test of MODULE_TESTS) {
+      try {
+        execSync(`node --experimental-strip-types ${test.file}`, { stdio: 'inherit' });
+        passedCount++;
+      } catch (err) {
+        console.error(`❌ Test Failed: ${test.file}`);
+        failedCount++;
+      }
+    }
+  } finally {
+    if (serverProcess) {
+      console.log('\n🧹 Gracefully stopping ephemeral test server...');
+      try {
+        if (process.platform === 'win32') {
+          execSync(`taskkill /pid ${serverProcess.pid} /T /F`, { stdio: 'ignore' });
+        } else {
+          serverProcess.kill('SIGTERM');
+        }
+      } catch {}
+    }
+  }
+
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log(`📊 FINAL MODULAR TEST RUN RESULTS: ${passedCount}/${MODULE_TESTS.length} SUITES PASSED`);
+  if (failedCount === 0) {
+    console.log(`🎉 100% SUCCESS — ALL ${MODULE_TESTS.length} TEST SUITES VERIFIED OPERATIONAL!`);
+  } else {
+    console.error(`⚠️ ${failedCount} suite(s) failed.`);
+  }
+  console.log('═══════════════════════════════════════════════════════════════\n');
+
+  if (failedCount > 0) {
+    process.exit(1);
   }
 }
 
-console.log('═══════════════════════════════════════════════════════════════');
-console.log(`📊 FINAL MODULAR TEST RUN RESULTS: ${passedCount}/${MODULE_TESTS.length} SUITES PASSED`);
-if (failedCount === 0) {
-  console.log(`🎉 100% SUCCESS — ALL 7 MODULES & ${MODULE_TESTS.length} TEST SUITES VERIFIED OPERATIONAL!`);
-} else {
-  console.error(`⚠️ ${failedCount} suite(s) failed.`);
-}
-console.log('═══════════════════════════════════════════════════════════════\n');
-
-if (failedCount > 0) {
+main().catch((err) => {
+  console.error('Fatal test runner error:', err);
   process.exit(1);
-}
+});

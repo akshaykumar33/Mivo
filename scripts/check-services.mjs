@@ -120,7 +120,7 @@ async function checkRedis() {
   try {
     let Redis;
     try {
-      Redis = (await import('../node_modules/.pnpm/ioredis@5.11.1/node_modules/ioredis/built/index.js')).default;
+      Redis = (await import('ioredis')).default;
     } catch {
       try {
         Redis = (await import('../apps/server/node_modules/ioredis/built/index.js')).default;
@@ -231,3 +231,4 @@ async function run() {
 }
 
 run().catch(console.error);
+

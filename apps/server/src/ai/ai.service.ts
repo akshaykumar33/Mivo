@@ -6,6 +6,9 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
 
   private getEffectiveApiKey(userKey?: string): string | undefined {
+    if (process.env.NODE_ENV === 'test' || process.env.CI === 'true') {
+      return undefined;
+    }
     return userKey?.trim() || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   }
 

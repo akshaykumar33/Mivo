@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mivo-ingress
+  namespace: mivo-prod
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/websocket-services: "mivo-server"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+spec:
+  tls:
+    - hosts:
+        - mivo.live
+        - www.mivo.live
+      secretName: mivo-live-tls
+  rules:
+    - host: mivo.live
+      http:
+        paths:
+          # Real-time WebSocket Gateway
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: mivo-server
+                port:
+                  number: 4000
+          # Backend REST APIs & Health
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: mivo-server
+                port:
+                  number: 4000
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: mivo-server
+                port:
+                  number: 4000
+          # Frontend Web Application
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mivo-web
+                port:
+                  number: 3000
+

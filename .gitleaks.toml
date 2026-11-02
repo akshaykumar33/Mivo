@@ -1,0 +1,67 @@
+# ==============================================================================
+# Mivo Enterprise Gitleaks Configuration (.gitleaks.toml)
+# Defines custom detection rules for secrets, API tokens, and connection strings
+# ==============================================================================
+
+title = "Mivo SecOps Secret Detection Rules"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlists for safe tests, documentation, and mock values"
+paths = [
+  '''^\.env\.example$''',
+  '''^tests/.*''',
+  '''^\.github/.*''',
+  '''^docker/.*''',
+  '''^docker-compose.*''',
+  '''^k8s/.*''',
+  '''^scripts/.*''',
+  '''^docs/.*''',
+  '''^README\.md$''',
+  '''^pnpm-lock\.yaml$'''
+]
+regexes = [
+  '''dev_jwt_access_secret_super_secure_32chars_min''',
+  '''dev_jwt_refresh_secret_super_secure_32chars_min''',
+  '''ci_jwt_access_secret_super_secure_32chars_min''',
+  '''ci_jwt_refresh_secret_super_secure_32chars_min''',
+  '''jwt_access_super_secret_production_key_32c''',
+  '''jwt_refresh_super_secret_production_key_32c''',
+  '''postgres_dev_password''',
+  '''postgres_prod_password''',
+  '''minioadmin''',
+  '''REPLACE_WITH_.*''',
+  '''dummy:dummy'''
+]
+
+# Custom Rules
+[[rules]]
+id = "mivo-database-connection-url"
+description = "Detected unmasked PostgreSQL database connection string with credentials"
+regex = '''(?i)postgres(ql)?://[a-zA-Z0-9_\-]+:[a-zA-Z0-9_\-\.\$\%\^\@]+@[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,}(:\d+)?/[a-zA-Z0-9_\-]+'''
+secretGroup = 0
+keywords = ["postgres", "postgresql", "DATABASE_URL", "DIRECT_URL"]
+
+[[rules]]
+id = "mivo-jwt-secret-leak"
+description = "Detected high-entropy production JWT secret key"
+regex = '''(?i)(jwt_secret|jwt_access_secret|jwt_refresh_secret)\s*[:=]\s*['"][a-zA-Z0-9_\-]{32,}['"]'''
+secretGroup = 0
+keywords = ["jwt_secret", "jwt_access_secret", "jwt_refresh_secret"]
+
+[[rules]]
+id = "mivo-redis-authenticated-url"
+description = "Detected authenticated Redis connection string"
+regex = '''(?i)redis(s)?://:[a-zA-Z0-9_\-\.\$\%\^]+@[a-zA-Z0-9_\-\.]+(:\d+)?'''
+secretGroup = 0
+keywords = ["redis", "REDIS_URL"]
+
+[[rules]]
+id = "mivo-gemini-api-key"
+description = "Detected Google Gemini AI API Key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+secretGroup = 0
+keywords = ["AIza", "GEMINI_API_KEY"]
+

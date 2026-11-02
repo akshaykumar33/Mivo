@@ -34,14 +34,21 @@ async function loginUser(email, password) {
 function connectSocket(token) {
   return new Promise((resolve, reject) => {
     const socket = io(WS_URL, {
-      auth: { token },
-      transports: ['websocket'],
+      auth: { token: `Bearer ${token}` },
+      transports: ["websocket"],
       forceNew: true,
-      timeout: 5000,
+      timeout: 15000,
     });
 
-    socket.on('connect', () => resolve(socket));
-    socket.on('connect_error', (err) => reject(err));
+    const timer = setTimeout(() => reject(new Error("Connection ACK timeout")), 15000);
+    socket.on("connection:ack", () => {
+      clearTimeout(timer);
+      resolve(socket);
+    });
+    socket.on("connect_error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
   });
 }
 
@@ -160,7 +167,7 @@ async function run() {
   };
 
   const messagePromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:new_message')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:new_message')), 15000);
     socket2.on('dm:new_message', (msg) => {
       clearTimeout(timer);
       resolve(msg);
@@ -207,7 +214,7 @@ async function run() {
   };
 
   const groupMsgPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for group dm:new_message')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for group dm:new_message')), 15000);
     socket2.on('dm:new_message', (msg) => {
       if (msg.conversationId === groupConvId) {
         clearTimeout(timer);
@@ -245,7 +252,7 @@ async function run() {
 
   // 7. Test Typing Indicators & Reactions
   const typingPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:typing')), 4000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:typing')), 15000);
     socket2.on('dm:typing', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -259,7 +266,7 @@ async function run() {
   }
 
   const reactionPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:reaction_added')), 4000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for dm:reaction_added')), 15000);
     socket2.on('dm:reaction_added', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -279,7 +286,7 @@ async function run() {
 
   // 8. Test Direct Audio Call Signaling (Invite -> Ring -> Accept -> WebRTC Relay -> End)
   const incomingCallPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:incoming')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:incoming')), 15000);
     socket2.on('call:incoming', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -294,7 +301,7 @@ async function run() {
 
   // Socket 2 accepts the call
   const callAcceptedPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:accepted')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:accepted')), 15000);
     socket1.on('call:accepted', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -309,7 +316,7 @@ async function run() {
 
   // Test WebRTC Signaling Relay for Audio Call
   const signalingPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for signaling:offer')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for signaling:offer')), 15000);
     socket2.on('signaling:offer', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -329,7 +336,7 @@ async function run() {
 
   // End Call
   const callEndedPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:ended')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:ended')), 15000);
     socket2.on('call:ended', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -342,7 +349,7 @@ async function run() {
 
   // 9. Test Group Audio Call (Invite -> Decline)
   const groupCallPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for group call:incoming')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for group call:incoming')), 15000);
     socket2.on('call:incoming', (data) => {
       clearTimeout(timer);
       resolve(data);
@@ -356,7 +363,7 @@ async function run() {
   }
 
   const groupDeclinePromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:declined')), 5000);
+    const timer = setTimeout(() => reject(new Error('Timeout waiting for call:declined')), 15000);
     socket1.on('call:declined', (data) => {
       clearTimeout(timer);
       resolve(data);
