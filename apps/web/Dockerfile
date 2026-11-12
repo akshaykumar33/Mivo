@@ -4,7 +4,7 @@
 # ==============================================================================
 
 # Stage 1: Base runtime environment
-FROM node:20-alpine AS base
+FROM node:25-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN apk add --no-cache dumb-init libc6-compat wget curl
@@ -38,7 +38,7 @@ RUN pnpm --filter @mivo/ui run build
 RUN pnpm --filter @mivo/web run build
 
 # Stage 3: Production Runner (Next.js Standalone, Non-root)
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
