@@ -4,7 +4,7 @@
 # ==============================================================================
 
 # Stage 1: Base runtime environment
-FROM node:20-alpine AS base
+FROM node:25-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN apk add --no-cache dumb-init openssl ffmpeg wget curl
